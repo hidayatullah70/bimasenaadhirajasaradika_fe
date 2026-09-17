@@ -160,7 +160,7 @@ export function DashboardSidebar({ currentPath, onNavigate, onCloseMobile }) {
           </div>
           <div className="grid grid-cols-2 gap-1.5 px-2">
             {[
-              { id: 'owner', label: 'Owner' },
+              { id: 'owner', label: 'Direktur' },
               { id: 'hrd', label: 'HRD' },
               { id: 'operasional', label: 'Operasional' },
               { id: 'finance', label: 'Finance' },

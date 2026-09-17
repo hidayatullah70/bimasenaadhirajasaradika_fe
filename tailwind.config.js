@@ -25,6 +25,7 @@ export default {
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        nasalization: ['Nasalization', 'sans-serif'],
       },
       borderRadius: {
         'card': '14px',

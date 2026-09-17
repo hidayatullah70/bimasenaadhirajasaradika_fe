@@ -163,7 +163,7 @@ export function LoginPage({ onNavigate, onLoginSuccess }) {
             </p>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { role: 'owner', label: '1. Owner / Direksi', color: 'hover:border-slate-800' },
+                { role: 'owner', label: '1. Direktur', color: 'hover:border-slate-800' },
                 { role: 'hrd', label: '2. HRD & Personel', color: 'hover:border-blue-500' },
                 { role: 'operasional', label: '3. Operasional Site', color: 'hover:border-amber-500' },
                 { role: 'finance', label: '4. Finance & Billing', color: 'hover:border-emerald-600' },

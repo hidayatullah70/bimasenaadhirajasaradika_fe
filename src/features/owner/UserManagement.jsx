@@ -123,8 +123,8 @@ export function UserManagement() {
     <div className="space-y-6">
       <PageHeader
         title="Manajemen Pengguna & Otoritas Role"
-        subtitle="Pengaturan hak akses sistem internal untuk 5 peran: Owner, HRD, Operasional, Finance, dan Marketing."
-        breadcrumb={['Dashboard', 'Owner', 'User Management']}
+        subtitle="Pengaturan hak akses sistem internal untuk 5 peran: Direktur, HRD, Operasional, Finance, dan Marketing."
+        breadcrumb={['Dashboard', 'Direktur', 'User Management']}
       />
 
       <DataTable
@@ -154,7 +154,7 @@ export function UserManagement() {
               value={newRole}
               onChange={(e) => setNewRole(e.target.value)}
               options={[
-                { value: 'owner', label: 'Owner / Direktur Utama' },
+                { value: 'owner', label: 'Direktur' },
                 { value: 'hrd', label: 'HRD (Manajemen Tenaga Kerja)' },
                 { value: 'operasional', label: 'Operasional (Site & Supervisi)' },
                 { value: 'finance', label: 'Finance (Billing & Tagihan)' },

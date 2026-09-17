@@ -112,7 +112,7 @@ export const INITIAL_USERS = [
     name: 'Bhimasena Adhirajasa',
     email: 'owner@bhimasena.co.id',
     role: 'owner',
-    roleLabel: 'Direktur Utama / Owner',
+    roleLabel: 'Direktur',
     phone: '+62 811-2345-6789',
     status: 'active',
     lastLogin: '2026-09-15 08:30',
@@ -131,7 +131,7 @@ export const INITIAL_USERS = [
   },
   {
     id: 'usr-3',
-    name: 'Kapten (Purn.) Hendra Wijaya',
+    name: 'Nazi Rinaldi',
     email: 'operasional@bhimasena.co.id',
     role: 'operasional',
     roleLabel: 'Manager Operasional & Lapangan',
@@ -670,7 +670,7 @@ export const INITIAL_ATTENDANCE = [
 export const INITIAL_ACTIVITIES = [
   {
     id: 'act-1',
-    user: 'Kapten (Purn.) Hendra Wijaya',
+    user: 'Nazi Rinaldi',
     role: 'operasional',
     action: 'Inspeksi Mendadak Selesai',
     description: 'Melakukan inspeksi mendadak kesiapan regu shift malam di Site Graha Mandiri Tower.',

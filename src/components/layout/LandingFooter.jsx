@@ -213,7 +213,18 @@ export function LandingFooter({ onNavigate }) {
 
         {/* Bottom Copyright */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <p>© 2026 PT. Bhimasena Adhirajasa Radhika. Hak Cipta Dilindungi Undang-Undang by <a href="https://wa.me/6281384224733" target="_blank" className="hover:text-brand-red transition-colors text-bold text-blue-600 font-bold">JustHidy</a></p>
+          <p className="flex items-center flex-wrap gap-1.5">
+            <span>© 2026 PT. Bhimasena Adhirajasa Radhika. Hak Cipta Dilindungi Undang-Undang by</span>
+            <a
+              href="https://wa.me/6281384224733"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center font-nasalization tracking-wide text-[13px] hover:opacity-80 transition-opacity duration-200"
+            >
+              <span className="text-slate-500 font-semibold">Bionora</span>
+              <span className="text-[#00A3FF] font-semibold">Dev</span>
+            </a>
+          </p>
           <div className="flex items-center gap-6 font-medium">
             <span>Standar Mutu & K3</span>
             <span>Kerahasiaan Data Klien</span>

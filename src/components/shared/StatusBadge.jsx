@@ -9,7 +9,7 @@ export function StatusBadge({ status, type = 'general' }) {
   // Roles
   if (type === 'role') {
     const roleLabels = {
-      owner: { label: 'Owner / Direksi', variant: 'dark' },
+      owner: { label: 'Direktur', variant: 'dark' },
       hrd: { label: 'HRD', variant: 'blue' },
       operasional: { label: 'Operasional', variant: 'yellow' },
       finance: { label: 'Finance', variant: 'green' },

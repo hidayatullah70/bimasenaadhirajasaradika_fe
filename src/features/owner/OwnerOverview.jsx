@@ -67,7 +67,7 @@ export function OwnerOverview({ onNavigate }) {
       <PageHeader
         title="Ringkasan Eksekutif Direksi"
         subtitle="Konsolidasi performa operasional, keuangan, dan utilisasi tenaga kerja PT. Bhimasena Adhirajasa Radhika."
-        breadcrumb={['Dashboard', 'Owner', 'Overview']}
+        breadcrumb={['Dashboard', 'Direktur', 'Overview']}
       />
 
       {/* KPI Cards */}
