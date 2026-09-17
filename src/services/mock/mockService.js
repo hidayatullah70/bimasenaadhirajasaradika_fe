@@ -71,7 +71,7 @@ export const mockService = {
       email: email.trim().toLowerCase(),
       role: role || 'operasional',
       phone: phone || '-',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+      avatar: '/assets/img/team/person-4.jpeg',
       status: 'active',
       createdAt: new Date().toISOString().split('T')[0]
     };

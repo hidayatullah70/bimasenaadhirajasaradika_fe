@@ -4,6 +4,7 @@ import { DataTable } from '../../components/ui/DataTable';
 import { StatusBadge } from '../../components/shared/StatusBadge';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
+import { Avatar } from '../../components/ui/Avatar';
 import { Select } from '../../components/ui/Input';
 import { useToast } from '../../app/context/ToastContext';
 import { api } from '../../services/api/apiClient';
@@ -71,9 +72,12 @@ export function UserManagement() {
       header: 'Nama Staf / Pejabat',
       render: (row) => (
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-slate-800 text-white font-bold text-xs flex items-center justify-center flex-shrink-0">
-            {row.avatar}
-          </div>
+          <Avatar
+            src={row.avatar}
+            name={row.name}
+            size="md"
+            className="ring-1 ring-slate-200"
+          />
           <div>
             <p className="font-bold text-brand-dark">{row.name}</p>
             <p className="text-xs text-slate-500">{row.email}</p>
@@ -144,9 +148,17 @@ export function UserManagement() {
       >
         {selectedUser && (
           <div className="space-y-4">
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
-              <p className="font-bold text-brand-dark">{selectedUser.name}</p>
-              <p className="text-slate-500">{selectedUser.email}</p>
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs flex items-center gap-3">
+              <Avatar
+                src={selectedUser.avatar}
+                name={selectedUser.name}
+                size="lg"
+                className="ring-1 ring-slate-300"
+              />
+              <div>
+                <p className="font-bold text-brand-dark">{selectedUser.name}</p>
+                <p className="text-slate-500">{selectedUser.email}</p>
+              </div>
             </div>
 
             <Select

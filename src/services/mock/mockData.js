@@ -109,25 +109,25 @@ export const INITIAL_SERVICES = [
 export const INITIAL_USERS = [
   {
     id: 'usr-1',
-    name: 'Bhimasena Adhirajasa',
+    name: 'Juli Priyanto',
     email: 'owner@bhimasena.co.id',
     role: 'owner',
     roleLabel: 'Direktur',
     phone: '+62 811-2345-6789',
     status: 'active',
     lastLogin: '2026-09-15 08:30',
-    avatar: 'BA'
+    avatar: '/assets/img/team/person-3.jpeg'
   },
   {
     id: 'usr-2',
-    name: 'Siti Nurhaliza, S.Psi',
+    name: 'Robyn Topani, SH',
     email: 'hrd@bhimasena.co.id',
     role: 'hrd',
     roleLabel: 'Kepala Divisi HRD',
     phone: '+62 812-3456-7890',
     status: 'active',
     lastLogin: '2026-09-15 08:45',
-    avatar: 'SN'
+    avatar: '/assets/img/team/person-7.jpeg'
   },
   {
     id: 'usr-3',
@@ -138,29 +138,29 @@ export const INITIAL_USERS = [
     phone: '+62 813-4567-8901',
     status: 'active',
     lastLogin: '2026-09-15 07:15',
-    avatar: 'HW'
+    avatar: '/assets/img/team/nazi.jpg'
   },
   {
     id: 'usr-4',
-    name: 'Dewi Kartika, S.E., Ak.',
+    name: 'Zaenal Arifin',
     email: 'finance@bhimasena.co.id',
     role: 'finance',
     roleLabel: 'Finance & Billing Lead',
     phone: '+62 814-5678-9012',
     status: 'active',
     lastLogin: '2026-09-15 09:10',
-    avatar: 'DK'
+    avatar: '/assets/img/team/person-4.jpeg'
   },
   {
     id: 'usr-5',
-    name: 'Rian Pratama, B.B.A',
+    name: 'Hendri Nopamin',
     email: 'marketing@bhimasena.co.id',
     role: 'marketing',
     roleLabel: 'Business Development & Marketing',
     phone: '+62 815-6789-0123',
     status: 'active',
     lastLogin: '2026-09-15 10:00',
-    avatar: 'RP'
+    avatar: '/assets/img/team/person-2.jpeg'
   }
 ];
 

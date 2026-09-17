@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Menu, Bell, Globe, ChevronDown, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../app/context/AuthContext';
 import { api } from '../../services/api/apiClient';
+import { Avatar } from '../ui/Avatar';
 
 export function DashboardTopbar({ onOpenMobileMenu, onNavigateLanding }) {
   const { user, role } = useAuth();
@@ -126,9 +127,12 @@ export function DashboardTopbar({ onOpenMobileMenu, onNavigateLanding }) {
 
         {/* User Info */}
         <div className="flex items-center gap-2.5 pl-2 border-l border-slate-200">
-          <div className="w-8 h-8 rounded-full bg-brand-red text-white text-xs font-bold flex items-center justify-center shadow-sm">
-            {user?.avatar || 'BA'}
-          </div>
+          <Avatar
+            src={user?.avatar}
+            name={user?.name}
+            size="md"
+            className="shadow-sm ring-1 ring-slate-200"
+          />
           <div className="hidden lg:block text-left">
             <p className="text-xs font-bold text-brand-dark leading-tight">{user?.name || 'Staff'}</p>
             <p className="text-[10px] text-slate-400 capitalize">{user?.roleLabel || role}</p>

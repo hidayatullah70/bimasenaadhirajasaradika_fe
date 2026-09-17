@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Shield,
   LayoutDashboard,
   Users,
   Briefcase,
@@ -17,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../app/context/AuthContext';
 import { StatusBadge } from '../shared/StatusBadge';
+import { Avatar } from '../ui/Avatar';
 
 export function DashboardSidebar({ currentPath, onNavigate, onCloseMobile }) {
   const { user, role, logout, switchRole } = useAuth();
@@ -99,11 +99,13 @@ export function DashboardSidebar({ currentPath, onNavigate, onCloseMobile }) {
       {/* Brand Header */}
       <div className="p-4 border-b border-slate-800 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-brand-red flex items-center justify-center text-white shadow-sm">
-            <Shield className="w-5 h-5 text-brand-yellow fill-brand-yellow/20" />
-          </div>
+          <img
+            src="/assets/logoBarakTrans.png"
+            alt="Logo Bhimasena"
+            className="w-10 h-10 object-contain shrink-0"
+          />
           <div>
-            <h2 className="text-sm font-extrabold text-white tracking-tight leading-tight">BHIMASENA</h2>
+            <h2 className="text-sm font-extrabold text-white tracking-tight leading-tight">BARAK</h2>
             <p className="text-[10px] text-slate-400 font-medium tracking-wide uppercase">PORTAL OPERASI</p>
           </div>
         </div>
@@ -191,9 +193,12 @@ export function DashboardSidebar({ currentPath, onNavigate, onCloseMobile }) {
       <div className="p-3 border-t border-slate-800 bg-slate-900/40">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="w-8 h-8 rounded-full bg-brand-red/80 text-white font-bold text-xs flex items-center justify-center flex-shrink-0">
-              {user?.avatar || 'BA'}
-            </div>
+            <Avatar
+              src={user?.avatar}
+              name={user?.name}
+              size="md"
+              className="ring-1 ring-white/10"
+            />
             <div className="truncate">
               <p className="text-xs font-medium text-white truncate">{user?.name || 'Staff'}</p>
               <p className="text-[10px] text-slate-400 truncate">{user?.email}</p>
