@@ -4,7 +4,7 @@
 ### 1. Product Summary
 A responsive corporate landing page + internal operations management dashboard for an outsourcing company whose core business is supplying and managing client-deployed manpower.
 
-**Primary users:** Public visitor, Owner, HRD, Finance, Marketing, Operasional.  
+**Primary users:** Public visitor, Direktur, HRD, Finance, Marketing, Operasional.  
 **Frontend:** HTML, Tailwind CSS, React + Vite.  
 **SOT rule:** This document set is the product contract. UI, API and implementation must not introduce features outside it without updating the SOT first.
 
@@ -40,7 +40,7 @@ Common:
 - Profile
 - Search/filter/table patterns
 
-Owner:
+Direktur:
 - Executive overview
 - User/role management
 - Workforce/client/service overview

@@ -33,7 +33,7 @@ Unauthorized route → 403 state
 Expired session → Login
 ```
 
-### 3. Owner Flow
+### 3. Direktur Flow
 ```text
 Dashboard
  → Executive Summary

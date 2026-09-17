@@ -50,7 +50,7 @@ Build:
 
 ### Phase 4 — Dashboard Modules
 Order:
-1. Owner
+1. Direktur
 2. HRD
 3. Operasional
 4. Finance

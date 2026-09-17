@@ -43,7 +43,7 @@ Error:
 | DELETE | `/users/:id` | Delete |
 | GET | `/roles` | List roles |
 
-Roles: `owner`, `hrd`, `finance`, `marketing`, `operasional`.
+Roles: `direktur`, `hrd`, `finance`, `marketing`, `operasional`.
 
 ### 4. Master Data
 | Resource | Endpoints |

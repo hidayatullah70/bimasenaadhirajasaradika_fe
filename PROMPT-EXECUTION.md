@@ -26,7 +26,7 @@ Services:
 
 Product:
 - Public corporate landing page
-- Internal management dashboard for Owner, HRD, Finance, Marketing, Operasional
+- Internal management dashboard for Direktur, HRD, Finance, Marketing, Operasional
 
 ### TECHNICAL CONSTRAINTS
 - React + Vite
