@@ -18,12 +18,24 @@ import { useAuth } from '../../app/context/AuthContext';
 import { StatusBadge } from '../shared/StatusBadge';
 import { Avatar } from '../ui/Avatar';
 
-export function DashboardSidebar({ currentPath, onNavigate, onCloseMobile }) {
+export function DashboardSidebar({ currentPath, onNavigate, onCloseMobile, onNavigateLanding }) {
   const { user, role, logout, switchRole } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (err) {}
+    if (onNavigateLanding) {
+      onNavigateLanding('login');
+    } else {
+      window.location.reload();
+    }
+  };
 
   // Navigation schema configured by role as per 01-PRD.md & 02-USER-FLOW.md
   const getNavSections = () => {
     switch (role) {
+      case 'direktur':
       case 'owner':
         return [
           {
@@ -171,13 +183,14 @@ export function DashboardSidebar({ currentPath, onNavigate, onCloseMobile }) {
               <button
                 key={r.id}
                 type="button"
-                onClick={() => {
-                  switchRole(r.id);
-                  onNavigate(`${r.id}-overview`);
+                onClick={async () => {
+                  await switchRole(r.id);
+                  const nextPath = (r.id === 'owner' || r.id === 'direktur') ? 'owner-overview' : `${r.id}-overview`;
+                  onNavigate(nextPath);
                   if (onCloseMobile) onCloseMobile();
                 }}
                 className={`px-2 py-1 rounded text-[11px] font-medium border text-center transition-colors ${
-                  role === r.id
+                  (role === r.id || (r.id === 'owner' && role === 'direktur') || (r.id === 'direktur' && role === 'owner'))
                     ? 'bg-brand-yellow/20 text-brand-yellow border-brand-yellow/40 font-bold'
                     : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white hover:bg-slate-700'
                 }`}
@@ -206,7 +219,7 @@ export function DashboardSidebar({ currentPath, onNavigate, onCloseMobile }) {
           </div>
           <button
             type="button"
-            onClick={logout}
+            onClick={handleLogout}
             title="Keluar / Logout"
             className="p-1.5 rounded-lg text-slate-400 hover:text-brand-red hover:bg-slate-800 transition-colors"
           >

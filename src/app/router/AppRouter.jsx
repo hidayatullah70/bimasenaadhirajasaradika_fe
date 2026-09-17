@@ -8,6 +8,7 @@ import { DashboardShell } from '../../components/layout/DashboardShell';
 // Owner views
 import { OwnerOverview } from '../../features/owner/OwnerOverview';
 import { UserManagement } from '../../features/owner/UserManagement';
+import { AuditLogView } from '../../features/owner/AuditLogView';
 
 // HRD views
 import { HrdOverview } from '../../features/hrd/HrdOverview';
@@ -45,9 +46,17 @@ export function AppRouter() {
   // When user logs in or switches role, adjust default view
   useEffect(() => {
     if (role) {
-      setCurrentDashboardPath(`${role}-overview`);
+      const initialPath = (role === 'direktur' || role === 'owner') ? 'owner-overview' : `${role}-overview`;
+      setCurrentDashboardPath(initialPath);
     }
   }, [role]);
+
+  // auto-redirect to login when unauthenticated on dashboard
+  useEffect(() => {
+    if (!isAuthenticated && currentPage === 'dashboard') {
+      setCurrentPage('login');
+    }
+  }, [isAuthenticated, currentPage]);
 
   const handleNavigate = (page) => {
     if (page === 'dashboard') {
@@ -85,19 +94,21 @@ export function AppRouter() {
 
   // Check Role Permissions for Dashboard Route
   const renderDashboardContent = () => {
-    // 1. Owner Views
-    if (currentDashboardPath.startsWith('owner')) {
-      if (role !== 'owner') return <UnauthorizedState onBack={() => setCurrentDashboardPath(`${role}-overview`)} />;
-      if (currentDashboardPath === 'owner-overview') return <OwnerOverview onNavigate={setCurrentDashboardPath} />;
-      if (currentDashboardPath === 'owner-users') return <UserManagement />;
-      if (currentDashboardPath === 'owner-workforce') return <EmployeeManagement />;
-      if (currentDashboardPath === 'owner-audit') return <OwnerOverview onNavigate={setCurrentDashboardPath} />;
+    const isDirekturOrOwner = role === 'direktur' || role === 'owner';
+
+    // 1. Owner / Direktur Views
+    if (currentDashboardPath.startsWith('owner') || currentDashboardPath.startsWith('direktur')) {
+      if (!isDirekturOrOwner) return <UnauthorizedState onBack={() => setCurrentDashboardPath(`${role}-overview`)} />;
+      if (currentDashboardPath === 'owner-overview' || currentDashboardPath === 'direktur-overview') return <OwnerOverview onNavigate={setCurrentDashboardPath} />;
+      if (currentDashboardPath === 'owner-users' || currentDashboardPath === 'direktur-users') return <UserManagement />;
+      if (currentDashboardPath === 'owner-workforce' || currentDashboardPath === 'direktur-workforce') return <EmployeeManagement />;
+      if (currentDashboardPath === 'owner-audit' || currentDashboardPath === 'direktur-audit') return <AuditLogView onNavigate={setCurrentDashboardPath} />;
       return <OwnerOverview onNavigate={setCurrentDashboardPath} />;
     }
 
-    // 2. HRD Views
+    // 2. HRD Views (Direktur memiliki hak supervisi eksekutif)
     if (currentDashboardPath.startsWith('hrd')) {
-      if (role !== 'hrd' && role !== 'owner') return <UnauthorizedState onBack={() => setCurrentDashboardPath(`${role}-overview`)} />;
+      if (role !== 'hrd' && !isDirekturOrOwner) return <UnauthorizedState onBack={() => setCurrentDashboardPath(`${role}-overview`)} />;
       if (currentDashboardPath === 'hrd-overview') return <HrdOverview onNavigate={setCurrentDashboardPath} />;
       if (currentDashboardPath === 'hrd-employees') return <EmployeeManagement />;
       if (currentDashboardPath === 'hrd-placements') return <PlacementManagement />;
@@ -105,9 +116,9 @@ export function AppRouter() {
       return <HrdOverview onNavigate={setCurrentDashboardPath} />;
     }
 
-    // 3. Operasional Views
+    // 3. Operasional Views (Direktur memiliki hak supervisi eksekutif)
     if (currentDashboardPath.startsWith('operasional')) {
-      if (role !== 'operasional' && role !== 'owner') return <UnauthorizedState onBack={() => setCurrentDashboardPath(`${role}-overview`)} />;
+      if (role !== 'operasional' && !isDirekturOrOwner) return <UnauthorizedState onBack={() => setCurrentDashboardPath(`${role}-overview`)} />;
       if (currentDashboardPath === 'operasional-overview') return <OperasionalOverview onNavigate={setCurrentDashboardPath} />;
       if (currentDashboardPath === 'operasional-sites') return <SiteManagement />;
       if (currentDashboardPath === 'operasional-placements') return <PlacementManagement />;
@@ -115,18 +126,18 @@ export function AppRouter() {
       return <OperasionalOverview onNavigate={setCurrentDashboardPath} />;
     }
 
-    // 4. Finance Views
+    // 4. Finance Views (Direktur memiliki hak supervisi eksekutif)
     if (currentDashboardPath.startsWith('finance')) {
-      if (role !== 'finance' && role !== 'owner') return <UnauthorizedState onBack={() => setCurrentDashboardPath(`${role}-overview`)} />;
+      if (role !== 'finance' && !isDirekturOrOwner) return <UnauthorizedState onBack={() => setCurrentDashboardPath(`${role}-overview`)} />;
       if (currentDashboardPath === 'finance-overview') return <FinanceOverview onNavigate={setCurrentDashboardPath} />;
       if (currentDashboardPath === 'finance-invoices') return <InvoiceManagement />;
       if (currentDashboardPath === 'finance-payroll-ops') return <FinanceOverview onNavigate={setCurrentDashboardPath} />;
       return <FinanceOverview onNavigate={setCurrentDashboardPath} />;
     }
 
-    // 5. Marketing Views
+    // 5. Marketing Views (Direktur memiliki hak supervisi eksekutif)
     if (currentDashboardPath.startsWith('marketing')) {
-      if (role !== 'marketing' && role !== 'owner') return <UnauthorizedState onBack={() => setCurrentDashboardPath(`${role}-overview`)} />;
+      if (role !== 'marketing' && !isDirekturOrOwner) return <UnauthorizedState onBack={() => setCurrentDashboardPath(`${role}-overview`)} />;
       if (currentDashboardPath === 'marketing-overview') return <MarketingOverview onNavigate={setCurrentDashboardPath} />;
       if (currentDashboardPath === 'marketing-leads') return <LeadPipeline />;
       if (currentDashboardPath === 'marketing-proposals') return <LeadPipeline />;

@@ -49,6 +49,7 @@ export function DashboardShell({ currentPath, onNavigate, onNavigateLanding, chi
         <DashboardSidebar
           currentPath={currentPath}
           onNavigate={onNavigate}
+          onNavigateLanding={onNavigateLanding}
         />
       </div>
 
@@ -64,6 +65,7 @@ export function DashboardShell({ currentPath, onNavigate, onNavigateLanding, chi
               currentPath={currentPath}
               onNavigate={onNavigate}
               onCloseMobile={() => setMobileDrawerOpen(false)}
+              onNavigateLanding={onNavigateLanding}
             />
           </div>
         </div>

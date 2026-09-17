@@ -43,17 +43,27 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
-    await api.logout();
+    try {
+      await api.logout();
+    } catch (err) {}
+    localStorage.removeItem('barak_auth_token');
+    localStorage.removeItem('barak_user_role');
     setUser(null);
   };
 
   // Switch role helper for testing all 5 roles seamlessly
   const switchRole = async (targetRole) => {
-    localStorage.setItem('barak_user_role', targetRole);
-    localStorage.setItem('barak_auth_token', `mock-jwt-token-${targetRole}`);
-    const res = await api.getCurrentUser();
-    if (res.success && res.data) {
-      setUser(res.data);
+    const roleCode = (targetRole === 'owner' || targetRole === 'direktur') ? 'direktur' : targetRole;
+    localStorage.setItem('barak_user_role', roleCode);
+    localStorage.setItem('barak_auth_token', `mock-jwt-token-${roleCode}`);
+    try {
+      const res = await api.getCurrentUser();
+      if (res && res.success && res.data) {
+        setUser(res.data);
+        return res.data;
+      }
+    } catch (err) {
+      console.warn('Switch role fetch error:', err);
     }
   };
 

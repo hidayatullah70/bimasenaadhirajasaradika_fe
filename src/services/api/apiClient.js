@@ -33,10 +33,17 @@ export const api = {
   // Auth
   login: async (credentials) => {
     if (USE_REAL_API) {
-      return request('/auth/login', {
+      const res = await request('/auth/login', {
         method: 'POST',
         body: JSON.stringify(credentials),
       });
+      if (res?.data?.token) {
+        localStorage.setItem('barak_auth_token', res.data.token);
+      }
+      if (res?.data?.user?.role) {
+        localStorage.setItem('barak_user_role', res.data.user.role);
+      }
+      return res;
     }
     return mockService.login(credentials);
   },
@@ -57,6 +64,8 @@ export const api = {
   },
 
   logout: async () => {
+    localStorage.removeItem('barak_auth_token');
+    localStorage.removeItem('barak_user_role');
     if (USE_REAL_API) return request('/auth/logout', { method: 'POST' });
     return mockService.logout();
   },
