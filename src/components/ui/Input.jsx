@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 
 export function Input({
   label,
@@ -7,11 +8,18 @@ export function Input({
   error,
   helperText,
   icon: Icon,
+  rightElement,
+  showPasswordToggle = true,
   className = '',
   required = false,
   ...props
 }) {
+  const [showPassword, setShowPassword] = useState(false);
   const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
+
+  const isPassword = type === 'password';
+  const canTogglePassword = isPassword && showPasswordToggle;
+  const inputType = isPassword && showPassword ? 'text' : type;
 
   return (
     <div className="w-full">
@@ -28,10 +36,12 @@ export function Input({
         )}
         <input
           id={inputId}
-          type={type}
+          type={inputType}
           required={required}
           className={`block w-full rounded-btn border text-sm transition-colors py-2 px-3 text-brand-dark placeholder-slate-400 focus:outline-none focus:ring-2 ${
             Icon ? 'pl-9' : ''
+          } ${
+            canTogglePassword || rightElement ? 'pr-10' : ''
           } ${
             error
               ? 'border-red-400 focus:border-red-500 focus:ring-red-200 bg-red-50/20'
@@ -39,6 +49,27 @@ export function Input({
           } ${className}`}
           {...props}
         />
+        {canTogglePassword && (
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Lihat kata sandi'}
+            title={showPassword ? 'Sembunyikan kata sandi' : 'Lihat kata sandi'}
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none focus:text-brand-red transition-colors cursor-pointer"
+            tabIndex={-1}
+          >
+            {showPassword ? (
+              <EyeOff className="w-4 h-4" />
+            ) : (
+              <Eye className="w-4 h-4" />
+            )}
+          </button>
+        )}
+        {!canTogglePassword && rightElement && (
+          <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+            {rightElement}
+          </div>
+        )}
       </div>
       {error && <p className="mt-1 text-xs text-brand-red font-medium">{error}</p>}
       {helperText && !error && <p className="mt-1 text-xs text-slate-500">{helperText}</p>}
