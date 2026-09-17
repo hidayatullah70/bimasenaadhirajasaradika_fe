@@ -71,6 +71,11 @@ export const api = {
   },
 
   // Users & Roles
+  createUser: async (userData) => {
+    if (USE_REAL_API) return request('/users', { method: 'POST', body: JSON.stringify(userData) });
+    return mockService.createUser(userData);
+  },
+
   getUsers: async () => {
     if (USE_REAL_API) return request('/users');
     return mockService.getUsers();

@@ -43,8 +43,8 @@ export function LoginPage({ onNavigate, onLoginSuccess }) {
       const user = INITIAL_USERS.find(u => u.role === roleKey);
       if (user) {
         setEmail(user.email);
-        setPassword('password123');
-        const res = await login(user.email, 'password123');
+        setPassword('password');
+        const res = await login(user.email, 'password');
         if (res.success && onLoginSuccess) {
           onLoginSuccess(roleKey);
         }

@@ -104,6 +104,27 @@ export const mockService = {
   },
 
   // Users & Roles (Owner only)
+  async createUser(userData) {
+    await delay(200);
+    const newUser = {
+      id: 'usr-' + (users.length + 1),
+      name: userData.name,
+      email: userData.email,
+      role: userData.role || 'operasional',
+      roleLabel: userData.role || 'Operasional',
+      phone: userData.phone || '-',
+      status: 'active',
+      lastLogin: '-',
+      avatar: userData.avatar_url || '/assets/img/team/person-2.jpeg'
+    };
+    users.unshift(newUser);
+    return {
+      success: true,
+      data: newUser,
+      message: 'Pengguna berhasil ditambahkan.'
+    };
+  },
+
   async getUsers() {
     await delay(200);
     return { success: true, data: [...users] };

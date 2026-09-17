@@ -109,57 +109,57 @@ export const INITIAL_SERVICES = [
 export const INITIAL_USERS = [
   {
     id: 'usr-1',
-    name: 'Juli Priyanto',
-    email: 'owner@bhimasena.co.id',
+    name: 'Juli Priyanto (Direktur)',
+    email: 'direktur@bhimasena.co.id',
     role: 'owner',
     roleLabel: 'Direktur',
     phone: '+62 811-2345-6789',
     status: 'active',
-    lastLogin: '2026-09-15 08:30',
+    lastLogin: '2026-09-18 08:30',
     avatar: '/assets/img/team/person-3.jpeg'
   },
   {
     id: 'usr-2',
-    name: 'Robyn Topani, SH',
+    name: 'Robyn Topani (HRD)',
     email: 'hrd@bhimasena.co.id',
     role: 'hrd',
     roleLabel: 'Kepala Divisi HRD',
     phone: '+62 812-3456-7890',
     status: 'active',
-    lastLogin: '2026-09-15 08:45',
+    lastLogin: '2026-09-18 08:45',
     avatar: '/assets/img/team/person-7.jpeg'
   },
   {
     id: 'usr-3',
-    name: 'Nazi Rinaldi',
+    name: 'Nazi Rinaldi (operasional)',
     email: 'operasional@bhimasena.co.id',
     role: 'operasional',
     roleLabel: 'Manager Operasional & Lapangan',
     phone: '+62 813-4567-8901',
     status: 'active',
-    lastLogin: '2026-09-15 07:15',
+    lastLogin: '2026-09-18 07:15',
     avatar: '/assets/img/team/nazi.jpg'
   },
   {
     id: 'usr-4',
-    name: 'Zaenal Arifin',
+    name: 'Zaenal Arifin (Finance)',
     email: 'finance@bhimasena.co.id',
     role: 'finance',
     roleLabel: 'Finance & Billing Lead',
     phone: '+62 814-5678-9012',
     status: 'active',
-    lastLogin: '2026-09-15 09:10',
+    lastLogin: '2026-09-18 09:10',
     avatar: '/assets/img/team/person-4.jpeg'
   },
   {
     id: 'usr-5',
-    name: 'Hendri Nopamin',
+    name: 'Hendri Nopamin (Marketing)',
     email: 'marketing@bhimasena.co.id',
     role: 'marketing',
     roleLabel: 'Business Development & Marketing',
     phone: '+62 815-6789-0123',
     status: 'active',
-    lastLogin: '2026-09-15 10:00',
+    lastLogin: '2026-09-18 10:00',
     avatar: '/assets/img/team/person-2.jpeg'
   }
 ];
