@@ -125,7 +125,15 @@ export function LoginPage({ onNavigate, onLoginSuccess }) {
                 <input type="checkbox" className="rounded text-brand-red focus:ring-brand-red" defaultChecked />
                 <span>Ingat sesi saya</span>
               </label>
-              <span className="text-slate-400">Lupa password? Hubungi Admin</span>
+              <a
+                href="https://wa.me/6285124799305?text=Halo%20Admin%20PT.%20BARAK%2C%20saya%20membutuhkan%20bantuan%20reset%20kata%20sandi%20portal%20internal"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Hubungi Admin via WhatsApp untuk reset kata sandi"
+                className="text-slate-500 hover:text-brand-red hover:underline transition-colors cursor-pointer"
+              >
+                Lupa password? Hubungi Admin
+              </a>
             </div>
 
             <div className="pt-2">
