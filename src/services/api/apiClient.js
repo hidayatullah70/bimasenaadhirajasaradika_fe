@@ -1,7 +1,11 @@
-// PT. Bhimasena Adhirajasa Radhika — API Client Abstraction
-// Aligned with SOT/04-API-SPEC.md, collection.json & SOT/API-INTEGRATION.md
+import collection from '../../../SOT/collection.json';
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://bimasenaadhirajasaradikabe-production.up.railway.app/api/v1';
+// Resolusi baseUrl secara dinamis bersumber dari collection.json (SOT)
+const collectionBaseUrl = collection?.variable?.find((v) => v.key === 'baseUrl')?.value || '';
+const collectionApiBase = collectionBaseUrl ? `${collectionBaseUrl.replace(/\/+$/, '')}/api/v1` : '/api/v1';
+
+// Prioritas utama membaca .env (VITE_API_BASE_URL), dengan fallback otomatis dari collection.json
+const BASE_URL = (import.meta.env.VITE_API_BASE_URL || collectionApiBase).replace(/\/+$/, '');
 
 async function request(endpoint, options = {}) {
   const token = localStorage.getItem('barak_auth_token');
