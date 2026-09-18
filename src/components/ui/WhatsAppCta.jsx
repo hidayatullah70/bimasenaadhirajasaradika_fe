@@ -44,7 +44,7 @@ export function WhatsAppCta() {
         <div className="hidden sm:flex items-center absolute right-full mr-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none translate-x-2 group-hover:translate-x-0">
           <div className="bg-slate-900/90 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-xl backdrop-blur-sm whitespace-nowrap flex items-center gap-1.5 border border-white/10">
             <span className="w-2 h-2 rounded-full bg-[#25D366] animate-pulse"></span>
-            <span>Chat WhatsApp</span>
+            <span>Chat BARAK</span>
           </div>
           <div className="w-0 h-0 border-y-4 border-y-transparent border-l-4 border-l-slate-900/90 ml-[-1px]"></div>
         </div>
