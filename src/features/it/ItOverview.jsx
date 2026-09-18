@@ -94,7 +94,23 @@ export function ItOverview({ onNavigate }) {
         subtitle="Monitoring realtime server, perangkat keras IoT di site klien, konektivitas biometrik, dan tiket helpdesk operasional."
         breadcrumb={['Dashboard', 'IT Support', 'Ringkasan Sistem']}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              icon={HardDrive}
+              onClick={() => onNavigate && onNavigate('it-assets')}
+            >
+              Kelola Aset IT (CRUD)
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              icon={Headphones}
+              onClick={() => onNavigate && onNavigate('it-helpdesk')}
+            >
+              Kelola Tiket (CRUD)
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -102,7 +118,7 @@ export function ItOverview({ onNavigate }) {
               loading={refreshing}
               onClick={handleRefresh}
             >
-              Segarkan Status
+              Segarkan
             </Button>
             <Button
               variant="primary"
@@ -112,7 +128,7 @@ export function ItOverview({ onNavigate }) {
               onClick={handleRunBackup}
               className="shadow-md shadow-red-900/10"
             >
-              Snapshot Backup Sekarang
+              Snapshot Backup
             </Button>
           </div>
         }

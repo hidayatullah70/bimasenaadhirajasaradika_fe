@@ -379,41 +379,33 @@ export function ItAssetManagement() {
       className: 'text-right',
       cellClassName: 'text-right',
       render: (row) => (
-        <div className="flex items-center justify-end gap-1.5">
+        <div className="flex items-center justify-end gap-1.5 flex-wrap sm:flex-nowrap">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleOpenEdit(row)}
+            icon={Edit2}
+            title="Ubah / Edit Data Perangkat"
+          >
+            Ubah
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleOpenDelete(row)}
+            icon={Trash2}
+            title="Hapus Perangkat dari Inventaris"
+            className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+          >
+            Hapus
+          </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => handlePingDevice(row)}
             title="Diagnostik Ping & Telemetri"
           >
-            Diagnostik
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleOpenEdit(row)}
-            title="Edit Data Perangkat"
-            className="!p-2 text-slate-700 hover:text-brand-dark"
-          >
-            <Edit2 className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleToggleStatus(row)}
-            title="Toggle Online / Offline"
-            className="!p-2 text-slate-500 hover:text-brand-dark"
-          >
-            <RotateCw className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleOpenDelete(row)}
-            title="Hapus Perangkat"
-            className="!p-2 text-rose-600 hover:bg-rose-50"
-          >
-            <Trash2 className="w-4 h-4" />
+            Ping
           </Button>
         </div>
       )

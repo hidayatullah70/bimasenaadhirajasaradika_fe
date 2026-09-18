@@ -348,16 +348,16 @@ export function ItHelpdeskManagement() {
       )
     },
     {
-      header: 'Aksi',
+      header: 'Aksi Pengelolaan',
       className: 'text-right',
       cellClassName: 'text-right',
       render: (row) => (
-        <div className="flex items-center justify-end gap-1.5">
+        <div className="flex items-center justify-end gap-1.5 flex-wrap sm:flex-nowrap">
           <Button
             variant="outline"
             size="sm"
             onClick={() => handleOpenDetail(row)}
-            title="Tindak Lanjut Solusi"
+            title="Tindak Lanjut Solusi & Status"
           >
             Respon
           </Button>
@@ -365,19 +365,20 @@ export function ItHelpdeskManagement() {
             variant="outline"
             size="sm"
             onClick={() => handleOpenEdit(row)}
-            title="Edit Tiket"
-            className="!p-2 text-slate-700 hover:text-brand-dark"
+            icon={Edit2}
+            title="Ubah / Edit Tiket"
           >
-            <Edit2 className="w-4 h-4" />
+            Ubah
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => handleOpenDelete(row)}
-            title="Hapus Tiket"
-            className="!p-2 text-rose-600 hover:bg-rose-50"
+            icon={Trash2}
+            title="Hapus Tiket dari Sistem"
+            className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
           >
-            <Trash2 className="w-4 h-4" />
+            Hapus
           </Button>
         </div>
       )
