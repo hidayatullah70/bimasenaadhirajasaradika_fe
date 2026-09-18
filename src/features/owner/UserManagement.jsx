@@ -6,9 +6,10 @@ import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import { Avatar } from '../../components/ui/Avatar';
 import { Input, Select } from '../../components/ui/Input';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { useToast } from '../../app/context/ToastContext';
 import { api } from '../../services/api/apiClient';
-import { UserCog, UserPlus, Mail, Lock, User, ShieldCheck } from 'lucide-react';
+import { UserCog, UserPlus, Mail, Lock, User, ShieldCheck, Trash2 } from 'lucide-react';
 
 export function UserManagement() {
   const { addToast } = useToast();
@@ -18,7 +19,8 @@ export function UserManagement() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [newRole, setNewRole] = useState('hrd');
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [newRoleId, setNewRoleId] = useState('2');
   const [saving, setSaving] = useState(false);
 
   // Form state for creating user
@@ -26,7 +28,7 @@ export function UserManagement() {
     name: '',
     email: '',
     password: '',
-    role_id: 2
+    role_id: '2'
   });
 
   const roleOptions = [
@@ -40,12 +42,14 @@ export function UserManagement() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await api.getUsers();
-      if (res.success) {
+      const res = await api.getUsers({ search });
+      if (res?.success && Array.isArray(res.data)) {
         setUsers(res.data);
+      } else {
+        setUsers([]);
       }
     } catch (err) {
-      addToast(err.message || 'Gagal memuat daftar pengguna', 'error');
+      addToast(err.message || 'Gagal memuat daftar pengguna dari server.', 'error');
     } finally {
       setLoading(false);
     }
@@ -53,26 +57,37 @@ export function UserManagement() {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [search]);
 
   const handleOpenEdit = (user) => {
     setSelectedUser(user);
-    setNewRole(user.role || user.role_code || 'hrd');
+    setNewRoleId(String(user.role_id || (user.role_code === 'direktur' ? 1 : user.role_code === 'hrd' ? 2 : user.role_code === 'finance' ? 3 : user.role_code === 'marketing' ? 4 : 5)));
     setIsEditModalOpen(true);
+  };
+
+  const handleOpenDelete = (user) => {
+    setSelectedUser(user);
+    setIsDeleteModalOpen(true);
   };
 
   const handleSaveRole = async () => {
     if (!selectedUser) return;
     setSaving(true);
     try {
-      const res = await api.updateUserRole(selectedUser.id, newRole);
-      if (res.success) {
-        addToast(`Role untuk ${selectedUser.name} berhasil diubah ke ${newRole.toUpperCase()}`, 'success');
+      const roleMap = { '1': 'direktur', '2': 'hrd', '3': 'finance', '4': 'marketing', '5': 'operasional' };
+      const role_code = roleMap[newRoleId] || 'operasional';
+      const res = await api.updateUser(selectedUser.id, {
+        role_id: parseInt(newRoleId, 10),
+        role: role_code,
+        is_active: true
+      });
+      if (res?.success) {
+        addToast(`Role untuk ${selectedUser.name} berhasil diperbarui!`, 'success');
         setIsEditModalOpen(false);
         fetchUsers();
       }
     } catch (err) {
-      addToast(err.message || 'Gagal memperbarui role', 'error');
+      addToast(err.message || 'Gagal memperbarui role pengguna', 'error');
     } finally {
       setSaving(false);
     }
@@ -100,28 +115,40 @@ export function UserManagement() {
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
         role_id: parseInt(formData.role_id, 10),
-        role: roleMap[formData.role_id] || 'operasional'
+        role: roleMap[formData.role_id] || 'operasional',
+        is_active: true
       };
 
       const res = await api.createUser(payload);
-      if (res.success) {
+      if (res?.success) {
         addToast(`Pengguna baru ${payload.name} berhasil ditambahkan!`, 'success');
         setIsCreateModalOpen(false);
-        setFormData({ name: '', email: '', password: '', role_id: 2 });
+        setFormData({ name: '', email: '', password: '', role_id: '2' });
         fetchUsers();
       }
     } catch (err) {
-      addToast(err.message || 'Gagal menambahkan pengguna baru.', 'error');
+      addToast(err.message || 'Gagal menambahkan pengguna baru ke server.', 'error');
     } finally {
       setSaving(false);
     }
   };
 
-  const filteredUsers = users.filter(u =>
-    (u.name && u.name.toLowerCase().includes(search.toLowerCase())) ||
-    (u.email && u.email.toLowerCase().includes(search.toLowerCase())) ||
-    ((u.role || u.role_name || u.role_code || '').toLowerCase().includes(search.toLowerCase()))
-  );
+  const handleDeleteUser = async () => {
+    if (!selectedUser) return;
+    setSaving(true);
+    try {
+      const res = await api.deleteUser(selectedUser.id);
+      if (res?.success) {
+        addToast(`Pengguna ${selectedUser.name} berhasil dinonaktifkan.`, 'success');
+        setIsDeleteModalOpen(false);
+        fetchUsers();
+      }
+    } catch (err) {
+      addToast(err.message || 'Gagal menghapus pengguna.', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const columns = [
     {
@@ -145,7 +172,7 @@ export function UserManagement() {
       header: 'Hak Akses Role',
       render: (row) => (
         <div className="flex flex-col gap-1 items-start">
-          <StatusBadge status={row.role || row.role_code} type="role" />
+          <StatusBadge status={row.role || row.role_code || row.role_name} type="role" />
           <span className="text-[11px] text-slate-400">{row.roleLabel || row.role_name}</span>
         </div>
       )
@@ -157,9 +184,13 @@ export function UserManagement() {
       )
     },
     {
-      header: 'Aktivitas Terakhir',
+      header: 'Status Akun',
       render: (row) => (
-        <span className="text-xs text-slate-500">{row.lastLogin || row.last_login_at || 'Belum pernah login'}</span>
+        <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-bold ${
+          row.is_active !== 0 && row.is_active !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+        }`}>
+          {row.is_active !== 0 && row.is_active !== false ? 'Aktif' : 'Non-Aktif'}
+        </span>
       )
     },
     {
@@ -167,14 +198,27 @@ export function UserManagement() {
       className: 'text-right',
       cellClassName: 'text-right',
       render: (row) => (
-        <Button
-          variant="outline"
-          size="sm"
-          icon={UserCog}
-          onClick={() => handleOpenEdit(row)}
-        >
-          Kelola Akses
-        </Button>
+        <div className="flex items-center justify-end gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            icon={UserCog}
+            onClick={() => handleOpenEdit(row)}
+          >
+            Kelola
+          </Button>
+          {row.id !== 1 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-red-600 hover:bg-red-50 !p-2"
+              onClick={() => handleOpenDelete(row)}
+              title="Hapus / Nonaktifkan User"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
       )
     }
   ];
@@ -200,7 +244,7 @@ export function UserManagement() {
 
       <DataTable
         columns={columns}
-        data={filteredUsers}
+        data={users}
         loading={loading}
         search={search}
         onSearchChange={setSearch}
@@ -229,7 +273,7 @@ export function UserManagement() {
             id="create-email"
             type="email"
             icon={Mail}
-            placeholder="contoh: rian@bhimasena.co.id"
+            placeholder="contoh: rian@bimasenaadhirajasaradika.com"
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             required
@@ -258,7 +302,7 @@ export function UserManagement() {
           <div className="p-3 bg-blue-50 rounded-xl border border-blue-200 text-xs text-blue-900 leading-relaxed flex items-start gap-2">
             <ShieldCheck className="w-4 h-4 text-blue-700 flex-shrink-0 mt-0.5" />
             <div>
-              <span className="font-bold">Otoritas Direktur:</span> Pengguna yang ditambahkan akan langsung terdaftar di database dan dapat login sesuai peran yang ditentukan.
+              <span className="font-bold">Otoritas Direktur:</span> Pengguna baru akan langsung tersimpan di database REST API backend.
             </div>
           </div>
 
@@ -308,19 +352,13 @@ export function UserManagement() {
 
             <Select
               label="Pilih Otoritas Role"
-              value={newRole}
-              onChange={(e) => setNewRole(e.target.value)}
-              options={[
-                { value: 'direktur', label: '1 - Direktur' },
-                { value: 'hrd', label: '2 - HRD (Manajemen Tenaga Kerja)' },
-                { value: 'operasional', label: '3 - Operasional (Site & Supervisi)' },
-                { value: 'finance', label: '4 - Finance (Billing & Tagihan)' },
-                { value: 'marketing', label: '5 - Marketing (Leads & Proposal)' }
-              ]}
+              value={newRoleId}
+              onChange={(e) => setNewRoleId(e.target.value)}
+              options={roleOptions}
             />
 
             <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 leading-relaxed">
-              <span className="font-bold">Peringatan Keamanan:</span> Mengubah role akan langsung menyesuaikan modul menu yang dapat diakses oleh akun bersangkutan.
+              <span className="font-bold">Peringatan:</span> Mengubah role akan langsung menyesuaikan hak akses modul akun yang bersangkutan di backend.
             </div>
 
             <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
@@ -328,12 +366,25 @@ export function UserManagement() {
                 Batal
               </Button>
               <Button variant="primary" size="sm" onClick={handleSaveRole} loading={saving}>
-                Simpan Perubahan Role
+                Simpan Perubahan
               </Button>
             </div>
           </div>
         )}
       </Modal>
+
+      {/* Delete User Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteUser}
+        title="Nonaktifkan Pengguna"
+        message={`Apakah Anda yakin ingin menonaktifkan akun ${selectedUser?.name}?`}
+        confirmText="Ya, Nonaktifkan"
+        cancelText="Batal"
+        variant="danger"
+        loading={saving}
+      />
     </div>
   );
 }

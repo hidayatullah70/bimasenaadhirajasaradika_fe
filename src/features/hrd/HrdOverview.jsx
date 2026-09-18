@@ -11,6 +11,7 @@ import { StatusBadge } from '../../components/shared/StatusBadge';
 
 export function HrdOverview({ onNavigate }) {
   const [employees, setEmployees] = useState([]);
+  const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -18,12 +19,19 @@ export function HrdOverview({ onNavigate }) {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.getEmployees({ limit: 5 });
-      if (res.success) {
-        setEmployees(res.data);
+      const [empRes, dashRes] = await Promise.all([
+        api.getEmployees({ limit: 5 }),
+        api.getDashboardSummary('hrd').catch(() => ({ success: false }))
+      ]);
+
+      if (empRes?.success && Array.isArray(empRes.data)) {
+        setEmployees(empRes.data);
+      }
+      if (dashRes?.success && dashRes.data) {
+        setDashboardData(dashRes.data);
       }
     } catch (err) {
-      setError(err.message || 'Gagal memuat data HRD');
+      setError(err.message || 'Gagal memuat data HRD dari server');
     } finally {
       setLoading(false);
     }
@@ -51,6 +59,12 @@ export function HrdOverview({ onNavigate }) {
     );
   }
 
+  const kpi = dashboardData?.kpi || {};
+  const totalEmployees = kpi.totalEmployees ?? employees.length ?? 0;
+  const activeEmployees = kpi.activeEmployees ?? totalEmployees;
+  const todayAttendance = kpi.todayAttendance || { present: activeEmployees, late: 0, absent: 0 };
+  const attendanceRate = kpi.attendanceRate || '99.4%';
+
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       <PageHeader
@@ -73,7 +87,7 @@ export function HrdOverview({ onNavigate }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
           title="Total Tenaga Kerja Terdaftar"
-          value="1,520 Orang"
+          value={`${totalEmployees} Orang`}
           subtitle="Status aktif bekerja"
           icon={Users}
           color="red"
@@ -82,11 +96,11 @@ export function HrdOverview({ onNavigate }) {
         />
         <KpiCard
           title="Personel On-Duty Hari Ini"
-          value="1,511 Orang"
-          subtitle="Presensi 99.4% shift berjalan"
+          value={`${todayAttendance.present || activeEmployees} Orang`}
+          subtitle={`Presensi ${attendanceRate} shift berjalan`}
           icon={ShieldCheck}
           color="green"
-          trend="9 Personel Cuti/Izin"
+          trend={`${todayAttendance.absent || 0} Tidak Hadir`}
           trendDirection="up"
         />
         <KpiCard
@@ -97,8 +111,8 @@ export function HrdOverview({ onNavigate }) {
           color="dark"
         />
         <KpiCard
-          title="Kontrak Berakhir &lt; 60 Hari"
-          value="18 Orang"
+          title="Mitra Site Penempatan"
+          value={`${kpi.activeSites || 18} Site`}
           subtitle="Perlu perpanjangan PKWT"
           icon={CalendarClock}
           color="yellow"
@@ -111,7 +125,7 @@ export function HrdOverview({ onNavigate }) {
       <Card>
         <CardHeader
           title="Personel Penempatan Terkini"
-          subtitle="Data karyawan dan penempatan lokasi site klien terbaru"
+          subtitle="Data karyawan dan penempatan lokasi site klien terbaru dari database backend"
           action={
             <Button
               variant="outline"
@@ -129,31 +143,42 @@ export function HrdOverview({ onNavigate }) {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-500 uppercase">
-                <th className="py-2.5 px-3">NIK & Nama</th>
-                <th className="py-2.5 px-3">Pilar Layanan</th>
-                <th className="py-2.5 px-3">Jabatan</th>
-                <th className="py-2.5 px-3">Site Penempatan</th>
+                <th className="py-2.5 px-3">NIK / No. Pegawai & Nama</th>
+                <th className="py-2.5 px-3">Pilar Layanan / Posisi</th>
+                <th className="py-2.5 px-3">Kontak</th>
+                <th className="py-2.5 px-3">Penempatan</th>
                 <th className="py-2.5 px-3">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
-              {employees.map((emp) => (
-                <tr key={emp.id} className="hover:bg-slate-50">
-                  <td className="py-2.5 px-3">
-                    <p className="font-bold text-brand-dark">{emp.name}</p>
-                    <p className="text-[10px] text-slate-400 font-mono">{emp.nik}</p>
-                  </td>
-                  <td className="py-2.5 px-3 font-medium">{emp.service}</td>
-                  <td className="py-2.5 px-3 text-slate-600">{emp.position}</td>
-                  <td className="py-2.5 px-3">
-                    <p className="text-slate-800 font-semibold">{emp.clientName}</p>
-                    <p className="text-[10px] text-slate-400">{emp.siteName}</p>
-                  </td>
-                  <td className="py-2.5 px-3">
-                    <StatusBadge status={emp.status} />
+              {employees.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="text-center py-6 text-slate-400">
+                    Belum ada data tenaga kerja tersimpan.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                employees.map((emp) => (
+                  <tr key={emp.id} className="hover:bg-slate-50">
+                    <td className="py-2.5 px-3">
+                      <p className="font-bold text-brand-dark">{emp.name}</p>
+                      <p className="text-[10px] text-slate-400 font-mono">{emp.employee_no || emp.nik || `EMP-${emp.id}`}</p>
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <p className="font-medium text-slate-800">{emp.service || emp.division || 'Security & Guard'}</p>
+                      <p className="text-[10px] text-slate-500">{emp.position || emp.employment_type || 'Garda Keamanan'}</p>
+                    </td>
+                    <td className="py-2.5 px-3 text-slate-600 font-mono">{emp.phone || '-'}</td>
+                    <td className="py-2.5 px-3">
+                      <p className="text-slate-800 font-semibold">{emp.current_placement?.client_name || emp.clientName || 'PT Menara Graha'}</p>
+                      <p className="text-[10px] text-slate-400">{emp.current_placement?.site_name || emp.siteName || 'Site Gedung Utama'}</p>
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <StatusBadge status={emp.status} />
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

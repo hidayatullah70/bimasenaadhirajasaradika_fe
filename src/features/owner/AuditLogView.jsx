@@ -18,14 +18,14 @@ export function AuditLogView({ onNavigate }) {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.getActivities();
-      if (res.success && Array.isArray(res.data)) {
+      const res = await api.getActivities({ limit: 50 });
+      if (res?.success && Array.isArray(res.data)) {
         setActivities(res.data);
       } else {
         setActivities([]);
       }
     } catch (err) {
-      setError(err.message || 'Gagal memuat log audit aktivitas.');
+      setError(err.message || 'Gagal memuat log audit aktivitas dari backend.');
     } finally {
       setLoading(false);
     }
@@ -74,7 +74,7 @@ export function AuditLogView({ onNavigate }) {
             key={act}
             type="button"
             onClick={() => setFilterAction(act)}
-            className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
+            className={`px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${
               filterAction === act
                 ? 'bg-brand-dark text-white font-bold'
                 : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
@@ -117,13 +117,13 @@ export function AuditLogView({ onNavigate }) {
                 {filteredList.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="py-3 px-4 font-mono text-slate-500 whitespace-nowrap">
-                      {item.created_at || '-'}
+                      {item.created_at || item.timestamp || '-'}
                     </td>
                     <td className="py-3 px-4 font-medium text-brand-dark">
-                      {item.user_name || item.user || 'Sistem / Anonim'}
+                      {item.user_name || item.user || 'Sistem / Karyawan'}
                     </td>
                     <td className="py-3 px-4">
-                      <StatusBadge status={item.role_name || item.role || 'Staf'} type="role" />
+                      <StatusBadge status={item.role_name || item.role || 'direktur'} type="role" />
                     </td>
                     <td className="py-3 px-4">
                       <span className="inline-flex px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-slate-100 text-slate-700">
@@ -134,7 +134,7 @@ export function AuditLogView({ onNavigate }) {
                       {item.resource} {item.resource_id ? `#${item.resource_id}` : ''}
                     </td>
                     <td className="py-3 px-4 text-slate-500 max-w-xs truncate">
-                      {item.description || (item.after_data ? JSON.stringify(item.after_data) : '-')}
+                      {item.description || (item.after_data ? (typeof item.after_data === 'string' ? item.after_data : JSON.stringify(item.after_data)) : '-')}
                     </td>
                   </tr>
                 ))}

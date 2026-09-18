@@ -4,10 +4,11 @@ import { DataTable } from '../../components/ui/DataTable';
 import { StatusBadge } from '../../components/shared/StatusBadge';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { Input, Select, Textarea } from '../../components/ui/Input';
 import { useToast } from '../../app/context/ToastContext';
 import { api } from '../../services/api/apiClient';
-import { Building2, Plus, MapPin, Phone, Mail } from 'lucide-react';
+import { Building2, Plus, MapPin, Phone, Mail, Trash2 } from 'lucide-react';
 
 export function SiteManagement() {
   const { addToast } = useToast();
@@ -15,29 +16,29 @@ export function SiteManagement() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
-    industry: 'Properti & Komersial',
-    contactPerson: '',
     phone: '',
     email: '',
     address: '',
-    serviceType: 'Pengamanan / Security',
-    activeHeadcount: '20',
-    contractEnd: '2027-12-31'
+    status: 'active'
   });
 
   const fetchClients = async () => {
     setLoading(true);
     try {
       const res = await api.getClients({ search });
-      if (res.success) {
+      if (res?.success && Array.isArray(res.data)) {
         setClients(res.data);
+      } else {
+        setClients([]);
       }
     } catch (err) {
-      addToast(err.message || 'Gagal memuat data klien & site', 'error');
+      addToast(err.message || 'Gagal memuat data klien & site dari server', 'error');
     } finally {
       setLoading(false);
     }
@@ -49,16 +50,16 @@ export function SiteManagement() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.contactPerson) {
-      addToast('Harap isi nama klien dan kontak PIC.', 'error');
+    if (!formData.name) {
+      addToast('Harap isi nama perusahaan mitra klien.', 'error');
       return;
     }
 
     setSubmitting(true);
     try {
       const res = await api.createClient(formData);
-      if (res.success) {
-        addToast(`Klien ${formData.name} berhasil ditambahkan ke daftar operasional.`, 'success');
+      if (res?.success) {
+        addToast(`Klien ${formData.name} berhasil ditambahkan ke database backend!`, 'success');
         setIsAddModalOpen(false);
         fetchClients();
       }
@@ -69,48 +70,81 @@ export function SiteManagement() {
     }
   };
 
+  const handleDeleteClient = async () => {
+    if (!selectedClient) return;
+    setSubmitting(true);
+    try {
+      const res = await api.deleteClient(selectedClient.id);
+      if (res?.success) {
+        addToast(`Klien ${selectedClient.name} berhasil dinonaktifkan.`, 'success');
+        setIsDeleteModalOpen(false);
+        fetchClients();
+      }
+    } catch (err) {
+      addToast(err.message || 'Gagal menghapus klien', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const columns = [
     {
-      header: 'Nama Mitra Klien & Industri',
+      header: 'Nama Mitra Klien & Kode',
       render: (row) => (
         <div>
           <p className="font-bold text-brand-dark">{row.name}</p>
-          <span className="text-xs text-brand-red font-medium">{row.industry}</span>
+          <span className="text-xs text-slate-400 font-mono">{row.client_code || `CLN-${row.id}`}</span>
         </div>
       )
     },
     {
-      header: 'Layanan Aktif',
-      render: (row) => (
-        <span className="text-xs font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded">
-          {row.serviceType}
-        </span>
-      )
-    },
-    {
-      header: 'PIC / Penanggung Jawab',
+      header: 'Kontak Telepon & Email',
       render: (row) => (
         <div>
-          <p className="font-semibold text-slate-800">{row.contactPerson}</p>
-          <p className="text-xs text-slate-400">{row.phone}</p>
+          <p className="font-semibold text-slate-800 font-mono text-xs">{row.phone || '-'}</p>
+          <p className="text-xs text-slate-500">{row.email || '-'}</p>
         </div>
       )
     },
     {
-      header: 'Personel Ditempatkan',
+      header: 'Alamat Penempatan',
       render: (row) => (
-        <span className="font-bold text-brand-dark text-sm">{row.activeHeadcount} Orang</span>
+        <p className="text-xs text-slate-600 max-w-xs truncate">{row.address || '-'}</p>
       )
     },
     {
-      header: 'Masa Berlaku Kontrak',
+      header: 'Total Site & Personel',
       render: (row) => (
-        <span className="text-xs text-slate-600 font-mono">{row.contractEnd}</span>
+        <div>
+          <p className="font-bold text-brand-dark text-xs">{row.total_sites || 1} Lokasi Site</p>
+          <p className="text-xs text-slate-500">{row.active_personnel || 0} Personel Aktif</p>
+        </div>
       )
     },
     {
       header: 'Status Operasi',
       render: (row) => <StatusBadge status={row.status} />
+    },
+    {
+      header: 'Aksi',
+      className: 'text-right',
+      cellClassName: 'text-right',
+      render: (row) => (
+        <div className="flex items-center justify-end gap-1.5">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="!p-1.5 text-slate-400 hover:text-brand-red"
+            title="Hapus Klien"
+            onClick={() => {
+              setSelectedClient(row);
+              setIsDeleteModalOpen(true);
+            }}
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+      )
     }
   ];
 
@@ -118,14 +152,23 @@ export function SiteManagement() {
     <div className="space-y-6">
       <PageHeader
         title="Kelola Mitra Klien & Site Operasional"
-        subtitle="Daftar perjanjian penempatan tenaga kerja, lokasi site, dan kontak manajerial klien."
+        subtitle="Daftar mitra korporasi resmi, kontak penanggung jawab, dan sebaran lokasi site alih daya."
         breadcrumb={['Dashboard', 'Operasional', 'Sites']}
         actions={
           <Button
             variant="primary"
             size="sm"
             icon={Plus}
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={() => {
+              setFormData({
+                name: '',
+                phone: '',
+                email: '',
+                address: '',
+                status: 'active'
+              });
+              setIsAddModalOpen(true);
+            }}
           >
             Daftarkan Klien Baru
           </Button>
@@ -138,14 +181,14 @@ export function SiteManagement() {
         loading={loading}
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Cari nama klien, industri, atau PIC..."
+        searchPlaceholder="Cari nama klien, telepon, atau alamat..."
       />
 
       {/* Add Client Modal */}
       <Modal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        title="Daftarkan Klien & Lokasi Site Baru"
+        title="Daftarkan Mitra Klien Baru"
         maxWidth="max-w-xl"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -157,60 +200,39 @@ export function SiteManagement() {
               placeholder="Contoh: PT Graha Finansial Mandiri"
               required
             />
+            <Input
+              label="Nomor Telepon Kantor / PIC"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              placeholder="021-5551234 / 081234567890"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Alamat Email Klien"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="procurement@grahamandiri.com"
+            />
             <Select
-              label="Sektor Industri"
-              value={formData.industry}
-              onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+              label="Status Kemitraan"
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
               options={[
-                { value: 'Properti & Komersial', label: 'Properti & Komersial' },
-                { value: 'Transportasi & Logistik', label: 'Transportasi & Logistik' },
-                { value: 'Retail & Supermarket', label: 'Retail & Supermarket' },
-                { value: 'Manufaktur & Pabrik', label: 'Manufaktur & Pabrik' },
-                { value: 'Kesehatan & Rumah Sakit', label: 'Kesehatan & Rumah Sakit' },
-                { value: 'Perbankan & Lembaga Finansial', label: 'Perbankan & Finansial' }
+                { value: 'active', label: 'Aktif Bekerja (Active)' },
+                { value: 'inactive', label: 'Non-Aktif' }
               ]}
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              label="Nama PIC / Contact Person"
-              value={formData.contactPerson}
-              onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
-              placeholder="Nama Pejabat Klien"
-              required
-            />
-            <Input
-              label="Nomor Telepon Kantor / WA"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              placeholder="+62 21 xxxx-xxxx"
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              label="Jumlah Personel yang Ditempatkan"
-              type="number"
-              value={formData.activeHeadcount}
-              onChange={(e) => setFormData({ ...formData, activeHeadcount: e.target.value })}
-              required
-            />
-            <Input
-              label="Batas Akhir Kontrak Kerjasama"
-              type="date"
-              value={formData.contractEnd}
-              onChange={(e) => setFormData({ ...formData, contractEnd: e.target.value })}
-              required
-            />
-          </div>
-
           <Textarea
-            label="Alamat Lengkap Site / Gedung Klien"
+            label="Alamat Lengkap Site / Gedung Kantor"
             value={formData.address}
             onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-            placeholder="Alamat penempatan operasional..."
+            placeholder="Alamat lengkap lokasi operasional penempatan..."
             required
           />
 
@@ -224,6 +246,19 @@ export function SiteManagement() {
           </div>
         </form>
       </Modal>
+
+      {/* Delete Client Confirm */}
+      <ConfirmDialog
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteClient}
+        title="Nonaktifkan Klien"
+        message={`Apakah Anda yakin ingin menonaktifkan kemitraan dengan ${selectedClient?.name}?`}
+        confirmText="Ya, Nonaktifkan"
+        cancelText="Batal"
+        variant="danger"
+        loading={submitting}
+      />
     </div>
   );
 }

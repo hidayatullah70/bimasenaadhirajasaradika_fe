@@ -4,15 +4,16 @@ import { DataTable } from '../../components/ui/DataTable';
 import { StatusBadge } from '../../components/shared/StatusBadge';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { Input, Select, Textarea } from '../../components/ui/Input';
 import { useToast } from '../../app/context/ToastContext';
 import { api } from '../../services/api/apiClient';
-import { INITIAL_CLIENTS } from '../../services/mock/mockData';
-import { Plus, Eye, CheckCircle, Clock, AlertTriangle, Download } from 'lucide-react';
+import { Plus, Eye, CheckCircle, Clock, AlertTriangle, Trash2 } from 'lucide-react';
 
 export function InvoiceManagement() {
   const { addToast } = useToast();
   const [invoices, setInvoices] = useState([]);
+  const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -20,25 +21,30 @@ export function InvoiceManagement() {
   // Modals
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
-    clientId: 'cli-1',
-    clientName: 'PT Menara Graha Mandiri',
-    serviceType: 'Pengamanan & Parkir',
-    period: 'September 2026',
-    subtotal: '200000000',
-    headcountBilled: '50',
-    notes: 'Tagihan bulanan penempatan tenaga kerja'
+    client_id: '',
+    invoice_no: `INV-${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-00${Math.floor(10 + Math.random() * 90)}`,
+    invoice_date: new Date().toISOString().split('T')[0],
+    due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    subtotal: '45000000',
+    tax: '4950000',
+    total: '49950000',
+    status: 'issued',
+    notes: 'Tagihan alih daya personil periode berjalan'
   });
 
   const fetchInvoices = async () => {
     setLoading(true);
     try {
       const res = await api.getInvoices({ search, status: statusFilter });
-      if (res.success) {
+      if (res?.success && Array.isArray(res.data)) {
         setInvoices(res.data);
+      } else {
+        setInvoices([]);
       }
     } catch (err) {
       addToast(err.message || 'Gagal memuat daftar invoice', 'error');
@@ -47,22 +53,69 @@ export function InvoiceManagement() {
     }
   };
 
+  const fetchClients = async () => {
+    try {
+      const res = await api.getClients();
+      if (res?.success && Array.isArray(res.data)) {
+        setClients(res.data);
+        if (res.data.length > 0 && !formData.client_id) {
+          setFormData(prev => ({ ...prev, client_id: String(res.data[0].id) }));
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to load clients list:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchClients();
+  }, []);
+
   useEffect(() => {
     fetchInvoices();
   }, [search, statusFilter]);
 
+  const handleSubtotalChange = (val) => {
+    const num = Number(val) || 0;
+    const tax = Math.round(num * 0.11);
+    const total = num + tax;
+    setFormData(prev => ({
+      ...prev,
+      subtotal: String(num),
+      tax: String(tax),
+      total: String(total)
+    }));
+  };
+
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.client_id) {
+      addToast('Harap pilih klien yang ditagih.', 'error');
+      return;
+    }
+
     setSubmitting(true);
     try {
-      const res = await api.createInvoice(formData);
-      if (res.success) {
-        addToast(`Invoice ${res.data.invoiceNumber} berhasil diterbitkan.`, 'success');
+      const payload = {
+        client_id: parseInt(formData.client_id, 10),
+        invoice_no: formData.invoice_no,
+        invoice_date: formData.invoice_date,
+        due_date: formData.due_date,
+        subtotal: Number(formData.subtotal),
+        tax: Number(formData.tax),
+        total: Number(formData.total),
+        status: formData.status,
+        notes: formData.notes
+      };
+
+      const res = await api.createInvoice(payload);
+      if (res?.success) {
+        addToast(`Invoice ${formData.invoice_no} berhasil diterbitkan di database backend!`, 'success');
         setIsCreateModalOpen(false);
         fetchInvoices();
       }
     } catch (err) {
-      addToast(err.message || 'Gagal menerbitkan invoice', 'error');
+      addToast(err.message || 'Gagal menerbitkan invoice di server', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -70,21 +123,38 @@ export function InvoiceManagement() {
 
   const handleUpdateStatus = async (invoiceId, newStatus) => {
     try {
-      const res = await api.updateInvoiceStatus(invoiceId, newStatus);
-      if (res.success) {
-        addToast(`Status invoice diperbarui menjadi ${newStatus.toUpperCase()}`, 'success');
+      const res = await api.updateInvoiceStatus(invoiceId, { status: newStatus });
+      if (res?.success) {
+        addToast(`Status invoice #${invoiceId} berhasil diperbarui menjadi ${newStatus.toUpperCase()}`, 'success');
         if (selectedInvoice && selectedInvoice.id === invoiceId) {
-          setSelectedInvoice(res.data);
+          setSelectedInvoice({ ...selectedInvoice, status: newStatus });
         }
         fetchInvoices();
       }
     } catch (err) {
-      addToast(err.message || 'Gagal mengubah status', 'error');
+      addToast(err.message || 'Gagal mengubah status di backend', 'error');
+    }
+  };
+
+  const handleDeleteInvoice = async () => {
+    if (!selectedInvoice) return;
+    setSubmitting(true);
+    try {
+      const res = await api.deleteInvoice(selectedInvoice.id);
+      if (res?.success) {
+        addToast(`Invoice #${selectedInvoice.invoice_no || selectedInvoice.id} berhasil dihapus.`, 'success');
+        setIsDeleteModalOpen(false);
+        fetchInvoices();
+      }
+    } catch (err) {
+      addToast(err.message || 'Gagal menghapus invoice', 'error');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const formatRupiah = (val) => {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val || 0);
   };
 
   const columns = [
@@ -92,30 +162,24 @@ export function InvoiceManagement() {
       header: 'No. Faktur / Invoice',
       render: (row) => (
         <div>
-          <p className="font-bold text-brand-dark font-mono text-xs">{row.invoiceNumber}</p>
-          <p className="text-xs text-slate-500">{row.period}</p>
+          <p className="font-bold text-brand-dark font-mono text-xs">{row.invoice_no || row.invoiceNumber || `INV-${row.id}`}</p>
+          <p className="text-xs text-slate-500 font-mono">{row.invoice_date || '-'}</p>
         </div>
       )
     },
     {
-      header: 'Klien & Layanan',
+      header: 'Klien Mitra',
       render: (row) => (
         <div>
-          <p className="font-semibold text-slate-800">{row.clientName}</p>
-          <p className="text-xs text-slate-500">{row.serviceType}</p>
+          <p className="font-semibold text-slate-800">{row.client_name || row.clientName || `Klien ID #${row.client_id}`}</p>
+          <p className="text-xs text-slate-400">{row.notes || 'Tagihan Jasa Alih Daya'}</p>
         </div>
-      )
-    },
-    {
-      header: 'Beban Manpower',
-      render: (row) => (
-        <span className="text-xs text-slate-600 font-medium">{row.headcountBilled} Personel</span>
       )
     },
     {
       header: 'Tgl Jatuh Tempo',
       render: (row) => (
-        <span className="text-xs text-slate-600 font-mono">{row.dueDate}</span>
+        <span className="text-xs text-slate-600 font-mono">{row.due_date || row.dueDate || '-'}</span>
       )
     },
     {
@@ -157,6 +221,19 @@ export function InvoiceManagement() {
               Set Lunas
             </Button>
           )}
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className="!p-1.5 text-slate-400 hover:text-brand-red"
+            title="Hapus Invoice"
+            onClick={() => {
+              setSelectedInvoice(row);
+              setIsDeleteModalOpen(true);
+            }}
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
         </div>
       )
     }
@@ -173,7 +250,20 @@ export function InvoiceManagement() {
             variant="primary"
             size="sm"
             icon={Plus}
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={() => {
+              setFormData({
+                client_id: clients.length > 0 ? String(clients[0].id) : '1',
+                invoice_no: `INV-${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-00${Math.floor(10 + Math.random() * 90)}`,
+                invoice_date: new Date().toISOString().split('T')[0],
+                due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                subtotal: '45000000',
+                tax: '4950000',
+                total: '49950000',
+                status: 'issued',
+                notes: 'Tagihan layanan alih daya personil'
+              });
+              setIsCreateModalOpen(true);
+            }}
           >
             Terbitkan Invoice Baru
           </Button>
@@ -188,6 +278,7 @@ export function InvoiceManagement() {
             onChange={(e) => setStatusFilter(e.target.value)}
             options={[
               { value: 'all', label: 'Semua Status Pembayaran' },
+              { value: 'issued', label: 'Diterbitkan (Issued)' },
               { value: 'pending', label: 'Menunggu Pembayaran (Pending)' },
               { value: 'paid', label: 'Telah Lunas (Paid)' },
               { value: 'overdue', label: 'Jatuh Tempo (Overdue)' }
@@ -202,7 +293,7 @@ export function InvoiceManagement() {
         loading={loading}
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Cari nomor invoice, klien, atau layanan..."
+        searchPlaceholder="Cari nomor invoice, klien, atau status..."
       />
 
       {/* Create Invoice Modal */}
@@ -216,61 +307,77 @@ export function InvoiceManagement() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Select
               label="Pilih Klien Tertagih"
-              value={formData.clientId}
-              onChange={(e) => {
-                const sel = INITIAL_CLIENTS.find(c => c.id === e.target.value);
-                setFormData({
-                  ...formData,
-                  clientId: e.target.value,
-                  clientName: sel ? sel.name : formData.clientName,
-                  serviceType: sel ? sel.serviceType : formData.serviceType
-                });
-              }}
-              options={INITIAL_CLIENTS.map(c => ({ value: c.id, label: c.name }))}
+              value={formData.client_id}
+              onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
+              options={
+                clients.length > 0
+                  ? clients.map(c => ({ value: String(c.id), label: `${c.name} (${c.client_code || `CLN-${c.id}`})` }))
+                  : [{ value: '1', label: 'PT. Nusantara Graha Pratama' }]
+              }
+              required
             />
             <Input
-              label="Periode Tagihan"
-              value={formData.period}
-              onChange={(e) => setFormData({ ...formData, period: e.target.value })}
-              placeholder="Contoh: September 2026"
+              label="Nomor Invoice"
+              value={formData.invoice_no}
+              onChange={(e) => setFormData({ ...formData, invoice_no: e.target.value })}
               required
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label="Jumlah Personel yang Ditagihkan"
-              type="number"
-              value={formData.headcountBilled}
-              onChange={(e) => setFormData({ ...formData, headcountBilled: e.target.value })}
+              label="Tanggal Terbit"
+              type="date"
+              value={formData.invoice_date}
+              onChange={(e) => setFormData({ ...formData, invoice_date: e.target.value })}
               required
             />
             <Input
-              label="Subtotal Tagihan Jasa (Rp)"
+              label="Tanggal Jatuh Tempo"
+              type="date"
+              value={formData.due_date}
+              onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Subtotal DPP (Rp)"
               type="number"
               value={formData.subtotal}
-              onChange={(e) => setFormData({ ...formData, subtotal: e.target.value })}
+              onChange={(e) => handleSubtotalChange(e.target.value)}
               required
+            />
+            <Select
+              label="Status Tagihan"
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+              options={[
+                { value: 'issued', label: 'Diterbitkan (Issued)' },
+                { value: 'pending', label: 'Pending' },
+                { value: 'paid', label: 'Lunas (Paid)' }
+              ]}
             />
           </div>
 
           <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1">
             <div className="flex justify-between text-slate-500">
-              <span>Subtotal:</span>
-              <span>{formatRupiah(Number(formData.subtotal) || 0)}</span>
+              <span>Subtotal (DPP):</span>
+              <span>{formatRupiah(formData.subtotal)}</span>
             </div>
             <div className="flex justify-between text-slate-500">
               <span>PPN (11%):</span>
-              <span>{formatRupiah(Math.round((Number(formData.subtotal) || 0) * 0.11))}</span>
+              <span>{formatRupiah(formData.tax)}</span>
             </div>
             <div className="flex justify-between font-bold text-brand-dark pt-1 border-t border-slate-200">
               <span>Estimasi Total Faktur:</span>
-              <span>{formatRupiah(Math.round((Number(formData.subtotal) || 0) * 1.11))}</span>
+              <span>{formatRupiah(formData.total)}</span>
             </div>
           </div>
 
           <Textarea
-            label="Catatan Invoice / Klausul Khusus"
+            label="Catatan Invoice / Uraian Layanan"
             value={formData.notes}
             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
           />
@@ -297,29 +404,21 @@ export function InvoiceManagement() {
           <div className="space-y-4 text-xs">
             <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-mono font-bold text-brand-dark text-sm">{selectedInvoice.invoiceNumber}</span>
+                <span className="font-mono font-bold text-brand-dark text-sm">{selectedInvoice.invoice_no || selectedInvoice.invoiceNumber || `INV-${selectedInvoice.id}`}</span>
                 <StatusBadge status={selectedInvoice.status} type="invoice" />
               </div>
-              <p className="font-bold text-slate-800 text-sm">{selectedInvoice.clientName}</p>
-              <p className="text-slate-500">Layanan: {selectedInvoice.serviceType}</p>
+              <p className="font-bold text-slate-800 text-sm">{selectedInvoice.client_name || selectedInvoice.clientName || `Klien ID #${selectedInvoice.client_id}`}</p>
+              <p className="text-slate-500">Uraian: {selectedInvoice.notes || 'Layanan Alih Daya'}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="p-3 bg-white border border-slate-200 rounded-lg">
                 <span className="text-slate-400 block mb-0.5">Tanggal Terbit:</span>
-                <span className="font-semibold text-slate-700 font-mono">{selectedInvoice.issueDate}</span>
+                <span className="font-semibold text-slate-700 font-mono">{selectedInvoice.invoice_date || selectedInvoice.issueDate || '-'}</span>
               </div>
               <div className="p-3 bg-white border border-slate-200 rounded-lg">
                 <span className="text-slate-400 block mb-0.5">Jatuh Tempo:</span>
-                <span className="font-semibold text-slate-700 font-mono">{selectedInvoice.dueDate}</span>
-              </div>
-              <div className="p-3 bg-white border border-slate-200 rounded-lg">
-                <span className="text-slate-400 block mb-0.5">Jumlah Manpower:</span>
-                <span className="font-semibold text-slate-700">{selectedInvoice.headcountBilled} Orang</span>
-              </div>
-              <div className="p-3 bg-white border border-slate-200 rounded-lg">
-                <span className="text-slate-400 block mb-0.5">Periode:</span>
-                <span className="font-semibold text-slate-700">{selectedInvoice.period}</span>
+                <span className="font-semibold text-slate-700 font-mono">{selectedInvoice.due_date || selectedInvoice.dueDate || '-'}</span>
               </div>
             </div>
 
@@ -331,19 +430,13 @@ export function InvoiceManagement() {
               </div>
               <div className="flex justify-between text-slate-600">
                 <span>PPN 11%:</span>
-                <span className="font-mono">{formatRupiah(selectedInvoice.ppn)}</span>
+                <span className="font-mono">{formatRupiah(selectedInvoice.tax || Math.round((Number(selectedInvoice.subtotal) || 0) * 0.11))}</span>
               </div>
               <div className="flex justify-between font-extrabold text-brand-dark text-sm pt-2 border-t border-slate-200">
                 <span>Total Tagihan:</span>
                 <span className="font-mono text-brand-red">{formatRupiah(selectedInvoice.total)}</span>
               </div>
             </div>
-
-            {selectedInvoice.notes && (
-              <p className="text-slate-500 italic p-2 bg-slate-50 rounded">
-                Catatan: {selectedInvoice.notes}
-              </p>
-            )}
 
             {/* Change status actions */}
             <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
@@ -352,21 +445,21 @@ export function InvoiceManagement() {
                 <button
                   type="button"
                   onClick={() => handleUpdateStatus(selectedInvoice.id, 'paid')}
-                  className="px-2 py-1 bg-emerald-100 text-emerald-800 rounded font-semibold text-[11px] hover:bg-emerald-200"
+                  className="px-2 py-1 bg-emerald-100 text-emerald-800 rounded font-semibold text-[11px] hover:bg-emerald-200 cursor-pointer"
                 >
                   Lunas
                 </button>
                 <button
                   type="button"
                   onClick={() => handleUpdateStatus(selectedInvoice.id, 'pending')}
-                  className="px-2 py-1 bg-amber-100 text-amber-800 rounded font-semibold text-[11px] hover:bg-amber-200"
+                  className="px-2 py-1 bg-amber-100 text-amber-800 rounded font-semibold text-[11px] hover:bg-amber-200 cursor-pointer"
                 >
                   Pending
                 </button>
                 <button
                   type="button"
                   onClick={() => handleUpdateStatus(selectedInvoice.id, 'overdue')}
-                  className="px-2 py-1 bg-red-100 text-red-800 rounded font-semibold text-[11px] hover:bg-red-200"
+                  className="px-2 py-1 bg-red-100 text-red-800 rounded font-semibold text-[11px] hover:bg-red-200 cursor-pointer"
                 >
                   Overdue
                 </button>
@@ -379,6 +472,19 @@ export function InvoiceManagement() {
           </div>
         )}
       </Modal>
+
+      {/* Delete Confirm */}
+      <ConfirmDialog
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteInvoice}
+        title="Hapus Invoice"
+        message={`Apakah Anda yakin ingin menghapus invoice #${selectedInvoice?.invoice_no || selectedInvoice?.id}?`}
+        confirmText="Ya, Hapus"
+        cancelText="Batal"
+        variant="danger"
+        loading={submitting}
+      />
     </div>
   );
 }

@@ -1,10 +1,7 @@
 // PT. Bhimasena Adhirajasa Radhika — API Client Abstraction
-// Aligned with 04-API-SPEC.md
+// Aligned with SOT/04-API-SPEC.md, collection.json & SOT/API-INTEGRATION.md
 
-import { mockService } from '../mock/mockService';
-
-const USE_REAL_API = import.meta.env.VITE_USE_REAL_API === 'true';
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://bimasenaadhirajasaradikabe-production.up.railway.app/api/v1';
 
 async function request(endpoint, options = {}) {
   const token = localStorage.getItem('barak_auth_token');
@@ -19,194 +16,444 @@ async function request(endpoint, options = {}) {
       ...options,
       headers,
     });
-    const data = await response.json();
+    
+    // Attempt parsing JSON
+    const data = await response.json().catch(() => ({}));
+    
     if (!response.ok) {
-      throw new Error(data.message || 'Terjadi kesalahan pada sistem.');
+      const errorMessage = data.message || `Request gagal dengan status ${response.status}`;
+      throw new Error(errorMessage);
     }
     return data;
   } catch (err) {
+    console.error(`[API Error] ${options.method || 'GET'} ${endpoint}:`, err.message);
     throw err;
   }
 }
 
 export const api = {
-  // Auth
-  login: async (credentials) => {
-    if (USE_REAL_API) {
-      const res = await request('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify(credentials),
-      });
-      if (res?.data?.token) {
-        localStorage.setItem('barak_auth_token', res.data.token);
-      }
-      if (res?.data?.user?.role) {
-        localStorage.setItem('barak_user_role', res.data.user.role);
-      }
-      return res;
-    }
-    return mockService.login(credentials);
-  },
+  // 00. Health & Server Info
+  getServerInfo: async () => request('/'),
+  getHealth: async () => request('/health'),
 
-  register: async (userData) => {
-    if (USE_REAL_API) {
-      return request('/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(userData),
-      });
+  // 01. Authentication
+  login: async (credentials) => {
+    const res = await request('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+    if (res?.data?.token) {
+      localStorage.setItem('barak_auth_token', res.data.token);
     }
-    return mockService.register(userData);
+    if (res?.data?.user?.role) {
+      localStorage.setItem('barak_user_role', res.data.user.role);
+    }
+    return res;
   },
 
   getCurrentUser: async () => {
-    if (USE_REAL_API) return request('/auth/me');
-    return mockService.getCurrentUser();
+    return request('/auth/me');
+  },
+
+  refreshToken: async () => {
+    const res = await request('/auth/refresh', { method: 'POST' });
+    if (res?.data?.token) {
+      localStorage.setItem('barak_auth_token', res.data.token);
+    }
+    return res;
   },
 
   logout: async () => {
-    localStorage.removeItem('barak_auth_token');
-    localStorage.removeItem('barak_user_role');
-    if (USE_REAL_API) return request('/auth/logout', { method: 'POST' });
-    return mockService.logout();
-  },
-
-  // Users & Roles
-  createUser: async (userData) => {
-    if (USE_REAL_API) return request('/users', { method: 'POST', body: JSON.stringify(userData) });
-    return mockService.createUser(userData);
-  },
-
-  getUsers: async () => {
-    if (USE_REAL_API) return request('/users');
-    return mockService.getUsers();
-  },
-
-  updateUserRole: async (id, role) => {
-    if (USE_REAL_API) return request(`/users/${id}`, { method: 'PATCH', body: JSON.stringify({ role }) });
-    return mockService.updateUserRole(id, role);
-  },
-
-  // Services
-  getServices: async () => {
-    if (USE_REAL_API) return request('/services');
-    return mockService.getServices();
-  },
-
-  // Employees (HRD)
-  getEmployees: async (params) => {
-    if (USE_REAL_API) {
-      const query = new URLSearchParams(params).toString();
-      return request(`/employees?${query}`);
+    try {
+      await request('/auth/logout', { method: 'POST' });
+    } catch (e) {
+      // Ignore network errors on logout
+    } finally {
+      localStorage.removeItem('barak_auth_token');
+      localStorage.removeItem('barak_user_role');
     }
-    return mockService.getEmployees(params);
+    return { success: true };
+  },
+
+  // 02. Dashboard KPI Summary (Role-aware)
+  getDashboardSummary: async (role = 'direktur') => {
+    const roleParam = role === 'owner' ? 'direktur' : role;
+    return request(`/dashboard/summary?role=${encodeURIComponent(roleParam)}`);
+  },
+
+  // 03. Employees / Karyawan (CRUD)
+  getEmployees: async (params = {}) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== '' && v !== 'all')
+    );
+    const query = new URLSearchParams(cleanParams).toString();
+    return request(`/employees${query ? `?${query}` : ''}`);
+  },
+
+  getEmployeeById: async (id) => {
+    return request(`/employees/${id}`);
   },
 
   createEmployee: async (data) => {
-    if (USE_REAL_API) return request('/employees', { method: 'POST', body: JSON.stringify(data) });
-    return mockService.createEmployee(data);
+    return request('/employees', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
 
   updateEmployee: async (id, data) => {
-    if (USE_REAL_API) return request(`/employees/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
-    return mockService.updateEmployee(id, data);
+    return request(`/employees/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
   },
 
   deleteEmployee: async (id) => {
-    if (USE_REAL_API) return request(`/employees/${id}`, { method: 'DELETE' });
-    return mockService.deleteEmployee(id);
+    return request(`/employees/${id}`, {
+      method: 'DELETE',
+    });
   },
 
-  // Clients & Sites
-  getClients: async (params) => {
-    if (USE_REAL_API) {
-      const query = new URLSearchParams(params).toString();
-      return request(`/clients?${query}`);
-    }
-    return mockService.getClients(params);
+  // 04. Clients / Mitra Klien (CRUD)
+  getClients: async (params = {}) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== '' && v !== 'all')
+    );
+    const query = new URLSearchParams(cleanParams).toString();
+    return request(`/clients${query ? `?${query}` : ''}`);
+  },
+
+  getClientById: async (id) => {
+    return request(`/clients/${id}`);
   },
 
   createClient: async (data) => {
-    if (USE_REAL_API) return request('/clients', { method: 'POST', body: JSON.stringify(data) });
-    return mockService.createClient(data);
+    return request('/clients', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
 
-  getSites: async () => {
-    if (USE_REAL_API) return request('/sites');
-    return mockService.getSites();
+  updateClient: async (id, data) => {
+    return request(`/clients/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
   },
 
-  // Invoices (Finance)
-  getInvoices: async (params) => {
-    if (USE_REAL_API) {
-      const query = new URLSearchParams(params).toString();
-      return request(`/invoices?${query}`);
-    }
-    return mockService.getInvoices(params);
+  deleteClient: async (id) => {
+    return request(`/clients/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // 05. Sites / Lokasi Kerja (CRUD)
+  getSites: async (params = {}) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== '' && v !== 'all')
+    );
+    const query = new URLSearchParams(cleanParams).toString();
+    return request(`/sites${query ? `?${query}` : ''}`);
+  },
+
+  getSiteById: async (id) => {
+    return request(`/sites/${id}`);
+  },
+
+  createSite: async (data) => {
+    return request('/sites', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateSite: async (id, data) => {
+    return request(`/sites/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  deleteSite: async (id) => {
+    return request(`/sites/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // 06. Services / Layanan Outsourcing (CRUD)
+  getServices: async () => {
+    return request('/services');
+  },
+
+  getServiceById: async (id) => {
+    return request(`/services/${id}`);
+  },
+
+  createService: async (data) => {
+    return request('/services', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateService: async (id, data) => {
+    return request(`/services/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  deleteService: async (id) => {
+    return request(`/services/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // 07. Placements / Penempatan Kerja (CRUD)
+  getPlacements: async (params = {}) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== '' && v !== 'all')
+    );
+    const query = new URLSearchParams(cleanParams).toString();
+    return request(`/placements${query ? `?${query}` : ''}`);
+  },
+
+  getPlacementById: async (id) => {
+    return request(`/placements/${id}`);
+  },
+
+  createPlacement: async (data) => {
+    return request('/placements', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  updatePlacement: async (id, data) => {
+    return request(`/placements/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  deletePlacement: async (id) => {
+    return request(`/placements/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // 08. Attendance / Presensi (CRUD)
+  getAttendance: async (params = {}) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== '' && v !== 'all')
+    );
+    const query = new URLSearchParams(cleanParams).toString();
+    return request(`/attendance${query ? `?${query}` : ''}`);
+  },
+
+  getTodayAttendance: async () => {
+    return request('/attendance/today');
+  },
+
+  getAttendanceById: async (id) => {
+    return request(`/attendance/${id}`);
+  },
+
+  recordAttendance: async (data) => {
+    return request('/attendance', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateAttendance: async (id, data) => {
+    return request(`/attendance/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  // 09. Invoices / Keuangan (CRUD)
+  getInvoices: async (params = {}) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== '' && v !== 'all')
+    );
+    const query = new URLSearchParams(cleanParams).toString();
+    return request(`/invoices${query ? `?${query}` : ''}`);
+  },
+
+  getInvoiceById: async (id) => {
+    return request(`/invoices/${id}`);
   },
 
   createInvoice: async (data) => {
-    if (USE_REAL_API) return request('/invoices', { method: 'POST', body: JSON.stringify(data) });
-    return mockService.createInvoice(data);
+    return request('/invoices', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   },
 
-  updateInvoiceStatus: async (id, status) => {
-    if (USE_REAL_API) return request(`/invoices/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) });
-    return mockService.updateInvoiceStatus(id, status);
+  updateInvoiceStatus: async (id, updateData) => {
+    const payload = typeof updateData === 'string' ? { status: updateData } : updateData;
+    return request(`/invoices/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
   },
 
-  // Leads (Marketing)
-  getLeads: async (params) => {
-    if (USE_REAL_API) {
-      const query = new URLSearchParams(params).toString();
-      return request(`/leads?${query}`);
-    }
-    return mockService.getLeads(params);
+  deleteInvoice: async (id) => {
+    return request(`/invoices/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // 10. Leads / CRM Marketing (CRUD)
+  getLeads: async (params = {}) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== '' && v !== 'all')
+    );
+    const query = new URLSearchParams(cleanParams).toString();
+    return request(`/leads${query ? `?${query}` : ''}`);
+  },
+
+  getLeadById: async (id) => {
+    return request(`/leads/${id}`);
   },
 
   createLead: async (data) => {
-    if (USE_REAL_API) return request('/leads', { method: 'POST', body: JSON.stringify(data) });
-    return mockService.createLead(data);
+    return request('/leads', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateLead: async (id, data) => {
+    return request(`/leads/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
   },
 
   updateLeadStage: async (id, stage) => {
-    if (USE_REAL_API) return request(`/leads/${id}`, { method: 'PATCH', body: JSON.stringify({ stage }) });
-    return mockService.updateLeadStage(id, stage);
+    const payload = typeof stage === 'string' ? { status: stage } : stage;
+    return request(`/leads/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
   },
 
-  // Attendance (HRD / Operasional)
-  getAttendance: async (params) => {
-    if (USE_REAL_API) {
-      const query = new URLSearchParams(params).toString();
-      return request(`/attendance?${query}`);
-    }
-    return mockService.getAttendance(params);
+  deleteLead: async (id) => {
+    return request(`/leads/${id}`, {
+      method: 'DELETE',
+    });
   },
 
-  // Dashboard Summary (Role-aware)
-  getDashboardSummary: async (role) => {
-    if (USE_REAL_API) return request(`/dashboard/summary?role=${role}`);
-    return mockService.getDashboardSummary(role);
+  // 11. Activities & Audit Trail
+  getActivities: async (params = {}) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== '' && v !== 'all')
+    );
+    const query = new URLSearchParams(cleanParams).toString();
+    return request(`/activities${query ? `?${query}` : ''}`);
   },
 
-  // Activities & Notifications
-  getActivities: async () => {
-    if (USE_REAL_API) return request('/activities');
-    return mockService.getActivities();
+  getActivityById: async (id) => {
+    return request(`/activities/${id}`);
   },
 
-  getNotifications: async () => {
-    if (USE_REAL_API) return request('/notifications');
-    return mockService.getNotifications();
+  // 12. Notifications
+  getNotifications: async (params = {}) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== '' && v !== 'all')
+    );
+    const query = new URLSearchParams(cleanParams).toString();
+    return request(`/notifications${query ? `?${query}` : ''}`);
   },
 
   markNotificationRead: async (id) => {
-    if (USE_REAL_API) return request(`/notifications/${id}/read`, { method: 'PATCH' });
-    return mockService.markNotificationRead(id);
+    return request(`/notifications/${id}/read`, {
+      method: 'PATCH',
+    });
   },
 
-  // Public Contact Form
+  markAllNotificationsRead: async () => {
+    return request('/notifications/mark-all-read', {
+      method: 'POST',
+    });
+  },
+
+  // 13. Users & Roles (Direktur Only)
+  getUsers: async (params = {}) => {
+    const cleanParams = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== '' && v !== 'all')
+    );
+    const query = new URLSearchParams(cleanParams).toString();
+    return request(`/users${query ? `?${query}` : ''}`);
+  },
+
+  getMasterRoles: async () => {
+    return request('/users/roles');
+  },
+
+  getUserById: async (id) => {
+    return request(`/users/${id}`);
+  },
+
+  createUser: async (userData) => {
+    return request('/users', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
+  },
+
+  updateUser: async (id, data) => {
+    return request(`/users/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  updateUserRole: async (id, roleOrData) => {
+    const payload = typeof roleOrData === 'object' ? roleOrData : { role: roleOrData };
+    return request(`/users/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  deleteUser: async (id) => {
+    return request(`/users/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // 14. Public Endpoints
+  getPublicServices: async () => {
+    return request('/public/services');
+  },
+
   submitContactInquiry: async (data) => {
-    if (USE_REAL_API) return request('/public/contact', { method: 'POST', body: JSON.stringify(data) });
-    return mockService.submitContactInquiry(data);
-  }
+    // Standard public lead submission
+    const payload = {
+      company_name: data.company || data.company_name || 'Individual / Personal',
+      contact_name: data.name || data.contact_name,
+      email: data.email,
+      phone: data.phone,
+      service_interest: data.service || data.service_interest || 'Security & Guard Services',
+      message: data.message || data.notes || 'Permohonan konsultasi alih daya'
+    };
+
+    try {
+      return await request('/public/lead', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {
+      // Fallback to /leads if public endpoint routes differently
+      return request('/leads', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+    }
+  },
 };

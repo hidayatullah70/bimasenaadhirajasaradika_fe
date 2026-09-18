@@ -110,7 +110,7 @@ export const INITIAL_USERS = [
   {
     id: 'usr-1',
     name: 'Juli Priyanto (Direktur)',
-    email: 'direktur@bhimasena.co.id',
+    email: 'direktur@bimasenaadhirajasaradika.com',
     role: 'owner',
     roleLabel: 'Direktur',
     phone: '+62 811-2345-6789',
@@ -121,7 +121,7 @@ export const INITIAL_USERS = [
   {
     id: 'usr-2',
     name: 'Robyn Topani (HRD)',
-    email: 'hrd@bhimasena.co.id',
+    email: 'hrd@bimasenaadhirajasaradika.com',
     role: 'hrd',
     roleLabel: 'Kepala Divisi HRD',
     phone: '+62 812-3456-7890',
@@ -132,7 +132,7 @@ export const INITIAL_USERS = [
   {
     id: 'usr-3',
     name: 'Nazi Rinaldi (operasional)',
-    email: 'operasional@bhimasena.co.id',
+    email: 'operasional@bimasenaadhirajasaradika.com',
     role: 'operasional',
     roleLabel: 'Manager Operasional & Lapangan',
     phone: '+62 813-4567-8901',
@@ -143,7 +143,7 @@ export const INITIAL_USERS = [
   {
     id: 'usr-4',
     name: 'Zaenal Arifin (Finance)',
-    email: 'finance@bhimasena.co.id',
+    email: 'finance@bimasenaadhirajasaradika.com',
     role: 'finance',
     roleLabel: 'Finance & Billing Lead',
     phone: '+62 814-5678-9012',
@@ -154,7 +154,7 @@ export const INITIAL_USERS = [
   {
     id: 'usr-5',
     name: 'Hendri Nopamin (Marketing)',
-    email: 'marketing@bhimasena.co.id',
+    email: 'marketing@bimasenaadhirajasaradika.com',
     role: 'marketing',
     roleLabel: 'Business Development & Marketing',
     phone: '+62 815-6789-0123',
@@ -856,7 +856,7 @@ export const COMPANY_INFO = {
     },
     {
       question: 'Bagaimana tata cara mengajukan penawaran kerjasama atau konsultasi kebutuhan?',
-      answer: 'Anda dapat mengisi formulir konsultasi kebutuhan di situs ini, menghubungi hotline WhatsApp kami di +62 811-9000-8888, atau mengirimkan email ke info@bhimasena.co.id. Tim Business Development kami akan merespons dalam waktu 1x24 jam kerja.'
+      answer: 'Anda dapat mengisi formulir konsultasi kebutuhan di situs ini, menghubungi hotline WhatsApp kami di +62 811-9000-8888, atau mengirimkan email ke info@bimasenaadhirajasaradika.com. Tim Business Development kami akan merespons dalam waktu 1x24 jam kerja.'
     }
   ]
 };

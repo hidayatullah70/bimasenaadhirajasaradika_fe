@@ -6,29 +6,34 @@ import { LoadingSkeleton } from '../../components/ui/LoadingSkeleton';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { Button } from '../../components/ui/Button';
 import { api } from '../../services/api/apiClient';
-import { INITIAL_SITES } from '../../services/mock/mockData';
 import {
   Building2,
   ShieldCheck,
   AlertTriangle,
   Radio,
-  ArrowRight,
-  PhoneCall,
-  CheckCircle2
+  ArrowRight
 } from 'lucide-react';
 import { StatusBadge } from '../../components/shared/StatusBadge';
 
 export function OperasionalOverview({ onNavigate }) {
   const [sites, setSites] = useState([]);
+  const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const fetchOps = async () => {
     setLoading(true);
     try {
-      const res = await api.getSites();
-      if (res.success) {
-        setSites(res.data);
+      const [sitesRes, dashRes] = await Promise.all([
+        api.getSites(),
+        api.getDashboardSummary('operasional').catch(() => ({ success: false }))
+      ]);
+
+      if (sitesRes?.success && Array.isArray(sitesRes.data)) {
+        setSites(sitesRes.data);
+      }
+      if (dashRes?.success && dashRes.data) {
+        setDashboardData(dashRes.data);
       }
     } catch (err) {
       setError(err.message || 'Gagal memuat ringkasan operasional');
@@ -59,11 +64,15 @@ export function OperasionalOverview({ onNavigate }) {
     );
   }
 
+  const kpi = dashboardData?.kpi || {};
+  const activeSites = kpi.activeSites ?? sites.length;
+  const activePlacements = kpi.activePlacements ?? sites.reduce((acc, s) => acc + (Number(s.active_personnel || s.required_personnel) || 0), 0);
+
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       <PageHeader
         title="Monitoring Operasional & Pengawasan Site"
-        subtitle="Kesiapan pos jaga, kepatuhan jadwal shift, disposisi personel, dan status insiden lapangan."
+        subtitle="Kesiapan pos jaga, kepatuhan jadwal shift, disposisi personel, dan status pengawasan lapangan."
         breadcrumb={['Dashboard', 'Operasional', 'Overview']}
         actions={
           <Button
@@ -81,18 +90,18 @@ export function OperasionalOverview({ onNavigate }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
           title="Total Site Aktif Terkelola"
-          value="14 Lokasi"
-          subtitle="Gedung, pabrik, hub logistik"
+          value={`${activeSites} Lokasi`}
+          subtitle="Gedung, pabrik, kawasan komersial"
           icon={Building2}
           color="dark"
         />
         <KpiCard
-          title="Kepatuhan Shift Hari Ini"
-          value="99.8%"
-          subtitle="Seluruh pos terisi penuh"
+          title="Kekuatan Personel Tergelar"
+          value={`${activePlacements} Personel`}
+          subtitle="Tersebar di seluruh shift"
           icon={ShieldCheck}
           color="green"
-          trend="Nir-Keterlambatan"
+          trend="Pos Siaga Penuh"
           trendDirection="up"
         />
         <KpiCard
@@ -107,7 +116,7 @@ export function OperasionalOverview({ onNavigate }) {
         <KpiCard
           title="Kesiapan Buffer / Backup"
           value="100%"
-          subtitle="Siaga respons < 3 jam"
+          subtitle="Siaga respons cepat"
           icon={Radio}
           color="red"
         />
@@ -117,7 +126,7 @@ export function OperasionalOverview({ onNavigate }) {
       <Card>
         <CardHeader
           title="Status Kesiapan Site Utama Terkini"
-          subtitle="Pemantauan pengawas regu (Danru/Supervisor) dan skor SLA harian"
+          subtitle="Pemantauan lokasi kerja dan alokasi personil langsung dari database backend"
           action={
             <Button
               variant="outline"
@@ -135,30 +144,38 @@ export function OperasionalOverview({ onNavigate }) {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-500 uppercase">
-                <th className="py-2.5 px-3">Nama Site & Lokasi</th>
+                <th className="py-2.5 px-3">Kode & Nama Site</th>
                 <th className="py-2.5 px-3">Mitra Klien</th>
-                <th className="py-2.5 px-3">Danru / Supervisor Jaga</th>
+                <th className="py-2.5 px-3">Lokasi / Kota</th>
                 <th className="py-2.5 px-3">Kekuatan Personel</th>
-                <th className="py-2.5 px-3">Skor SLA Harian</th>
                 <th className="py-2.5 px-3">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
-              {sites.map((site) => (
-                <tr key={site.id} className="hover:bg-slate-50">
-                  <td className="py-2.5 px-3">
-                    <p className="font-bold text-brand-dark">{site.name}</p>
-                    <p className="text-[10px] text-slate-400">{site.location}</p>
-                  </td>
-                  <td className="py-2.5 px-3 font-medium text-slate-800">{site.clientName}</td>
-                  <td className="py-2.5 px-3 text-slate-600">{site.assignedSupervisor}</td>
-                  <td className="py-2.5 px-3 font-semibold text-brand-dark">{site.totalPersonnel} Personel</td>
-                  <td className="py-2.5 px-3 font-bold text-brand-green">{site.slaScore}</td>
-                  <td className="py-2.5 px-3">
-                    <StatusBadge status={site.status} />
+              {sites.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="text-center py-6 text-slate-400">
+                    Belum ada data lokasi kerja tersimpan.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                sites.map((site) => (
+                  <tr key={site.id} className="hover:bg-slate-50">
+                    <td className="py-2.5 px-3">
+                      <p className="font-bold text-brand-dark">{site.name}</p>
+                      <p className="text-[10px] text-slate-400 font-mono">{site.site_code || `SITE-${site.id}`}</p>
+                    </td>
+                    <td className="py-2.5 px-3 font-medium text-slate-800">{site.client_name || site.clientName || `Klien ID #${site.client_id}`}</td>
+                    <td className="py-2.5 px-3 text-slate-600">{site.city || site.address || '-'}</td>
+                    <td className="py-2.5 px-3 font-semibold text-brand-dark">
+                      {site.active_personnel ?? site.required_personnel ?? 0} Personel (Kebutuhan: {site.required_personnel || 0})
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <StatusBadge status={site.status} />
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

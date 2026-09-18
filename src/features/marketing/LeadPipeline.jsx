@@ -4,15 +4,16 @@ import { DataTable } from '../../components/ui/DataTable';
 import { StatusBadge } from '../../components/shared/StatusBadge';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { Input, Select, Textarea } from '../../components/ui/Input';
 import { useToast } from '../../app/context/ToastContext';
 import { api } from '../../services/api/apiClient';
-import { INITIAL_SERVICES } from '../../services/mock/mockData';
-import { Plus, Eye, ArrowRightCircle, Target, TrendingUp } from 'lucide-react';
+import { Plus, Eye, Target, TrendingUp, Trash2, Edit2 } from 'lucide-react';
 
 export function LeadPipeline() {
   const { addToast } = useToast();
   const [leads, setLeads] = useState([]);
+  const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [stageFilter, setStageFilter] = useState('all');
@@ -20,26 +21,29 @@ export function LeadPipeline() {
   // Modals
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
-    company: '',
-    picName: '',
-    picPhone: '',
+    company_name: '',
+    contact_name: '',
+    phone: '',
     email: '',
-    serviceInterested: 'Pengamanan / Security',
-    requestedHeadcount: '25',
-    estimatedValue: '90000000',
-    notes: 'Kebutuhan alih daya baru'
+    estimated_value: '75000000',
+    status: 'new',
+    source: 'Website Landing Page',
+    notes: 'Kebutuhan alih daya personil baru'
   });
 
   const fetchLeads = async () => {
     setLoading(true);
     try {
-      const res = await api.getLeads({ search, stage: stageFilter });
-      if (res.success) {
+      const res = await api.getLeads({ search, status: stageFilter });
+      if (res?.success && Array.isArray(res.data)) {
         setLeads(res.data);
+      } else {
+        setLeads([]);
       }
     } catch (err) {
       addToast(err.message || 'Gagal memuat pipeline leads', 'error');
@@ -48,27 +52,44 @@ export function LeadPipeline() {
     }
   };
 
+  const fetchServices = async () => {
+    try {
+      const res = await api.getServices();
+      if (res?.success && Array.isArray(res.data)) {
+        setServices(res.data);
+      }
+    } catch (e) {}
+  };
+
+  useEffect(() => {
+    fetchServices();
+  }, []);
+
   useEffect(() => {
     fetchLeads();
   }, [search, stageFilter]);
 
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.company || !formData.picName) {
-      addToast('Harap lengkapi nama instansi dan nama PIC.', 'error');
+    if (!formData.company_name || !formData.contact_name) {
+      addToast('Harap lengkapi nama instansi dan nama kontak PIC.', 'error');
       return;
     }
 
     setSubmitting(true);
     try {
-      const res = await api.createLead(formData);
-      if (res.success) {
-        addToast(`Prospek untuk ${formData.company} berhasil didaftarkan.`, 'success');
+      const payload = {
+        ...formData,
+        estimated_value: Number(formData.estimated_value) || 0
+      };
+      const res = await api.createLead(payload);
+      if (res?.success) {
+        addToast(`Prospek untuk ${formData.company_name} berhasil dicatat di backend!`, 'success');
         setIsCreateModalOpen(false);
         fetchLeads();
       }
     } catch (err) {
-      addToast(err.message || 'Gagal menambahkan prospek', 'error');
+      addToast(err.message || 'Gagal menambahkan prospek ke server', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -76,21 +97,38 @@ export function LeadPipeline() {
 
   const handleUpdateStage = async (leadId, newStage) => {
     try {
-      const res = await api.updateLeadStage(leadId, newStage);
-      if (res.success) {
-        addToast(`Tahapan prospek berhasil dipindahkan ke: ${newStage.toUpperCase()}`, 'success');
+      const res = await api.updateLead(leadId, { status: newStage });
+      if (res?.success) {
+        addToast(`Tahapan prospek berhasil diperbarui ke: ${newStage.toUpperCase()}`, 'success');
         if (selectedLead && selectedLead.id === leadId) {
-          setSelectedLead(res.data);
+          setSelectedLead({ ...selectedLead, status: newStage });
         }
         fetchLeads();
       }
     } catch (err) {
-      addToast(err.message || 'Gagal mengubah tahapan', 'error');
+      addToast(err.message || 'Gagal mengubah tahapan di server', 'error');
+    }
+  };
+
+  const handleDeleteLead = async () => {
+    if (!selectedLead) return;
+    setSubmitting(true);
+    try {
+      const res = await api.deleteLead(selectedLead.id);
+      if (res?.success) {
+        addToast(`Prospek #${selectedLead.id} berhasil dihapus.`, 'success');
+        setIsDeleteModalOpen(false);
+        fetchLeads();
+      }
+    } catch (err) {
+      addToast(err.message || 'Gagal menghapus lead', 'error');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const formatRupiah = (val) => {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val || 0);
   };
 
   const columns = [
@@ -98,7 +136,7 @@ export function LeadPipeline() {
       header: 'Perusahaan Calon Klien & Sumber',
       render: (row) => (
         <div>
-          <p className="font-bold text-brand-dark">{row.company}</p>
+          <p className="font-bold text-brand-dark">{row.company_name || row.company || 'Calon Klien'}</p>
           <p className="text-[11px] text-slate-400">Sumber: {row.source || 'Website Form'}</p>
         </div>
       )
@@ -107,56 +145,57 @@ export function LeadPipeline() {
       header: 'Penanggung Jawab (PIC)',
       render: (row) => (
         <div>
-          <p className="font-semibold text-slate-800">{row.picName}</p>
-          <p className="text-xs text-slate-500 font-mono">{row.picPhone}</p>
+          <p className="font-semibold text-slate-800">{row.contact_name || row.picName}</p>
+          <p className="text-xs text-slate-500 font-mono">{row.phone || row.picPhone || '-'}</p>
         </div>
       )
     },
     {
-      header: 'Kebutuhan Layanan',
+      header: 'Email Korporasi',
       render: (row) => (
-        <span className="text-xs font-semibold text-slate-700 bg-slate-100 px-2 py-1 rounded">
-          {row.serviceInterested}
-        </span>
+        <span className="text-xs text-slate-600 font-mono">{row.email || '-'}</span>
       )
     },
     {
-      header: 'Personel / Nilai Estimasi',
+      header: 'Nilai Estimasi Kontrak',
       render: (row) => (
-        <div>
-          <p className="font-bold text-brand-dark">{formatRupiah(row.estimatedValue)}</p>
-          <p className="text-[11px] text-slate-500">{row.requestedHeadcount} Personel</p>
-        </div>
+        <p className="font-bold text-brand-dark">{formatRupiah(row.estimated_value || row.estimatedValue)}</p>
       )
     },
     {
       header: 'Tahapan Pipeline',
-      render: (row) => <StatusBadge status={row.stage} type="lead" />
-    },
-    {
-      header: 'Peluang SPK',
-      render: (row) => (
-        <span className="font-mono font-bold text-xs text-brand-green bg-green-50 px-2 py-0.5 rounded">
-          {row.probability}
-        </span>
-      )
+      render: (row) => <StatusBadge status={row.status || row.stage} type="lead" />
     },
     {
       header: 'Aksi',
       className: 'text-right',
       cellClassName: 'text-right',
       render: (row) => (
-        <Button
-          variant="outline"
-          size="sm"
-          icon={Eye}
-          onClick={() => {
-            setSelectedLead(row);
-            setIsDetailModalOpen(true);
-          }}
-        >
-          Detail & Progres
-        </Button>
+        <div className="flex items-center justify-end gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            icon={Eye}
+            onClick={() => {
+              setSelectedLead(row);
+              setIsDetailModalOpen(true);
+            }}
+          >
+            Detail
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="!p-1.5 text-slate-400 hover:text-brand-red"
+            title="Hapus Prospek"
+            onClick={() => {
+              setSelectedLead(row);
+              setIsDeleteModalOpen(true);
+            }}
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
       )
     }
   ];
@@ -164,15 +203,27 @@ export function LeadPipeline() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Daftar Prospek & Pipeline Klien (CRM)"
-        subtitle="Pelacakan siklus penawaran: Masuk Baru -> Diskusi -> Penawaran Proposal -> Negosiasi -> Terbit SPK Menang."
-        breadcrumb={['Dashboard', 'Marketing', 'Leads']}
+        title="Pipeline Pemasaran & Manajemen Leads"
+        subtitle="Pelacakan prospek alih daya dari formulir publik, pemeringkatan probabilitas, dan status negosiasi kontrak."
+        breadcrumb={['Dashboard', 'Marketing', 'Pipeline Leads']}
         actions={
           <Button
             variant="primary"
             size="sm"
             icon={Plus}
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={() => {
+              setFormData({
+                company_name: '',
+                contact_name: '',
+                phone: '',
+                email: '',
+                estimated_value: '75000000',
+                status: 'new',
+                source: 'Direct Contact',
+                notes: 'Kebutuhan alih daya personil'
+              });
+              setIsCreateModalOpen(true);
+            }}
           >
             Tambah Prospek Baru
           </Button>
@@ -187,11 +238,12 @@ export function LeadPipeline() {
             onChange={(e) => setStageFilter(e.target.value)}
             options={[
               { value: 'all', label: 'Semua Tahapan Pipeline' },
-              { value: 'baru', label: '1. Masuk Baru' },
-              { value: 'diskusi', label: '2. Diskusi Kebutuhan' },
-              { value: 'penawaran', label: '3. Penawaran Proposal' },
-              { value: 'negosiasi', label: '4. Negosiasi Kontrak' },
-              { value: 'menang', label: '5. Menang / SPK Terbit' }
+              { value: 'new', label: 'Prospek Baru (New Lead)' },
+              { value: 'contacted', label: 'Telah Dihubungi (Contacted)' },
+              { value: 'proposal_sent', label: 'Proposal Terkirim' },
+              { value: 'negotiation', label: 'Negosiasi Kontrak' },
+              { value: 'won', label: 'Disepakati / Menang (Won)' },
+              { value: 'lost', label: 'Batal / Kalah (Lost)' }
             ]}
           />
         </div>
@@ -203,78 +255,77 @@ export function LeadPipeline() {
         loading={loading}
         search={search}
         onSearchChange={setSearch}
-        searchPlaceholder="Cari nama perusahaan, PIC, atau layanan..."
+        searchPlaceholder="Cari nama perusahaan, PIC, atau email..."
       />
 
       {/* Create Lead Modal */}
       <Modal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        title="Pendaftaran Prospek Calon Klien Baru"
+        title="Daftarkan Prospek Kemitraan Baru"
         maxWidth="max-w-xl"
       >
         <form onSubmit={handleCreateSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label="Nama Perusahaan / Instansi"
-              value={formData.company}
-              onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-              placeholder="Contoh: PT Surya Logistik"
+              label="Nama Perusahaan / Korporasi"
+              value={formData.company_name}
+              onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
+              placeholder="Contoh: PT Graha Sentosa Abadi"
               required
             />
             <Input
-              label="Nama Kontak PIC"
-              value={formData.picName}
-              onChange={(e) => setFormData({ ...formData, picName: e.target.value })}
-              placeholder="Budi Santoso"
+              label="Nama Contact Person (PIC)"
+              value={formData.contact_name}
+              onChange={(e) => setFormData({ ...formData, contact_name: e.target.value })}
+              placeholder="Contoh: Ibu Diana / Bpk Hendra"
               required
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input
-              label="Telepon / WhatsApp"
-              value={formData.picPhone}
-              onChange={(e) => setFormData({ ...formData, picPhone: e.target.value })}
-              placeholder="+62 812-xxxx-xxxx"
+              label="Nomor Telepon / WhatsApp"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              placeholder="081234567890"
               required
             />
             <Input
-              label="Email Resmi Perusahaan"
+              label="Alamat Email PIC"
+              type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              placeholder="kontak@perusahaan.com"
+              placeholder="pic@perusahaan.com"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Select
-              label="Pilar Layanan Diminati"
-              value={formData.serviceInterested}
-              onChange={(e) => setFormData({ ...formData, serviceInterested: e.target.value })}
-              options={INITIAL_SERVICES.map(s => ({ value: s.title, label: s.title }))}
-            />
             <Input
-              label="Estimasi Kebutuhan Manpower"
+              label="Estimasi Nilai Kontrak (Rp)"
               type="number"
-              value={formData.requestedHeadcount}
-              onChange={(e) => setFormData({ ...formData, requestedHeadcount: e.target.value })}
+              value={formData.estimated_value}
+              onChange={(e) => setFormData({ ...formData, estimated_value: e.target.value })}
               required
+            />
+            <Select
+              label="Sumber Prospek (Source)"
+              value={formData.source}
+              onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+              options={[
+                { value: 'Website Landing Page', label: 'Website Landing Page' },
+                { value: 'Direct Contact', label: 'Direct Contact / Sales' },
+                { value: 'Tender / Pengadaan Resmi', label: 'Tender / Pengadaan' },
+                { value: 'Referral Klien', label: 'Referral Klien' }
+              ]}
             />
           </div>
 
-          <Input
-            label="Estimasi Nilai Kontrak (Rp)"
-            type="number"
-            value={formData.estimatedValue}
-            onChange={(e) => setFormData({ ...formData, estimatedValue: e.target.value })}
-            required
-          />
-
           <Textarea
-            label="Catatan Kebutuhan & Target Tanggal Penempatan"
+            label="Catatan Kebutuhan / Spesifikasi"
             value={formData.notes}
             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+            placeholder="Tuliskan detail kebutuhan tenaga kerja..."
           />
 
           <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
@@ -288,71 +339,67 @@ export function LeadPipeline() {
         </form>
       </Modal>
 
-      {/* Detail & Stage Advance Modal */}
+      {/* Detail & Stage Update Modal */}
       <Modal
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
-        title="Progres Pipeline & Rincian Prospek"
+        title="Detail Prospek & Progres Pipeline"
         maxWidth="max-w-lg"
       >
         {selectedLead && (
           <div className="space-y-4 text-xs">
             <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-              <div className="flex items-center justify-between mb-1">
-                <h4 className="font-bold text-brand-dark text-sm">{selectedLead.company}</h4>
-                <StatusBadge status={selectedLead.stage} type="lead" />
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-bold text-brand-dark text-sm">{selectedLead.company_name || selectedLead.company}</span>
+                <StatusBadge status={selectedLead.status || selectedLead.stage} type="lead" />
               </div>
-              <p className="text-slate-500">PIC: {selectedLead.picName} ({selectedLead.picPhone})</p>
+              <p className="text-slate-600 font-semibold">{selectedLead.contact_name || selectedLead.picName} ({selectedLead.phone || selectedLead.picPhone})</p>
+              <p className="text-slate-400 mt-1">Sumber: {selectedLead.source || 'Website'}</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5">
-              <div className="p-2.5 bg-white border border-slate-200 rounded-lg">
-                <span className="text-slate-400 block mb-0.5">Layanan Diminati:</span>
-                <span className="font-semibold text-brand-dark">{selectedLead.serviceInterested}</span>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 bg-white border border-slate-200 rounded-lg">
+                <span className="text-slate-400 block mb-0.5">Estimasi Nilai Kontrak:</span>
+                <span className="font-bold text-brand-dark text-sm">{formatRupiah(selectedLead.estimated_value || selectedLead.estimatedValue)}</span>
               </div>
-              <div className="p-2.5 bg-white border border-slate-200 rounded-lg">
-                <span className="text-slate-400 block mb-0.5">Estimasi Personel:</span>
-                <span className="font-semibold text-brand-dark">{selectedLead.requestedHeadcount} Orang</span>
-              </div>
-              <div className="p-2.5 bg-white border border-slate-200 rounded-lg">
-                <span className="text-slate-400 block mb-0.5">Estimasi Nilai:</span>
-                <span className="font-bold text-brand-red">{formatRupiah(selectedLead.estimatedValue)}</span>
-              </div>
-              <div className="p-2.5 bg-white border border-slate-200 rounded-lg">
-                <span className="text-slate-400 block mb-0.5">Probabilitas SPK:</span>
-                <span className="font-bold text-brand-green font-mono">{selectedLead.probability}</span>
+              <div className="p-3 bg-white border border-slate-200 rounded-lg">
+                <span className="text-slate-400 block mb-0.5">Email PIC:</span>
+                <span className="font-semibold text-slate-700">{selectedLead.email || '-'}</span>
               </div>
             </div>
 
             {selectedLead.notes && (
-              <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-                <span className="font-bold text-slate-700 block mb-1">Catatan Klien:</span>
-                <p className="text-slate-600 leading-relaxed">{selectedLead.notes}</p>
+              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span className="text-slate-400 block mb-1">Catatan Kebutuhan:</span>
+                <p className="text-slate-700 italic">{selectedLead.notes}</p>
               </div>
             )}
 
-            {/* Advance Stage Selector */}
+            {/* Quick Stage Update */}
             <div className="pt-3 border-t border-slate-100 space-y-2">
-              <span className="font-bold text-brand-dark block">Pindahkan Tahapan Pipeline:</span>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                Pindahkan Tahapan Pipeline:
+              </span>
+              <div className="flex flex-wrap gap-1.5">
                 {[
-                  { id: 'baru', label: '1. Masuk Baru' },
-                  { id: 'diskusi', label: '2. Diskusi' },
-                  { id: 'penawaran', label: '3. Proposal' },
-                  { id: 'negosiasi', label: '4. Negosiasi' },
-                  { id: 'menang', label: '5. Menang / SPK' }
-                ].map((stg) => (
+                  { key: 'new', label: 'New Lead' },
+                  { key: 'contacted', label: 'Contacted' },
+                  { key: 'proposal_sent', label: 'Proposal Sent' },
+                  { key: 'negotiation', label: 'Negotiation' },
+                  { key: 'won', label: 'Won (Menang)' },
+                  { key: 'lost', label: 'Lost' }
+                ].map(st => (
                   <button
-                    key={stg.id}
+                    key={st.key}
                     type="button"
-                    onClick={() => handleUpdateStage(selectedLead.id, stg.id)}
-                    className={`px-2.5 py-1.5 rounded-lg border text-center font-semibold text-[11px] transition-colors ${
-                      selectedLead.stage === stg.id
-                        ? 'bg-brand-red text-white border-brand-red shadow-2xs'
-                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                    onClick={() => handleUpdateStage(selectedLead.id, st.key)}
+                    className={`px-2.5 py-1 rounded text-xs font-semibold cursor-pointer transition-colors ${
+                      (selectedLead.status || selectedLead.stage) === st.key
+                        ? 'bg-brand-red text-white'
+                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                     }`}
                   >
-                    {stg.label}
+                    {st.label}
                   </button>
                 ))}
               </div>
@@ -366,6 +413,19 @@ export function LeadPipeline() {
           </div>
         )}
       </Modal>
+
+      {/* Confirm Delete */}
+      <ConfirmDialog
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteLead}
+        title="Hapus Prospek"
+        message={`Apakah Anda yakin ingin menghapus prospek untuk ${selectedLead?.company_name || selectedLead?.company}?`}
+        confirmText="Ya, Hapus"
+        cancelText="Batal"
+        variant="danger"
+        loading={submitting}
+      />
     </div>
   );
 }

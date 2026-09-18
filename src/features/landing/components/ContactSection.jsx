@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mail, Phone, MapPin, Send, CheckCircle2, Shield, Clock, ArrowUpRight } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { Input, Select, Textarea } from '../../../components/ui/Input';
 import { api } from '../../../services/api/apiClient';
 import { useToast } from '../../../app/context/ToastContext';
-import { COMPANY_INFO, INITIAL_SERVICES } from '../../../services/mock/mockData';
+import { COMPANY_INFO } from '../../../services/mock/mockData';
 
 export function ContactSection({ selectedService }) {
   const { addToast } = useToast();
@@ -13,17 +13,30 @@ export function ContactSection({ selectedService }) {
     company: '',
     phone: '',
     email: '',
-    service: selectedService || 'Pengamanan / Security',
-    headcount: '10',
+    service: selectedService || 'Security & Guard Services',
+    headcount: '10-20 Personel',
     message: ''
   });
 
+  const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [ticketId, setTicketId] = useState(null);
 
+  useEffect(() => {
+    async function loadServices() {
+      try {
+        const res = await api.getPublicServices().catch(() => api.getServices());
+        if (res?.success && Array.isArray(res.data)) {
+          setServices(res.data);
+        }
+      } catch (e) {}
+    }
+    loadServices();
+  }, []);
+
   // If prop selectedService changes, sync state
-  React.useEffect(() => {
+  useEffect(() => {
     if (selectedService) {
       setFormData(prev => ({ ...prev, service: selectedService }));
     }
@@ -43,11 +56,19 @@ export function ContactSection({ selectedService }) {
 
     setLoading(true);
     try {
-      const res = await api.submitContactInquiry(formData);
-      if (res.success) {
+      const res = await api.submitContactInquiry({
+        company_name: formData.company || 'Pribadi / Perusahaan',
+        contact_name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        service_interest: formData.service,
+        message: `${formData.message ? `${formData.message}\n` : ''}Estimasi Kebutuhan: ${formData.headcount}`
+      });
+
+      if (res?.success) {
         setSubmitted(true);
-        setTicketId(res.data?.ticketId || 'BAR-REQ-001');
-        addToast('Permintaan konsultasi Anda telah berhasil dikirim!', 'success');
+        setTicketId(res.data?.lead_id ? `BAR-LEAD-${res.data.lead_id}` : `BAR-REQ-${Math.floor(100 + Math.random() * 900)}`);
+        addToast('Permintaan konsultasi Anda telah berhasil dikirim ke server!', 'success');
       }
     } catch (err) {
       addToast(err.message || 'Gagal mengirimkan permintaan', 'error');
@@ -62,24 +83,30 @@ export function ContactSection({ selectedService }) {
       company: '',
       phone: '',
       email: '',
-      service: 'Pengamanan / Security',
-      headcount: '10',
+      service: 'Security & Guard Services',
+      headcount: '10-20 Personel',
       message: ''
     });
     setSubmitted(false);
     setTicketId(null);
   };
 
-  const serviceOptions = INITIAL_SERVICES.map(s => ({
-    value: s.title,
-    label: `${s.title} (${s.code})`
-  }));
+  const serviceOptions = services.length > 0
+    ? services.map(s => ({ value: s.name, label: `${s.name} (${s.code || ''})` }))
+    : [
+        { value: 'Security & Guard Services', label: 'Security & Guard Services (SEC)' },
+        { value: 'Commercial Cleaning Service', label: 'Commercial Cleaning Service (CLN)' },
+        { value: 'Valet & Parking Management', label: 'Valet & Parking Management (VALET)' },
+        { value: 'Driver & Chauffeur Services', label: 'Driver & Chauffeur Services (DRV)' },
+        { value: 'Office Support & Administration', label: 'Office Support & Administration (ADM)' },
+        { value: 'General Labor & Warehousing', label: 'General Labor & Warehousing (WRH)' }
+      ];
 
   const headcountOptions = [
-    { value: '5-15', label: '5 – 15 Personel (Kebutuhan Ringan)' },
-    { value: '16-30', label: '16 – 30 Personel (Kebutuhan Sedang)' },
-    { value: '31-50', label: '31 – 50 Personel (Kebutuhan Komprehensif)' },
-    { value: '50+', label: 'Lebih dari 50 Personel (Skala Korporasi / Pabrik)' }
+    { value: '5-15 Personel', label: '5 – 15 Personel (Kebutuhan Ringan)' },
+    { value: '16-30 Personel', label: '16 – 30 Personel (Kebutuhan Sedang)' },
+    { value: '31-50 Personel', label: '31 – 50 Personel (Kebutuhan Komprehensif)' },
+    { value: 'Lebih dari 50 Personel', label: 'Lebih dari 50 Personel (Skala Korporasi / Pabrik)' }
   ];
 
   return (
@@ -135,7 +162,7 @@ export function ContactSection({ selectedService }) {
                 </div>
               </a>
 
-              {/* Email Resmi (Direct Gmail Compose) */}
+              {/* Email Resmi */}
               <a
                 href={`https://mail.google.com/mail/?view=cm&fs=1&to=${COMPANY_INFO.email}&su=Konsultasi%20Layanan%20PT.%20Bhimasena%20Adhirajasa%20Radhika`}
                 target="_blank"
@@ -161,7 +188,7 @@ export function ContactSection({ selectedService }) {
                 </div>
               </a>
 
-              {/* Alamat Kantor Pusat (Direct link to Google Maps) */}
+              {/* Alamat Kantor Pusat */}
               <a
                 href="https://maps.app.goo.gl/BsRT6XkbrJW8oRsB6"
                 target="_blank"
@@ -268,7 +295,7 @@ export function ContactSection({ selectedService }) {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Select
-                      label="Pilihan 6 Layanan Utama"
+                      label="Pilihan Layanan Alih Daya"
                       name="service"
                       value={formData.service}
                       onChange={handleChange}
@@ -305,7 +332,7 @@ export function ContactSection({ selectedService }) {
                       Kirimkan Permintaan Konsultasi
                     </Button>
                     <p className="text-[11px] text-slate-400 text-center mt-2">
-                      Informasi Anda dijamin kerahasiaannya dan hanya digunakan untuk keperluan penawaran resmi PT. Bhimasena.
+                      Informasi Anda dijamin kerahasiaannya dan diproses otomatis oleh sistem backend PT. Bhimasena.
                     </p>
                   </div>
                 </form>

@@ -1,9 +1,16 @@
 import React, { useState } from 'react';
-import { Shield, Lock, Mail, ArrowRight, ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react';
+import { Shield, Lock, Mail, ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useAuth } from '../../app/context/AuthContext';
-import { INITIAL_USERS } from '../../services/mock/mockData';
+
+const QUICK_ACCOUNTS = [
+  { role: 'owner', label: '1. Direktur', email: 'direktur@bimasenaadhirajasaradika.com', color: 'hover:border-slate-800' },
+  { role: 'hrd', label: '2. HRD & Personel', email: 'hrd@bimasenaadhirajasaradika.com', color: 'hover:border-blue-500' },
+  { role: 'operasional', label: '3. Operasional Site', email: 'operasional@bimasenaadhirajasaradika.com', color: 'hover:border-amber-500' },
+  { role: 'finance', label: '4. Finance & Billing', email: 'finance@bimasenaadhirajasaradika.com', color: 'hover:border-emerald-600' },
+  { role: 'marketing', label: '5. Marketing / BD', email: 'marketing@bimasenaadhirajasaradika.com', color: 'hover:border-red-500' }
+];
 
 export function LoginPage({ onNavigate, onLoginSuccess }) {
   const { login } = useAuth();
@@ -23,8 +30,8 @@ export function LoginPage({ onNavigate, onLoginSuccess }) {
 
     setLoading(true);
     try {
-      const res = await login(email, password);
-      if (res.success) {
+      const res = await login(email.trim(), password);
+      if (res?.success && res?.data?.user) {
         if (onLoginSuccess) {
           onLoginSuccess(res.data.user.role);
         }
@@ -36,21 +43,18 @@ export function LoginPage({ onNavigate, onLoginSuccess }) {
     }
   };
 
-  const handleQuickLogin = async (roleKey) => {
+  const handleQuickLogin = async (acc) => {
     setError('');
+    setEmail(acc.email);
+    setPassword('password123');
     setLoading(true);
     try {
-      const user = INITIAL_USERS.find(u => u.role === roleKey);
-      if (user) {
-        setEmail(user.email);
-        setPassword('password');
-        const res = await login(user.email, 'password');
-        if (res.success && onLoginSuccess) {
-          onLoginSuccess(roleKey);
-        }
+      const res = await login(acc.email, 'password123');
+      if (res?.success && onLoginSuccess) {
+        onLoginSuccess(res.data.user.role);
       }
     } catch (err) {
-      setError(err.message || 'Gagal login instan');
+      setError(err.message || 'Gagal login ke akun demo.');
     } finally {
       setLoading(false);
     }
@@ -105,7 +109,7 @@ export function LoginPage({ onNavigate, onLoginSuccess }) {
               icon={Mail}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="nama@bhimasena.co.id"
+              placeholder="nama@bimasenaadhirajasaradika.com"
               required
             />
 
@@ -149,39 +153,20 @@ export function LoginPage({ onNavigate, onLoginSuccess }) {
                 Masuk ke Dashboard
               </Button>
             </div>
-
-            <div className="text-center pt-1">
-              <p className="text-xs text-slate-600">
-                Belum memiliki akun terdaftar?{' '}
-                <button
-                  type="button"
-                  onClick={() => onNavigate && onNavigate('register')}
-                  className="font-bold text-brand-red hover:underline focus:outline-none"
-                >
-                  Daftar Sekarang
-                </button>
-              </p>
-            </div>
           </form>
 
           {/* Quick Switch Role for Demo / Evaluator convenience */}
           <div className="mt-6 pt-6 border-t border-slate-100">
             <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 text-center mb-3">
-              Akses Cepat Demo Sesuai Role (SOT 5 Role):
+              Akses Cepat Login Sesuai Role (Backend Live):
             </p>
             <div className="grid grid-cols-2 gap-2">
-              {[
-                { role: 'owner', label: '1. Direktur', color: 'hover:border-slate-800' },
-                { role: 'hrd', label: '2. HRD & Personel', color: 'hover:border-blue-500' },
-                { role: 'operasional', label: '3. Operasional Site', color: 'hover:border-amber-500' },
-                { role: 'finance', label: '4. Finance & Billing', color: 'hover:border-emerald-600' },
-                { role: 'marketing', label: '5. Marketing / BD', color: 'hover:border-red-500' }
-              ].map((item) => (
+              {QUICK_ACCOUNTS.map((item) => (
                 <button
                   key={item.role}
                   type="button"
                   disabled={loading}
-                  onClick={() => handleQuickLogin(item.role)}
+                  onClick={() => handleQuickLogin(item)}
                   className={`p-2 text-[11px] font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded-btn text-left hover:bg-white ${item.color} hover:shadow-2xs transition-all`}
                 >
                   {item.label}
