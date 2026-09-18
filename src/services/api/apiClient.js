@@ -425,8 +425,12 @@ export const api = {
     });
   },
 
-  deleteUser: async (id) => {
-    return request(`/users/${id}`, {
+  deleteUser: async (id, permanent = false, action = '') => {
+    const params = new URLSearchParams();
+    if (permanent) params.append('permanent', 'true');
+    if (action) params.append('action', action);
+    const qs = params.toString();
+    return request(`/users/${id}${qs ? `?${qs}` : ''}`, {
       method: 'DELETE',
     });
   },

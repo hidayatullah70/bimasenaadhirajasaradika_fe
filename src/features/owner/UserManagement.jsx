@@ -5,11 +5,10 @@ import { StatusBadge } from '../../components/shared/StatusBadge';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import { Avatar } from '../../components/ui/Avatar';
-import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { Input, Select } from '../../components/ui/Input';
 import { useToast } from '../../app/context/ToastContext';
 import { api } from '../../services/api/apiClient';
-import { UserCog, UserPlus, Mail, Lock, User, ShieldCheck, Trash2, Image, Check } from 'lucide-react';
+import { UserCog, UserPlus, Mail, Lock, User, ShieldCheck, Trash2, Power, AlertTriangle, Check } from 'lucide-react';
 
 const TEAM_AVATARS = [
   { label: 'Hidayatullah (JustHidy)', path: '/assets/img/team/JustHidy3.png' },
@@ -29,7 +28,7 @@ export function UserManagement() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isActionModalOpen, setIsActionModalOpen] = useState(false);
   const [newRoleId, setNewRoleId] = useState('2');
   const [saving, setSaving] = useState(false);
 
@@ -76,9 +75,9 @@ export function UserManagement() {
     setIsEditModalOpen(true);
   };
 
-  const handleOpenDelete = (user) => {
+  const handleOpenAction = (user) => {
     setSelectedUser(user);
-    setIsDeleteModalOpen(true);
+    setIsActionModalOpen(true);
   };
 
   const handleSaveRole = async () => {
@@ -158,7 +157,7 @@ export function UserManagement() {
 
       const res = await api.createUser(payload);
       if (res.success) {
-        addToast(`Pengguna baru ${payload.name} berhasil ditambahkan dengan foto avatar tim!`, 'success');
+        addToast(`Pengguna baru ${payload.name} berhasil ditambahkan!`, 'success');
         setIsCreateModalOpen(false);
         setFormData({
           name: '',
@@ -176,18 +175,45 @@ export function UserManagement() {
     }
   };
 
-  const handleDeleteUser = async () => {
+  // 1. Toggle Nonaktifkan / Aktifkan Kembali
+  const handleToggleStatus = async () => {
     if (!selectedUser) return;
+    const isCurrentlyActive = selectedUser.is_active !== 0 && selectedUser.is_active !== false;
+    const action = isCurrentlyActive ? 'deactivate' : 'activate';
+
     setSaving(true);
     try {
-      const res = await api.deleteUser(selectedUser.id);
+      const res = await api.deleteUser(selectedUser.id, false, action);
       if (res?.success) {
-        addToast(`Pengguna ${selectedUser.name} berhasil dinonaktifkan.`, 'success');
-        setIsDeleteModalOpen(false);
+        addToast(
+          isCurrentlyActive
+            ? `Pengguna ${selectedUser.name} berhasil dinonaktifkan.`
+            : `Pengguna ${selectedUser.name} berhasil diaktifkan kembali.`,
+          'success'
+        );
+        setIsActionModalOpen(false);
         fetchUsers();
       }
     } catch (err) {
-      addToast(err.message || 'Gagal menghapus pengguna.', 'error');
+      addToast(err.message || 'Gagal mengubah status pengguna.', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // 2. Hard Delete Permanen
+  const handlePermanentDelete = async () => {
+    if (!selectedUser) return;
+    setSaving(true);
+    try {
+      const res = await api.deleteUser(selectedUser.id, true, 'permanent');
+      if (res?.success) {
+        addToast(`Pengguna ${selectedUser.name} berhasil DIHAPUS PERMANEN dari database.`, 'success');
+        setIsActionModalOpen(false);
+        fetchUsers();
+      }
+    } catch (err) {
+      addToast(err.message || 'Gagal menghapus pengguna secara permanen.', 'error');
     } finally {
       setSaving(false);
     }
@@ -257,8 +283,8 @@ export function UserManagement() {
               variant="ghost"
               size="sm"
               className="text-red-600 hover:bg-red-50 !p-2"
-              onClick={() => handleOpenDelete(row)}
-              title="Hapus / Nonaktifkan User"
+              onClick={() => handleOpenAction(row)}
+              title="Hapus atau Nonaktifkan User"
             >
               <Trash2 className="w-4 h-4" />
             </Button>
@@ -267,6 +293,8 @@ export function UserManagement() {
       )
     }
   ];
+
+  const isSelectedActive = selectedUser?.is_active !== 0 && selectedUser?.is_active !== false;
 
   return (
     <div className="space-y-6">
@@ -468,18 +496,107 @@ export function UserManagement() {
         )}
       </Modal>
 
-      {/* Delete User Confirm Dialog */}
-      <ConfirmDialog
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={handleDeleteUser}
-        title="Nonaktifkan Pengguna"
-        message={`Apakah Anda yakin ingin menonaktifkan akun ${selectedUser?.name}?`}
-        confirmText="Ya, Nonaktifkan"
-        cancelText="Batal"
-        variant="danger"
-        loading={saving}
-      />
+      {/* 2-Option Action Modal: Nonaktifkan OR Hapus Permanen */}
+      <Modal
+        isOpen={isActionModalOpen}
+        onClose={() => setIsActionModalOpen(false)}
+        title="Opsi Pengelolaan / Penghapusan Akun"
+        maxWidth="max-w-lg"
+      >
+        {selectedUser && (
+          <div className="space-y-4">
+            {/* User card info */}
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center gap-3">
+              <Avatar
+                src={selectedUser.avatar || selectedUser.avatar_url}
+                name={selectedUser.name}
+                size="md"
+                className="ring-1 ring-slate-300"
+              />
+              <div>
+                <p className="font-bold text-brand-dark text-sm">{selectedUser.name}</p>
+                <p className="text-xs text-slate-500">{selectedUser.email}</p>
+                <div className="mt-1 flex items-center gap-2">
+                  <span className={`inline-flex px-2 py-0.2 rounded text-[10px] font-bold ${
+                    isSelectedActive ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+                  }`}>
+                    {isSelectedActive ? 'Status: Aktif' : 'Status: Non-Aktif'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 font-medium">
+              Silakan tentukan tindakan yang ingin Anda lakukan terhadap akun ini:
+            </p>
+
+            {/* Pilihan 1: Nonaktifkan / Aktifkan */}
+            <div className="p-3.5 rounded-xl border border-amber-200 bg-amber-50/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-start gap-2.5">
+                <Power className={`w-5 h-5 flex-shrink-0 mt-0.5 ${isSelectedActive ? 'text-amber-600' : 'text-emerald-600'}`} />
+                <div>
+                  <h4 className="text-xs font-bold text-slate-800">
+                    {isSelectedActive ? '1. Nonaktifkan Akun (Soft)' : '1. Aktifkan Kembali Akun'}
+                  </h4>
+                  <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">
+                    {isSelectedActive
+                      ? 'Mematikan hak akses login sementara. Data riwayat akun tetap aman.'
+                      : 'Mengaktifkan kembali hak akses login pengguna.'}
+                  </p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className={isSelectedActive ? 'text-amber-800 border-amber-300 hover:bg-amber-100 whitespace-nowrap' : 'text-emerald-800 border-emerald-300 hover:bg-emerald-100 whitespace-nowrap'}
+                onClick={handleToggleStatus}
+                loading={saving}
+              >
+                {isSelectedActive ? 'Nonaktifkan' : 'Aktifkan'}
+              </Button>
+            </div>
+
+            {/* Pilihan 2: Hapus Permanen */}
+            <div className="p-3.5 rounded-xl border border-red-200 bg-red-50/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-start gap-2.5">
+                <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-xs font-bold text-red-900">
+                    2. Hapus Permanen (*Delete*)
+                  </h4>
+                  <p className="text-[11px] text-red-700 mt-0.5 leading-snug">
+                    Menghapus data akun secara permanen dari database MySQL. Tindakan ini tidak dapat dibatalkan.
+                  </p>
+                </div>
+              </div>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                className="!bg-red-600 hover:!bg-red-700 text-white whitespace-nowrap"
+                onClick={handlePermanentDelete}
+                loading={saving}
+                icon={Trash2}
+              >
+                Hapus Permanen
+              </Button>
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-slate-100">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsActionModalOpen(false)}
+                disabled={saving}
+              >
+                Tutup / Batal
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
