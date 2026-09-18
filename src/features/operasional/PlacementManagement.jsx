@@ -7,7 +7,7 @@ import { Modal } from '../../components/ui/Modal';
 import { Input, Select } from '../../components/ui/Input';
 import { useToast } from '../../app/context/ToastContext';
 import { api } from '../../services/api/apiClient';
-import { Plus, Users, Briefcase } from 'lucide-react';
+import { Plus, Trash2, AlertTriangle } from 'lucide-react';
 
 export function PlacementManagement() {
   const { addToast } = useToast();
@@ -17,9 +17,11 @@ export function PlacementManagement() {
   const [sites, setSites] = useState([]);
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [search, setSearch] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedPlacement, setSelectedPlacement] = useState(null);
 
   const [formData, setFormData] = useState({
     employee_id: '',
@@ -27,39 +29,20 @@ export function PlacementManagement() {
     site_id: '',
     service_id: '',
     shift: 'pagi',
-    start_date: '2026-03-01',
-    end_date: '2027-02-28',
+    start_date: new Date().toISOString().split('T')[0],
+    end_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     status: 'active'
   });
 
   const fetchPlacements = async () => {
     setLoading(true);
     try {
-      const res = await api.getPlacements({ status: 'active' });
-      if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+      const res = await api.getPlacements({ search });
+      if (res?.success) {
         setPlacements(res.data);
-      } else {
-        // Fallback to employee placements mapping if placements table is newly initialized
-        const empRes = await api.getEmployees();
-        if (empRes?.success && Array.isArray(empRes.data)) {
-          const mapped = empRes.data.map(emp => ({
-            id: emp.id,
-            employee_name: emp.name,
-            employee_nik: emp.employee_no || emp.nik,
-            client_name: emp.current_placement?.client_name || emp.clientName || 'PT Nusantara Graha',
-            site_name: emp.current_placement?.site_name || emp.siteName || 'Site Gedung Utama',
-            service_name: emp.service || 'Security & Guard Services',
-            position: emp.position || 'Garda Personil',
-            shift: emp.current_placement?.shift || 'pagi',
-            start_date: emp.join_date || '2026-01-01',
-            end_date: emp.end_date || '2027-01-01',
-            status: emp.status || 'active'
-          }));
-          setPlacements(mapped);
-        }
       }
     } catch (err) {
-      console.error('Failed to load placements:', err);
+      addToast(err.message || 'Gagal memuat data penempatan', 'error');
     } finally {
       setLoading(false);
     }
@@ -68,7 +51,7 @@ export function PlacementManagement() {
   const fetchDependencies = async () => {
     try {
       const [empRes, cliRes, siteRes, srvRes] = await Promise.all([
-        api.getEmployees().catch(() => ({ success: false })),
+        api.getEmployees({ limit: 100 }).catch(() => ({ success: false })),
         api.getClients().catch(() => ({ success: false })),
         api.getSites().catch(() => ({ success: false })),
         api.getServices().catch(() => ({ success: false }))
@@ -117,6 +100,24 @@ export function PlacementManagement() {
     }
   };
 
+  const handleDeletePlacement = async () => {
+    if (!selectedPlacement) return;
+    setSubmitting(true);
+    try {
+      const res = await api.deletePlacement(selectedPlacement.id);
+      if (res?.success) {
+        addToast('Data penempatan berhasil dihapus.', 'success');
+        setIsDeleteModalOpen(false);
+        setSelectedPlacement(null);
+        fetchPlacements();
+      }
+    } catch (err) {
+      addToast(err.message || 'Gagal menghapus penempatan', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const columns = [
     {
       header: 'Nama Personel & NIK',
@@ -156,6 +157,27 @@ export function PlacementManagement() {
     {
       header: 'Status Disposisi',
       render: (row) => <StatusBadge status={row.status} />
+    },
+    {
+      header: 'Aksi',
+      className: 'text-right',
+      cellClassName: 'text-right',
+      render: (row) => (
+        <div className="flex items-center justify-end gap-1.5">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="!p-1.5 text-slate-400 hover:text-brand-red"
+            title="Hapus Penempatan"
+            onClick={() => {
+              setSelectedPlacement(row);
+              setIsDeleteModalOpen(true);
+            }}
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+      )
     }
   ];
 
@@ -293,6 +315,48 @@ export function PlacementManagement() {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* Modal Delete Placement */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Konfirmasi Hapus Penempatan"
+      >
+        <div className="space-y-4">
+          <div className="p-3 bg-red-50 rounded-xl border border-red-200 text-xs text-red-900 leading-relaxed flex items-start gap-2.5">
+            <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold">Apakah Anda yakin ingin menghapus data penempatan ini?</p>
+              <p className="mt-1 text-red-700">
+                Personel <span className="font-semibold">{selectedPlacement?.employee_name || selectedPlacement?.name}</span> di lokasi <span className="font-semibold">{selectedPlacement?.site_name || selectedPlacement?.siteName}</span> akan dilepaskan dari status penugasan aktif.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsDeleteModalOpen(false)}
+              disabled={submitting}
+            >
+              Batal
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              className="!bg-red-600 hover:!bg-red-700"
+              loading={submitting}
+              icon={Trash2}
+              onClick={handleDeletePlacement}
+            >
+              Ya, Hapus Penempatan
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   );
