@@ -7,6 +7,7 @@ export function Badge({ children, variant = 'neutral', size = 'sm', className = 
     red: 'bg-red-50 text-brand-red border-red-200 font-semibold',
     yellow: 'bg-amber-50 text-amber-800 border-amber-200 font-semibold',
     blue: 'bg-blue-50 text-blue-700 border-blue-200 font-semibold',
+    purple: 'bg-purple-50 text-purple-700 border-purple-200 font-semibold',
     dark: 'bg-brand-dark text-white border-transparent font-medium'
   };
 

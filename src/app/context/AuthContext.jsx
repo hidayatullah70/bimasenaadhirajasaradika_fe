@@ -9,7 +9,8 @@ const ROLE_CREDENTIALS = {
   hrd: { email: 'hrd@bimasenaadhirajasaradika.com', password: 'password123' },
   finance: { email: 'finance@bimasenaadhirajasaradika.com', password: 'password123' },
   marketing: { email: 'marketing@bimasenaadhirajasaradika.com', password: 'password123' },
-  operasional: { email: 'operasional@bimasenaadhirajasaradika.com', password: 'password123' }
+  operasional: { email: 'operasional@bimasenaadhirajasaradika.com', password: 'password123' },
+  it_support: { email: 'itsupport@bimasenaadhirajasaradika.com', password: 'password123' }
 };
 
 export function AuthProvider({ children }) {

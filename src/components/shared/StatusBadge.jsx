@@ -13,10 +13,34 @@ export function StatusBadge({ status, type = 'general' }) {
       hrd: { label: 'HRD', variant: 'blue' },
       operasional: { label: 'Operasional', variant: 'yellow' },
       finance: { label: 'Finance', variant: 'green' },
-      marketing: { label: 'Marketing', variant: 'red' }
+      marketing: { label: 'Marketing', variant: 'red' },
+      it_support: { label: 'IT Support', variant: 'purple' }
     };
     const r = roleLabels[s] || { label: status, variant: 'neutral' };
     return <Badge variant={r.variant}>{r.label}</Badge>;
+  }
+
+  // IT Ticket Status
+  if (type === 'it_ticket') {
+    const map = {
+      open: { label: 'Menunggu (Open)', variant: 'red' },
+      in_progress: { label: 'Sedang Ditangani', variant: 'yellow' },
+      resolved: { label: 'Selesai (Resolved)', variant: 'green' },
+      closed: { label: 'Ditutup', variant: 'neutral' }
+    };
+    const t = map[s] || { label: status, variant: 'neutral' };
+    return <Badge variant={t.variant}>{t.label}</Badge>;
+  }
+
+  // IT Device Status
+  if (type === 'it_device') {
+    const map = {
+      online: { label: 'Online / Aktif', variant: 'green' },
+      offline: { label: 'Offline / Terputus', variant: 'red' },
+      maintenance: { label: 'Pemeliharaan', variant: 'yellow' }
+    };
+    const d = map[s] || { label: status, variant: 'neutral' };
+    return <Badge variant={d.variant}>{d.label}</Badge>;
   }
 
   // Attendance

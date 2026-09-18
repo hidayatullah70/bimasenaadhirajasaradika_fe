@@ -49,7 +49,8 @@ export function UserManagement() {
     { value: '2', label: '2 - HRD (Manajemen Tenaga Kerja)' },
     { value: '3', label: '3 - Finance (Billing & Tagihan)' },
     { value: '4', label: '4 - Marketing (Leads & Proposal)' },
-    { value: '5', label: '5 - Operasional (Site & Supervisi)' }
+    { value: '5', label: '5 - Operasional (Site & Supervisi)' },
+    { value: '6', label: '6 - IT Support & Infrastruktur' }
   ];
 
   const fetchUsers = async () => {
@@ -94,7 +95,8 @@ export function UserManagement() {
         '2': 'hrd',
         '3': 'finance',
         '4': 'marketing',
-        '5': 'operasional'
+        '5': 'operasional',
+        '6': 'it_support'
       };
       const res = await api.updateUserRole(selectedUser.id, {
         role_id: parseInt(newRoleId, 10),
@@ -147,7 +149,8 @@ export function UserManagement() {
         '2': 'hrd',
         '3': 'finance',
         '4': 'marketing',
-        '5': 'operasional'
+        '5': 'operasional',
+        '6': 'it_support'
       };
 
       const payload = {

@@ -20,39 +20,39 @@ export function HeroSection({ onOpenContact, onExploreServices }) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Left Column: Copy & CTAs */}
           <div className="lg:col-span-7 space-y-6 text-left">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-950/60 border border-white/20 text-brand-yellow text-xs font-bold tracking-wide uppercase backdrop-blur-md shadow-md">
-              <Shield className="w-3.5 h-3.5 fill-brand-yellow text-brand-yellow" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100/95 border border-slate-300 text-brand-red text-xs font-bold tracking-wide uppercase backdrop-blur-md shadow-sm">
+              <Shield className="w-3.5 h-3.5 fill-brand-yellow text-brand-red" />
               <span>Penyedia & Pengelola Tenaga Kerja Outsourcing Resmi</span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-[1.15] drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-[1.15] drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)]">
               Solusi Outsourcing Terpercaya untuk{' '}
               <span className="text-brand-yellow">Ketahanan Bisnis</span>{' '}
               dan Operasional Prima.
             </h1>
 
-            <p className="text-base sm:text-lg text-slate-100 max-w-2xl leading-relaxed drop-shadow-[0_1px_6px_rgba(0,0,0,0.9)]">
+            <p className="text-base sm:text-lg text-slate-100 max-w-2xl leading-relaxed drop-shadow-[0_1px_8px_rgba(0,0,0,0.95)]">
               <strong className="text-white font-semibold">PT. Bhimasena Adhirajasa Radhika</strong> menyediakan tenaga kerja terampil, disiplin, dan patuh hukum untuk 6 pilar layanan vital:{' '}
               <span className="text-brand-yellow font-medium">Security, Ekspedisi Kurir, Man Power, Cleaning Service, Pengelolaan Parkir,</span> hingga{' '}
               <span className="text-brand-yellow font-medium">Loss Prevention</span>.
             </p>
 
             {/* Quick Value Bullets */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-xs font-semibold">
-              <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-900/70 backdrop-blur-md border border-white/10 text-slate-200 shadow-sm">
-                <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-xs font-bold">
+              <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-100/95 backdrop-blur-md border border-slate-300/90 text-slate-800 shadow-sm">
+                <CheckCircle className="w-4 h-4 text-brand-green flex-shrink-0" />
                 <span>100% Kontrak Kerja & BPJS Resmi</span>
               </div>
-              <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-900/70 backdrop-blur-md border border-white/10 text-slate-200 shadow-sm">
-                <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-100/95 backdrop-blur-md border border-slate-300/90 text-slate-800 shadow-sm">
+                <CheckCircle className="w-4 h-4 text-brand-green flex-shrink-0" />
                 <span>Pencapaian SLA Layanan &gt; 99%</span>
               </div>
-              <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-900/70 backdrop-blur-md border border-white/10 text-slate-200 shadow-sm">
-                <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-100/95 backdrop-blur-md border border-slate-300/90 text-slate-800 shadow-sm">
+                <CheckCircle className="w-4 h-4 text-brand-green flex-shrink-0" />
                 <span>Penggantian Tenaga Standby 3 Jam</span>
               </div>
-              <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-900/70 backdrop-blur-md border border-white/10 text-slate-200 shadow-sm">
-                <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+              <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-100/95 backdrop-blur-md border border-slate-300/90 text-slate-800 shadow-sm">
+                <CheckCircle className="w-4 h-4 text-brand-green flex-shrink-0" />
                 <span>Supervisi & Pengawasan Lapangan 24/7</span>
               </div>
             </div>
@@ -73,58 +73,58 @@ export function HeroSection({ onOpenContact, onExploreServices }) {
                 variant="outline"
                 size="lg"
                 onClick={onExploreServices}
-                className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white backdrop-blur-md font-semibold"
+                className="border-slate-300 bg-slate-100/95 text-slate-800 hover:bg-white hover:text-brand-red backdrop-blur-md font-bold shadow-sm"
               >
                 Jelajahi 6 Pilar Layanan
               </Button>
             </div>
           </div>
 
-          {/* Right Column: Key Hero Metrics Card with Glassmorphic Design */}
+          {/* Right Column: Key Hero Metrics Card with Light Grey Card Design */}
           <div className="lg:col-span-5">
-            <div className="bg-slate-900/80 backdrop-blur-xl border border-white/20 p-6 sm:p-8 rounded-2xl shadow-2xl relative text-white">
-              <div className="flex items-center justify-between pb-5 border-b border-white/10">
+            <div className="bg-slate-100/95 backdrop-blur-xl border border-slate-300/90 p-6 sm:p-8 rounded-2xl shadow-2xl relative text-slate-800">
+              <div className="flex items-center justify-between pb-5 border-b border-slate-200">
                 <div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Ringkasan Operasional</span>
-                  <h3 className="text-lg font-bold text-white">PT. Bhimasena In Numbers</h3>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Ringkasan Operasional</span>
+                  <h3 className="text-lg font-bold text-slate-900">PT. Bhimasena In Numbers</h3>
                 </div>
-                <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-brand-yellow border border-amber-500/30 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 border border-amber-200 flex items-center justify-center shadow-xs">
                   <Award className="w-5 h-5" />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 py-5 border-b border-white/10">
-                <div className="p-3.5 rounded-xl bg-slate-800/70 border border-white/10 hover:border-white/25 transition-all">
-                  <span className="text-2xl font-black text-brand-red drop-shadow-sm">1,500+</span>
-                  <p className="text-xs font-semibold text-slate-200 mt-0.5">Personel Aktif</p>
-                  <span className="text-[10px] text-slate-400">Tersaring & terlatih</span>
+              <div className="grid grid-cols-2 gap-4 py-5 border-b border-slate-200">
+                <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-xs hover:border-brand-red/40 hover:shadow-sm transition-all">
+                  <span className="text-2xl font-black text-brand-red drop-shadow-xs">1,500+</span>
+                  <p className="text-xs font-bold text-slate-800 mt-0.5">Personel Aktif</p>
+                  <span className="text-[10px] font-medium text-slate-500">Tersaring & terlatih</span>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-slate-800/70 border border-white/10 hover:border-white/25 transition-all">
-                  <span className="text-2xl font-black text-emerald-400 drop-shadow-sm">99.4%</span>
-                  <p className="text-xs font-semibold text-slate-200 mt-0.5">Kepatuhan SLA</p>
-                  <span className="text-[10px] text-slate-400">Presensi & tugas site</span>
+                <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-xs hover:border-brand-green/40 hover:shadow-sm transition-all">
+                  <span className="text-2xl font-black text-brand-green drop-shadow-xs">99.4%</span>
+                  <p className="text-xs font-bold text-slate-800 mt-0.5">Kepatuhan SLA</p>
+                  <span className="text-[10px] font-medium text-slate-500">Presensi & tugas site</span>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-slate-800/70 border border-white/10 hover:border-white/25 transition-all">
-                  <span className="text-2xl font-black text-brand-yellow drop-shadow-sm">48+</span>
-                  <p className="text-xs font-semibold text-slate-200 mt-0.5">Mitra Korporasi</p>
-                  <span className="text-[10px] text-slate-400">Lintas industri nasional</span>
+                <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-xs hover:border-amber-400 hover:shadow-sm transition-all">
+                  <span className="text-2xl font-black text-amber-600 drop-shadow-xs">48+</span>
+                  <p className="text-xs font-bold text-slate-800 mt-0.5">Mitra Korporasi</p>
+                  <span className="text-[10px] font-medium text-slate-500">Lintas industri nasional</span>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-slate-800/70 border border-white/10 hover:border-white/25 transition-all">
-                  <span className="text-2xl font-black text-cyan-400 drop-shadow-sm">24/7</span>
-                  <p className="text-xs font-semibold text-slate-200 mt-0.5">Dukungan Darurat</p>
-                  <span className="text-[10px] text-slate-400">Tim reaksi cepat standby</span>
+                <div className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-xs hover:border-blue-400 hover:shadow-sm transition-all">
+                  <span className="text-2xl font-black text-blue-600 drop-shadow-xs">24/7</span>
+                  <p className="text-xs font-bold text-slate-800 mt-0.5">Dukungan Darurat</p>
+                  <span className="text-[10px] font-medium text-slate-500">Tim reaksi cepat standby</span>
                 </div>
               </div>
 
               {/* Service Badges Row */}
               <div className="pt-4">
-                <p className="text-xs text-slate-300 font-semibold mb-2">Cakupan Penempatan Tenaga Kerja:</p>
+                <p className="text-xs text-slate-700 font-bold mb-2">Cakupan Penempatan Tenaga Kerja:</p>
                 <div className="flex flex-wrap gap-1.5">
                   {['Security Gada Pratama', 'Kurir Logistik', 'Operator Gudang', 'Sanitasi Komersial', 'Juru Parkir', 'Loss Prevention'].map((item, idx) => (
-                    <span key={idx} className="text-[11px] font-medium bg-slate-800/90 text-slate-200 border border-white/10 px-2.5 py-1 rounded-md">
+                    <span key={idx} className="text-[11px] font-semibold bg-white text-slate-700 border border-slate-300/80 px-2.5 py-1 rounded-md shadow-2xs">
                       {item}
                     </span>
                   ))}

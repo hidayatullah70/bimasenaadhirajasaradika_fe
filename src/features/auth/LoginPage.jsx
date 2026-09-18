@@ -9,7 +9,8 @@ const QUICK_ACCOUNTS = [
   { role: 'hrd', label: '2. HRD & Personel', email: 'hrd@bimasenaadhirajasaradika.com', color: 'hover:border-blue-500' },
   { role: 'operasional', label: '3. Operasional Site', email: 'operasional@bimasenaadhirajasaradika.com', color: 'hover:border-amber-500' },
   { role: 'finance', label: '4. Finance & Billing', email: 'finance@bimasenaadhirajasaradika.com', color: 'hover:border-emerald-600' },
-  { role: 'marketing', label: '5. Marketing / BD', email: 'marketing@bimasenaadhirajasaradika.com', color: 'hover:border-red-500' }
+  { role: 'marketing', label: '5. Marketing / BD', email: 'marketing@bimasenaadhirajasaradika.com', color: 'hover:border-red-500' },
+  { role: 'it_support', label: '6. IT Support', email: 'itsupport@bimasenaadhirajasaradika.com', color: 'hover:border-purple-600' }
 ];
 
 export function LoginPage({ onNavigate, onLoginSuccess }) {
