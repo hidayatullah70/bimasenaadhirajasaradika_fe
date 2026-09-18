@@ -3,6 +3,8 @@ import { MapPin, Phone, Mail, Clock, CheckCircle2 } from 'lucide-react';
 import { COMPANY_INFO } from '../../services/mock/mockData';
 
 export function LandingFooter({ onNavigate }) {
+  const currentYear = new Date().getFullYear();
+
   return (
     <footer className="bg-slate-100 text-slate-700 border-t border-slate-200 pt-16 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -214,7 +216,7 @@ export function LandingFooter({ onNavigate }) {
         {/* Bottom Copyright */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <p className="flex items-center flex-wrap gap-1.5">
-            <span>© 2026 PT. Bhimasena Adhirajasa Radhika. Hak Cipta Dilindungi Undang-Undang by</span>
+            <span>© {currentYear} PT. Bhimasena Adhirajasa Radhika. Hak Cipta Dilindungi Undang-Undang by</span>
             <a
               href="https://wa.me/6281384224733"
               target="_blank"
