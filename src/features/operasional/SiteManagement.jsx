@@ -8,7 +8,7 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { Input, Select, Textarea } from '../../components/ui/Input';
 import { useToast } from '../../app/context/ToastContext';
 import { api } from '../../services/api/apiClient';
-import { Building2, Plus, MapPin, Phone, Mail, Trash2 } from 'lucide-react';
+import { Building2, Plus, MapPin, Phone, Mail, Trash2, Edit2, Eye } from 'lucide-react';
 
 export function SiteManagement() {
   const { addToast } = useToast();
@@ -16,6 +16,7 @@ export function SiteManagement() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -65,6 +66,37 @@ export function SiteManagement() {
       }
     } catch (err) {
       addToast(err.message || 'Gagal menambahkan klien', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleOpenEdit = (client) => {
+    setSelectedClient(client);
+    setFormData({
+      name: client.name || '',
+      phone: client.phone || '',
+      email: client.email || '',
+      address: client.address || '',
+      status: client.status || 'active'
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateClient = async (e) => {
+    e.preventDefault();
+    if (!selectedClient) return;
+
+    setSubmitting(true);
+    try {
+      const res = await api.updateClient(selectedClient.id, formData);
+      if (res?.success) {
+        addToast(`Data mitra klien ${formData.name} berhasil diperbarui!`, 'success');
+        setIsEditModalOpen(false);
+        fetchClients();
+      }
+    } catch (err) {
+      addToast(err.message || 'Gagal memperbarui klien', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -131,6 +163,15 @@ export function SiteManagement() {
       cellClassName: 'text-right',
       render: (row) => (
         <div className="flex items-center justify-end gap-1.5">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="!p-1.5 text-slate-500 hover:text-brand-blue"
+            title="Ubah Data Klien"
+            onClick={() => handleOpenEdit(row)}
+          >
+            <Edit2 className="w-4 h-4" />
+          </Button>
           <Button
             variant="ghost"
             size="sm"
@@ -242,6 +283,65 @@ export function SiteManagement() {
             </Button>
             <Button variant="primary" size="sm" type="submit" loading={submitting}>
               Simpan Klien Baru
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Edit Client Modal */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        title="Ubah Data Mitra Klien"
+        maxWidth="max-w-xl"
+      >
+        <form onSubmit={handleUpdateClient} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Nama Perusahaan Klien"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+            />
+            <Input
+              label="Nomor Telepon Kantor / PIC"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Alamat Email Klien"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            />
+            <Select
+              label="Status Kemitraan"
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+              options={[
+                { value: 'active', label: 'Aktif Bekerja (Active)' },
+                { value: 'inactive', label: 'Non-Aktif' }
+              ]}
+            />
+          </div>
+
+          <Textarea
+            label="Alamat Lengkap Site / Gedung Kantor"
+            value={formData.address}
+            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+            required
+          />
+
+          <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+            <Button variant="outline" size="sm" onClick={() => setIsEditModalOpen(false)}>
+              Batal
+            </Button>
+            <Button variant="primary" size="sm" type="submit" loading={submitting}>
+              Simpan Perubahan
             </Button>
           </div>
         </form>
