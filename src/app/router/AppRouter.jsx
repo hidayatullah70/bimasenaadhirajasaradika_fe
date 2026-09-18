@@ -28,6 +28,11 @@ import { InvoiceManagement } from '../../features/finance/InvoiceManagement';
 import { MarketingOverview } from '../../features/marketing/MarketingOverview';
 import { LeadPipeline } from '../../features/marketing/LeadPipeline';
 
+// IT Support views
+import { ItOverview } from '../../features/it/ItOverview';
+import { ItAssetManagement } from '../../features/it/ItAssetManagement';
+import { ItHelpdeskManagement } from '../../features/it/ItHelpdeskManagement';
+
 import { ShieldAlert, ArrowLeft } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 
@@ -142,6 +147,15 @@ export function AppRouter() {
       if (currentDashboardPath === 'marketing-leads') return <LeadPipeline />;
       if (currentDashboardPath === 'marketing-proposals') return <LeadPipeline />;
       return <MarketingOverview onNavigate={setCurrentDashboardPath} />;
+    }
+
+    // 6. IT Support Views (Direktur memiliki hak supervisi eksekutif)
+    if (currentDashboardPath.startsWith('it')) {
+      if (role !== 'it_support' && !isDirekturOrOwner) return <UnauthorizedState onBack={() => setCurrentDashboardPath(`${role}-overview`)} />;
+      if (currentDashboardPath === 'it-overview') return <ItOverview onNavigate={setCurrentDashboardPath} />;
+      if (currentDashboardPath === 'it-assets') return <ItAssetManagement />;
+      if (currentDashboardPath === 'it-helpdesk') return <ItHelpdeskManagement />;
+      return <ItOverview onNavigate={setCurrentDashboardPath} />;
     }
 
     // Default Fallback

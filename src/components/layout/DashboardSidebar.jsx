@@ -12,7 +12,9 @@ import {
   UserCog,
   LogOut,
   ChevronRight,
-  SlidersHorizontal
+  SlidersHorizontal,
+  HardDrive,
+  Headphones
 } from 'lucide-react';
 import { useAuth } from '../../app/context/AuthContext';
 import { StatusBadge } from '../shared/StatusBadge';
@@ -91,6 +93,17 @@ export function DashboardSidebar({ currentPath, onNavigate, onCloseMobile, onNav
               { id: 'marketing-overview', label: 'Ringkasan Pipeline', icon: LayoutDashboard },
               { id: 'marketing-leads', label: 'Daftar Prospek & Lead', icon: Target },
               { id: 'marketing-proposals', label: 'Pelacakan Proposal', icon: FileText }
+            ]
+          }
+        ];
+      case 'it_support':
+        return [
+          {
+            title: 'IT & Infrastruktur',
+            items: [
+              { id: 'it-overview', label: 'Ringkasan Sistem & Server', icon: LayoutDashboard },
+              { id: 'it-assets', label: 'Aset IT & Perangkat Site', icon: HardDrive },
+              { id: 'it-helpdesk', label: 'Tiket Helpdesk & Insiden', icon: Headphones }
             ]
           }
         ];
@@ -178,7 +191,8 @@ export function DashboardSidebar({ currentPath, onNavigate, onCloseMobile, onNav
               { id: 'hrd', label: 'HRD' },
               { id: 'operasional', label: 'Operasional' },
               { id: 'finance', label: 'Finance' },
-              { id: 'marketing', label: 'Marketing' }
+              { id: 'marketing', label: 'Marketing' },
+              { id: 'it_support', label: 'IT Support' }
             ].map((r) => (
               <button
                 key={r.id}
