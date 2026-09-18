@@ -49,7 +49,7 @@ export function LandingNavbar({ onNavigate }) {
           : 'bg-brand-yellow shadow-sm border-b border-brand-yellow-dark/30 py-3 sm:py-3.5'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+      <div className="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Brand Logo */}
         <a href="#hero" className="flex items-center group transition-transform hover:scale-[1.02]" aria-label="PT. Bhimasena Adhirajasa Radhika">
           <img

@@ -12,6 +12,7 @@ import { TestimonialsSection } from './components/TestimonialsSection';
 import { FaqSection } from './components/FaqSection';
 import { ContactSection } from './components/ContactSection';
 import { BackToTop } from '../../components/ui/BackToTop';
+import { WhatsAppCta } from '../../components/ui/WhatsAppCta';
 
 export function LandingPage({ onNavigate }) {
   const [selectedService, setSelectedService] = useState('Pengamanan / Security');
@@ -59,6 +60,7 @@ export function LandingPage({ onNavigate }) {
       </main>
 
       <LandingFooter onNavigate={onNavigate} />
+      <WhatsAppCta />
       <BackToTop />
     </div>
   );
