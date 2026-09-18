@@ -11,13 +11,12 @@ import { api } from '../../services/api/apiClient';
 import { UserCog, UserPlus, Mail, Lock, User, ShieldCheck, Trash2, Power, AlertTriangle, Check, Users, UserCheck, UserX } from 'lucide-react';
 
 const TEAM_AVATARS = [
-  { label: 'Hidayatullah (JustHidy)', path: '/assets/img/team/JustHidy3.png' },
   { label: 'Juli Priyanto (Direktur)', path: '/assets/img/team/person-3.jpeg' },
   { label: 'Robyn Topani (HRD)', path: '/assets/img/team/person-7.jpeg' },
   { label: 'Zaenal Arifin (Finance)', path: '/assets/img/team/person-4.jpeg' },
   { label: 'Hendri Nopamin (Marketing)', path: '/assets/img/team/person-2.jpeg' },
   { label: 'Nazi Rinaldi (Operasional)', path: '/assets/img/team/nazi.jpg' },
-  { label: 'Gheril Ramaditya (Support)', path: '/assets/img/team/person-5.jpeg' }
+  { label: 'Gheril Ramaditya S. (IT Support)', path: '/assets/img/team/person-5.jpeg' }
 ];
 
 export function UserManagement() {
@@ -41,7 +40,7 @@ export function UserManagement() {
     email: '',
     password: '',
     role_id: '1',
-    avatar_url: '/assets/img/team/JustHidy3.png'
+    avatar_url: '/assets/img/team/person-3.jpeg'
   });
 
   const roleOptions = [
@@ -58,8 +57,12 @@ export function UserManagement() {
     try {
       const res = await api.getUsers();
       if (res.success && Array.isArray(res.data)) {
-        // Filter out any user IDs that were deleted permanently in this session
-        const cleanList = res.data.filter(u => !deletedUserIdsRef.current.has(u.id));
+        // Filter out any permanently deleted IDs and any Hidayatullah records
+        const cleanList = res.data.filter(u =>
+          !deletedUserIdsRef.current.has(u.id) &&
+          !u.name?.toLowerCase().includes('hidayatullah') &&
+          !u.email?.toLowerCase().includes('hidayatullah')
+        );
         setUsers(cleanList);
       } else {
         setUsers([]);
@@ -117,9 +120,7 @@ export function UserManagement() {
   const handleNameChange = (val) => {
     let autoAvatar = formData.avatar_url;
     const lower = val.toLowerCase();
-    if (lower.includes('hidayat')) {
-      autoAvatar = '/assets/img/team/JustHidy3.png';
-    } else if (lower.includes('gheril')) {
+    if (lower.includes('gheril')) {
       autoAvatar = '/assets/img/team/person-5.jpeg';
     } else if (lower.includes('juli')) {
       autoAvatar = '/assets/img/team/person-3.jpeg';
