@@ -5,11 +5,21 @@ import { StatusBadge } from '../../components/shared/StatusBadge';
 import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import { Avatar } from '../../components/ui/Avatar';
-import { Input, Select } from '../../components/ui/Input';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
+import { Input, Select } from '../../components/ui/Input';
 import { useToast } from '../../app/context/ToastContext';
 import { api } from '../../services/api/apiClient';
-import { UserCog, UserPlus, Mail, Lock, User, ShieldCheck, Trash2 } from 'lucide-react';
+import { UserCog, UserPlus, Mail, Lock, User, ShieldCheck, Trash2, Image, Check } from 'lucide-react';
+
+const TEAM_AVATARS = [
+  { label: 'Hidayatullah (JustHidy)', path: '/assets/img/team/JustHidy3.png' },
+  { label: 'Juli Priyanto (Direktur)', path: '/assets/img/team/person-3.jpeg' },
+  { label: 'Robyn Topani (HRD)', path: '/assets/img/team/person-7.jpeg' },
+  { label: 'Zaenal Arifin (Finance)', path: '/assets/img/team/person-4.jpeg' },
+  { label: 'Hendri Nopamin (Marketing)', path: '/assets/img/team/person-2.jpeg' },
+  { label: 'Nazi Rinaldi (Operasional)', path: '/assets/img/team/nazi.jpg' },
+  { label: 'Gheril Ramaditya (Support)', path: '/assets/img/team/person-5.jpeg' }
+];
 
 export function UserManagement() {
   const { addToast } = useToast();
@@ -28,7 +38,8 @@ export function UserManagement() {
     name: '',
     email: '',
     password: '',
-    role_id: '2'
+    role_id: '1',
+    avatar_url: '/assets/img/team/JustHidy3.png'
   });
 
   const roleOptions = [
@@ -42,14 +53,14 @@ export function UserManagement() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await api.getUsers({ search });
-      if (res?.success && Array.isArray(res.data)) {
+      const res = await api.getUsers();
+      if (res.success && Array.isArray(res.data)) {
         setUsers(res.data);
       } else {
         setUsers([]);
       }
     } catch (err) {
-      addToast(err.message || 'Gagal memuat daftar pengguna dari server.', 'error');
+      addToast(err.message || 'Gagal memuat daftar pengguna', 'error');
     } finally {
       setLoading(false);
     }
@@ -57,11 +68,11 @@ export function UserManagement() {
 
   useEffect(() => {
     fetchUsers();
-  }, [search]);
+  }, []);
 
   const handleOpenEdit = (user) => {
     setSelectedUser(user);
-    setNewRoleId(String(user.role_id || (user.role_code === 'direktur' ? 1 : user.role_code === 'hrd' ? 2 : user.role_code === 'finance' ? 3 : user.role_code === 'marketing' ? 4 : 5)));
+    setNewRoleId(String(user.role_id || (user.role === 'direktur' ? '1' : '2')));
     setIsEditModalOpen(true);
   };
 
@@ -74,23 +85,48 @@ export function UserManagement() {
     if (!selectedUser) return;
     setSaving(true);
     try {
-      const roleMap = { '1': 'direktur', '2': 'hrd', '3': 'finance', '4': 'marketing', '5': 'operasional' };
-      const role_code = roleMap[newRoleId] || 'operasional';
-      const res = await api.updateUser(selectedUser.id, {
+      const roleMap = {
+        '1': 'direktur',
+        '2': 'hrd',
+        '3': 'finance',
+        '4': 'marketing',
+        '5': 'operasional'
+      };
+      const res = await api.updateUserRole(selectedUser.id, {
         role_id: parseInt(newRoleId, 10),
-        role: role_code,
-        is_active: true
+        role: roleMap[newRoleId] || 'operasional'
       });
       if (res?.success) {
-        addToast(`Role untuk ${selectedUser.name} berhasil diperbarui!`, 'success');
+        addToast(`Role untuk ${selectedUser.name} berhasil diperbarui.`, 'success');
         setIsEditModalOpen(false);
         fetchUsers();
       }
     } catch (err) {
-      addToast(err.message || 'Gagal memperbarui role pengguna', 'error');
+      addToast(err.message || 'Gagal memperbarui role', 'error');
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleNameChange = (val) => {
+    let autoAvatar = formData.avatar_url;
+    const lower = val.toLowerCase();
+    if (lower.includes('hidayat')) {
+      autoAvatar = '/assets/img/team/JustHidy3.png';
+    } else if (lower.includes('gheril')) {
+      autoAvatar = '/assets/img/team/person-5.jpeg';
+    } else if (lower.includes('juli')) {
+      autoAvatar = '/assets/img/team/person-3.jpeg';
+    } else if (lower.includes('robyn')) {
+      autoAvatar = '/assets/img/team/person-7.jpeg';
+    } else if (lower.includes('zaenal')) {
+      autoAvatar = '/assets/img/team/person-4.jpeg';
+    } else if (lower.includes('hendri')) {
+      autoAvatar = '/assets/img/team/person-2.jpeg';
+    } else if (lower.includes('nazi')) {
+      autoAvatar = '/assets/img/team/nazi.jpg';
+    }
+    setFormData({ ...formData, name: val, avatar_url: autoAvatar });
   };
 
   const handleCreateUser = async (e) => {
@@ -116,18 +152,25 @@ export function UserManagement() {
         password: formData.password,
         role_id: parseInt(formData.role_id, 10),
         role: roleMap[formData.role_id] || 'operasional',
-        is_active: true
+        avatar_url: formData.avatar_url || '/assets/img/team/JustHidy3.png',
+        avatar: formData.avatar_url || '/assets/img/team/JustHidy3.png'
       };
 
       const res = await api.createUser(payload);
-      if (res?.success) {
-        addToast(`Pengguna baru ${payload.name} berhasil ditambahkan!`, 'success');
+      if (res.success) {
+        addToast(`Pengguna baru ${payload.name} berhasil ditambahkan dengan foto avatar tim!`, 'success');
         setIsCreateModalOpen(false);
-        setFormData({ name: '', email: '', password: '', role_id: '2' });
+        setFormData({
+          name: '',
+          email: '',
+          password: '',
+          role_id: '1',
+          avatar_url: '/assets/img/team/JustHidy3.png'
+        });
         fetchUsers();
       }
     } catch (err) {
-      addToast(err.message || 'Gagal menambahkan pengguna baru ke server.', 'error');
+      addToast(err.message || 'Gagal menambahkan pengguna baru.', 'error');
     } finally {
       setSaving(false);
     }
@@ -178,9 +221,11 @@ export function UserManagement() {
       )
     },
     {
-      header: 'Kontak',
+      header: 'Foto Profil Tim',
       render: (row) => (
-        <span className="text-xs text-slate-600 font-mono">{row.phone || '-'}</span>
+        <span className="text-[11px] text-slate-500 font-mono truncate max-w-[150px] inline-block">
+          {row.avatar_url || row.avatar || '-'}
+        </span>
       )
     },
     {
@@ -234,7 +279,16 @@ export function UserManagement() {
             variant="primary"
             size="md"
             icon={UserPlus}
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={() => {
+              setFormData({
+                name: '',
+                email: '',
+                password: '',
+                role_id: '1',
+                avatar_url: '/assets/img/team/JustHidy3.png'
+              });
+              setIsCreateModalOpen(true);
+            }}
             className="shadow-md shadow-red-900/10"
           >
             Tambah Pengguna Baru
@@ -256,15 +310,16 @@ export function UserManagement() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         title="Tambah Pengguna Baru"
+        maxWidth="max-w-xl"
       >
         <form onSubmit={handleCreateUser} className="space-y-4">
           <Input
             label="Nama Lengkap Karyawan / Pejabat"
             id="create-name"
             icon={User}
-            placeholder="Contoh: Rian Pratama, S.E."
+            placeholder="Contoh: Hidayatullah"
             value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            onChange={(e) => handleNameChange(e.target.value)}
             required
           />
 
@@ -273,7 +328,7 @@ export function UserManagement() {
             id="create-email"
             type="email"
             icon={Mail}
-            placeholder="contoh: rian@bimasenaadhirajasaradika.com"
+            placeholder="contoh: hidayatullah@bimasenaadhirajasaradika.com"
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             required
@@ -299,10 +354,50 @@ export function UserManagement() {
             required
           />
 
+          {/* Avatar / Foto Profil Tim Selector */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
+              Pilih Foto Profil dari /assets/img/team/*
+            </label>
+            <div className="grid grid-cols-4 sm:grid-cols-7 gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+              {TEAM_AVATARS.map((item) => {
+                const isSelected = formData.avatar_url === item.path;
+                return (
+                  <button
+                    key={item.path}
+                    type="button"
+                    title={item.label}
+                    onClick={() => setFormData({ ...formData, avatar_url: item.path })}
+                    className={`relative rounded-xl overflow-hidden aspect-square border-2 transition-all group ${
+                      isSelected ? 'border-brand-red ring-2 ring-red-200 scale-105 shadow-md' : 'border-slate-200 hover:border-slate-400 opacity-75 hover:opacity-100'
+                    }`}
+                  >
+                    <img
+                      src={item.path}
+                      alt={item.label}
+                      className="w-full h-full object-cover object-top"
+                    />
+                    {isSelected && (
+                      <div className="absolute inset-0 bg-brand-red/30 flex items-center justify-center text-white">
+                        <Check className="w-4 h-4 drop-shadow stroke-[3]" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+              <span className="font-semibold text-brand-dark">Foto Terpilih:</span>
+              <span className="font-mono bg-slate-100 px-2 py-0.5 rounded text-[11px] text-brand-red font-medium truncate">
+                {formData.avatar_url}
+              </span>
+            </div>
+          </div>
+
           <div className="p-3 bg-blue-50 rounded-xl border border-blue-200 text-xs text-blue-900 leading-relaxed flex items-start gap-2">
             <ShieldCheck className="w-4 h-4 text-blue-700 flex-shrink-0 mt-0.5" />
             <div>
-              <span className="font-bold">Otoritas Direktur:</span> Pengguna baru akan langsung tersimpan di database REST API backend.
+              <span className="font-bold">Otoritas Direktur:</span> Pengguna baru akan langsung tersimpan di database backend dengan foto profil yang dipilih dari folder tim.
             </div>
           </div>
 
