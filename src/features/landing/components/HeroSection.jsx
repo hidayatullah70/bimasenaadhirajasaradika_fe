@@ -5,16 +5,15 @@ import { Button } from '../../../components/ui/Button';
 export function HeroSection({ onOpenContact, onExploreServices }) {
   return (
     <section id="hero" className="relative min-h-[92vh] flex items-center pt-32 pb-20 md:pt-40 md:pb-28 overflow-hidden">
-      {/* Full Section Background Image with Balanced Overlay to Ensure Image is Clearly Visible */}
+      {/* Full Section Background Image with Subtle, Light Overlay to Ensure Image is Clearly Visible and Bright */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <img
           src="/assets/img/hero/office-new.jpeg"
           alt="Kantor Operasional PT. Bhimasena Adhirajasa Radhika"
-          className="w-full h-full object-cover object-center"
+          className="w-full h-full object-cover object-center brightness-105"
         />
-        {/* Soft, balanced dark overlay: image remains bright & clearly visible while ensuring text readability */}
-        <div className="absolute inset-0 bg-slate-950/35 bg-gradient-to-r from-slate-950/70 via-slate-950/40 to-slate-900/20" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-black/25" />
+        {/* Soft, minimal gradient: hero background is clearly visible, bright, and vibrant */}
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/40 via-slate-950/15 to-transparent" />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
