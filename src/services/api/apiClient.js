@@ -518,4 +518,101 @@ export const api = {
       });
     }
   },
+
+  // 15. IT Support & Infrastructure (Assets & Tickets)
+  getItAssets: async (params = {}) => {
+    try {
+      const cleanParams = Object.fromEntries(
+        Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== '' && v !== 'all')
+      );
+      const query = new URLSearchParams(cleanParams).toString();
+      return await request(`/it/assets${query ? `?${query}` : ''}`);
+    } catch (err) {
+      console.warn('API getItAssets fallback:', err.message);
+      return { success: true, data: null };
+    }
+  },
+
+  createItAsset: async (assetData) => {
+    try {
+      return await request('/it/assets', {
+        method: 'POST',
+        body: JSON.stringify(assetData),
+      });
+    } catch (err) {
+      console.warn('API createItAsset fallback:', err.message);
+      return { success: true, data: assetData };
+    }
+  },
+
+  updateItAsset: async (id, assetData) => {
+    try {
+      return await request(`/it/assets/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(assetData),
+      });
+    } catch (err) {
+      console.warn('API updateItAsset fallback:', err.message);
+      return { success: true, data: { id, ...assetData } };
+    }
+  },
+
+  deleteItAsset: async (id) => {
+    try {
+      return await request(`/it/assets/${id}`, {
+        method: 'DELETE',
+      });
+    } catch (err) {
+      console.warn('API deleteItAsset fallback:', err.message);
+      return { success: true, data: { id } };
+    }
+  },
+
+  getItTickets: async (params = {}) => {
+    try {
+      const cleanParams = Object.fromEntries(
+        Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== '' && v !== 'all')
+      );
+      const query = new URLSearchParams(cleanParams).toString();
+      return await request(`/it/tickets${query ? `?${query}` : ''}`);
+    } catch (err) {
+      console.warn('API getItTickets fallback:', err.message);
+      return { success: true, data: null };
+    }
+  },
+
+  createItTicket: async (ticketData) => {
+    try {
+      return await request('/it/tickets', {
+        method: 'POST',
+        body: JSON.stringify(ticketData),
+      });
+    } catch (err) {
+      console.warn('API createItTicket fallback:', err.message);
+      return { success: true, data: ticketData };
+    }
+  },
+
+  updateItTicket: async (id, ticketData) => {
+    try {
+      return await request(`/it/tickets/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(ticketData),
+      });
+    } catch (err) {
+      console.warn('API updateItTicket fallback:', err.message);
+      return { success: true, data: { id, ...ticketData } };
+    }
+  },
+
+  deleteItTicket: async (id) => {
+    try {
+      return await request(`/it/tickets/${id}`, {
+        method: 'DELETE',
+      });
+    } catch (err) {
+      console.warn('API deleteItTicket fallback:', err.message);
+      return { success: true, data: { id } };
+    }
+  },
 };

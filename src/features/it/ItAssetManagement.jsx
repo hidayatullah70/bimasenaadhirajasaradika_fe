@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageHeader } from '../../components/shared/PageHeader';
 import { DataTable } from '../../components/ui/DataTable';
 import { StatusBadge } from '../../components/shared/StatusBadge';
@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/Button';
 import { Modal } from '../../components/ui/Modal';
 import { Input, Select } from '../../components/ui/Input';
 import { useToast } from '../../app/context/ToastContext';
+import { api } from '../../services/api/apiClient';
 import {
   HardDrive,
   Plus,
@@ -19,29 +20,33 @@ import {
   MapPin,
   Laptop,
   Camera,
-  Fingerprint
+  Fingerprint,
+  Edit2,
+  Trash2,
+  Wrench,
+  Server
 } from 'lucide-react';
 
-const INITIAL_ASSETS = [
+const INITIAL_FALLBACK_ASSETS = [
   {
     id: 'AST-BIO-001',
     name: 'ZKTeco FacePass 7 Biometric Terminal',
     category: 'Biometric Attendance',
     site: 'PT. Telkom Indonesia Tbk (Lantai 1 Lobi Utama)',
-    serialNo: 'ZK-2026-TLK-0199',
-    ipAddress: '192.168.10.45',
-    lastSync: '1 menit yang lalu',
+    serial_no: 'ZK-2026-TLK-0199',
+    ip_address: '192.168.10.45',
+    last_sync: '1 menit yang lalu',
     firmware: 'v4.2.1-prod',
     status: 'online'
   },
   {
     id: 'AST-BIO-002',
     name: 'Hikvision Face & Fingerprint Terminal',
-    site: 'PT. Mayora Indah Tbk (Pintu Masuk Karyawan)',
     category: 'Biometric Attendance',
-    serialNo: 'HIK-MYR-8821-B',
-    ipAddress: '192.168.20.12',
-    lastSync: '5 menit yang lalu',
+    site: 'PT. Mayora Indah Tbk (Pintu Masuk Karyawan)',
+    serial_no: 'HIK-MYR-8821-B',
+    ip_address: '192.168.20.12',
+    last_sync: '5 menit yang lalu',
     firmware: 'v3.8.0-barak',
     status: 'online'
   },
@@ -50,9 +55,9 @@ const INITIAL_ASSETS = [
     name: 'JWM Guard Tour RFID Patrol Wand (V9)',
     category: 'Security Patrol Device',
     site: 'RS Siloam Hospital Lippo Village',
-    serialNo: 'JWM-SLM-0044',
-    ipAddress: 'N/A (Docking Sync)',
-    lastSync: '15 menit yang lalu',
+    serial_no: 'JWM-SLM-0044',
+    ip_address: 'N/A (Docking Sync)',
+    last_sync: '15 menit yang lalu',
     firmware: 'v2.1.0',
     status: 'online'
   },
@@ -61,9 +66,9 @@ const INITIAL_ASSETS = [
     name: 'JWM Guard Tour GPS Wand',
     category: 'Security Patrol Device',
     site: 'PT. Gudang Garam Tbk (Area Gudang A)',
-    serialNo: 'JWM-GG-0112',
-    ipAddress: 'Cellular 4G SIM',
-    lastSync: '2 jam yang lalu',
+    serial_no: 'JWM-GG-0112',
+    ip_address: 'Cellular 4G SIM',
+    last_sync: '2 jam yang lalu',
     firmware: 'v2.1.0',
     status: 'offline'
   },
@@ -72,9 +77,9 @@ const INITIAL_ASSETS = [
     name: 'Dahua 32-Ch 4K NVR Command Center',
     category: 'CCTV Surveillance',
     site: 'Kantor Pusat PT. BARAK (Security HQ)',
-    serialNo: 'DH-NVR-HQ-001',
-    ipAddress: '10.0.1.50',
-    lastSync: 'Realtime Stream',
+    serial_no: 'DH-NVR-HQ-001',
+    ip_address: '10.0.1.50',
+    last_sync: 'Realtime Stream',
     firmware: 'v5.0.2',
     status: 'online'
   },
@@ -83,9 +88,9 @@ const INITIAL_ASSETS = [
     name: 'ThinkPad T14 Gen 4 - Operasional Dispatch',
     category: 'Office Workstation',
     site: 'Kantor Pusat PT. BARAK (Divisi Operasional)',
-    serialNo: 'PF-4X990-2026',
-    ipAddress: '10.0.1.104',
-    lastSync: 'Aktif saat ini',
+    serial_no: 'PF-4X990-2026',
+    ip_address: '10.0.1.104',
+    last_sync: 'Aktif saat ini',
     firmware: 'Win 11 Pro / BarakOS',
     status: 'online'
   }
@@ -93,20 +98,29 @@ const INITIAL_ASSETS = [
 
 export function ItAssetManagement() {
   const { addToast } = useToast();
-  const [assets, setAssets] = useState(INITIAL_ASSETS);
+  const [assets, setAssets] = useState(INITIAL_FALLBACK_ASSETS);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'online', 'offline', 'maintenance'
+  
+  // Modals state
   const [selectedAsset, setSelectedAsset] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isPingModalOpen, setIsPingModalOpen] = useState(false);
+  
+  // Diagnostics
   const [pingResult, setPingResult] = useState(null);
   const [pinging, setPinging] = useState(false);
 
+  // Form states
   const [formData, setFormData] = useState({
     name: '',
     category: 'Biometric Attendance',
     site: '',
-    serialNo: '',
-    ipAddress: '',
+    serial_no: '',
+    ip_address: '',
     firmware: 'v1.0.0-prod',
     status: 'online'
   });
@@ -119,95 +133,213 @@ export function ItAssetManagement() {
     { value: 'Network Gateway', label: 'Router 4G / Network Switch Lapangan' }
   ];
 
-  const handleCreateAsset = (e) => {
-    e.preventDefault();
-    if (!formData.name || !formData.site || !formData.serialNo) {
-      addToast('Harap isi semua kolom wajib!', 'error');
-      return;
+  const statusOptions = [
+    { value: 'online', label: 'Online / Aktif Normal' },
+    { value: 'offline', label: 'Offline / Terputus' },
+    { value: 'maintenance', label: 'Dalam Pemeliharaan / Perbaikan' }
+  ];
+
+  // Fetch from backend
+  const fetchAssets = async () => {
+    setLoading(true);
+    try {
+      const res = await api.getItAssets();
+      if (res?.success && Array.isArray(res?.data) && res.data.length > 0) {
+        setAssets(res.data);
+      }
+    } catch (err) {
+      console.warn('Load IT assets fallback:', err.message);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const newId = `AST-${formData.category.substring(0, 3).toUpperCase()}-${String(assets.length + 1).padStart(3, '0')}`;
-    const newAsset = {
-      id: newId,
-      ...formData,
-      lastSync: 'Baru didaftarkan'
-    };
+  useEffect(() => {
+    fetchAssets();
+  }, []);
 
-    setAssets([newAsset, ...assets]);
-    addToast(`Perangkat ${formData.name} berhasil didaftarkan ke inventaris.`, 'success');
-    setIsModalOpen(false);
+  // 1. CREATE Asset
+  const handleOpenCreate = () => {
     setFormData({
       name: '',
       category: 'Biometric Attendance',
       site: '',
-      serialNo: '',
-      ipAddress: '',
+      serial_no: '',
+      ip_address: '',
       firmware: 'v1.0.0-prod',
       status: 'online'
     });
+    setIsCreateModalOpen(true);
   };
 
+  const handleCreateAsset = async (e) => {
+    e.preventDefault();
+    if (!formData.name || !formData.site || !formData.serial_no) {
+      addToast('Harap isi semua kolom wajib!', 'error');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const prefix = formData.category.substring(0, 3).toUpperCase();
+      const newId = `AST-${prefix}-${Math.floor(100 + Math.random() * 900)}`;
+      const payload = {
+        id: newId,
+        ...formData,
+        last_sync: 'Baru didaftarkan'
+      };
+
+      const res = await api.createItAsset(payload);
+      if (res?.success) {
+        setAssets(prev => [res.data || payload, ...prev]);
+        addToast(`Perangkat ${formData.name} berhasil didaftarkan ke inventaris.`, 'success');
+        setIsCreateModalOpen(false);
+      }
+    } catch (err) {
+      addToast(err.message || 'Gagal mendaftarkan perangkat.', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // 2. EDIT / UPDATE Asset
+  const handleOpenEdit = (asset) => {
+    setSelectedAsset(asset);
+    setFormData({
+      name: asset.name || '',
+      category: asset.category || 'Biometric Attendance',
+      site: asset.site || '',
+      serial_no: asset.serial_no || asset.serialNo || '',
+      ip_address: asset.ip_address || asset.ipAddress || '',
+      firmware: asset.firmware || 'v1.0.0-prod',
+      status: asset.status || 'online'
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateAsset = async (e) => {
+    e.preventDefault();
+    if (!selectedAsset) return;
+
+    setSaving(true);
+    try {
+      const payload = {
+        ...formData,
+        last_sync: 'Baru diperbarui'
+      };
+
+      const res = await api.updateItAsset(selectedAsset.id, payload);
+      if (res?.success) {
+        setAssets(prev =>
+          prev.map(a => (a.id === selectedAsset.id ? { ...a, ...payload } : a))
+        );
+        addToast(`Data perangkat ${formData.name} berhasil diperbarui.`, 'success');
+        setIsEditModalOpen(false);
+      }
+    } catch (err) {
+      addToast(err.message || 'Gagal memperbarui perangkat.', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // 3. DELETE Asset
+  const handleOpenDelete = (asset) => {
+    setSelectedAsset(asset);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteAsset = async () => {
+    if (!selectedAsset) return;
+    setSaving(true);
+    try {
+      await api.deleteItAsset(selectedAsset.id);
+      setAssets(prev => prev.filter(a => a.id !== selectedAsset.id));
+      addToast(`Perangkat ${selectedAsset.name} berhasil dihapus dari inventaris.`, 'success');
+      setIsDeleteModalOpen(false);
+      setSelectedAsset(null);
+    } catch (err) {
+      addToast(err.message || 'Gagal menghapus perangkat.', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // 4. Quick Toggle Status
+  const handleToggleStatus = async (asset) => {
+    const nextStatus = asset.status === 'online' ? 'offline' : 'online';
+    try {
+      await api.updateItAsset(asset.id, { status: nextStatus, last_sync: 'Baru saja' });
+      setAssets(prev =>
+        prev.map(a => (a.id === asset.id ? { ...a, status: nextStatus, last_sync: 'Baru saja' } : a))
+      );
+      addToast(`Status ${asset.name} diubah menjadi ${nextStatus.toUpperCase()}`, 'info');
+    } catch (err) {
+      addToast(err.message || 'Gagal mengubah status', 'error');
+    }
+  };
+
+  // 5. Diagnostics Ping
   const handlePingDevice = (asset) => {
     setSelectedAsset(asset);
     setIsPingModalOpen(true);
     setPinging(true);
     setPingResult(null);
 
+    const ip = asset.ip_address || asset.ipAddress;
     setTimeout(() => {
       setPinging(false);
       if (asset.status === 'offline') {
         setPingResult({
           success: false,
-          message: `Host ${asset.ipAddress} Unreachable. Timeout 4000ms. Perangkat tidak merespons ICMP ping.`,
+          message: `Host ${ip || 'Unknown IP'} Unreachable. Timeout 4000ms. Perangkat tidak merespons ICMP ping.`,
           packetLoss: '100%',
           latency: 'N/A'
         });
       } else {
         setPingResult({
           success: true,
-          message: `64 bytes from ${asset.ipAddress || '192.168.1.1'}: icmp_seq=1 ttl=56 time=18.4 ms`,
+          message: `64 bytes from ${ip || '192.168.1.1'}: icmp_seq=1 ttl=56 time=18.4 ms`,
           packetLoss: '0%',
           latency: '18.4 ms'
         });
       }
-    }, 800);
+    }, 700);
   };
 
-  const handleToggleStatus = (assetId) => {
-    setAssets(prev =>
-      prev.map(a => {
-        if (a.id === assetId) {
-          const nextStatus = a.status === 'online' ? 'offline' : 'online';
-          addToast(`Status perangkat ${a.name} diubah menjadi ${nextStatus.toUpperCase()}`, 'info');
-          return { ...a, status: nextStatus, lastSync: 'Baru saja' };
-        }
-        return a;
-      })
-    );
-  };
+  // Filtered dataset
+  const displayedAssets = assets.filter(a => {
+    if (statusFilter === 'online') return a.status === 'online';
+    if (statusFilter === 'offline') return a.status === 'offline';
+    if (statusFilter === 'maintenance') return a.status === 'maintenance';
+    return true;
+  });
 
   const columns = [
     {
       header: 'Perangkat & Kategori',
-      render: (row) => (
-        <div className="flex items-center gap-3">
-          <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs ${
-            row.category.includes('Biometric') ? 'bg-purple-100 text-purple-700' :
-            row.category.includes('Patrol') ? 'bg-blue-100 text-blue-700' :
-            row.category.includes('CCTV') ? 'bg-amber-100 text-amber-700' :
-            'bg-slate-100 text-slate-700'
-          }`}>
-            {row.category.includes('Biometric') ? <Fingerprint className="w-5 h-5" /> :
-             row.category.includes('Patrol') ? <Cpu className="w-5 h-5" /> :
-             row.category.includes('CCTV') ? <Camera className="w-5 h-5" /> :
-             <Laptop className="w-5 h-5" />}
+      render: (row) => {
+        const cat = row.category || '';
+        return (
+          <div className="flex items-center gap-3">
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs ${
+              cat.includes('Biometric') ? 'bg-purple-100 text-purple-700' :
+              cat.includes('Patrol') ? 'bg-blue-100 text-blue-700' :
+              cat.includes('CCTV') ? 'bg-amber-100 text-amber-700' :
+              'bg-slate-100 text-slate-700'
+            }`}>
+              {cat.includes('Biometric') ? <Fingerprint className="w-5 h-5" /> :
+               cat.includes('Patrol') ? <Cpu className="w-5 h-5" /> :
+               cat.includes('CCTV') ? <Camera className="w-5 h-5" /> :
+               <Laptop className="w-5 h-5" />}
+            </div>
+            <div>
+              <p className="font-bold text-brand-dark text-xs">{row.name}</p>
+              <p className="text-[11px] text-slate-400 font-mono">{row.id} • {row.category}</p>
+            </div>
           </div>
-          <div>
-            <p className="font-bold text-brand-dark text-xs">{row.name}</p>
-            <p className="text-[11px] text-slate-400 font-mono">{row.id} • {row.category}</p>
-          </div>
-        </div>
-      )
+        );
+      }
     },
     {
       header: 'Lokasi Penempatan Site',
@@ -222,8 +354,8 @@ export function ItAssetManagement() {
       header: 'IP / Serial Number',
       render: (row) => (
         <div className="text-xs space-y-0.5 font-mono">
-          <p className="font-semibold text-slate-800">{row.ipAddress}</p>
-          <p className="text-[10px] text-slate-400">SN: {row.serialNo}</p>
+          <p className="font-semibold text-slate-800">{row.ip_address || row.ipAddress || '-'}</p>
+          <p className="text-[10px] text-slate-400">SN: {row.serial_no || row.serialNo || '-'}</p>
         </div>
       )
     },
@@ -231,8 +363,8 @@ export function ItAssetManagement() {
       header: 'Sinkronisasi Terakhir',
       render: (row) => (
         <div className="text-xs text-slate-600">
-          <p className="font-medium">{row.lastSync}</p>
-          <span className="text-[10px] text-slate-400 font-mono">FW: {row.firmware}</span>
+          <p className="font-medium">{row.last_sync || row.lastSync || 'Baru'}</p>
+          <span className="text-[10px] text-slate-400 font-mono">FW: {row.firmware || 'v1.0.0'}</span>
         </div>
       )
     },
@@ -243,7 +375,7 @@ export function ItAssetManagement() {
       )
     },
     {
-      header: 'Aksi Diagnostik',
+      header: 'Aksi Pengelolaan',
       className: 'text-right',
       cellClassName: 'text-right',
       render: (row) => (
@@ -257,13 +389,31 @@ export function ItAssetManagement() {
             Diagnostik
           </Button>
           <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleOpenEdit(row)}
+            title="Edit Data Perangkat"
+            className="!p-2 text-slate-700 hover:text-brand-dark"
+          >
+            <Edit2 className="w-4 h-4" />
+          </Button>
+          <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleToggleStatus(row.id)}
-            title="Ubah Status Online/Offline"
+            onClick={() => handleToggleStatus(row)}
+            title="Toggle Online / Offline"
             className="!p-2 text-slate-500 hover:text-brand-dark"
           >
             <RotateCw className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleOpenDelete(row)}
+            title="Hapus Perangkat"
+            className="!p-2 text-rose-600 hover:bg-rose-50"
+          >
+            <Trash2 className="w-4 h-4" />
           </Button>
         </div>
       )
@@ -274,18 +424,29 @@ export function ItAssetManagement() {
     <div className="space-y-6">
       <PageHeader
         title="Inventaris Aset IT & Perangkat IoT Lapangan"
-        subtitle="Manajemen perangkat biometrik presensi, GPS wand patroli security, dan hardware penunjang operasional di site klien."
+        subtitle="Manajemen CRUD perangkat biometrik presensi, GPS wand patroli security, dan hardware penunjang operasional di site klien."
         breadcrumb={['Dashboard', 'IT Support', 'Aset IT & Perangkat']}
         actions={
-          <Button
-            variant="primary"
-            size="md"
-            icon={Plus}
-            onClick={() => setIsModalOpen(true)}
-            className="shadow-md shadow-red-900/10"
-          >
-            Daftarkan Perangkat Baru
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              icon={RotateCw}
+              loading={loading}
+              onClick={fetchAssets}
+            >
+              Segarkan
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              icon={Plus}
+              onClick={handleOpenCreate}
+              className="shadow-md shadow-red-900/10"
+            >
+              Daftarkan Perangkat Baru
+            </Button>
+          </div>
         }
       />
 
@@ -322,19 +483,63 @@ export function ItAssetManagement() {
         </div>
       </div>
 
+      {/* Filter Tabs */}
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+        <button
+          onClick={() => setStatusFilter('all')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            statusFilter === 'all'
+              ? 'bg-brand-red text-white shadow-sm'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          }`}
+        >
+          Semua Aset ({assets.length})
+        </button>
+        <button
+          onClick={() => setStatusFilter('online')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            statusFilter === 'online'
+              ? 'bg-emerald-600 text-white shadow-sm'
+              : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+          }`}
+        >
+          Online ({assets.filter(a => a.status === 'online').length})
+        </button>
+        <button
+          onClick={() => setStatusFilter('offline')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            statusFilter === 'offline'
+              ? 'bg-rose-600 text-white shadow-sm'
+              : 'bg-rose-50 text-rose-700 hover:bg-rose-100'
+          }`}
+        >
+          Offline ({assets.filter(a => a.status === 'offline').length})
+        </button>
+        <button
+          onClick={() => setStatusFilter('maintenance')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+            statusFilter === 'maintenance'
+              ? 'bg-amber-600 text-white shadow-sm'
+              : 'bg-amber-50 text-amber-800 hover:bg-amber-100'
+          }`}
+        >
+          Pemeliharaan ({assets.filter(a => a.status === 'maintenance').length})
+        </button>
+      </div>
+
       <DataTable
         columns={columns}
-        data={assets}
+        data={displayedAssets}
         loading={loading}
         searchable
         searchPlaceholder="Cari nama perangkat, site klien, nomor seri, atau IP address..."
         emptyMessage="Tidak ada perangkat IT yang ditemukan."
       />
 
-      {/* Modal Add Device */}
+      {/* Modal CREATE Asset */}
       <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
         title="Daftarkan Perangkat IT / IoT Baru"
         maxWidth="max-w-lg"
       >
@@ -366,27 +571,148 @@ export function ItAssetManagement() {
             <Input
               label="Nomor Seri (Serial Number)"
               placeholder="ZK-SN-2026-XXXX"
-              value={formData.serialNo}
-              onChange={(e) => setFormData({ ...formData, serialNo: e.target.value })}
+              value={formData.serial_no}
+              onChange={(e) => setFormData({ ...formData, serial_no: e.target.value })}
               required
             />
             <Input
               label="Alamat IP Static / Host"
               placeholder="192.168.10.XX"
-              value={formData.ipAddress}
-              onChange={(e) => setFormData({ ...formData, ipAddress: e.target.value })}
+              value={formData.ip_address}
+              onChange={(e) => setFormData({ ...formData, ip_address: e.target.value })}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label="Versi Firmware"
+              placeholder="v1.0.0-prod"
+              value={formData.firmware}
+              onChange={(e) => setFormData({ ...formData, firmware: e.target.value })}
+            />
+            <Select
+              label="Status Operasional"
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+              options={statusOptions}
             />
           </div>
 
           <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
-            <Button variant="outline" size="sm" onClick={() => setIsModalOpen(false)}>
+            <Button variant="outline" size="sm" onClick={() => setIsCreateModalOpen(false)} disabled={saving}>
               Batal
             </Button>
-            <Button variant="primary" size="sm" type="submit">
+            <Button variant="primary" size="sm" type="submit" loading={saving} icon={Plus}>
               Simpan Perangkat
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* Modal EDIT Asset */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        title="Ubah Data Perangkat IT"
+        maxWidth="max-w-lg"
+      >
+        <form onSubmit={handleUpdateAsset} className="space-y-4">
+          <Input
+            label="Nama / Model Perangkat"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            required
+          />
+
+          <Select
+            label="Kategori Perangkat"
+            value={formData.category}
+            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+            options={categoryOptions}
+          />
+
+          <Input
+            label="Lokasi Penempatan (Site / Pos Satpam / HQ)"
+            value={formData.site}
+            onChange={(e) => setFormData({ ...formData, site: e.target.value })}
+            required
+          />
+
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label="Nomor Seri (Serial Number)"
+              value={formData.serial_no}
+              onChange={(e) => setFormData({ ...formData, serial_no: e.target.value })}
+              required
+            />
+            <Input
+              label="Alamat IP Static / Host"
+              value={formData.ip_address}
+              onChange={(e) => setFormData({ ...formData, ip_address: e.target.value })}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label="Versi Firmware"
+              value={formData.firmware}
+              onChange={(e) => setFormData({ ...formData, firmware: e.target.value })}
+            />
+            <Select
+              label="Status Operasional"
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+              options={statusOptions}
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+            <Button variant="outline" size="sm" onClick={() => setIsEditModalOpen(false)} disabled={saving}>
+              Batal
+            </Button>
+            <Button variant="primary" size="sm" type="submit" loading={saving}>
+              Simpan Perubahan
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal DELETE Asset */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        title="Konfirmasi Hapus Perangkat"
+        maxWidth="max-w-md"
+      >
+        {selectedAsset && (
+          <div className="space-y-4">
+            <div className="p-3.5 bg-rose-50 rounded-xl border border-rose-200 flex items-start gap-3 text-xs text-rose-900">
+              <AlertTriangle className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold">Apakah Anda yakin ingin menghapus perangkat ini?</p>
+                <p className="mt-1 text-slate-600">
+                  Perangkat <strong>{selectedAsset.name}</strong> ({selectedAsset.id}) di lokasi <strong>{selectedAsset.site}</strong> akan dihapus permanen dari inventaris.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" size="sm" onClick={() => setIsDeleteModalOpen(false)} disabled={saving}>
+                Batal
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                className="!bg-rose-600 hover:!bg-rose-700"
+                onClick={handleDeleteAsset}
+                loading={saving}
+                icon={Trash2}
+              >
+                Hapus Perangkat
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       {/* Modal Ping / Diagnostics */}
@@ -400,7 +726,9 @@ export function ItAssetManagement() {
           <div className="space-y-4">
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1">
               <p className="font-bold text-brand-dark">{selectedAsset.name}</p>
-              <p className="text-slate-500 font-mono text-[11px]">IP: {selectedAsset.ipAddress} • SN: {selectedAsset.serialNo}</p>
+              <p className="text-slate-500 font-mono text-[11px]">
+                IP: {selectedAsset.ip_address || selectedAsset.ipAddress || '-'} • SN: {selectedAsset.serial_no || selectedAsset.serialNo || '-'}
+              </p>
               <p className="text-slate-500 text-[11px]">Lokasi: {selectedAsset.site}</p>
             </div>
 
