@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, LogIn, UserPlus, UserCheck } from 'lucide-react';
+import { Menu, X, Shield, UserCheck, MessageSquareText } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { useAuth } from '../../app/context/AuthContext';
 
@@ -78,13 +78,14 @@ export function LandingNavbar({ onNavigate }) {
           <Button
             variant="outline"
             size="sm"
-            className={!isScrolled ? 'bg-white/90 hover:bg-white text-brand-dark border-transparent shadow-xs' : ''}
+            icon={MessageSquareText}
+            className={!isScrolled ? 'bg-white/90 hover:bg-white text-brand-dark border-transparent shadow-xs font-bold' : 'font-bold'}
             onClick={() => {
               const el = document.querySelector('#kontak');
               if (el) el.scrollIntoView({ behavior: 'smooth' });
             }}
           >
-            Konsultasi
+            Konsultasi Layanan
           </Button>
 
           {isAuthenticated ? (
@@ -94,28 +95,18 @@ export function LandingNavbar({ onNavigate }) {
               icon={UserCheck}
               onClick={() => onNavigate && onNavigate('dashboard')}
             >
-              Dashboard ({user?.role?.toUpperCase()})
+              Buka Dashboard ({user?.role?.toUpperCase()})
             </Button>
           ) : (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                icon={LogIn}
-                className={!isScrolled ? 'bg-white/90 hover:bg-white text-brand-dark border-transparent shadow-xs font-semibold' : 'border-slate-300 text-brand-dark hover:bg-slate-50 font-semibold'}
-                onClick={() => onNavigate && onNavigate('login')}
-              >
-                Login
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                icon={UserPlus}
-                onClick={() => onNavigate && onNavigate('register')}
-              >
-                Register
-              </Button>
-            </div>
+            <Button
+              variant="primary"
+              size="sm"
+              icon={Shield}
+              className="shadow-sm shadow-red-900/10 font-bold"
+              onClick={() => onNavigate && onNavigate('login')}
+            >
+              Portal Internal
+            </Button>
           )}
         </div>
 
@@ -154,7 +145,8 @@ export function LandingNavbar({ onNavigate }) {
             <Button
               variant="outline"
               size="md"
-              className="w-full text-center justify-center"
+              icon={MessageSquareText}
+              className="w-full text-center justify-center font-bold"
               onClick={() => {
                 setMobileMenuOpen(false);
                 const el = document.querySelector('#kontak');
@@ -177,32 +169,18 @@ export function LandingNavbar({ onNavigate }) {
                 Buka Dashboard ({user?.role})
               </Button>
             ) : (
-              <div className="grid grid-cols-2 gap-2 pt-1">
-                <Button
-                  variant="outline"
-                  size="md"
-                  icon={LogIn}
-                  className="w-full justify-center"
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    onNavigate && onNavigate('login');
-                  }}
-                >
-                  Login
-                </Button>
-                <Button
-                  variant="primary"
-                  size="md"
-                  icon={UserPlus}
-                  className="w-full justify-center"
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    onNavigate && onNavigate('register');
-                  }}
-                >
-                  Register
-                </Button>
-              </div>
+              <Button
+                variant="primary"
+                size="md"
+                icon={Shield}
+                className="w-full justify-center font-bold shadow-md shadow-red-900/10"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onNavigate && onNavigate('login');
+                }}
+              >
+                Portal Internal
+              </Button>
             )}
           </div>
         </div>
