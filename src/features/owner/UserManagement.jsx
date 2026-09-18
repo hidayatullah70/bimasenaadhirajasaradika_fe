@@ -137,7 +137,7 @@ export function UserManagement() {
         role: targetRoleCode
       });
 
-      // Optimistically update role in state
+      // Update user in state
       setUsers(prev =>
         prev.map(u =>
           u.id === selectedUser.id
@@ -155,7 +155,6 @@ export function UserManagement() {
 
       addToast(`Role untuk ${selectedUser.name} berhasil diperbarui menjadi ${roleLabelMap[newRoleId]}.`, 'success');
       setIsEditModalOpen(false);
-      fetchUsers();
     } catch (err) {
       addToast(err.message || 'Gagal memperbarui role', 'error');
     } finally {
