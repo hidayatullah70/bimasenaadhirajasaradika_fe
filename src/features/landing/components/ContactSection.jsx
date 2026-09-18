@@ -129,38 +129,68 @@ export function ContactSection({ selectedService }) {
 
             {/* Quick Contact Box with Interactive Links */}
             <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 space-y-3 shadow-sm">
-              {/* Telepon / WhatsApp */}
-              <a
-                href="https://wa.me/6285124799305?text=Halo%20PT.%20BARAK%2C%20saya%20tertarik%20dengan%20layanan%20Anda"
-                target="_blank"
-                rel="noopener noreferrer"
-                title="Chat WhatsApp Konsultasi PT. BARAK"
-                className="group flex items-start justify-between p-3.5 rounded-xl border border-slate-100 hover:border-brand-red/30 hover:bg-red-50/40 transition-all duration-200 cursor-pointer shadow-2xs hover:shadow-xs"
-              >
+              {/* Telepon & WhatsApp Card with Individual Hover Links */}
+              <div className="p-3.5 rounded-xl border border-slate-100 hover:border-brand-red/20 transition-all duration-200 shadow-2xs">
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-red-50 text-brand-red group-hover:bg-brand-red group-hover:text-white flex items-center justify-center flex-shrink-0 transition-colors shadow-2xs">
+                  <div className="w-10 h-10 rounded-xl bg-red-50 text-brand-red flex items-center justify-center flex-shrink-0 transition-colors shadow-2xs">
                     <Phone className="w-5 h-5" />
                   </div>
-                  <div>
+                  <div className="flex-1 min-w-0">
                     <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Telepon & WhatsApp</h4>
-                    <p className="text-sm font-bold text-brand-dark group-hover:text-brand-red transition-colors">
-                      {COMPANY_INFO.phone}
-                    </p>
-                    <div className="space-y-0.5 mt-0.5 text-xs">
-                      <span className="text-brand-green font-semibold block">
-                        WhatsApp Konsultasi: 0851 2479 9305
-                      </span>
-                      <span className="text-slate-500 text-[11px] block">
-                        WhatsApp Rekrutmen: 0851 7433 4336
-                      </span>
+                    
+                    {/* Primary Number Link & Hover to WhatsApp / Telepon */}
+                    <div className="mt-0.5">
+                      <a
+                        href="https://wa.me/6285124799305?text=Halo%20PT.%20BARAK%2C%20saya%20tertarik%20dengan%20layanan%20Anda"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Telepon / Chat WhatsApp 0851 2479 9305"
+                        className="inline-flex items-center gap-1.5 text-sm font-bold text-brand-dark hover:text-brand-red transition-colors group/phone cursor-pointer"
+                      >
+                        <span className="group-hover/phone:underline">{COMPANY_INFO.phone}</span>
+                        <ArrowUpRight className="w-3.5 h-3.5 text-slate-400 group-hover/phone:text-brand-red group-hover/phone:translate-x-0.5 transition-all" />
+                      </a>
+                    </div>
+
+                    {/* 2 Nomor WhatsApp Terpisah: Konsultasi & Rekrutmen */}
+                    <div className="space-y-1 mt-2 pt-2 border-t border-slate-100 text-xs">
+                      {/* WhatsApp Konsultasi */}
+                      <a
+                        href="https://wa.me/6285124799305?text=Halo%20PT.%20BARAK%2C%20saya%20ingin%20konsultasi%20layanan%20outsourcing"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Chat WhatsApp Konsultasi Layanan: 0851 2479 9305"
+                        className="group/wa1 flex items-center justify-between p-1.5 -mx-1.5 rounded-lg hover:bg-emerald-50 text-slate-700 hover:text-brand-green transition-all cursor-pointer"
+                      >
+                        <span className="text-brand-green font-semibold flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-brand-green"></span>
+                          WhatsApp Konsultasi: 0851 2479 9305
+                        </span>
+                        <span className="text-[11px] font-semibold text-slate-400 group-hover/wa1:text-brand-green flex items-center gap-0.5 opacity-80 group-hover/wa1:opacity-100 transition-opacity">
+                          Chat WA <ArrowUpRight className="w-3.5 h-3.5" />
+                        </span>
+                      </a>
+
+                      {/* WhatsApp Rekrutmen */}
+                      <a
+                        href="https://wa.me/6285174334336?text=Halo%20HRD%20PT.%20BARAK%2C%20saya%20ingin%20informasi%20lowongan%20kerja%20rekrutmen"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="Chat WhatsApp Rekrutmen Tenaga Kerja: 0851 7433 4336"
+                        className="group/wa2 flex items-center justify-between p-1.5 -mx-1.5 rounded-lg hover:bg-red-50 text-slate-700 hover:text-brand-red transition-all cursor-pointer"
+                      >
+                        <span className="text-slate-600 group-hover/wa2:text-brand-red font-medium flex items-center gap-1.5 text-[11.5px]">
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-400 group-hover/wa2:bg-brand-red"></span>
+                          WhatsApp Rekrutmen: 0851 7433 4336
+                        </span>
+                        <span className="text-[11px] font-semibold text-slate-400 group-hover/wa2:text-brand-red flex items-center gap-0.5 opacity-80 group-hover/wa2:opacity-100 transition-opacity">
+                          Chat WA <ArrowUpRight className="w-3.5 h-3.5" />
+                        </span>
+                      </a>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 text-slate-400 group-hover:text-brand-red group-hover:translate-x-0.5 transition-all text-xs font-semibold flex-shrink-0 mt-1">
-                  <span className="hidden sm:inline text-[11px]">Chat WA</span>
-                  <ArrowUpRight className="w-4 h-4" />
-                </div>
-              </a>
+              </div>
 
               {/* Email Resmi */}
               <a
