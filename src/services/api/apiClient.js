@@ -1,11 +1,17 @@
 import collection from '../../../SOT/collection.json';
 
+const PRODUCTION_API_URL = 'https://bimasenaadhirajasaradikabe-production.up.railway.app/api/v1';
+
 // Resolusi baseUrl secara dinamis bersumber dari collection.json (SOT)
 const collectionBaseUrl = collection?.variable?.find((v) => v.key === 'baseUrl')?.value || '';
 const collectionApiBase = collectionBaseUrl ? `${collectionBaseUrl.replace(/\/+$/, '')}/api/v1` : '/api/v1';
 
-// Prioritas utama membaca .env (VITE_API_BASE_URL), dengan fallback otomatis dari collection.json
-const BASE_URL = (import.meta.env.VITE_API_BASE_URL || collectionApiBase).replace(/\/+$/, '');
+// Cek apakah fallback adalah localhost tetapi aplikasi dibuka di hosting publik (Vercel / HTTPS)
+const isBrowserPublic = typeof window !== 'undefined' && window.location && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1');
+const resolvedFallback = (isBrowserPublic && collectionApiBase.includes('localhost')) ? PRODUCTION_API_URL : collectionApiBase;
+
+// Prioritas: 1. Environment Variable .env (VITE_API_BASE_URL), 2. Resolved Smart Fallback
+const BASE_URL = (import.meta.env.VITE_API_BASE_URL || resolvedFallback || PRODUCTION_API_URL).replace(/\/+$/, '');
 
 async function request(endpoint, options = {}) {
   const token = localStorage.getItem('barak_auth_token');
