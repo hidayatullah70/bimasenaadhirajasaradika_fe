@@ -161,6 +161,17 @@ export const INITIAL_USERS = [
     status: 'active',
     lastLogin: '2026-09-18 10:00',
     avatar: '/assets/img/team/person-2.jpeg'
+  },
+  {
+    id: 'usr-6',
+    name: 'Gheril Ramaditya S.',
+    email: 'itsupport@bimasenaadhirajasaradika.com',
+    role: 'it_support',
+    roleLabel: 'IT Support & Infrastruktur',
+    phone: '+62 816-7890-1234',
+    status: 'active',
+    lastLogin: '2026-09-18 09:30',
+    avatar: '/assets/img/team/person-5.jpeg'
   }
 ];
 

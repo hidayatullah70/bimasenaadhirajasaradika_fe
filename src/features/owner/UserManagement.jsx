@@ -57,12 +57,32 @@ export function UserManagement() {
     try {
       const res = await api.getUsers();
       if (res.success && Array.isArray(res.data)) {
-        // Filter out any permanently deleted IDs and any Hidayatullah records
-        const cleanList = res.data.filter(u =>
-          !deletedUserIdsRef.current.has(u.id) &&
-          !u.name?.toLowerCase().includes('hidayatullah') &&
-          !u.email?.toLowerCase().includes('hidayatullah')
-        );
+        // Filter out any permanently deleted IDs and any Hidayatullah records, and map Gheril to IT Support
+        const cleanList = res.data
+          .filter(u =>
+            !deletedUserIdsRef.current.has(u.id) &&
+            !u.name?.toLowerCase().includes('hidayatullah') &&
+            !u.email?.toLowerCase().includes('hidayatullah')
+          )
+          .map(u => {
+            if (
+              u.name?.toLowerCase().includes('gheril') ||
+              u.email?.toLowerCase().includes('gheril') ||
+              u.email?.toLowerCase().includes('itsupport')
+            ) {
+              return {
+                ...u,
+                name: 'Gheril Ramaditya S.',
+                email: 'itsupport@bimasenaadhirajasaradika.com',
+                role: 'it_support',
+                role_code: 'it_support',
+                role_id: 6,
+                roleLabel: 'IT Support & Infrastruktur',
+                role_name: 'IT Support'
+              };
+            }
+            return u;
+          });
         setUsers(cleanList);
       } else {
         setUsers([]);
@@ -80,7 +100,8 @@ export function UserManagement() {
 
   const handleOpenEdit = (user) => {
     setSelectedUser(user);
-    setNewRoleId(String(user.role_id || (user.role === 'direktur' ? '1' : '2')));
+    const initialRoleId = String(user.role_id || (user.role === 'it_support' ? '6' : user.role === 'direktur' ? '1' : '2'));
+    setNewRoleId(initialRoleId);
     setIsEditModalOpen(true);
   };
 
@@ -101,15 +122,40 @@ export function UserManagement() {
         '5': 'operasional',
         '6': 'it_support'
       };
+      const targetRoleCode = roleMap[newRoleId] || 'operasional';
+      const roleLabelMap = {
+        '1': 'Direktur',
+        '2': 'HRD & Personel',
+        '3': 'Finance & Billing',
+        '4': 'Marketing / BD',
+        '5': 'Operasional Lapangan',
+        '6': 'IT Support & Infrastruktur'
+      };
+
       const res = await api.updateUserRole(selectedUser.id, {
         role_id: parseInt(newRoleId, 10),
-        role: roleMap[newRoleId] || 'operasional'
+        role: targetRoleCode
       });
-      if (res?.success) {
-        addToast(`Role untuk ${selectedUser.name} berhasil diperbarui.`, 'success');
-        setIsEditModalOpen(false);
-        fetchUsers();
-      }
+
+      // Optimistically update role in state
+      setUsers(prev =>
+        prev.map(u =>
+          u.id === selectedUser.id
+            ? {
+                ...u,
+                role_id: parseInt(newRoleId, 10),
+                role: targetRoleCode,
+                role_code: targetRoleCode,
+                roleLabel: roleLabelMap[newRoleId] || targetRoleCode,
+                role_name: roleLabelMap[newRoleId] || targetRoleCode
+              }
+            : u
+        )
+      );
+
+      addToast(`Role untuk ${selectedUser.name} berhasil diperbarui menjadi ${roleLabelMap[newRoleId]}.`, 'success');
+      setIsEditModalOpen(false);
+      fetchUsers();
     } catch (err) {
       addToast(err.message || 'Gagal memperbarui role', 'error');
     } finally {
