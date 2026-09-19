@@ -768,7 +768,9 @@ export const COMPANY_INFO = {
   whatsapp: '0851 2479 9305',
   whatsappRecruitment: '0851 7433 4336',
   email: 'ptbimasenaadhirajasaradhika@gmail.com',
-  operationalHours: 'Senin - Jumat: 08:00 - 17:00 WIB | Sabtu: 08:00 - 12:00 WIB',
+  operationalHours: 'Senin - Jumat: 08:00 - 17:00 WIB |  Sabtu: 08:00 - 12:00 WIB',
+  operationalHoursWeekdays: 'Senin - Jumat: 08:00 - 17:00 WIB |',
+  operationalHoursSaturday: 'Sabtu: 08:00 - 12:00 WIB',
   stats: [
     { value: '1,520+', label: 'Tenaga Kerja Aktif Lapangan', detail: 'Tersaring & terlatih' },
     { value: '48+', label: 'Mitra Perusahaan Nasional', detail: 'Kerjasama jangka panjang' },

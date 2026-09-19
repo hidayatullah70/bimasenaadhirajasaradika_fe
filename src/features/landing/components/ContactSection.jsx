@@ -247,9 +247,16 @@ export function ContactSection({ selectedService }) {
               </a>
 
               {/* Jam Operasional */}
-              <div className="flex items-center gap-2 pt-3 border-t border-slate-100 text-xs text-slate-500 px-3">
-                <Clock className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                <span>Jam Operasional: <strong>{COMPANY_INFO.operationalHours}</strong></span>
+              <div className="flex items-start gap-2.5 pt-3 border-t border-slate-100 text-xs text-slate-500 px-3">
+                <Clock className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                <div className="leading-snug">
+                  <div>
+                    Jam Operasional: <strong className="text-slate-700">{COMPANY_INFO.operationalHoursWeekdays || 'Senin - Jumat: 08:00 - 17:00 WIB |'}</strong>
+                  </div>
+                  <div className="font-bold text-slate-700 mt-0.5">
+                    {COMPANY_INFO.operationalHoursSaturday || 'Sabtu: 08:00 - 12:00 WIB'}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
