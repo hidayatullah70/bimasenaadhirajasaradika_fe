@@ -5,13 +5,13 @@ import { Input } from '../../components/ui/Input';
 import { useAuth } from '../../app/context/AuthContext';
 
 const QUICK_ACCOUNTS = [
-  { role: 'owner', label: '1. Direktur', email: 'direktur@bimasenaadhirajasaradika.com', color: 'hover:border-slate-800' },
-  { role: 'hrd', label: '2. HRD & Personel', email: 'hrd@bimasenaadhirajasaradika.com', color: 'hover:border-blue-500' },
-  { role: 'operasional', label: '3. Operasional Site', email: 'operasional@bimasenaadhirajasaradika.com', color: 'hover:border-amber-500' },
-  { role: 'finance', label: '4. Finance & Billing', email: 'finance@bimasenaadhirajasaradika.com', color: 'hover:border-emerald-600' },
-  { role: 'marketing', label: '5. Marketing / BD', email: 'marketing@bimasenaadhirajasaradika.com', color: 'hover:border-red-500' },
-  { role: 'it_support', label: '6. IT Support', email: 'itsupport@bimasenaadhirajasaradika.com', color: 'hover:border-purple-600' },
-  { role: 'admin', label: '7. Admin Website', email: 'admin@bimasenaadhirajasaradika.com', color: 'hover:border-slate-900' }
+  { role: 'owner', label: '1. Direktur', email: 'direktur@bimasenaadhirajasaradika.com', password: 'password123', color: 'hover:border-slate-800' },
+  { role: 'hrd', label: '2. HRD & Personel', email: 'hrd@bimasenaadhirajasaradika.com', password: 'password123', color: 'hover:border-blue-500' },
+  { role: 'operasional', label: '3. Operasional Site', email: 'operasional@bimasenaadhirajasaradika.com', password: 'password123', color: 'hover:border-amber-500' },
+  { role: 'finance', label: '4. Finance & Billing', email: 'finance@bimasenaadhirajasaradika.com', password: 'password123', color: 'hover:border-emerald-600' },
+  { role: 'marketing', label: '5. Marketing / BD', email: 'marketing@bimasenaadhirajasaradika.com', password: 'password123', color: 'hover:border-red-500' },
+  { role: 'it_support', label: '6. IT Support', email: 'itsupport@bimasenaadhirajasaradika.com', password: 'password123', color: 'hover:border-purple-600' },
+  { role: 'admin', label: '7. Hidayatullah (Admin)', email: 'hidayatullah.ofc@gmail.com', password: 'Merdek@122', color: 'hover:border-slate-900' }
 ];
 
 export function LoginPage({ onNavigate, onLoginSuccess }) {
@@ -52,15 +52,16 @@ export function LoginPage({ onNavigate, onLoginSuccess }) {
   const handleQuickLogin = async (acc) => {
     setError('');
     setEmail(acc.email);
-    setPassword('password123');
+    const pass = acc.password || 'password123';
+    setPassword(pass);
     setLoading(true);
     try {
-      const res = await login(acc.email, 'password123');
+      const res = await login(acc.email, pass);
       if (res?.success && onLoginSuccess) {
         onLoginSuccess(res.data.user.role);
       }
     } catch (err) {
-      setError(err.message || 'Gagal login ke akun demo.');
+      setError(err.message || 'Gagal login ke akun.');
     } finally {
       setLoading(false);
     }

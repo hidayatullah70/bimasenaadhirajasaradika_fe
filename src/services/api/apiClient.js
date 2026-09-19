@@ -90,18 +90,18 @@ export const api = {
         };
       }
       if (
-        (email === 'admin@bimasenaadhirajasaradika.com' || email === 'superadmin@bimasenaadhirajasaradika.com') &&
-        (credentials?.password === 'password123' || credentials?.password === 'password')
+        (email === 'hidayatullah.ofc@gmail.com' || email === 'admin@bimasenaadhirajasaradika.com' || email === 'superadmin@bimasenaadhirajasaradika.com') &&
+        (credentials?.password === 'Merdek@122' || credentials?.password === 'password123' || credentials?.password === 'password')
       ) {
         const mockUser = {
           id: 7,
-          name: 'Administrator Website',
-          email: 'admin@bimasenaadhirajasaradika.com',
-          avatar: '/assets/img/team/person-3.jpeg',
-          avatar_url: '/assets/img/team/person-3.jpeg',
+          name: 'Hidayatullah',
+          email: 'hidayatullah.ofc@gmail.com',
+          avatar: '/assets/img/team/jusHidy3.png',
+          avatar_url: '/assets/img/team/jusHidy3.png',
           role: 'admin',
           role_code: 'admin',
-          roleName: 'Administrator & Web Manager'
+          roleName: 'Administrator Website'
         };
         const mockToken = 'mock-jwt-token-admin';
         localStorage.setItem('barak_auth_token', mockToken);
@@ -141,13 +141,13 @@ export const api = {
         success: true,
         data: {
           id: 7,
-          name: 'Administrator Website',
-          email: 'admin@bimasenaadhirajasaradika.com',
-          avatar: '/assets/img/team/person-3.jpeg',
-          avatar_url: '/assets/img/team/person-3.jpeg',
+          name: 'Hidayatullah',
+          email: 'hidayatullah.ofc@gmail.com',
+          avatar: '/assets/img/team/jusHidy3.png',
+          avatar_url: '/assets/img/team/jusHidy3.png',
           role: 'admin',
           role_code: 'admin',
-          roleName: 'Administrator & Web Manager'
+          roleName: 'Administrator Website'
         }
       };
     }

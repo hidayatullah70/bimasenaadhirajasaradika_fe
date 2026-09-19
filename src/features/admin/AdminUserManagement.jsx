@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 
 const TEAM_AVATAR_OPTIONS = [
+  { label: 'Hidayatullah (Admin)', path: '/assets/img/team/jusHidy3.png' },
   { label: 'Juli Priyanto (Direktur)', path: '/assets/img/team/person-3.jpeg' },
   { label: 'Robyn Topani (HRD)', path: '/assets/img/team/person-1.jpeg' },
   { label: 'Nazi Rinaldi (Operasional)', path: '/assets/img/team/person-2.jpeg' },
@@ -355,7 +356,8 @@ export function AdminUserManagement() {
                 { value: '3', label: '3 - Operasional' },
                 { value: '4', label: '4 - Finance' },
                 { value: '5', label: '5 - Marketing' },
-                { value: '6', label: '6 - IT Support' }
+                { value: '6', label: '6 - IT Support' },
+                { value: '7', label: '7 - Administrator Website' }
               ]}
             />
           </div>

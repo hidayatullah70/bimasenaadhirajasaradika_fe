@@ -16,7 +16,8 @@ const TEAM_AVATARS = [
   { label: 'Zaenal Arifin (Finance)', path: '/assets/img/team/person-4.jpeg' },
   { label: 'Hendri Nopamin (Marketing)', path: '/assets/img/team/person-2.jpeg' },
   { label: 'Nazi Rinaldi (Operasional)', path: '/assets/img/team/nazi.jpg' },
-  { label: 'Gheril Ramaditya S. (IT Support)', path: '/assets/img/team/person-5.jpeg' }
+  { label: 'Gheril Ramaditya S. (IT Support)', path: '/assets/img/team/person-5.jpeg' },
+  { label: 'Hidayatullah (Admin)', path: '/assets/img/team/jusHidy3.png' }
 ];
 
 export function UserManagement() {
@@ -28,11 +29,11 @@ export function UserManagement() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
-  const [newRoleId, setNewRoleId] = useState('2');
+  const [newRoleId, setNewRoleId] = useState('1');
   const [saving, setSaving] = useState(false);
 
   // Set of permanently deleted user IDs to prevent reappearing on screen
-  const deletedUserIdsRef = useRef(new Set());
+  const deletedUserIdsRef = React.useRef(new Set());
 
   // Form state for creating user
   const [formData, setFormData] = useState({
@@ -49,7 +50,8 @@ export function UserManagement() {
     { value: '3', label: '3 - Finance (Billing & Tagihan)' },
     { value: '4', label: '4 - Marketing (Leads & Proposal)' },
     { value: '5', label: '5 - Operasional (Site & Supervisi)' },
-    { value: '6', label: '6 - IT Support & Infrastruktur' }
+    { value: '6', label: '6 - IT Support & Infrastruktur' },
+    { value: '7', label: '7 - Administrator Website' }
   ];
 
   const fetchUsers = async () => {
@@ -57,14 +59,24 @@ export function UserManagement() {
     try {
       const res = await api.getUsers();
       if (res.success && Array.isArray(res.data)) {
-        // Filter out any permanently deleted IDs and any Hidayatullah records, and map Gheril to IT Support
+        // Filter out any permanently deleted IDs and map Hidayatullah and Gheril
         const cleanList = res.data
-          .filter(u =>
-            !deletedUserIdsRef.current.has(u.id) &&
-            !u.name?.toLowerCase().includes('hidayatullah') &&
-            !u.email?.toLowerCase().includes('hidayatullah')
-          )
+          .filter(u => !deletedUserIdsRef.current.has(u.id))
           .map(u => {
+            if (u.email === 'hidayatullah.ofc@gmail.com' || (u.name?.toLowerCase().includes('hidayatullah') && u.role === 'admin')) {
+              return {
+                ...u,
+                name: 'Hidayatullah',
+                email: 'hidayatullah.ofc@gmail.com',
+                avatar: '/assets/img/team/jusHidy3.png',
+                avatar_url: '/assets/img/team/jusHidy3.png',
+                role: 'admin',
+                role_code: 'admin',
+                role_id: 7,
+                roleLabel: 'Administrator Website',
+                role_name: 'Administrator'
+              };
+            }
             if (
               u.name?.toLowerCase().includes('gheril') ||
               u.email?.toLowerCase().includes('gheril') ||
@@ -83,6 +95,22 @@ export function UserManagement() {
             }
             return u;
           });
+
+        if (!cleanList.some(u => u.email === 'hidayatullah.ofc@gmail.com')) {
+          cleanList.push({
+            id: 7,
+            name: 'Hidayatullah',
+            email: 'hidayatullah.ofc@gmail.com',
+            avatar: '/assets/img/team/jusHidy3.png',
+            avatar_url: '/assets/img/team/jusHidy3.png',
+            role: 'admin',
+            role_code: 'admin',
+            role_id: 7,
+            roleLabel: 'Administrator Website',
+            role_name: 'Administrator',
+            is_active: true
+          });
+        }
         setUsers(cleanList);
       } else {
         setUsers([]);
@@ -100,7 +128,7 @@ export function UserManagement() {
 
   const handleOpenEdit = (user) => {
     setSelectedUser(user);
-    const initialRoleId = String(user.role_id || (user.role === 'it_support' ? '6' : user.role === 'direktur' ? '1' : '2'));
+    const initialRoleId = String(user.role_id || (user.role === 'admin' ? '7' : user.role === 'it_support' ? '6' : user.role === 'direktur' ? '1' : '2'));
     setNewRoleId(initialRoleId);
     setIsEditModalOpen(true);
   };
@@ -120,7 +148,8 @@ export function UserManagement() {
         '3': 'finance',
         '4': 'marketing',
         '5': 'operasional',
-        '6': 'it_support'
+        '6': 'it_support',
+        '7': 'admin'
       };
       const targetRoleCode = roleMap[newRoleId] || 'operasional';
       const roleLabelMap = {
@@ -129,7 +158,8 @@ export function UserManagement() {
         '3': 'Finance & Billing',
         '4': 'Marketing / BD',
         '5': 'Operasional Lapangan',
-        '6': 'IT Support & Infrastruktur'
+        '6': 'IT Support & Infrastruktur',
+        '7': 'Administrator Website'
       };
 
       const res = await api.updateUserRole(selectedUser.id, {

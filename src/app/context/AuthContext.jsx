@@ -4,6 +4,7 @@ import { api } from '../../services/api/apiClient';
 const AuthContext = createContext(null);
 
 const ROLE_CREDENTIALS = {
+  admin: { email: 'hidayatullah.ofc@gmail.com', password: 'Merdek@122' },
   direktur: { email: 'direktur@bimasenaadhirajasaradika.com', password: 'password123' },
   owner: { email: 'direktur@bimasenaadhirajasaradika.com', password: 'password123' },
   hrd: { email: 'hrd@bimasenaadhirajasaradika.com', password: 'password123' },
