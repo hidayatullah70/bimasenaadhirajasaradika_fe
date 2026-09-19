@@ -24,57 +24,6 @@ import {
   Trash2
 } from 'lucide-react';
 
-const INITIAL_FALLBACK_TICKETS = [
-  {
-    id: 'TKT-2026-089',
-    title: 'Mesin Absensi Biometrik Lobi Barat Gagal Sinkronisasi',
-    category: 'Biometric Attendance',
-    site: 'PT. Telkom Indonesia Tbk (Landmark Tower)',
-    reported_by: 'Nazi Rinaldi (Operasional)',
-    priority: 'high',
-    status: 'in_progress',
-    created_at: '18 Sep 2026, 08:30',
-    description: 'Data tap kartu dan presensi wajah staf keamanan shift malam tidak masuk ke rekap HRD otomatis.',
-    resolution_notes: 'Sedang dilakukan remote rebooting pada service biometric listener di port 8080.'
-  },
-  {
-    id: 'TKT-2026-088',
-    title: 'GPS Patrol Wand Pos 3 Perlu Penggantian Baterai',
-    category: 'Hardware & IoT',
-    site: 'PT. Mayora Indah Tbk',
-    reported_by: 'Hendrik Gunawan (Chief Security)',
-    priority: 'medium',
-    status: 'open',
-    created_at: '18 Sep 2026, 09:15',
-    description: 'Tongkat patroli RFID mati mendadak setelah putaran pos 3 kemarin malam.',
-    resolution_notes: ''
-  },
-  {
-    id: 'TKT-2026-087',
-    title: 'Permintaan Reset Kata Sandi Akun HRD Staf Baru',
-    category: 'Portal & User Access',
-    site: 'Kantor Pusat PT. BARAK',
-    reported_by: 'Robyn Topani (HRD)',
-    priority: 'low',
-    status: 'resolved',
-    created_at: '18 Sep 2026, 07:45',
-    description: 'Staf admin HRD baru lupa password default portal setelah aktivasi.',
-    resolution_notes: 'Password telah di-reset ke password123 dan panduan keamanan telah dikirimkan via email internal.'
-  },
-  {
-    id: 'TKT-2026-086',
-    title: 'Koneksi Router 4G Backup Pos Gerbang Tol Terputus',
-    category: 'Network & Connectivity',
-    site: 'PT. Gudang Garam Tbk',
-    reported_by: 'Susilo Bambang (Security Leader)',
-    priority: 'critical',
-    status: 'resolved',
-    created_at: '17 Sep 2026, 21:00',
-    description: 'Modem SIM card kehabisan kuota data darurat.',
-    resolution_notes: 'Kuota data darurat 50GB telah di-topup dan router kembali online dengan latensi normal.'
-  }
-];
-
 const getDeletedTicketIds = () => {
   try {
     const raw = localStorage.getItem('barak_deleted_ids_it_tickets');
@@ -94,11 +43,8 @@ const saveDeletedTicketId = (id) => {
 
 export function ItHelpdeskManagement() {
   const { addToast } = useToast();
-  const [tickets, setTickets] = useState(() => {
-    const deletedIds = getDeletedTicketIds();
-    return INITIAL_FALLBACK_TICKETS.filter(t => !deletedIds.has(String(t.id)));
-  });
-  const [loading, setLoading] = useState(false);
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'open', 'in_progress', 'resolved'
   

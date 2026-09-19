@@ -8,7 +8,6 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { Input, Select } from '../../components/ui/Input';
 import { useToast } from '../../app/context/ToastContext';
 import { api } from '../../services/api/apiClient';
-import { INITIAL_EMPLOYEES } from '../../services/mock/mockData';
 import {
   UserPlus,
   Edit2,
@@ -32,7 +31,7 @@ import {
   Image as ImageIcon
 } from 'lucide-react';
 
-const LOCAL_STORAGE_KEY = 'barak_employees_data_v2';
+const LOCAL_STORAGE_KEY = 'barak_store_employees';
 
 const PTKP_OPTIONS = [
   { value: 'TK', label: 'TK - Tidak Kawin (Lajang)' },
@@ -212,70 +211,27 @@ export function EmployeeManagement() {
     setLoading(true);
     try {
       const deletedIds = getDeletedEmployeeIds();
-      const localData = getSavedLocalEmployees();
-      let rawList = localData || INITIAL_EMPLOYEES;
-      let list = rawList.filter(e => 
+      const res = await api.getEmployees({
+        search,
+        status: statusFilter,
+        page,
+        limit: 100
+      });
+
+      let list = [];
+      if (res?.success && Array.isArray(res.data)) {
+        list = res.data;
+      } else {
+        const localData = getSavedLocalEmployees();
+        list = localData || [];
+      }
+
+      const filtered = list.filter(e => 
         !deletedIds.has(String(e.id)) && 
         !deletedIds.has(String(e.nik)) && 
         !deletedIds.has(String(e.employee_no || '')) &&
         !deletedIds.has(String(e.name || '').trim().toLowerCase())
       );
-
-      try {
-        const res = await api.getEmployees({
-          search,
-          status: statusFilter,
-          page,
-          limit: 100
-        });
-        if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
-          // Merge API data with rich local/initial fields, filtering out permanently deleted records
-          const merged = res.data
-            .filter(apiEmp => 
-              !deletedIds.has(String(apiEmp.id)) && 
-              !deletedIds.has(String(apiEmp.nik)) &&
-              !deletedIds.has(String(apiEmp.employee_no || '')) &&
-              !deletedIds.has(String(apiEmp.name || '').trim().toLowerCase())
-            )
-            .map(apiEmp => {
-              const match = list.find(l => String(l.id) === String(apiEmp.id) || l.nik === apiEmp.nik);
-              return {
-                ...match,
-                ...apiEmp,
-                nik: apiEmp.nik || match?.nik || `327501${String(apiEmp.id).padStart(10, '0')}`,
-                birth_date: apiEmp.birth_date || match?.birth_date || '1995-01-01',
-                ptkp_status: apiEmp.ptkp_status || match?.ptkp_status || 'TK',
-                bank_account: apiEmp.bank_account || match?.bank_account || 'BCA 8830192831 a.n ' + (apiEmp.name || 'Karyawan'),
-                npwp: apiEmp.npwp || match?.npwp || '09.254.629.8-407.000',
-                address: apiEmp.address || match?.address || 'Jl. Jend. Sudirman No. Kav 54-55, Jakarta',
-                placement_address: apiEmp.placement_address || match?.placement_address || 'PT Menara Graha Mandiri - Gedung Pusat',
-                photo_url: apiEmp.photo_url || match?.photo_url || '/assets/img/team/person-2.jpeg'
-              };
-            });
-          list = merged;
-        }
-      } catch (apiErr) {
-        console.info('Using local / mock employee data store', apiErr.message);
-      }
-
-      // Apply client filtering
-      let filtered = [...list];
-      if (search) {
-        const q = search.toLowerCase();
-        filtered = filtered.filter(e =>
-          (e.name || '').toLowerCase().includes(q) ||
-          (e.nik || '').toLowerCase().includes(q) ||
-          (e.employee_no || '').toLowerCase().includes(q) ||
-          (e.phone || '').toLowerCase().includes(q) ||
-          (e.position || '').toLowerCase().includes(q) ||
-          (e.service || '').toLowerCase().includes(q) ||
-          (e.placement_address || '').toLowerCase().includes(q)
-        );
-      }
-
-      if (statusFilter !== 'all') {
-        filtered = filtered.filter(e => e.status === statusFilter);
-      }
 
       setEmployees(filtered);
       setPaginationMeta({

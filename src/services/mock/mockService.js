@@ -54,7 +54,7 @@ function loadStore(key, defaultData) {
 
   try {
     const raw = localStorage.getItem(`barak_store_${key}`);
-    if (raw) {
+    if (raw !== null) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
         return parsed.filter(item => !isDeleted(item));
@@ -63,7 +63,10 @@ function loadStore(key, defaultData) {
   } catch (e) {
     console.warn(`Failed to read storage for ${key}:`, e);
   }
-  return (defaultData || []).filter(item => !isDeleted(item));
+
+  const initial = (defaultData || []).filter(item => !isDeleted(item));
+  saveStore(key, initial);
+  return initial;
 }
 
 function saveStore(key, data) {

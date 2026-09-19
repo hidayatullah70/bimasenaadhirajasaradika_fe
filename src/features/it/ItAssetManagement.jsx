@@ -27,75 +27,6 @@ import {
   Server
 } from 'lucide-react';
 
-const INITIAL_FALLBACK_ASSETS = [
-  {
-    id: 'AST-BIO-001',
-    name: 'ZKTeco FacePass 7 Biometric Terminal',
-    category: 'Biometric Attendance',
-    site: 'PT. Telkom Indonesia Tbk (Lantai 1 Lobi Utama)',
-    serial_no: 'ZK-2026-TLK-0199',
-    ip_address: '192.168.10.45',
-    last_sync: '1 menit yang lalu',
-    firmware: 'v4.2.1-prod',
-    status: 'online'
-  },
-  {
-    id: 'AST-BIO-002',
-    name: 'Hikvision Face & Fingerprint Terminal',
-    category: 'Biometric Attendance',
-    site: 'PT. Mayora Indah Tbk (Pintu Masuk Karyawan)',
-    serial_no: 'HIK-MYR-8821-B',
-    ip_address: '192.168.20.12',
-    last_sync: '5 menit yang lalu',
-    firmware: 'v3.8.0-barak',
-    status: 'online'
-  },
-  {
-    id: 'AST-PAT-001',
-    name: 'JWM Guard Tour RFID Patrol Wand (V9)',
-    category: 'Security Patrol Device',
-    site: 'RS Siloam Hospital Lippo Village',
-    serial_no: 'JWM-SLM-0044',
-    ip_address: 'N/A (Docking Sync)',
-    last_sync: '15 menit yang lalu',
-    firmware: 'v2.1.0',
-    status: 'online'
-  },
-  {
-    id: 'AST-PAT-002',
-    name: 'JWM Guard Tour GPS Wand',
-    category: 'Security Patrol Device',
-    site: 'PT. Gudang Garam Tbk (Area Gudang A)',
-    serial_no: 'JWM-GG-0112',
-    ip_address: 'Cellular 4G SIM',
-    last_sync: '2 jam yang lalu',
-    firmware: 'v2.1.0',
-    status: 'offline'
-  },
-  {
-    id: 'AST-CCTV-001',
-    name: 'Dahua 32-Ch 4K NVR Command Center',
-    category: 'CCTV Surveillance',
-    site: 'Kantor Pusat PT. BARAK (Security HQ)',
-    serial_no: 'DH-NVR-HQ-001',
-    ip_address: '10.0.1.50',
-    last_sync: 'Realtime Stream',
-    firmware: 'v5.0.2',
-    status: 'online'
-  },
-  {
-    id: 'AST-LAP-001',
-    name: 'ThinkPad T14 Gen 4 - Operasional Dispatch',
-    category: 'Office Workstation',
-    site: 'Kantor Pusat PT. BARAK (Divisi Operasional)',
-    serial_no: 'PF-4X990-2026',
-    ip_address: '10.0.1.104',
-    last_sync: 'Aktif saat ini',
-    firmware: 'Win 11 Pro / BarakOS',
-    status: 'online'
-  }
-];
-
 const getDeletedAssetIds = () => {
   try {
     const raw = localStorage.getItem('barak_deleted_ids_it_assets');
@@ -116,11 +47,8 @@ const saveDeletedAssetId = (id, serialNo) => {
 
 export function ItAssetManagement() {
   const { addToast } = useToast();
-  const [assets, setAssets] = useState(() => {
-    const deletedIds = getDeletedAssetIds();
-    return INITIAL_FALLBACK_ASSETS.filter(a => !deletedIds.has(String(a.id)) && !deletedIds.has(String(a.serial_no || '')));
-  });
-  const [loading, setLoading] = useState(false);
+  const [assets, setAssets] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'online', 'offline', 'maintenance'
   
