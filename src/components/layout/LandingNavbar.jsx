@@ -46,7 +46,7 @@ export function LandingNavbar({ onNavigate }) {
       className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
         isScrolled
           ? 'bg-white shadow-md border-b border-slate-200/80 py-2 sm:py-2.5'
-          : 'bg-brand-yellow shadow-sm border-b border-brand-yellow-dark/30 py-3 sm:py-3.5'
+          : 'bg-[#15C110] shadow-sm border-b border-green-600/30 py-3 sm:py-3.5'
       }`}
     >
       <div className="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
@@ -66,7 +66,11 @@ export function LandingNavbar({ onNavigate }) {
               key={link.href}
               href={link.href}
               onClick={(e) => handleLinkClick(e, link.href)}
-              className="text-xs sm:text-sm font-bold text-brand-red hover:underline hover:decoration-brand-green hover:decoration-2 underline-offset-8 transition-all py-1"
+              className={`text-xs sm:text-sm font-bold transition-all py-1 underline-offset-8 hover:underline hover:decoration-2 ${
+                isScrolled
+                  ? 'text-[#BC1727] hover:decoration-[#15C110]'
+                  : 'text-white hover:decoration-[#BC1727]'
+              }`}
             >
               {link.label}
             </a>
@@ -79,7 +83,7 @@ export function LandingNavbar({ onNavigate }) {
             variant="outline"
             size="sm"
             icon={MessageSquareText}
-            className={!isScrolled ? 'bg-white/90 hover:bg-white text-brand-dark border-transparent shadow-xs font-bold' : 'font-bold'}
+            className={!isScrolled ? 'bg-white/95 hover:bg-white text-brand-dark border-transparent shadow-xs font-bold' : 'font-bold'}
             onClick={() => {
               const el = document.querySelector('#kontak');
               if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -115,8 +119,10 @@ export function LandingNavbar({ onNavigate }) {
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className={`p-2 rounded-lg text-brand-red transition-colors ${
-              isScrolled ? 'hover:bg-slate-100' : 'hover:bg-brand-yellow-dark/20'
+            className={`p-2 rounded-lg transition-colors ${
+              isScrolled
+                ? 'text-[#BC1727] hover:bg-slate-100'
+                : 'text-white hover:bg-white/10'
             }`}
             aria-label="Toggle navigation"
           >
@@ -134,7 +140,7 @@ export function LandingNavbar({ onNavigate }) {
                 key={link.href}
                 href={link.href}
                 onClick={(e) => handleLinkClick(e, link.href)}
-                className="px-3 py-2 rounded-lg text-sm font-bold text-brand-red hover:bg-slate-50 hover:underline hover:decoration-brand-green hover:decoration-2 underline-offset-4 transition-all"
+                className="px-3 py-2 rounded-lg text-sm font-bold text-[#BC1727] hover:bg-slate-50 hover:underline hover:decoration-[#15C110] hover:decoration-2 underline-offset-4 transition-all"
               >
                 {link.label}
               </a>
