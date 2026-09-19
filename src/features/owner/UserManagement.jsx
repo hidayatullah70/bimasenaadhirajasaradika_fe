@@ -11,6 +11,7 @@ import { api } from '../../services/api/apiClient';
 import { UserCog, UserPlus, Mail, Lock, User, ShieldCheck, Trash2, Power, AlertTriangle, Check, Users, UserCheck, UserX } from 'lucide-react';
 
 const TEAM_AVATARS = [
+  { label: 'Inisial Huruf (Otomatis dari Nama)', path: '' },
   { label: 'Juli Priyanto (Direktur)', path: '/assets/img/team/person-3.jpeg' },
   { label: 'Robyn Topani (HRD)', path: '/assets/img/team/person-7.jpeg' },
   { label: 'Zaenal Arifin (Finance)', path: '/assets/img/team/person-4.jpeg' },
@@ -31,6 +32,7 @@ export function UserManagement() {
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
   const [newRoleId, setNewRoleId] = useState('1');
   const [newStatus, setNewStatus] = useState(true);
+  const [editAvatarUrl, setEditAvatarUrl] = useState('');
   const [saving, setSaving] = useState(false);
 
   // Set of permanently deleted user IDs to prevent reappearing on screen
@@ -42,7 +44,7 @@ export function UserManagement() {
     email: '',
     password: '',
     role_id: '1',
-    avatar_url: '/assets/img/team/person-3.jpeg'
+    avatar_url: ''
   });
 
   const roleOptions = [
@@ -133,6 +135,7 @@ export function UserManagement() {
     const initialRoleId = String(user.role_id || (user.role === 'admin' ? '7' : user.role === 'it_support' ? '6' : user.role === 'direktur' ? '1' : '2'));
     setNewRoleId(initialRoleId);
     setNewStatus(user.is_active !== 0 && user.is_active !== false);
+    setEditAvatarUrl(user.avatar_url || '');
     setIsEditModalOpen(true);
   };
 
@@ -193,7 +196,9 @@ export function UserManagement() {
       const res = await api.updateUser(selectedUser.id, {
         role_id: parseInt(newRoleId, 10),
         role: targetRoleCode,
-        is_active: newStatus ? 1 : 0
+        is_active: newStatus ? 1 : 0,
+        avatar_url: editAvatarUrl || null,
+        avatar: editAvatarUrl || null
       });
 
       // Update user in state
@@ -207,13 +212,15 @@ export function UserManagement() {
                 role_code: targetRoleCode,
                 roleLabel: roleLabelMap[newRoleId] || targetRoleCode,
                 role_name: roleLabelMap[newRoleId] || targetRoleCode,
-                is_active: newStatus ? 1 : 0
+                is_active: newStatus ? 1 : 0,
+                avatar_url: editAvatarUrl || null,
+                avatar: editAvatarUrl || null
               }
             : u
         )
       );
 
-      addToast(`Data pengguna ${selectedUser.name} berhasil diperbarui (Status: ${newStatus ? 'Aktif' : 'Non-Aktif'}).`, 'success');
+      addToast(`Data pengguna ${selectedUser.name} berhasil diperbarui (Role, Foto Profil & Status).`, 'success');
       setIsEditModalOpen(false);
     } catch (err) {
       addToast(err.message || 'Gagal memperbarui pengguna', 'error');
@@ -223,22 +230,7 @@ export function UserManagement() {
   };
 
   const handleNameChange = (val) => {
-    let autoAvatar = formData.avatar_url;
-    const lower = val.toLowerCase();
-    if (lower.includes('gheril')) {
-      autoAvatar = '/assets/img/team/person-5.jpeg';
-    } else if (lower.includes('juli')) {
-      autoAvatar = '/assets/img/team/person-3.jpeg';
-    } else if (lower.includes('robyn')) {
-      autoAvatar = '/assets/img/team/person-7.jpeg';
-    } else if (lower.includes('zaenal')) {
-      autoAvatar = '/assets/img/team/person-4.jpeg';
-    } else if (lower.includes('hendri')) {
-      autoAvatar = '/assets/img/team/person-2.jpeg';
-    } else if (lower.includes('nazi')) {
-      autoAvatar = '/assets/img/team/nazi.jpg';
-    }
-    setFormData({ ...formData, name: val, avatar_url: autoAvatar });
+    setFormData({ ...formData, name: val });
   };
 
   const handleCreateUser = async (e) => {
@@ -265,8 +257,8 @@ export function UserManagement() {
         password: formData.password,
         role_id: parseInt(formData.role_id, 10),
         role: roleMap[formData.role_id] || 'operasional',
-        avatar_url: formData.avatar_url || '/assets/img/team/JustHidy3.png',
-        avatar: formData.avatar_url || '/assets/img/team/JustHidy3.png'
+        avatar_url: formData.avatar_url ? formData.avatar_url.trim() : null,
+        avatar: formData.avatar_url ? formData.avatar_url.trim() : null
       };
 
       const res = await api.createUser(payload);
@@ -278,7 +270,7 @@ export function UserManagement() {
           email: '',
           password: '',
           role_id: '1',
-          avatar_url: '/assets/img/team/JustHidy3.png'
+          avatar_url: ''
         });
         fetchUsers();
       }
@@ -376,9 +368,15 @@ export function UserManagement() {
     {
       header: 'Foto Profil Tim',
       render: (row) => (
-        <span className="text-[11px] text-slate-500 font-mono truncate max-w-[150px] inline-block">
-          {row.avatar_url || row.avatar || '-'}
-        </span>
+        row.avatar_url ? (
+          <span className="text-[11px] text-slate-600 font-mono truncate max-w-[150px] inline-block bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+            {row.avatar_url}
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 text-[11px] text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200 font-medium">
+            Inisial Huruf
+          </span>
+        )
       )
     },
     {
@@ -447,7 +445,7 @@ export function UserManagement() {
                 email: '',
                 password: '',
                 role_id: '1',
-                avatar_url: '/assets/img/team/JustHidy3.png'
+                avatar_url: ''
               });
               setIsCreateModalOpen(true);
             }}
@@ -548,39 +546,51 @@ export function UserManagement() {
             options={roleOptions}
           />
 
-          {/* Avatar Selector from /assets/img/team */}
-          <div className="space-y-2 pt-2 border-t border-slate-100">
-            <label className="block text-xs font-bold text-slate-700">
-              Pilih Foto Profil Tim (Folder: <span className="font-mono text-brand-red">/assets/img/team/</span>)
-            </label>
+          {/* Avatar Selector from /assets/img/team with Initial Support */}
+          <div className="space-y-2.5 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold text-slate-700">
+                Pilih Foto Profil Tim (Folder: <span className="font-mono text-brand-red">/assets/img/team/</span>)
+              </label>
+              <span className="text-[11px] text-slate-400">Pilih opsi pertama jika belum ada file foto</span>
+            </div>
+
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               {TEAM_AVATARS.map((item) => {
                 const isSelected = formData.avatar_url === item.path;
                 return (
                   <button
-                    key={item.path}
+                    key={item.label}
                     type="button"
                     onClick={() => setFormData({ ...formData, avatar_url: item.path })}
-                    className={`relative p-2 rounded-xl border text-left transition-all flex flex-col items-center gap-1.5 overflow-hidden ${
+                    className={`relative p-2.5 rounded-xl border text-left transition-all flex flex-col items-center gap-2 overflow-hidden ${
                       isSelected
-                        ? 'border-brand-red ring-2 ring-brand-red/30 bg-red-50/50'
+                        ? 'border-brand-red ring-2 ring-brand-red/30 bg-red-50/50 shadow-sm'
                         : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
                     }`}
                   >
-                    <img
-                      src={item.path}
-                      alt={item.label}
-                      className="w-12 h-12 rounded-full object-cover shadow-sm ring-1 ring-slate-200"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.label)}&background=0284c7&color=fff`;
-                      }}
-                    />
-                    <span className="text-[10px] font-semibold text-slate-700 text-center line-clamp-1">
+                    {item.path ? (
+                      <img
+                        src={item.path}
+                        alt={item.label}
+                        className="w-12 h-12 rounded-full object-cover shadow-sm ring-1 ring-slate-200"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.label)}&background=0284c7&color=fff`;
+                        }}
+                      />
+                    ) : (
+                      <Avatar
+                        name={formData.name || 'User Baru'}
+                        size="xl"
+                        className="shadow-sm ring-1 ring-slate-200"
+                      />
+                    )}
+                    <span className="text-[10px] font-semibold text-slate-700 text-center line-clamp-1 leading-tight">
                       {item.label}
                     </span>
                     {isSelected && (
-                      <div className="absolute top-1 right-1 bg-brand-red text-white p-0.5 rounded-full shadow">
+                      <div className="absolute top-1.5 right-1.5 bg-brand-red text-white p-0.5 rounded-full shadow">
                         <Check className="w-3 h-3 stroke-[3]" />
                       </div>
                     )}
@@ -588,18 +598,36 @@ export function UserManagement() {
                 );
               })}
             </div>
-            <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
-              <span className="font-semibold text-brand-dark">Foto Terpilih:</span>
-              <span className="font-mono bg-slate-100 px-2 py-0.5 rounded text-[11px] text-brand-red font-medium truncate">
-                {formData.avatar_url}
-              </span>
+
+            <div className="mt-2.5 p-2.5 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2.5">
+                <Avatar
+                  src={formData.avatar_url}
+                  name={formData.name || 'User Baru'}
+                  size="md"
+                  className="ring-1 ring-slate-300"
+                />
+                <div>
+                  <p className="font-semibold text-slate-700 text-[11px]">
+                    {formData.avatar_url ? 'Foto Profil Terpilih:' : 'Mode Inisial Huruf Otomatis:'}
+                  </p>
+                  <p className="font-mono text-[11px] text-brand-red font-medium truncate max-w-[280px]">
+                    {formData.avatar_url || `Avatar inisial (${(formData.name || 'UB').slice(0, 2).toUpperCase()})`}
+                  </p>
+                </div>
+              </div>
+              {!formData.avatar_url && (
+                <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full">
+                  Tanpa Foto (Inisial)
+                </span>
+              )}
             </div>
           </div>
 
           <div className="p-3 bg-blue-50 rounded-xl border border-blue-200 text-xs text-blue-900 leading-relaxed flex items-start gap-2">
             <ShieldCheck className="w-4 h-4 text-blue-700 flex-shrink-0 mt-0.5" />
             <div>
-              <span className="font-bold">Otoritas Direktur:</span> Pengguna baru akan langsung tersimpan di database backend dengan foto profil yang dipilih dari folder tim.
+              <span className="font-bold">Otoritas Direktur:</span> Jika foto belum diupload, avatar akan dibuat dari inisial nama secara otomatis. Anda dapat memperbarui foto kapan saja melalui tombol <strong>Kelola</strong>.
             </div>
           </div>
 
@@ -639,7 +667,7 @@ export function UserManagement() {
             <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <Avatar
-                  src={selectedUser.avatar || selectedUser.avatar_url}
+                  src={editAvatarUrl}
                   name={selectedUser.name}
                   size="lg"
                   className="ring-2 ring-slate-200"
@@ -686,6 +714,79 @@ export function UserManagement() {
               </div>
             )}
 
+            {/* Update Avatar Profil Section in Edit Modal */}
+            <div className="space-y-2.5 pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold text-slate-700">
+                  Update Foto Profil Tim (Folder: <span className="font-mono text-brand-red">/assets/img/team/</span>)
+                </label>
+                <span className="text-[11px] text-slate-400">Pilih foto jika file baru telah diupload</span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 max-h-44 overflow-y-auto p-1">
+                {TEAM_AVATARS.map((item) => {
+                  const isSelected = editAvatarUrl === item.path;
+                  return (
+                    <button
+                      key={item.label}
+                      type="button"
+                      onClick={() => setEditAvatarUrl(item.path)}
+                      className={`relative p-2 rounded-xl border text-left transition-all flex flex-col items-center gap-1.5 overflow-hidden ${
+                        isSelected
+                          ? 'border-brand-red ring-2 ring-brand-red/30 bg-red-50/50 shadow-sm'
+                          : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
+                      }`}
+                    >
+                      {item.path ? (
+                        <img
+                          src={item.path}
+                          alt={item.label}
+                          className="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-slate-200"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.label)}&background=0284c7&color=fff`;
+                          }}
+                        />
+                      ) : (
+                        <Avatar
+                          name={selectedUser.name || 'User'}
+                          size="lg"
+                          className="shadow-sm ring-1 ring-slate-200"
+                        />
+                      )}
+                      <span className="text-[10px] font-semibold text-slate-700 text-center line-clamp-1">
+                        {item.label}
+                      </span>
+                      {isSelected && (
+                        <div className="absolute top-1 right-1 bg-brand-red text-white p-0.5 rounded-full shadow">
+                          <Check className="w-3 h-3 stroke-[3]" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="p-2 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2">
+                  <Avatar
+                    src={editAvatarUrl}
+                    name={selectedUser.name}
+                    size="sm"
+                    className="ring-1 ring-slate-300"
+                  />
+                  <div>
+                    <p className="font-semibold text-slate-700 text-[11px]">
+                      {editAvatarUrl ? 'Foto Terpilih:' : 'Mode Inisial Huruf:'}
+                    </p>
+                    <p className="font-mono text-[10px] text-brand-red font-medium truncate max-w-[240px]">
+                      {editAvatarUrl || 'Menggunakan inisial huruf dari nama'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Select Status Akun */}
             <Select
               label="Status Akses Akun (Otoritas Direktur)"
@@ -708,7 +809,7 @@ export function UserManagement() {
             <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 leading-relaxed flex items-start gap-2">
               <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
               <div>
-                <span className="font-bold">Otoritas Direktur:</span> Perubahan status maupun role akan langsung disinkronkan ke database backend secara realtime.
+                <span className="font-bold">Otoritas Direktur:</span> Perubahan foto profil, status, maupun role akan langsung disinkronkan ke database backend secara realtime.
               </div>
             </div>
 

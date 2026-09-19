@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 
 const TEAM_AVATAR_OPTIONS = [
+  { label: 'Inisial Huruf (Otomatis dari Nama)', path: '' },
   { label: 'Admin', path: '/assets/img/team/jusHidy3.png' },
   { label: 'Juli Priyanto (Direktur)', path: '/assets/img/team/person-3.jpeg' },
   { label: 'Robyn Topani (HRD)', path: '/assets/img/team/person-1.jpeg' },
@@ -66,7 +67,7 @@ export function AdminUserManagement() {
     email: '',
     password: 'password123',
     role_id: '2',
-    avatar_url: '/assets/img/team/person-1.jpeg'
+    avatar_url: ''
   });
 
   const fetchUsers = async () => {
@@ -361,6 +362,65 @@ export function AdminUserManagement() {
                 { value: '7', label: '7 - Administrator Website' }
               ]}
             />
+          </div>
+
+          {/* Avatar Selector from TEAM_AVATAR_OPTIONS */}
+          <div className="space-y-2 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold text-slate-700">
+                Pilih Foto Profil Tim (Folder: <span className="font-mono text-brand-red">/assets/img/team/</span>)
+              </label>
+              <span className="text-[11px] text-slate-400">Pilih opsi pertama jika belum ada file</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {TEAM_AVATAR_OPTIONS.map((item) => {
+                const isSelected = formData.avatar_url === item.path;
+                return (
+                  <button
+                    key={item.label}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, avatar_url: item.path })}
+                    className={`relative p-2 rounded-xl border text-left transition-all flex flex-col items-center gap-1.5 overflow-hidden ${
+                      isSelected
+                        ? 'border-brand-red ring-2 ring-brand-red/30 bg-red-50/50 shadow-sm'
+                        : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
+                    }`}
+                  >
+                    {item.path ? (
+                      <img
+                        src={item.path}
+                        alt={item.label}
+                        className="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-slate-200"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(item.label)}&background=0284c7&color=fff`;
+                        }}
+                      />
+                    ) : (
+                      <Avatar
+                        name={formData.name || 'User Baru'}
+                        size="md"
+                        className="shadow-sm ring-1 ring-slate-200"
+                      />
+                    )}
+                    <span className="text-[10px] font-semibold text-slate-700 text-center line-clamp-1">
+                      {item.label}
+                    </span>
+                    {isSelected && (
+                      <div className="absolute top-1 right-1 bg-brand-red text-white p-0.5 rounded-full shadow">
+                        <Check className="w-3 h-3 stroke-[3]" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="p-2 bg-slate-50 rounded-lg border border-slate-200 text-xs flex items-center gap-2">
+              <span className="font-semibold text-slate-700">Foto Terpilih:</span>
+              <span className="font-mono text-brand-red text-[11px] truncate">
+                {formData.avatar_url || 'Inisial Huruf Otomatis (Tanpa Foto)'}
+              </span>
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
