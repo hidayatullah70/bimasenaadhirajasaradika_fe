@@ -118,6 +118,52 @@ export function PlacementManagement() {
     }
   };
 
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const handleOpenEdit = (placement) => {
+    setSelectedPlacement(placement);
+    setFormData({
+      employee_id: String(placement.employee_id || ''),
+      client_id: String(placement.client_id || ''),
+      site_id: String(placement.site_id || ''),
+      service_id: String(placement.service_id || ''),
+      shift: placement.shift || 'pagi',
+      start_date: placement.start_date ? String(placement.start_date).split('T')[0] : '',
+      end_date: placement.end_date ? String(placement.end_date).split('T')[0] : '',
+      status: placement.status || 'active'
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdatePlacement = async (e) => {
+    e.preventDefault();
+    if (!selectedPlacement) return;
+    setSubmitting(true);
+    try {
+      const payload = {
+        employee_id: parseInt(formData.employee_id, 10),
+        client_id: parseInt(formData.client_id, 10),
+        site_id: parseInt(formData.site_id, 10),
+        service_id: parseInt(formData.service_id, 10),
+        shift: formData.shift,
+        start_date: formData.start_date,
+        end_date: formData.end_date,
+        status: formData.status
+      };
+      const res = await api.updatePlacement(selectedPlacement.id, payload);
+      if (res?.success) {
+        addToast('Data penempatan personil berhasil diperbarui!', 'success');
+        setIsEditModalOpen(false);
+        setSelectedPlacement(null);
+        fetchPlacements();
+      }
+    } catch (err) {
+      addToast(err.message || 'Gagal memperbarui penempatan', 'error');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const columns = [
     {
       header: 'Nama Personel & NIK',
@@ -164,6 +210,15 @@ export function PlacementManagement() {
       cellClassName: 'text-right',
       render: (row) => (
         <div className="flex items-center justify-end gap-1.5">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="!p-1.5 text-slate-500 hover:text-brand-blue"
+            title="Ubah Penempatan"
+            onClick={() => handleOpenEdit(row)}
+          >
+            <Plus className="w-4 h-4 rotate-45" />
+          </Button>
           <Button
             variant="ghost"
             size="sm"
@@ -312,6 +367,115 @@ export function PlacementManagement() {
             </Button>
             <Button variant="primary" size="sm" type="submit" loading={submitting}>
               Simpan Penempatan
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal Edit Placement */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        title="Ubah Data Penugasan & Disposisi Personel"
+        maxWidth="max-w-xl"
+      >
+        <form onSubmit={handleUpdatePlacement} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Select
+              label="Pilih Personel Karyawan"
+              value={formData.employee_id}
+              onChange={(e) => setFormData({ ...formData, employee_id: e.target.value })}
+              options={
+                employees.length > 0
+                  ? employees.map(emp => ({ value: String(emp.id), label: `${emp.name} (${emp.employee_no || emp.nik || emp.id})` }))
+                  : [{ value: '1', label: 'Budi Santoso' }]
+              }
+              required
+            />
+            <Select
+              label="Pilar Layanan"
+              value={formData.service_id}
+              onChange={(e) => setFormData({ ...formData, service_id: e.target.value })}
+              options={
+                services.length > 0
+                  ? services.map(srv => ({ value: String(srv.id), label: srv.name }))
+                  : [{ value: '1', label: 'Security & Guard Services' }]
+              }
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Select
+              label="Mitra Klien Tertuju"
+              value={formData.client_id}
+              onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
+              options={
+                clients.length > 0
+                  ? clients.map(cli => ({ value: String(cli.id), label: cli.name }))
+                  : [{ value: '1', label: 'PT. Nusantara Graha Pratama' }]
+              }
+              required
+            />
+            <Select
+              label="Lokasi Site Penugasan"
+              value={formData.site_id}
+              onChange={(e) => setFormData({ ...formData, site_id: e.target.value })}
+              options={
+                sites.length > 0
+                  ? sites.map(site => ({ value: String(site.id), label: `${site.name} (${site.city || 'Site'})` }))
+                  : [{ value: '1', label: 'Nusantara Tower Sudirman' }]
+              }
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Select
+              label="Jadwal Shift"
+              value={formData.shift}
+              onChange={(e) => setFormData({ ...formData, shift: e.target.value })}
+              options={[
+                { value: 'pagi', label: 'Pagi (07:00 - 15:00)' },
+                { value: 'siang', label: 'Siang (15:00 - 23:00)' },
+                { value: 'malam', label: 'Malam (23:00 - 07:00)' },
+                { value: 'general', label: 'General / Office' }
+              ]}
+            />
+            <Input
+              label="Mulai Tugas"
+              type="date"
+              value={formData.start_date}
+              onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+              required
+            />
+            <Input
+              label="Selesai Tugas"
+              type="date"
+              value={formData.end_date}
+              onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+              required
+            />
+          </div>
+
+          <Select
+            label="Status Disposisi"
+            value={formData.status}
+            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+            options={[
+              { value: 'active', label: 'Aktif (Active)' },
+              { value: 'planned', label: 'Direncanakan (Planned)' },
+              { value: 'ended', label: 'Berakhir (Ended)' },
+              { value: 'cancelled', label: 'Dibatalkan (Cancelled)' }
+            ]}
+          />
+
+          <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
+            <Button variant="outline" size="sm" onClick={() => setIsEditModalOpen(false)}>
+              Batal
+            </Button>
+            <Button variant="primary" size="sm" type="submit" loading={submitting}>
+              Simpan Perubahan
             </Button>
           </div>
         </form>

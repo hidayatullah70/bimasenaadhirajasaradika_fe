@@ -148,8 +148,8 @@ export function SiteManagement() {
       header: 'Total Site & Personel',
       render: (row) => (
         <div>
-          <p className="font-bold text-brand-dark text-xs">{row.total_sites || 1} Lokasi Site</p>
-          <p className="text-xs text-slate-500">{row.active_personnel || 0} Personel Aktif</p>
+          <p className="font-bold text-brand-dark text-xs">{row.sites_count ?? row.total_sites ?? 1} Lokasi Site</p>
+          <p className="text-xs text-slate-500 font-medium">{row.active_placements_count ?? row.active_personnel ?? 0} Personel Aktif</p>
         </div>
       )
     },
