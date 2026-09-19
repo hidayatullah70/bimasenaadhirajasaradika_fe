@@ -19,18 +19,77 @@ import {
   AlertTriangle,
   Clock,
   ShieldCheck,
-  Check
+  Check,
+  Upload
 } from 'lucide-react';
 
-const TEAM_AVATAR_OPTIONS = [
-  { label: 'Inisial Huruf (Otomatis dari Nama)', path: '' },
-  { label: 'Admin', path: '/assets/img/team/jusHidy3.png' },
-  { label: 'Juli Priyanto (Direktur)', path: '/assets/img/team/person-3.jpeg' },
-  { label: 'Robyn Topani (HRD)', path: '/assets/img/team/person-1.jpeg' },
-  { label: 'Nazi Rinaldi (Operasional)', path: '/assets/img/team/person-2.jpeg' },
-  { label: 'Bagas Pratama (Finance)', path: '/assets/img/team/person-4.jpeg' },
-  { label: 'Gheril Ramaditya S. (IT Support)', path: '/assets/img/team/person-5.jpeg' }
-];
+// Scan all image files in /public/assets/img/team/ dynamically
+const teamImageGlob = import.meta.glob('/public/assets/img/team/*.{png,jpg,jpeg,webp,PNG,JPG,JPEG}', { eager: true });
+
+const KNOWN_LABELS = {
+  '/assets/img/team/intan.png': 'Intan Nuraini (Marketing)',
+  '/assets/img/team/person-3.jpeg': 'Juli Priyanto (Direktur)',
+  '/assets/img/team/person-7.jpeg': 'Robyn Topani (HRD)',
+  '/assets/img/team/person-4.jpeg': 'Zaenal Arifin (Finance)',
+  '/assets/img/team/person-2.jpeg': 'Hendri Nopamin (Marketing)',
+  '/assets/img/team/nazi.jpg': 'Nazi Rinaldi (Operasional)',
+  '/assets/img/team/person-5.jpeg': 'Gheril Ramaditya S. (IT Support)',
+  '/assets/img/team/jusHidy3.png': 'Admin',
+  '/assets/img/team/JustHidy3.png': 'Admin (Hidayatullah)'
+};
+
+function formatFileNameToLabel(filename) {
+  const base = filename.replace(/\.[^/.]+$/, '');
+  return base.charAt(0).toUpperCase() + base.slice(1);
+}
+
+function getAvailableTeamAvatars(customAvatars = []) {
+  const list = [
+    { label: 'Inisial Huruf (Otomatis dari Nama)', path: '' }
+  ];
+
+  const seenPaths = new Set(['']);
+
+  // 1. Custom uploaded avatars
+  customAvatars.forEach(item => {
+    if (!seenPaths.has(item.path)) {
+      seenPaths.add(item.path);
+      list.push(item);
+    }
+  });
+
+  // 2. Dynamic glob
+  Object.keys(teamImageGlob).forEach(fullPath => {
+    const publicUrl = fullPath.replace(/^\/public/, '');
+    if (!seenPaths.has(publicUrl)) {
+      seenPaths.add(publicUrl);
+      const filename = publicUrl.split('/').pop();
+      const label = KNOWN_LABELS[publicUrl] || `${formatFileNameToLabel(filename)} (Foto Tim)`;
+      list.push({ label, path: publicUrl });
+    }
+  });
+
+  // 3. Fallback defaults
+  const fallbackList = [
+    { label: 'Intan Nuraini (Marketing)', path: '/assets/img/team/intan.png' },
+    { label: 'Juli Priyanto (Direktur)', path: '/assets/img/team/person-3.jpeg' },
+    { label: 'Robyn Topani (HRD)', path: '/assets/img/team/person-7.jpeg' },
+    { label: 'Zaenal Arifin (Finance)', path: '/assets/img/team/person-4.jpeg' },
+    { label: 'Hendri Nopamin (Marketing)', path: '/assets/img/team/person-2.jpeg' },
+    { label: 'Nazi Rinaldi (Operasional)', path: '/assets/img/team/nazi.jpg' },
+    { label: 'Gheril Ramaditya S. (IT Support)', path: '/assets/img/team/person-5.jpeg' },
+    { label: 'Admin', path: '/assets/img/team/jusHidy3.png' }
+  ];
+
+  fallbackList.forEach(item => {
+    if (!seenPaths.has(item.path)) {
+      seenPaths.add(item.path);
+      list.push(item);
+    }
+  });
+
+  return list;
+}
 
 export function AdminUserManagement() {
   const { addToast } = useToast();
@@ -62,6 +121,9 @@ export function AdminUserManagement() {
     }
   ]);
 
+  const [customAvatars, setCustomAvatars] = useState([]);
+  const teamAvatars = React.useMemo(() => getAvailableTeamAvatars(customAvatars), [customAvatars]);
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -69,6 +131,61 @@ export function AdminUserManagement() {
     role_id: '2',
     avatar_url: ''
   });
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      addToast('File harus berupa gambar (PNG, JPG, JPEG, WEBP)', 'error');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target.result;
+      const fileName = file.name;
+      const pathGuess = `/assets/img/team/${fileName}`;
+      
+      const newOption = {
+        label: `${formatFileNameToLabel(fileName)} (Upload: ${fileName})`,
+        path: pathGuess,
+        dataUrl: dataUrl
+      };
+
+      setCustomAvatars(prev => {
+        const filtered = prev.filter(p => p.path !== pathGuess);
+        return [newOption, ...filtered];
+      });
+
+      setFormData(prev => ({ ...prev, avatar_url: pathGuess }));
+      addToast(`Foto ${fileName} berhasil dimuat dan siap digunakan!`, 'success');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleNameChange = (val) => {
+    const lower = val.toLowerCase();
+    let autoAvatar = formData.avatar_url;
+    if (!formData.avatar_url || formData.avatar_url === '' || formData.avatar_url.includes('intan') || formData.avatar_url.includes('person') || formData.avatar_url.includes('nazi')) {
+      if (lower.includes('intan')) {
+        autoAvatar = '/assets/img/team/intan.png';
+      } else if (lower.includes('gheril')) {
+        autoAvatar = '/assets/img/team/person-5.jpeg';
+      } else if (lower.includes('juli')) {
+        autoAvatar = '/assets/img/team/person-3.jpeg';
+      } else if (lower.includes('robyn')) {
+        autoAvatar = '/assets/img/team/person-7.jpeg';
+      } else if (lower.includes('zaenal') || lower.includes('bagas')) {
+        autoAvatar = '/assets/img/team/person-4.jpeg';
+      } else if (lower.includes('hendri')) {
+        autoAvatar = '/assets/img/team/person-2.jpeg';
+      } else if (lower.includes('nazi')) {
+        autoAvatar = '/assets/img/team/nazi.jpg';
+      }
+    }
+    setFormData(prev => ({ ...prev, name: val, avatar_url: autoAvatar }));
+  };
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -341,8 +458,8 @@ export function AdminUserManagement() {
             <Input
               label="Nama Lengkap"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="Contoh: Rian Anggara"
+              onChange={(e) => handleNameChange(e.target.value)}
+              placeholder="Contoh: Intan Nuraini"
               required
             />
             <Input
@@ -350,7 +467,7 @@ export function AdminUserManagement() {
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              placeholder="rian@bimasenaadhirajasaradika.com"
+              placeholder="intan@bimasenaadhirajasaradika.com"
               required
             />
           </div>
@@ -379,20 +496,29 @@ export function AdminUserManagement() {
             />
           </div>
 
-          {/* Avatar Selector from TEAM_AVATAR_OPTIONS */}
+          {/* Avatar Selector from teamAvatars with File Upload */}
           <div className="space-y-2 pt-2 border-t border-slate-100">
             <div className="flex items-center justify-between">
               <label className="block text-xs font-bold text-slate-700">
                 Pilih Foto Profil Tim (Folder: <span className="font-mono text-brand-red">/assets/img/team/</span>)
               </label>
-              <span className="text-[11px] text-slate-400">Pilih opsi pertama jika belum ada file</span>
+              <label className="cursor-pointer inline-flex items-center gap-1 text-[11px] font-semibold text-brand-red hover:text-red-700 bg-red-50 hover:bg-red-100/80 px-2.5 py-1 rounded-lg border border-red-200 transition-colors">
+                <Upload className="w-3.5 h-3.5" />
+                <span>Upload Foto Baru</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                />
+              </label>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {TEAM_AVATAR_OPTIONS.map((item) => {
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-52 overflow-y-auto p-1 border border-slate-100 rounded-xl bg-slate-50/50">
+              {teamAvatars.map((item) => {
                 const isSelected = formData.avatar_url === item.path;
                 return (
                   <button
-                    key={item.label}
+                    key={item.label + item.path}
                     type="button"
                     onClick={() => setFormData({ ...formData, avatar_url: item.path })}
                     className={`relative p-2 rounded-xl border text-left transition-all flex flex-col items-center gap-1.5 overflow-hidden ${
@@ -403,7 +529,7 @@ export function AdminUserManagement() {
                   >
                     {item.path ? (
                       <img
-                        src={item.path}
+                        src={item.dataUrl || item.path}
                         alt={item.label}
                         className="w-10 h-10 rounded-full object-cover shadow-sm ring-1 ring-slate-200"
                         onError={(e) => {
