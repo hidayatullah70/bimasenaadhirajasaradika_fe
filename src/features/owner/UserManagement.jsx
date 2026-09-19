@@ -109,7 +109,9 @@ export function UserManagement() {
             !deletedIds.has(String(u.id)) &&
             !deletedEmails.has(u.email?.trim().toLowerCase()) &&
             u.email !== 'hidayatullah.thab70@gmail.com' &&
-            !u.email?.includes('thab70')
+            !u.email?.includes('thab70') &&
+            u.email !== 'aisyah@bimasenaadhirajasaradika.com' &&
+            !(u.name === 'Aisyah' && (u.is_active === 0 || u.is_active === false))
           )
           .map(u => {
             if (u.email === 'hidayatullah.ofc@gmail.com' || (u.name?.toLowerCase().includes('hidayatullah') && u.role === 'admin')) {
