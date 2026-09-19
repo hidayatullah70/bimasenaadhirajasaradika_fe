@@ -405,6 +405,44 @@ export function LeadPipeline() {
               </div>
             </div>
 
+            {/* Convert to Client Button when Won */}
+            {(selectedLead.status === 'won' || selectedLead.stage === 'won' || selectedLead.status === 'menang') && (
+              <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center justify-between gap-2">
+                <div>
+                  <p className="font-bold text-emerald-900 text-xs">Kesepakatan Tercapai (Won)!</p>
+                  <p className="text-[11px] text-emerald-700">Daftarkan langsung prospek ini menjadi Klien Mitra resmi perusahaan.</p>
+                </div>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="!bg-emerald-600 hover:!bg-emerald-700 whitespace-nowrap"
+                  onClick={async () => {
+                    try {
+                      setSubmitting(true);
+                      const res = await api.createClient({
+                        name: selectedLead.company_name || selectedLead.company,
+                        phone: selectedLead.phone || selectedLead.picPhone || '-',
+                        email: selectedLead.email || 'procurement@client.com',
+                        address: selectedLead.notes || 'Kantor Pusat Klien',
+                        status: 'active'
+                      });
+                      if (res?.success) {
+                        addToast(`Klien ${selectedLead.company_name || selectedLead.company} berhasil didaftarkan ke Database Mitra!`, 'success');
+                        setIsDetailModalOpen(false);
+                      }
+                    } catch (err) {
+                      addToast(err.message || 'Gagal mengonversi prospek ke klien', 'error');
+                    } finally {
+                      setSubmitting(false);
+                    }
+                  }}
+                  loading={submitting}
+                >
+                  Konversi Jadi Klien Mitra
+                </Button>
+              </div>
+            )}
+
             <div className="flex justify-end pt-3 border-t border-slate-100">
               <Button variant="outline" size="sm" onClick={() => setIsDetailModalOpen(false)}>
                 Tutup
