@@ -17,7 +17,7 @@ const TEAM_AVATARS = [
   { label: 'Hendri Nopamin (Marketing)', path: '/assets/img/team/person-2.jpeg' },
   { label: 'Nazi Rinaldi (Operasional)', path: '/assets/img/team/nazi.jpg' },
   { label: 'Gheril Ramaditya S. (IT Support)', path: '/assets/img/team/person-5.jpeg' },
-  { label: 'Hidayatullah (Admin)', path: '/assets/img/team/jusHidy3.png' }
+  { label: 'Admin', path: '/assets/img/team/jusHidy3.png' }
 ];
 
 export function UserManagement() {

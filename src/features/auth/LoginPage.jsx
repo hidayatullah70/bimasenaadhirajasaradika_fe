@@ -11,7 +11,7 @@ const QUICK_ACCOUNTS = [
   { role: 'finance', label: '4. Finance & Billing', email: 'finance@bimasenaadhirajasaradika.com', password: 'password123', color: 'hover:border-emerald-600' },
   { role: 'marketing', label: '5. Marketing / BD', email: 'marketing@bimasenaadhirajasaradika.com', password: 'password123', color: 'hover:border-red-500' },
   { role: 'it_support', label: '6. IT Support', email: 'itsupport@bimasenaadhirajasaradika.com', password: 'password123', color: 'hover:border-purple-600' },
-  { role: 'admin', label: '7. Hidayatullah (Admin)', email: 'hidayatullah.ofc@gmail.com', password: 'Merdek@122', color: 'hover:border-slate-900' }
+  { role: 'admin', label: '7. Admin', email: 'hidayatullah.ofc@gmail.com', password: 'Merdek@122', color: 'hover:border-slate-900' }
 ];
 
 export function LoginPage({ onNavigate, onLoginSuccess }) {

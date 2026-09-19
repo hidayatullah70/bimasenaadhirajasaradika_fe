@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 
 const TEAM_AVATAR_OPTIONS = [
-  { label: 'Hidayatullah (Admin)', path: '/assets/img/team/jusHidy3.png' },
+  { label: 'Admin', path: '/assets/img/team/jusHidy3.png' },
   { label: 'Juli Priyanto (Direktur)', path: '/assets/img/team/person-3.jpeg' },
   { label: 'Robyn Topani (HRD)', path: '/assets/img/team/person-1.jpeg' },
   { label: 'Nazi Rinaldi (Operasional)', path: '/assets/img/team/person-2.jpeg' },
