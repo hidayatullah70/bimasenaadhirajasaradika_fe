@@ -44,11 +44,10 @@ const PTKP_OPTIONS = [
 
 const SERVICE_OPTIONS = [
   { value: 'Security & Guard Services', label: 'Security & Guard Services' },
-  { value: 'Commercial Cleaning Service', label: 'Commercial Cleaning Service' },
-  { value: 'Valet & Parking Management', label: 'Valet & Parking Management' },
-  { value: 'Driver & Chauffeur Services', label: 'Driver & Chauffeur Services' },
-  { value: 'Office Support & Administration', label: 'Office Support & Administration' },
-  { value: 'General Labor & Warehousing', label: 'General Labor & Warehousing' }
+  { value: 'Ekspedisi Kurir', label: 'Ekspedisi Kurir' },
+  { value: 'Cleaning Service', label: 'Cleaning Service' },
+  { value: 'Parkir', label: 'Parkir' },
+  { value: 'Man Power', label: 'Man Power' }
 ];
 
 // Helper to auto-crop & resize any uploaded image to 3x4 aspect ratio (300 x 400 px)
@@ -622,14 +621,14 @@ export function EmployeeManagement() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input
-                label="Nama Lengkap Karyawan *"
+                label="Nama Lengkap Karyawan"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Contoh: Budi Santoso"
                 required
               />
               <Input
-                label="NIK (Nomor Induk Kependudukan) *"
+                label="NIK (Nomor Induk Kependudukan)"
                 value={formData.nik}
                 onChange={(e) => setFormData({ ...formData, nik: e.target.value })}
                 placeholder="Contoh: 3275012304950002 (16 digit)"
@@ -639,7 +638,7 @@ export function EmployeeManagement() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Input
-                label="Nomor Telepon / WhatsApp *"
+                label="Nomor Telepon / WhatsApp"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 placeholder="081234567890"
@@ -653,7 +652,7 @@ export function EmployeeManagement() {
                 placeholder="budi@example.com"
               />
               <Input
-                label="Tanggal Lahir *"
+                label="Tanggal Lahir"
                 type="date"
                 value={formData.birth_date}
                 onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
@@ -663,13 +662,13 @@ export function EmployeeManagement() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Select
-                label="Status PTKP / Pernikahan *"
+                label="Status PTKP / Pernikahan"
                 value={formData.ptkp_status}
                 onChange={(e) => setFormData({ ...formData, ptkp_status: e.target.value })}
                 options={PTKP_OPTIONS}
               />
               <Input
-                label="Nomor Rekening Bank *"
+                label="Nomor Rekening Bank"
                 value={formData.bank_account}
                 onChange={(e) => setFormData({ ...formData, bank_account: e.target.value })}
                 placeholder="Contoh: BCA 8830192831 a.n Budi"
@@ -699,7 +698,7 @@ export function EmployeeManagement() {
                 options={SERVICE_OPTIONS}
               />
               <Input
-                label="Posisi / Jabatan *"
+                label="Posisi / Jabatan"
                 value={formData.position}
                 onChange={(e) => setFormData({ ...formData, position: e.target.value })}
                 placeholder="Contoh: Garda Pengamanan / Danru"
@@ -731,14 +730,14 @@ export function EmployeeManagement() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Input
-                label="Tanggal Mulai Kontrak *"
+                label="Tanggal Mulai Kontrak"
                 type="date"
                 value={formData.join_date}
                 onChange={(e) => setFormData({ ...formData, join_date: e.target.value })}
                 required
               />
               <Input
-                label="Tanggal Akhir Kontrak *"
+                label="Tanggal Akhir Kontrak"
                 type="date"
                 value={formData.end_date}
                 onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
