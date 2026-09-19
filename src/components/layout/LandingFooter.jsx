@@ -27,6 +27,9 @@ export function LandingFooter({ onNavigate }) {
               <p className="text-[11px] text-slate-500 leading-normal">
                 {COMPANY_INFO.legal}
               </p>
+              <p className="text-[11px] text-slate-500 leading-normal font-medium">
+                {COMPANY_INFO.nib || 'NIB : 0108230077863'}
+              </p>
             </div>
 
             {/* Social Media Links from live site */}

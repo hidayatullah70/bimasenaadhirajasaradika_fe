@@ -761,6 +761,7 @@ export const COMPANY_INFO = {
   shortName: 'Bhimasena Radhika',
   tagline: 'Mitra Strategis Penyedia & Pengelola Tenaga Kerja Outsourcing Profesional',
   legal: 'Keputusan Menkumham RI No. AHU-0146154.AH.01.11. TAHUN 2023',
+  nib: 'NIB : 0108230077863',
   address: 'Jl. Melati I RT. 002/RW.005 Kel. Tanah Tinggi Kec. Tangerang, Kota Tangerang, Banten 15119',
   phone: '0851 2479 9305',
   fax: '-',
@@ -867,7 +868,7 @@ export const COMPANY_INFO = {
     },
     {
       question: 'Bagaimana tata cara mengajukan penawaran kerjasama atau konsultasi kebutuhan?',
-      answer: 'Anda dapat mengisi formulir konsultasi kebutuhan di situs ini, menghubungi hotline WhatsApp kami di +62 811-9000-8888, atau mengirimkan email ke info@bimasenaadhirajasaradika.com. Tim Business Development kami akan merespons dalam waktu 1x24 jam kerja.'
+      answer: 'Anda dapat mengisi formulir konsultasi kebutuhan di situs ini, menghubungi hotline WhatsApp kami di +62 0851 2479 9305, atau mengirimkan email ke ptbimasenaadhirajasaradhika@gmail.com. Tim Business Development kami akan merespons dalam waktu 1x24 jam kerja.'
     }
   ]
 };
