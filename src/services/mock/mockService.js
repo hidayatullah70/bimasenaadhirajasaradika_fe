@@ -1,5 +1,5 @@
 // PT. Bhimasena Adhirajasa Radhika — Mock Service Implementation
-// Implements async simulation according to 04-API-SPEC.md
+// Implements async simulation according to 04-API-SPEC.md & synchronizes with Rekapitulasi & Dashboards
 
 import {
   INITIAL_SERVICES,
@@ -14,28 +14,93 @@ import {
   INITIAL_NOTIFICATIONS
 } from './mockData';
 
-// Simulated storage in memory (persisted across component life cycle, resets on hard refresh)
-let services = [...INITIAL_SERVICES];
-let users = [...INITIAL_USERS];
-let clients = [...INITIAL_CLIENTS];
-let sites = [...INITIAL_SITES];
-let employees = [...INITIAL_EMPLOYEES];
-let invoices = [...INITIAL_INVOICES];
-let leads = [...INITIAL_LEADS];
-let attendance = [...INITIAL_ATTENDANCE];
-let activities = [...INITIAL_ACTIVITIES];
-let notifications = [...INITIAL_NOTIFICATIONS];
+// Storage Helper
+function loadStore(key, defaultData) {
+  try {
+    const raw = localStorage.getItem(`barak_store_${key}`);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {
+    console.warn(`Failed to read storage for ${key}:`, e);
+  }
+  return [...defaultData];
+}
 
-const delay = (ms = 200) => new Promise(resolve => setTimeout(resolve, ms));
+function saveStore(key, data) {
+  try {
+    localStorage.setItem(`barak_store_${key}`, JSON.stringify(data));
+  } catch (e) {
+    console.warn(`Failed to save storage for ${key}:`, e);
+  }
+}
+
+// In-Memory Live Stores initialized from localStorage or baseline mockData
+let services = loadStore('services', INITIAL_SERVICES);
+let users = loadStore('users', INITIAL_USERS);
+let clients = loadStore('clients', INITIAL_CLIENTS);
+let sites = loadStore('sites', INITIAL_SITES);
+let employees = loadStore('employees', INITIAL_EMPLOYEES);
+let invoices = loadStore('invoices', INITIAL_INVOICES);
+let leads = loadStore('leads', INITIAL_LEADS);
+let attendance = loadStore('attendance', INITIAL_ATTENDANCE);
+let activities = loadStore('activities', INITIAL_ACTIVITIES);
+let notifications = loadStore('notifications', INITIAL_NOTIFICATIONS);
+
+let placements = loadStore('placements', [
+  {
+    id: 1,
+    employee_id: 'emp-101',
+    employee_name: 'Ahmad Faisal',
+    client_id: 'cli-1',
+    client_name: 'PT Menara Graha Mandiri',
+    site_id: 'ste-1',
+    site_name: 'Gedung Graha Mandiri Tower A & B',
+    service: 'Security & Guard Services',
+    position: 'Komandan Regu (Danru)',
+    start_date: '2024-01-15',
+    end_date: '2026-12-31',
+    status: 'active'
+  },
+  {
+    id: 2,
+    employee_id: 'emp-102',
+    employee_name: 'Bagus Setiawan',
+    client_id: 'cli-1',
+    client_name: 'PT Menara Graha Mandiri',
+    site_id: 'ste-1',
+    site_name: 'Gedung Graha Mandiri Tower A & B',
+    service: 'Security & Guard Services',
+    position: 'Anggota Garda Pengamanan',
+    start_date: '2024-03-01',
+    end_date: '2026-12-31',
+    status: 'active'
+  },
+  {
+    id: 3,
+    employee_id: 'emp-103',
+    employee_name: 'Rudi Hermawan',
+    client_id: 'cli-2',
+    client_name: 'PT Logistik Nusantara Prima',
+    site_id: 'ste-3',
+    site_name: 'Central Distribution Hub Cikarang',
+    service: 'General Labor & Warehousing',
+    position: 'Lead Rider Ekspedisi',
+    start_date: '2024-02-10',
+    end_date: '2026-12-31',
+    status: 'active'
+  }
+]);
+
+const delay = (ms = 100) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const mockService = {
   // Auth
   async login({ email, password }) {
-    await delay(300);
-    // Find user by email or fallback for quick demo
+    await delay(200);
     const user = users.find(u => u.email.toLowerCase() === (email || '').toLowerCase().trim());
     if (!user) {
-      // Check if matching any role prefix
       const roleMatch = users.find(u => u.role === (email || '').toLowerCase().trim());
       if (roleMatch) {
         const token = `mock-jwt-token-${roleMatch.role}-${Date.now()}`;
@@ -60,7 +125,7 @@ export const mockService = {
   },
 
   async register({ name, email, password, role = 'operasional', phone = '' }) {
-    await delay(300);
+    await delay(200);
     const existing = users.find(u => u.email.toLowerCase() === (email || '').toLowerCase().trim());
     if (existing) {
       throw new Error('Email sudah terdaftar. Silakan gunakan email lain atau langsung login.');
@@ -76,6 +141,7 @@ export const mockService = {
       createdAt: new Date().toISOString().split('T')[0]
     };
     users.unshift(newUser);
+    saveStore('users', users);
     const token = `mock-jwt-token-${newUser.role}-${Date.now()}`;
     localStorage.setItem('barak_auth_token', token);
     localStorage.setItem('barak_user_role', newUser.role);
@@ -87,7 +153,7 @@ export const mockService = {
   },
 
   async getCurrentUser() {
-    await delay(150);
+    await delay(100);
     const savedRole = localStorage.getItem('barak_user_role') || 'owner';
     const user = users.find(u => u.role === savedRole) || users[0];
     return {
@@ -97,15 +163,15 @@ export const mockService = {
   },
 
   async logout() {
-    await delay(100);
+    await delay(50);
     localStorage.removeItem('barak_auth_token');
     localStorage.removeItem('barak_user_role');
     return { success: true, message: 'Logout berhasil' };
   },
 
-  // Users & Roles (Owner only)
+  // Users & Roles (Direktur/Owner only)
   async createUser(userData) {
-    await delay(200);
+    await delay(150);
     const newUser = {
       id: 'usr-' + (users.length + 1),
       name: userData.name,
@@ -118,6 +184,7 @@ export const mockService = {
       avatar: userData.avatar_url || '/assets/img/team/person-2.jpeg'
     };
     users.unshift(newUser);
+    saveStore('users', users);
     return {
       success: true,
       data: newUser,
@@ -126,42 +193,45 @@ export const mockService = {
   },
 
   async getUsers() {
-    await delay(200);
+    await delay(150);
     return { success: true, data: [...users] };
   },
 
   async updateUserRole(id, newRole) {
-    await delay(250);
+    await delay(150);
     const index = users.findIndex(u => u.id === id);
     if (index === -1) throw new Error('Pengguna tidak ditemukan');
     users[index] = { ...users[index], role: newRole };
+    saveStore('users', users);
     return { success: true, message: 'Role pengguna berhasil diperbarui', data: users[index] };
   },
 
   // Services
   async getServices() {
-    await delay(150);
+    await delay(100);
     return { success: true, data: [...services] };
   },
 
-  // Employees
-  async getEmployees({ search = '', service = '', status = '', page = 1, limit = 10 } = {}) {
-    await delay(250);
+  // Employees / Tenaga Kerja
+  async getEmployees({ search = '', service = '', status = '', page = 1, limit = 50 } = {}) {
+    await delay(150);
     let filtered = [...employees];
 
     if (search) {
       const q = search.toLowerCase();
       filtered = filtered.filter(e =>
-        e.name.toLowerCase().includes(q) ||
-        e.nik.toLowerCase().includes(q) ||
-        e.position.toLowerCase().includes(q) ||
-        e.siteName.toLowerCase().includes(q) ||
-        e.clientName.toLowerCase().includes(q)
+        (e.name || '').toLowerCase().includes(q) ||
+        (e.nik || '').toLowerCase().includes(q) ||
+        (e.employee_no || '').toLowerCase().includes(q) ||
+        (e.position || '').toLowerCase().includes(q) ||
+        (e.siteName || '').toLowerCase().includes(q) ||
+        (e.placement_address || '').toLowerCase().includes(q) ||
+        (e.clientName || '').toLowerCase().includes(q)
       );
     }
 
     if (service && service !== 'all') {
-      filtered = filtered.filter(e => e.service.toLowerCase().includes(service.toLowerCase()));
+      filtered = filtered.filter(e => (e.service || '').toLowerCase().includes(service.toLowerCase()));
     }
 
     if (status && status !== 'all') {
@@ -184,64 +254,95 @@ export const mockService = {
     };
   },
 
+  async getEmployeeById(id) {
+    await delay(100);
+    const emp = employees.find(e => String(e.id) === String(id));
+    if (!emp) throw new Error('Data karyawan tidak ditemukan');
+    return { success: true, data: emp };
+  },
+
   async createEmployee(data) {
-    await delay(300);
+    await delay(200);
     const newEmp = {
       id: `emp-${Date.now()}`,
-      nik: `BA-${new Date().getFullYear()}-${String(employees.length + 1).padStart(3, '0')}`,
-      status: 'active',
-      joinDate: new Date().toISOString().split('T')[0],
-      contractEnd: `${new Date().getFullYear() + 1}-12-31`,
-      ...data
+      employee_no: data.employee_no || `BA-${new Date().getFullYear()}-${String(employees.length + 1).padStart(3, '0')}`,
+      nik: data.nik || `327501${Math.floor(1000000000 + Math.random() * 9000000000)}`,
+      name: data.name,
+      birth_date: data.birth_date || '1995-05-15',
+      ptkp_status: data.ptkp_status || 'TK',
+      bank_account: data.bank_account || 'BCA 8830192831 a.n ' + data.name,
+      npwp: data.npwp || '09.254.629.8-407.000',
+      address: data.address || 'Jl. Jend. Sudirman Kav 54-55, Jakarta',
+      placement_address: data.placement_address || 'PT Menara Graha Mandiri - Gedung Pusat',
+      photo_url: data.photo_url || '/assets/img/team/person-2.jpeg',
+      service: data.service || 'Security & Guard Services',
+      position: data.position || 'Garda Pengamanan',
+      employment_type: data.employment_type || 'kontrak',
+      status: data.status || 'active',
+      join_date: data.join_date || new Date().toISOString().split('T')[0],
+      end_date: data.end_date || `${new Date().getFullYear() + 1}-12-31`,
+      certification: data.certification || 'Gada Pratama',
+      siteName: data.placement_address ? data.placement_address.split(',')[0] : 'Gedung Graha Mandiri',
+      clientName: 'PT Menara Graha Mandiri'
     };
     employees = [newEmp, ...employees];
-    
-    // add activity
+    saveStore('employees', employees);
+
     activities.unshift({
       id: `act-${Date.now()}`,
-      user: 'Siti Nurhaliza, S.Psi',
+      user: 'HRD Administrator',
       role: 'hrd',
       action: 'Penambahan Tenaga Kerja Baru',
       description: `Menambahkan personil baru: ${newEmp.name} (${newEmp.service})`,
       timestamp: 'Baru saja'
     });
+    saveStore('activities', activities);
 
     return { success: true, message: 'Data tenaga kerja berhasil ditambahkan', data: newEmp };
   },
 
   async updateEmployee(id, data) {
-    await delay(250);
-    const index = employees.findIndex(e => e.id === id);
+    await delay(150);
+    const index = employees.findIndex(e => String(e.id) === String(id));
     if (index === -1) throw new Error('Data karyawan tidak ditemukan');
     employees[index] = { ...employees[index], ...data };
+    saveStore('employees', employees);
     return { success: true, message: 'Data karyawan berhasil diperbarui', data: employees[index] };
   },
 
   async deleteEmployee(id) {
-    await delay(250);
-    const item = employees.find(e => e.id === id);
+    await delay(150);
+    const item = employees.find(e => String(e.id) === String(id));
     if (!item) throw new Error('Data karyawan tidak ditemukan');
-    employees = employees.filter(e => e.id !== id);
+    employees = employees.filter(e => String(e.id) !== String(id));
+    saveStore('employees', employees);
     return { success: true, message: `Data karyawan ${item.name} berhasil dihapus` };
   },
 
-  // Clients & Sites
+  // Clients
   async getClients({ search = '' } = {}) {
-    await delay(200);
+    await delay(150);
     let filtered = [...clients];
     if (search) {
       const q = search.toLowerCase();
       filtered = filtered.filter(c =>
-        c.name.toLowerCase().includes(q) ||
-        c.industry.toLowerCase().includes(q) ||
-        c.contactPerson.toLowerCase().includes(q)
+        (c.name || '').toLowerCase().includes(q) ||
+        (c.industry || '').toLowerCase().includes(q) ||
+        (c.contactPerson || '').toLowerCase().includes(q)
       );
     }
     return { success: true, data: filtered };
   },
 
+  async getClientById(id) {
+    await delay(100);
+    const client = clients.find(c => String(c.id) === String(id));
+    if (!client) throw new Error('Data klien tidak ditemukan');
+    return { success: true, data: client };
+  },
+
   async createClient(data) {
-    await delay(300);
+    await delay(200);
     const newClient = {
       id: `cli-${Date.now()}`,
       status: 'active',
@@ -250,88 +351,248 @@ export const mockService = {
       ...data
     };
     clients = [newClient, ...clients];
-    return { success: true, message: 'Klien baru berhasil ditambahkan', data: newClient };
+    saveStore('clients', clients);
+
+    activities.unshift({
+      id: `act-${Date.now()}`,
+      user: 'Business Development Lead',
+      role: 'marketing',
+      action: 'Penambahan Mitra Klien Baru',
+      description: `Menambahkan mitra klien baru: ${newClient.name}`,
+      timestamp: 'Baru saja'
+    });
+    saveStore('activities', activities);
+
+    return { success: true, message: 'Mitra klien berhasil didaftarkan', data: newClient };
   },
 
-  async getSites() {
-    await delay(200);
-    return { success: true, data: [...sites] };
+  async updateClient(id, data) {
+    await delay(150);
+    const index = clients.findIndex(c => String(c.id) === String(id));
+    if (index === -1) throw new Error('Data klien tidak ditemukan');
+    clients[index] = { ...clients[index], ...data };
+    saveStore('clients', clients);
+    return { success: true, message: 'Data mitra klien berhasil diperbarui', data: clients[index] };
   },
 
-  // Invoices & Billing
-  async getInvoices({ search = '', status = 'all' } = {}) {
-    await delay(250);
-    let filtered = [...invoices];
+  async deleteClient(id) {
+    await delay(150);
+    clients = clients.filter(c => String(c.id) !== String(id));
+    saveStore('clients', clients);
+    return { success: true, message: 'Data klien berhasil dihapus' };
+  },
+
+  // Sites
+  async getSites({ search = '', clientId = 'all' } = {}) {
+    await delay(150);
+    let filtered = [...sites];
 
     if (search) {
       const q = search.toLowerCase();
-      filtered = filtered.filter(inv =>
-        inv.invoiceNumber.toLowerCase().includes(q) ||
-        inv.clientName.toLowerCase().includes(q) ||
-        inv.serviceType.toLowerCase().includes(q)
+      filtered = filtered.filter(s =>
+        (s.name || '').toLowerCase().includes(q) ||
+        (s.clientName || '').toLowerCase().includes(q) ||
+        (s.location || '').toLowerCase().includes(q)
       );
     }
 
-    if (status && status !== 'all') {
-      filtered = filtered.filter(inv => inv.status === status);
+    if (clientId && clientId !== 'all') {
+      filtered = filtered.filter(s => String(s.clientId) === String(clientId));
     }
 
     return { success: true, data: filtered };
   },
 
-  async createInvoice(data) {
-    await delay(300);
-    const subtotal = Number(data.subtotal) || 100000000;
-    const ppn = Math.round(subtotal * 0.11);
-    const total = subtotal + ppn;
-    const newInv = {
-      id: `inv-${Date.now()}`,
-      invoiceNumber: `INV/BAR/${new Date().getFullYear()}/${String(new Date().getMonth() + 1).padStart(2, '0')}/${String(invoices.length + 1).padStart(3, '0')}`,
-      status: 'pending',
-      issueDate: new Date().toISOString().split('T')[0],
-      dueDate: new Date(Date.now() + 20 * 86400000).toISOString().split('T')[0],
-      subtotal,
-      ppn,
-      total,
+  async getSiteById(id) {
+    await delay(100);
+    const site = sites.find(s => String(s.id) === String(id));
+    if (!site) throw new Error('Data site tidak ditemukan');
+    return { success: true, data: site };
+  },
+
+  async createSite(data) {
+    await delay(200);
+    const newSite = {
+      id: `ste-${Date.now()}`,
+      status: 'operational',
+      totalPersonnel: Number(data.totalPersonnel) || 12,
+      slaScore: '99.5%',
       ...data
     };
-    invoices = [newInv, ...invoices];
+    sites = [newSite, ...sites];
+    saveStore('sites', sites);
 
     activities.unshift({
       id: `act-${Date.now()}`,
-      user: 'Dewi Kartika, S.E., Ak.',
+      user: 'Operations Supervisor',
+      role: 'operasional',
+      action: 'Penambahan Site Operasional Baru',
+      description: `Mendaftarkan site baru: ${newSite.name}`,
+      timestamp: 'Baru saja'
+    });
+    saveStore('activities', activities);
+
+    return { success: true, message: 'Site operasional baru berhasil dibuat', data: newSite };
+  },
+
+  async updateSite(id, data) {
+    await delay(150);
+    const index = sites.findIndex(s => String(s.id) === String(id));
+    if (index === -1) throw new Error('Data site tidak ditemukan');
+    sites[index] = { ...sites[index], ...data };
+    saveStore('sites', sites);
+    return { success: true, message: 'Data site operasional berhasil diperbarui', data: sites[index] };
+  },
+
+  async deleteSite(id) {
+    await delay(150);
+    sites = sites.filter(s => String(s.id) !== String(id));
+    saveStore('sites', sites);
+    return { success: true, message: 'Data site berhasil dihapus' };
+  },
+
+  // Placements / Penempatan
+  async getPlacements(params = {}) {
+    await delay(150);
+    return { success: true, data: [...placements] };
+  },
+
+  async createPlacement(data) {
+    await delay(200);
+    const newP = {
+      id: Date.now(),
+      status: 'active',
+      start_date: data.start_date || new Date().toISOString().split('T')[0],
+      end_date: data.end_date || `${new Date().getFullYear() + 1}-12-31`,
+      ...data
+    };
+    placements = [newP, ...placements];
+    saveStore('placements', placements);
+    return { success: true, message: 'Penempatan personil berhasil dibuat', data: newP };
+  },
+
+  async updatePlacement(id, data) {
+    await delay(150);
+    const index = placements.findIndex(p => String(p.id) === String(id));
+    if (index !== -1) {
+      placements[index] = { ...placements[index], ...data };
+      saveStore('placements', placements);
+    }
+    return { success: true, message: 'Penempatan personil berhasil diperbarui' };
+  },
+
+  async deletePlacement(id) {
+    await delay(150);
+    placements = placements.filter(p => String(p.id) !== String(id));
+    saveStore('placements', placements);
+    return { success: true, message: 'Penempatan personil berhasil dihapus' };
+  },
+
+  // Invoices
+  async getInvoices({ search = '', status = 'all', page = 1, limit = 50 } = {}) {
+    await delay(150);
+    let filtered = [...invoices];
+
+    if (search) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(i =>
+        (i.invoiceNumber || '').toLowerCase().includes(q) ||
+        (i.clientName || '').toLowerCase().includes(q) ||
+        (i.serviceType || '').toLowerCase().includes(q)
+      );
+    }
+
+    if (status && status !== 'all') {
+      filtered = filtered.filter(i => i.status === status);
+    }
+
+    const total = filtered.length;
+    const startIndex = (page - 1) * limit;
+    const paginated = filtered.slice(startIndex, startIndex + limit);
+
+    return {
+      success: true,
+      data: paginated,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit) || 1
+      }
+    };
+  },
+
+  async getInvoiceById(id) {
+    await delay(100);
+    const inv = invoices.find(i => String(i.id) === String(id));
+    if (!inv) throw new Error('Invoice tidak ditemukan');
+    return { success: true, data: inv };
+  },
+
+  async createInvoice(data) {
+    await delay(200);
+    const subtotal = Number(data.subtotal) || 100000000;
+    const ppn = Number(data.ppn) || Math.round(subtotal * 0.11);
+    const newInv = {
+      id: `inv-${Date.now()}`,
+      invoiceNumber: data.invoiceNumber || `INV/BAR/${new Date().getFullYear()}/${String(invoices.length + 1).padStart(3, '0')}`,
+      status: 'pending',
+      subtotal,
+      ppn,
+      total: subtotal + ppn,
+      issueDate: data.issueDate || new Date().toISOString().split('T')[0],
+      dueDate: data.dueDate || new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
+      ...data
+    };
+    invoices = [newInv, ...invoices];
+    saveStore('invoices', invoices);
+
+    activities.unshift({
+      id: `act-${Date.now()}`,
+      user: 'Finance Billing Staff',
       role: 'finance',
       action: 'Penerbitan Invoice Baru',
       description: `Menerbitkan invoice ${newInv.invoiceNumber} untuk ${newInv.clientName}`,
       timestamp: 'Baru saja'
     });
+    saveStore('activities', activities);
 
     return { success: true, message: 'Invoice baru berhasil diterbitkan', data: newInv };
   },
 
+  async updateInvoice(id, data) {
+    await delay(150);
+    const index = invoices.findIndex(i => String(i.id) === String(id));
+    if (index === -1) throw new Error('Invoice tidak ditemukan');
+    invoices[index] = { ...invoices[index], ...data };
+    saveStore('invoices', invoices);
+    return { success: true, message: 'Data invoice berhasil diperbarui', data: invoices[index] };
+  },
+
   async updateInvoiceStatus(id, newStatus) {
-    await delay(200);
-    const index = invoices.findIndex(inv => inv.id === id);
+    await delay(150);
+    const index = invoices.findIndex(inv => String(inv.id) === String(id));
     if (index === -1) throw new Error('Invoice tidak ditemukan');
     invoices[index] = {
       ...invoices[index],
       status: newStatus,
       paidDate: newStatus === 'paid' ? new Date().toISOString().split('T')[0] : invoices[index].paidDate
     };
+    saveStore('invoices', invoices);
     return { success: true, message: `Status invoice berhasil diubah menjadi ${newStatus}`, data: invoices[index] };
   },
 
   // Leads & CRM
   async getLeads({ search = '', stage = 'all' } = {}) {
-    await delay(250);
+    await delay(150);
     let filtered = [...leads];
 
     if (search) {
       const q = search.toLowerCase();
       filtered = filtered.filter(l =>
-        l.company.toLowerCase().includes(q) ||
-        l.picName.toLowerCase().includes(q) ||
-        l.serviceInterested.toLowerCase().includes(q)
+        (l.company || '').toLowerCase().includes(q) ||
+        (l.picName || '').toLowerCase().includes(q) ||
+        (l.serviceInterested || '').toLowerCase().includes(q)
       );
     }
 
@@ -343,7 +604,7 @@ export const mockService = {
   },
 
   async createLead(data) {
-    await delay(300);
+    await delay(200);
     const newLead = {
       id: `led-${Date.now()}`,
       stage: 'baru',
@@ -352,22 +613,24 @@ export const mockService = {
       ...data
     };
     leads = [newLead, ...leads];
+    saveStore('leads', leads);
 
     activities.unshift({
       id: `act-${Date.now()}`,
-      user: 'Rian Pratama, B.B.A',
+      user: 'Marketing Account Exec',
       role: 'marketing',
       action: 'Pendaftaran Prospek Klien Baru',
       description: `Mendaftarkan prospek baru: ${newLead.company}`,
       timestamp: 'Baru saja'
     });
+    saveStore('activities', activities);
 
     return { success: true, message: 'Prospek baru berhasil dicatat', data: newLead };
   },
 
   async updateLeadStage(id, newStage) {
-    await delay(200);
-    const index = leads.findIndex(l => l.id === id);
+    await delay(150);
+    const index = leads.findIndex(l => String(l.id) === String(id));
     if (index === -1) throw new Error('Data prospek tidak ditemukan');
     const probabilityMap = {
       baru: '30%',
@@ -381,24 +644,34 @@ export const mockService = {
       stage: newStage,
       probability: probabilityMap[newStage] || leads[index].probability
     };
+    saveStore('leads', leads);
     return { success: true, message: 'Status tahapan prospek berhasil diperbarui', data: leads[index] };
+  },
+
+  async updateLead(id, data) {
+    await delay(150);
+    const index = leads.findIndex(l => String(l.id) === String(id));
+    if (index === -1) throw new Error('Data prospek tidak ditemukan');
+    leads[index] = { ...leads[index], ...data };
+    saveStore('leads', leads);
+    return { success: true, message: 'Data prospek berhasil diperbarui', data: leads[index] };
   },
 
   // Attendance
   async getAttendance({ search = '', service = 'all', status = 'all' } = {}) {
-    await delay(200);
+    await delay(150);
     let filtered = [...attendance];
 
     if (search) {
       const q = search.toLowerCase();
       filtered = filtered.filter(a =>
-        a.employeeName.toLowerCase().includes(q) ||
-        a.siteName.toLowerCase().includes(q)
+        (a.employeeName || '').toLowerCase().includes(q) ||
+        (a.siteName || '').toLowerCase().includes(q)
       );
     }
 
     if (service && service !== 'all') {
-      filtered = filtered.filter(a => a.service.toLowerCase().includes(service.toLowerCase()));
+      filtered = filtered.filter(a => (a.service || '').toLowerCase().includes(service.toLowerCase()));
     }
 
     if (status && status !== 'all') {
@@ -408,33 +681,59 @@ export const mockService = {
     return { success: true, data: filtered };
   },
 
-  // Dashboard Role-Aware Summary
+  async recordAttendance(data) {
+    await delay(150);
+    const newRecord = {
+      id: `att-${Date.now()}`,
+      date: data.attendance_date || new Date().toISOString().split('T')[0],
+      check_in: data.check_in || '08:00',
+      check_out: data.check_out || '17:00',
+      status: data.status || 'present',
+      notes: data.notes || '-',
+      ...data
+    };
+    attendance = [newRecord, ...attendance];
+    saveStore('attendance', attendance);
+    return { success: true, message: 'Presensi berhasil dicatat', data: newRecord };
+  },
+
+  // Dashboard Role-Aware Summary (Recalculated dynamically from live stores!)
   async getDashboardSummary(role = 'owner') {
-    await delay(300);
+    await delay(150);
 
     const totalEmployees = employees.length;
     const activeEmployees = employees.filter(e => e.status === 'active').length;
     const totalClients = clients.length;
-    const totalSites = sites.length;
-    const totalInvoicesValue = invoices.reduce((sum, i) => sum + i.total, 0);
-    const paidInvoicesValue = invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + i.total, 0);
-    const pendingInvoicesValue = invoices.filter(i => i.status === 'pending').reduce((sum, i) => sum + i.total, 0);
-    const overdueInvoicesValue = invoices.filter(i => i.status === 'overdue').reduce((sum, i) => sum + i.total, 0);
+    const activeSites = sites.filter(s => s.status === 'operational' || s.status === 'active').length || sites.length;
+    const totalInvoicesValue = invoices.reduce((sum, i) => sum + (Number(i.total) || 0), 0);
+    const paidInvoicesValue = invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + (Number(i.total) || 0), 0);
+    const pendingInvoicesValue = invoices.filter(i => i.status === 'pending' || i.status === 'sent' || i.status === 'unpaid').reduce((sum, i) => sum + (Number(i.total) || 0), 0);
+    const overdueInvoicesValue = invoices.filter(i => i.status === 'overdue').reduce((sum, i) => sum + (Number(i.total) || 0), 0);
     const totalLeadsValue = leads.reduce((sum, l) => sum + (Number(l.estimatedValue) || 0), 0);
+    const activePipelineValue = leads.filter(l => l.stage !== 'menang' && l.stage !== 'kalah').reduce((sum, l) => sum + (Number(l.estimatedValue) || 0), 0);
     const openLeadsCount = leads.filter(l => l.stage !== 'menang').length;
+    const wonLeadsCount = leads.filter(l => l.stage === 'menang').length;
+
+    const formatRupiah = (num) => 'Rp ' + Number(num || 0).toLocaleString('id-ID');
 
     return {
       success: true,
       data: {
         role,
         kpi: {
-          totalEmployees: 1520, // Company wide scale as per PRD/SOT
-          activeSites: totalSites,
-          totalClients: 48,
+          totalEmployees: activeEmployees,
+          activeSites: activeSites,
+          totalClients: totalClients,
+          activePlacements: placements.filter(p => p.status === 'active').length || activeEmployees,
           attendanceRate: '99.4%',
-          monthlyRevenue: 'Rp 1.466.000.000',
-          pendingReceivables: 'Rp 505.050.000',
-          activePipelineValue: 'Rp 585.000.000',
+          monthlyRevenue: formatRupiah(paidInvoicesValue || totalInvoicesValue),
+          pendingReceivables: formatRupiah(pendingInvoicesValue),
+          totalInvoiced: formatRupiah(totalInvoicesValue),
+          totalPaid: formatRupiah(paidInvoicesValue),
+          totalPending: formatRupiah(pendingInvoicesValue),
+          totalLeads: leads.length,
+          dealsWon: wonLeadsCount,
+          activePipelineValue: formatRupiah(activePipelineValue || totalLeadsValue),
           openIncidents: 0,
           shiftCompliance: '99.8%'
         },
@@ -445,32 +744,34 @@ export const mockService = {
         })),
         recentActivities: activities.slice(0, 5),
         recentInvoices: invoices.slice(0, 4),
-        recentLeads: leads.slice(0, 4)
+        recentLeads: leads.slice(0, 4),
+        recentEmployees: employees.slice(0, 5),
+        recentSites: sites.slice(0, 5)
       }
     };
   },
 
   // Activities & Notifications
   async getActivities() {
-    await delay(200);
+    await delay(100);
     return { success: true, data: [...activities] };
   },
 
   async getNotifications() {
-    await delay(150);
+    await delay(100);
     return { success: true, data: [...notifications] };
   },
 
   async markNotificationRead(id) {
-    await delay(100);
-    notifications = notifications.map(n => n.id === id ? { ...n, unread: false } : n);
+    await delay(50);
+    notifications = notifications.map(n => String(n.id) === String(id) ? { ...n, unread: false } : n);
+    saveStore('notifications', notifications);
     return { success: true, message: 'Notifikasi ditandai sudah dibaca' };
   },
 
   // Public Contact Inquiry Submission
   async submitContactInquiry(inquiryData) {
-    await delay(400);
-    // Create new lead in CRM automatically
+    await delay(300);
     const newLead = {
       id: `led-${Date.now()}`,
       company: inquiryData.company || inquiryData.name,
@@ -487,8 +788,8 @@ export const mockService = {
       createdAt: new Date().toISOString().split('T')[0]
     };
     leads.unshift(newLead);
+    saveStore('leads', leads);
 
-    // Add activity log
     activities.unshift({
       id: `act-${Date.now()}`,
       user: 'Sistem Website',
@@ -497,8 +798,8 @@ export const mockService = {
       description: `Inquiry baru dari ${inquiryData.name} (${inquiryData.company || 'Perorangan'}) - Layanan: ${inquiryData.service}`,
       timestamp: 'Baru saja'
     });
+    saveStore('activities', activities);
 
-    // Add notification
     notifications.unshift({
       id: `notif-${Date.now()}`,
       title: 'Inquiry Konsultasi Baru',
@@ -507,6 +808,7 @@ export const mockService = {
       unread: true,
       type: 'marketing'
     });
+    saveStore('notifications', notifications);
 
     return {
       success: true,
