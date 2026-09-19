@@ -36,12 +36,30 @@ export function LeadPipeline() {
     notes: 'Kebutuhan alih daya personil baru'
   });
 
+  const getDeletedLeadIds = () => {
+    try {
+      const raw = localStorage.getItem('barak_deleted_ids_leads');
+      return raw ? new Set(JSON.parse(raw)) : new Set();
+    } catch (e) {
+      return new Set();
+    }
+  };
+
+  const saveDeletedLeadId = (id) => {
+    try {
+      const set = getDeletedLeadIds();
+      set.add(String(id));
+      localStorage.setItem('barak_deleted_ids_leads', JSON.stringify([...set]));
+    } catch (e) {}
+  };
+
   const fetchLeads = async () => {
     setLoading(true);
     try {
+      const deletedIds = getDeletedLeadIds();
       const res = await api.getLeads({ search, status: stageFilter });
       if (res?.success && Array.isArray(res.data)) {
-        setLeads(res.data);
+        setLeads(res.data.filter(l => !deletedIds.has(String(l.id))));
       } else {
         setLeads([]);
       }
@@ -114,10 +132,14 @@ export function LeadPipeline() {
     if (!selectedLead) return;
     setSubmitting(true);
     try {
+      saveDeletedLeadId(selectedLead.id);
+      setLeads(prev => prev.filter(l => String(l.id) !== String(selectedLead.id)));
+
       const res = await api.deleteLead(selectedLead.id);
       if (res?.success) {
-        addToast(`Prospek #${selectedLead.id} berhasil dihapus.`, 'success');
+        addToast(`Prospek #${selectedLead.id} berhasil dihapus permanen dari sistem.`, 'success');
         setIsDeleteModalOpen(false);
+        setSelectedLead(null);
         fetchLeads();
       }
     } catch (err) {

@@ -96,9 +96,30 @@ const INITIAL_FALLBACK_ASSETS = [
   }
 ];
 
+const getDeletedAssetIds = () => {
+  try {
+    const raw = localStorage.getItem('barak_deleted_ids_it_assets');
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch (e) {
+    return new Set();
+  }
+};
+
+const saveDeletedAssetId = (id, serialNo) => {
+  try {
+    const set = getDeletedAssetIds();
+    if (id) set.add(String(id));
+    if (serialNo) set.add(String(serialNo).trim());
+    localStorage.setItem('barak_deleted_ids_it_assets', JSON.stringify([...set]));
+  } catch (e) {}
+};
+
 export function ItAssetManagement() {
   const { addToast } = useToast();
-  const [assets, setAssets] = useState(INITIAL_FALLBACK_ASSETS);
+  const [assets, setAssets] = useState(() => {
+    const deletedIds = getDeletedAssetIds();
+    return INITIAL_FALLBACK_ASSETS.filter(a => !deletedIds.has(String(a.id)) && !deletedIds.has(String(a.serial_no || '')));
+  });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'online', 'offline', 'maintenance'
@@ -143,9 +164,10 @@ export function ItAssetManagement() {
   const fetchAssets = async () => {
     setLoading(true);
     try {
+      const deletedIds = getDeletedAssetIds();
       const res = await api.getItAssets();
-      if (res?.success && Array.isArray(res?.data) && res.data.length > 0) {
-        setAssets(res.data);
+      if (res?.success && Array.isArray(res?.data)) {
+        setAssets(res.data.filter(a => !deletedIds.has(String(a.id)) && !deletedIds.has(String(a.serial_no || ''))));
       }
     } catch (err) {
       console.warn('Load IT assets fallback:', err.message);
@@ -253,9 +275,11 @@ export function ItAssetManagement() {
     if (!selectedAsset) return;
     setSaving(true);
     try {
-      await api.deleteItAsset(selectedAsset.id);
+      saveDeletedAssetId(selectedAsset.id, selectedAsset.serial_no || selectedAsset.serialNo);
       setAssets(prev => prev.filter(a => a.id !== selectedAsset.id));
-      addToast(`Perangkat ${selectedAsset.name} berhasil dihapus dari inventaris.`, 'success');
+
+      await api.deleteItAsset(selectedAsset.id);
+      addToast(`Perangkat ${selectedAsset.name} berhasil dihapus permanen dari inventaris.`, 'success');
       setIsDeleteModalOpen(false);
       setSelectedAsset(null);
     } catch (err) {

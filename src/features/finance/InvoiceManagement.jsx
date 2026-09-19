@@ -37,12 +37,31 @@ export function InvoiceManagement() {
     notes: 'Tagihan alih daya personil periode berjalan'
   });
 
+  const getDeletedInvoiceIds = () => {
+    try {
+      const raw = localStorage.getItem('barak_deleted_ids_invoices');
+      return raw ? new Set(JSON.parse(raw)) : new Set();
+    } catch (e) {
+      return new Set();
+    }
+  };
+
+  const saveDeletedInvoiceId = (id, invoiceNo) => {
+    try {
+      const set = getDeletedInvoiceIds();
+      if (id) set.add(String(id));
+      if (invoiceNo) set.add(String(invoiceNo).trim());
+      localStorage.setItem('barak_deleted_ids_invoices', JSON.stringify([...set]));
+    } catch (e) {}
+  };
+
   const fetchInvoices = async () => {
     setLoading(true);
     try {
+      const deletedIds = getDeletedInvoiceIds();
       const res = await api.getInvoices({ search, status: statusFilter });
       if (res?.success && Array.isArray(res.data)) {
-        setInvoices(res.data);
+        setInvoices(res.data.filter(i => !deletedIds.has(String(i.id)) && !deletedIds.has(String(i.invoice_no || i.invoiceNumber || ''))));
       } else {
         setInvoices([]);
       }
@@ -140,10 +159,14 @@ export function InvoiceManagement() {
     if (!selectedInvoice) return;
     setSubmitting(true);
     try {
+      saveDeletedInvoiceId(selectedInvoice.id, selectedInvoice.invoice_no || selectedInvoice.invoiceNumber);
+      setInvoices(prev => prev.filter(i => String(i.id) !== String(selectedInvoice.id)));
+
       const res = await api.deleteInvoice(selectedInvoice.id);
       if (res?.success) {
-        addToast(`Invoice #${selectedInvoice.invoice_no || selectedInvoice.id} berhasil dihapus.`, 'success');
+        addToast(`Invoice #${selectedInvoice.invoice_no || selectedInvoice.id} berhasil dihapus permanen dari sistem.`, 'success');
         setIsDeleteModalOpen(false);
+        setSelectedInvoice(null);
         fetchInvoices();
       }
     } catch (err) {

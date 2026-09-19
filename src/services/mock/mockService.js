@@ -37,18 +37,33 @@ function saveDeletedId(key, id) {
 
 function loadStore(key, defaultData) {
   const deletedSet = getDeletedIds(key);
+  const isDeleted = (item) => {
+    if (!item) return false;
+    if (item.id && deletedSet.has(String(item.id))) return true;
+    if (item.email && deletedSet.has(String(item.email).toLowerCase())) return true;
+    if (item.nik && deletedSet.has(String(item.nik))) return true;
+    if (item.employee_no && deletedSet.has(String(item.employee_no))) return true;
+    if (item.employeeNo && deletedSet.has(String(item.employeeNo))) return true;
+    if (item.serial_no && deletedSet.has(String(item.serial_no))) return true;
+    if (item.serialNo && deletedSet.has(String(item.serialNo))) return true;
+    if (item.invoice_no && deletedSet.has(String(item.invoice_no))) return true;
+    if (item.invoiceNumber && deletedSet.has(String(item.invoiceNumber))) return true;
+    if (item.client_code && deletedSet.has(String(item.client_code))) return true;
+    return false;
+  };
+
   try {
     const raw = localStorage.getItem(`barak_store_${key}`);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        return parsed.filter(item => !deletedSet.has(String(item.id)) && !deletedSet.has(String(item.employee_no || item.nik || '')));
+        return parsed.filter(item => !isDeleted(item));
       }
     }
   } catch (e) {
     console.warn(`Failed to read storage for ${key}:`, e);
   }
-  return defaultData.filter(item => !deletedSet.has(String(item.id)) && !deletedSet.has(String(item.employee_no || item.nik || '')));
+  return (defaultData || []).filter(item => !isDeleted(item));
 }
 
 function saveStore(key, data) {
@@ -113,6 +128,126 @@ let placements = loadStore('placements', [
     start_date: '2024-02-10',
     end_date: '2026-12-31',
     status: 'active'
+  }
+]);
+
+let itAssets = loadStore('it_assets', [
+  {
+    id: 'AST-BIO-001',
+    name: 'ZKTeco FacePass 7 Biometric Terminal',
+    category: 'Biometric Attendance',
+    site: 'PT. Telkom Indonesia Tbk (Lantai 1 Lobi Utama)',
+    serial_no: 'ZK-2026-TLK-0199',
+    ip_address: '192.168.10.45',
+    last_sync: '1 menit yang lalu',
+    firmware: 'v4.2.1-prod',
+    status: 'online'
+  },
+  {
+    id: 'AST-BIO-002',
+    name: 'Hikvision Face & Fingerprint Terminal',
+    category: 'Biometric Attendance',
+    site: 'PT. Mayora Indah Tbk (Pintu Masuk Karyawan)',
+    serial_no: 'HIK-MYR-8821-B',
+    ip_address: '192.168.20.12',
+    last_sync: '5 menit yang lalu',
+    firmware: 'v3.8.0-barak',
+    status: 'online'
+  },
+  {
+    id: 'AST-PAT-001',
+    name: 'JWM Guard Tour RFID Patrol Wand (V9)',
+    category: 'Security Patrol Device',
+    site: 'RS Siloam Hospital Lippo Village',
+    serial_no: 'JWM-SLM-0044',
+    ip_address: 'N/A (Docking Sync)',
+    last_sync: '15 menit yang lalu',
+    firmware: 'v2.1.0',
+    status: 'online'
+  },
+  {
+    id: 'AST-PAT-002',
+    name: 'JWM Guard Tour GPS Wand',
+    category: 'Security Patrol Device',
+    site: 'PT. Gudang Garam Tbk (Area Gudang A)',
+    serial_no: 'JWM-GG-0112',
+    ip_address: 'Cellular 4G SIM',
+    last_sync: '2 jam yang lalu',
+    firmware: 'v2.1.0',
+    status: 'offline'
+  },
+  {
+    id: 'AST-CCTV-001',
+    name: 'Dahua 32-Ch 4K NVR Command Center',
+    category: 'CCTV Surveillance',
+    site: 'Kantor Pusat PT. BARAK (Security HQ)',
+    serial_no: 'DH-NVR-HQ-001',
+    ip_address: '10.0.1.50',
+    last_sync: 'Realtime Stream',
+    firmware: 'v5.0.2',
+    status: 'online'
+  },
+  {
+    id: 'AST-LAP-001',
+    name: 'ThinkPad T14 Gen 4 - Operasional Dispatch',
+    category: 'Office Workstation',
+    site: 'Kantor Pusat PT. BARAK (Divisi Operasional)',
+    serial_no: 'PF-4X990-2026',
+    ip_address: '10.0.1.104',
+    last_sync: 'Aktif saat ini',
+    firmware: 'Win 11 Pro / BarakOS',
+    status: 'online'
+  }
+]);
+
+let itTickets = loadStore('it_tickets', [
+  {
+    id: 'TKT-2026-089',
+    title: 'Mesin Absensi Biometrik Lobi Barat Gagal Sinkronisasi',
+    category: 'Biometric Attendance',
+    site: 'PT. Telkom Indonesia Tbk (Landmark Tower)',
+    reported_by: 'Nazi Rinaldi (Operasional)',
+    priority: 'high',
+    status: 'in_progress',
+    created_at: '18 Sep 2026, 08:30',
+    description: 'Data tap kartu dan presensi wajah staf keamanan shift malam tidak masuk ke rekap HRD otomatis.',
+    resolution_notes: 'Sedang dilakukan remote rebooting pada service biometric listener di port 8080.'
+  },
+  {
+    id: 'TKT-2026-088',
+    title: 'GPS Patrol Wand Pos 3 Perlu Penggantian Baterai',
+    category: 'Hardware & IoT',
+    site: 'PT. Mayora Indah Tbk',
+    reported_by: 'Hendrik Gunawan (Chief Security)',
+    priority: 'medium',
+    status: 'open',
+    created_at: '18 Sep 2026, 09:15',
+    description: 'Tongkat patroli RFID mati mendadak setelah putaran pos 3 kemarin malam.',
+    resolution_notes: ''
+  },
+  {
+    id: 'TKT-2026-087',
+    title: 'Permintaan Reset Kata Sandi Akun HRD Staf Baru',
+    category: 'Portal & User Access',
+    site: 'Kantor Pusat PT. BARAK',
+    reported_by: 'Robyn Topani (HRD)',
+    priority: 'low',
+    status: 'resolved',
+    created_at: '18 Sep 2026, 07:45',
+    description: 'Staf admin HRD baru lupa password default portal setelah aktivasi.',
+    resolution_notes: 'Password telah di-reset ke password123 dan panduan keamanan telah dikirimkan via email internal.'
+  },
+  {
+    id: 'TKT-2026-086',
+    title: 'Koneksi Router 4G Backup Pos Gerbang Tol Terputus',
+    category: 'Network & Connectivity',
+    site: 'PT. Gudang Garam Tbk',
+    reported_by: 'Susilo Bambang (Security Leader)',
+    priority: 'critical',
+    status: 'resolved',
+    created_at: '17 Sep 2026, 21:00',
+    description: 'Modem SIM card kehabisan kuota data darurat.',
+    resolution_notes: 'Kuota data darurat 50GB telah di-topup dan router kembali online dengan latensi normal.'
   }
 ]);
 
@@ -907,5 +1042,109 @@ export const mockService = {
       message: 'Terima kasih! Permintaan konsultasi Anda telah berhasil kami terima. Tim Business Development kami akan menghubungi Anda dalam waktu 1x24 jam kerja.',
       data: { ticketId: `BAR-REQ-${Math.floor(100000 + Math.random() * 900000)}` }
     };
+  },
+
+  // IT Assets
+  async getItAssets(params = {}) {
+    await delay(100);
+    const deletedAssetIds = getDeletedIds('it_assets');
+    let filtered = itAssets.filter(a => !deletedAssetIds.has(String(a.id)) && !deletedAssetIds.has(String(a.serial_no || '')));
+    if (params.search) {
+      const q = params.search.toLowerCase();
+      filtered = filtered.filter(a =>
+        (a.name || '').toLowerCase().includes(q) ||
+        (a.site || '').toLowerCase().includes(q) ||
+        (a.serial_no || '').toLowerCase().includes(q) ||
+        (a.category || '').toLowerCase().includes(q)
+      );
+    }
+    if (params.status && params.status !== 'all') {
+      filtered = filtered.filter(a => a.status === params.status);
+    }
+    return { success: true, data: filtered };
+  },
+
+  async createItAsset(data) {
+    await delay(150);
+    const newAsset = {
+      id: data.id || `AST-${Date.now()}`,
+      last_sync: '1 menit yang lalu',
+      ...data
+    };
+    itAssets = [newAsset, ...itAssets];
+    saveStore('it_assets', itAssets);
+    return { success: true, message: 'Perangkat IT berhasil ditambahkan', data: newAsset };
+  },
+
+  async updateItAsset(id, data) {
+    await delay(150);
+    const index = itAssets.findIndex(a => String(a.id) === String(id));
+    if (index !== -1) {
+      itAssets[index] = { ...itAssets[index], ...data, last_sync: 'Baru diperbarui' };
+      saveStore('it_assets', itAssets);
+    }
+    return { success: true, message: 'Perangkat IT berhasil diperbarui', data: itAssets[index] };
+  },
+
+  async deleteItAsset(id) {
+    await delay(150);
+    saveDeletedId('it_assets', id);
+    const item = itAssets.find(a => String(a.id) === String(id));
+    if (item && item.serial_no) {
+      saveDeletedId('it_assets', item.serial_no);
+    }
+    itAssets = itAssets.filter(a => String(a.id) !== String(id));
+    saveStore('it_assets', itAssets);
+    return { success: true, message: 'Perangkat IT berhasil dihapus permanen' };
+  },
+
+  // IT Tickets
+  async getItTickets(params = {}) {
+    await delay(100);
+    const deletedTicketIds = getDeletedIds('it_tickets');
+    let filtered = itTickets.filter(t => !deletedTicketIds.has(String(t.id)));
+    if (params.search) {
+      const q = params.search.toLowerCase();
+      filtered = filtered.filter(t =>
+        (t.title || '').toLowerCase().includes(q) ||
+        (t.site || '').toLowerCase().includes(q) ||
+        (t.reported_by || '').toLowerCase().includes(q) ||
+        (t.category || '').toLowerCase().includes(q)
+      );
+    }
+    if (params.status && params.status !== 'all') {
+      filtered = filtered.filter(t => t.status === params.status);
+    }
+    return { success: true, data: filtered };
+  },
+
+  async createItTicket(data) {
+    await delay(150);
+    const newTicket = {
+      id: data.id || `TKT-2026-${String(itTickets.length + 1).padStart(3, '0')}`,
+      created_at: 'Baru saja',
+      ...data
+    };
+    itTickets = [newTicket, ...itTickets];
+    saveStore('it_tickets', itTickets);
+    return { success: true, message: 'Tiket bantuan IT berhasil dibuat', data: newTicket };
+  },
+
+  async updateItTicket(id, data) {
+    await delay(150);
+    const index = itTickets.findIndex(t => String(t.id) === String(id));
+    if (index !== -1) {
+      itTickets[index] = { ...itTickets[index], ...data };
+      saveStore('it_tickets', itTickets);
+    }
+    return { success: true, message: 'Tiket bantuan IT berhasil diperbarui', data: itTickets[index] };
+  },
+
+  async deleteItTicket(id) {
+    await delay(150);
+    saveDeletedId('it_tickets', id);
+    itTickets = itTickets.filter(t => String(t.id) !== String(id));
+    saveStore('it_tickets', itTickets);
+    return { success: true, message: 'Tiket bantuan IT berhasil dihapus permanen' };
   }
 };

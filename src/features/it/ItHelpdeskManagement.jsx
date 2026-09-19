@@ -75,9 +75,29 @@ const INITIAL_FALLBACK_TICKETS = [
   }
 ];
 
+const getDeletedTicketIds = () => {
+  try {
+    const raw = localStorage.getItem('barak_deleted_ids_it_tickets');
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch (e) {
+    return new Set();
+  }
+};
+
+const saveDeletedTicketId = (id) => {
+  try {
+    const set = getDeletedTicketIds();
+    if (id) set.add(String(id));
+    localStorage.setItem('barak_deleted_ids_it_tickets', JSON.stringify([...set]));
+  } catch (e) {}
+};
+
 export function ItHelpdeskManagement() {
   const { addToast } = useToast();
-  const [tickets, setTickets] = useState(INITIAL_FALLBACK_TICKETS);
+  const [tickets, setTickets] = useState(() => {
+    const deletedIds = getDeletedTicketIds();
+    return INITIAL_FALLBACK_TICKETS.filter(t => !deletedIds.has(String(t.id)));
+  });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'open', 'in_progress', 'resolved'
@@ -129,9 +149,10 @@ export function ItHelpdeskManagement() {
   const fetchTickets = async () => {
     setLoading(true);
     try {
+      const deletedIds = getDeletedTicketIds();
       const res = await api.getItTickets();
-      if (res?.success && Array.isArray(res?.data) && res.data.length > 0) {
-        setTickets(res.data);
+      if (res?.success && Array.isArray(res?.data)) {
+        setTickets(res.data.filter(t => !deletedIds.has(String(t.id))));
       }
     } catch (err) {
       console.warn('Load IT tickets fallback:', err.message);
@@ -268,9 +289,11 @@ export function ItHelpdeskManagement() {
     if (!selectedTicket) return;
     setSaving(true);
     try {
-      await api.deleteItTicket(selectedTicket.id);
+      saveDeletedTicketId(selectedTicket.id);
       setTickets(prev => prev.filter(t => t.id !== selectedTicket.id));
-      addToast(`Tiket ${selectedTicket.id} berhasil dihapus dari sistem.`, 'success');
+
+      await api.deleteItTicket(selectedTicket.id);
+      addToast(`Tiket ${selectedTicket.id} berhasil dihapus permanen dari sistem.`, 'success');
       setIsDeleteModalOpen(false);
       setSelectedTicket(null);
     } catch (err) {

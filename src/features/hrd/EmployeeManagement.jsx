@@ -168,6 +168,28 @@ export function EmployeeManagement() {
     photo_url: ''
   });
 
+  const getDeletedEmployeeIds = () => {
+    try {
+      const raw = localStorage.getItem('barak_deleted_ids_employees');
+      return raw ? new Set(JSON.parse(raw)) : new Set();
+    } catch (e) {
+      return new Set();
+    }
+  };
+
+  const saveDeletedEmployeeId = (id, nik, empNo, name) => {
+    try {
+      const set = getDeletedEmployeeIds();
+      if (id) set.add(String(id));
+      if (nik) set.add(String(nik));
+      if (empNo) set.add(String(empNo));
+      if (name) set.add(String(name).trim().toLowerCase());
+      localStorage.setItem('barak_deleted_ids_employees', JSON.stringify([...set]));
+    } catch (e) {
+      console.warn('Failed to save deleted employee id:', e);
+    }
+  };
+
   const getSavedLocalEmployees = () => {
     try {
       const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -189,9 +211,15 @@ export function EmployeeManagement() {
   const fetchEmployees = async () => {
     setLoading(true);
     try {
-      // Check local storage first
+      const deletedIds = getDeletedEmployeeIds();
       const localData = getSavedLocalEmployees();
-      let list = localData || INITIAL_EMPLOYEES;
+      let rawList = localData || INITIAL_EMPLOYEES;
+      let list = rawList.filter(e => 
+        !deletedIds.has(String(e.id)) && 
+        !deletedIds.has(String(e.nik)) && 
+        !deletedIds.has(String(e.employee_no || '')) &&
+        !deletedIds.has(String(e.name || '').trim().toLowerCase())
+      );
 
       try {
         const res = await api.getEmployees({
@@ -201,22 +229,29 @@ export function EmployeeManagement() {
           limit: 100
         });
         if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
-          // Merge API data with rich local/initial fields
-          const merged = res.data.map(apiEmp => {
-            const match = list.find(l => String(l.id) === String(apiEmp.id) || l.nik === apiEmp.nik);
-            return {
-              ...match,
-              ...apiEmp,
-              nik: apiEmp.nik || match?.nik || `327501${String(apiEmp.id).padStart(10, '0')}`,
-              birth_date: apiEmp.birth_date || match?.birth_date || '1995-01-01',
-              ptkp_status: apiEmp.ptkp_status || match?.ptkp_status || 'TK',
-              bank_account: apiEmp.bank_account || match?.bank_account || 'BCA 8830192831 a.n ' + (apiEmp.name || 'Karyawan'),
-              npwp: apiEmp.npwp || match?.npwp || '09.254.629.8-407.000',
-              address: apiEmp.address || match?.address || 'Jl. Jend. Sudirman No. Kav 54-55, Jakarta',
-              placement_address: apiEmp.placement_address || match?.placement_address || 'PT Menara Graha Mandiri - Gedung Pusat',
-              photo_url: apiEmp.photo_url || match?.photo_url || '/assets/img/team/person-2.jpeg'
-            };
-          });
+          // Merge API data with rich local/initial fields, filtering out permanently deleted records
+          const merged = res.data
+            .filter(apiEmp => 
+              !deletedIds.has(String(apiEmp.id)) && 
+              !deletedIds.has(String(apiEmp.nik)) &&
+              !deletedIds.has(String(apiEmp.employee_no || '')) &&
+              !deletedIds.has(String(apiEmp.name || '').trim().toLowerCase())
+            )
+            .map(apiEmp => {
+              const match = list.find(l => String(l.id) === String(apiEmp.id) || l.nik === apiEmp.nik);
+              return {
+                ...match,
+                ...apiEmp,
+                nik: apiEmp.nik || match?.nik || `327501${String(apiEmp.id).padStart(10, '0')}`,
+                birth_date: apiEmp.birth_date || match?.birth_date || '1995-01-01',
+                ptkp_status: apiEmp.ptkp_status || match?.ptkp_status || 'TK',
+                bank_account: apiEmp.bank_account || match?.bank_account || 'BCA 8830192831 a.n ' + (apiEmp.name || 'Karyawan'),
+                npwp: apiEmp.npwp || match?.npwp || '09.254.629.8-407.000',
+                address: apiEmp.address || match?.address || 'Jl. Jend. Sudirman No. Kav 54-55, Jakarta',
+                placement_address: apiEmp.placement_address || match?.placement_address || 'PT Menara Graha Mandiri - Gedung Pusat',
+                photo_url: apiEmp.photo_url || match?.photo_url || '/assets/img/team/person-2.jpeg'
+              };
+            });
           list = merged;
         }
       } catch (apiErr) {
@@ -429,13 +464,18 @@ export function EmployeeManagement() {
     if (!activeEmployee) return;
     setSubmitting(true);
     try {
+      saveDeletedEmployeeId(activeEmployee.id, activeEmployee.nik, activeEmployee.employee_no || activeEmployee.employeeNo, activeEmployee.name);
       await api.deleteEmployee(activeEmployee.id).catch(() => {});
       const currentList = getSavedLocalEmployees() || employees;
-      const updatedList = currentList.filter(e => String(e.id) !== String(activeEmployee.id));
+      const updatedList = currentList.filter(e => 
+        String(e.id) !== String(activeEmployee.id) && 
+        e.nik !== activeEmployee.nik &&
+        e.employee_no !== (activeEmployee.employee_no || activeEmployee.employeeNo)
+      );
       saveLocalEmployees(updatedList);
       setEmployees(updatedList);
 
-      addToast(`Personil ${activeEmployee.name} berhasil dihapus.`, 'success');
+      addToast(`Personil ${activeEmployee.name} berhasil dihapus permanen dari sistem.`, 'success');
       setIsDeleteConfirmOpen(false);
     } catch (err) {
       addToast(err.message || 'Gagal menghapus data karyawan.', 'error');

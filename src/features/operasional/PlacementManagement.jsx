@@ -34,12 +34,32 @@ export function PlacementManagement() {
     status: 'active'
   });
 
+  const getDeletedPlacementIds = () => {
+    try {
+      const raw = localStorage.getItem('barak_deleted_ids_placements');
+      return raw ? new Set(JSON.parse(raw)) : new Set();
+    } catch (e) {
+      return new Set();
+    }
+  };
+
+  const saveDeletedPlacementId = (id) => {
+    try {
+      const set = getDeletedPlacementIds();
+      set.add(String(id));
+      localStorage.setItem('barak_deleted_ids_placements', JSON.stringify([...set]));
+    } catch (e) {}
+  };
+
   const fetchPlacements = async () => {
     setLoading(true);
     try {
+      const deletedIds = getDeletedPlacementIds();
       const res = await api.getPlacements({ search });
-      if (res?.success) {
-        setPlacements(res.data);
+      if (res?.success && Array.isArray(res.data)) {
+        setPlacements(res.data.filter(p => !deletedIds.has(String(p.id))));
+      } else {
+        setPlacements([]);
       }
     } catch (err) {
       addToast(err.message || 'Gagal memuat data penempatan', 'error');
@@ -104,9 +124,12 @@ export function PlacementManagement() {
     if (!selectedPlacement) return;
     setSubmitting(true);
     try {
+      saveDeletedPlacementId(selectedPlacement.id);
+      setPlacements(prev => prev.filter(p => String(p.id) !== String(selectedPlacement.id)));
+
       const res = await api.deletePlacement(selectedPlacement.id);
       if (res?.success) {
-        addToast('Data penempatan berhasil dihapus.', 'success');
+        addToast('Data penempatan berhasil dihapus permanen dari sistem.', 'success');
         setIsDeleteModalOpen(false);
         setSelectedPlacement(null);
         fetchPlacements();

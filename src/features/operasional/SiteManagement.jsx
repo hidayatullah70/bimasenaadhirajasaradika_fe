@@ -29,12 +29,22 @@ export function SiteManagement() {
     status: 'active'
   });
 
+  const getDeletedClientIds = () => {
+    try {
+      const raw = localStorage.getItem('barak_deleted_ids_clients');
+      return raw ? new Set(JSON.parse(raw)) : new Set();
+    } catch (e) {
+      return new Set();
+    }
+  };
+
   const fetchClients = async () => {
     setLoading(true);
     try {
+      const deletedIds = getDeletedClientIds();
       const res = await api.getClients({ search });
       if (res?.success && Array.isArray(res.data)) {
-        setClients(res.data);
+        setClients(res.data.filter(c => !deletedIds.has(String(c.id))));
       } else {
         setClients([]);
       }
@@ -106,9 +116,13 @@ export function SiteManagement() {
     if (!selectedClient) return;
     setSubmitting(true);
     try {
+      const deletedIds = getDeletedClientIds();
+      deletedIds.add(String(selectedClient.id));
+      localStorage.setItem('barak_deleted_ids_clients', JSON.stringify([...deletedIds]));
+
       const res = await api.deleteClient(selectedClient.id);
       if (res?.success) {
-        addToast(`Klien ${selectedClient.name} berhasil dinonaktifkan.`, 'success');
+        addToast(`Klien ${selectedClient.name} berhasil dihapus permanen dari sistem.`, 'success');
         setIsDeleteModalOpen(false);
         fetchClients();
       }

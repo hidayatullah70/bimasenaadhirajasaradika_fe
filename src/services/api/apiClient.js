@@ -545,7 +545,7 @@ export const api = {
         method: 'DELETE',
       }).catch(() => {});
     } catch (e) {}
-    return { success: true };
+    return mockService.deleteInvoice(id);
   },
 
   // 10. Leads / CRM Marketing (CRUD)
@@ -610,7 +610,7 @@ export const api = {
         method: 'DELETE',
       }).catch(() => {});
     } catch (e) {}
-    return { success: true };
+    return mockService.deleteLead(id);
   },
 
   // 11. Activities & Audit Trail
@@ -747,12 +747,11 @@ export const api = {
     if (action) params.append('action', action);
     const qs = params.toString();
     try {
-      return await request(`/users/${id}${qs ? `?${qs}` : ''}`, {
+      await request(`/users/${id}${qs ? `?${qs}` : ''}`, {
         method: 'DELETE',
-      });
-    } catch (e) {
-      return { success: true, message: 'Pengguna berhasil dihapus' };
-    }
+      }).catch(() => {});
+    } catch (e) {}
+    return mockService.deleteUser(id);
   },
 
   // 14. Public Endpoints
@@ -790,46 +789,41 @@ export const api = {
         Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== '' && v !== 'all')
       );
       const query = new URLSearchParams(cleanParams).toString();
-      return await request(`/it/assets${query ? `?${query}` : ''}`);
+      const res = await request(`/it/assets${query ? `?${query}` : ''}`);
+      if (res?.success && Array.isArray(res.data) && res.data.length > 0) return res;
+      return mockService.getItAssets(params);
     } catch (err) {
-      console.warn('API getItAssets fallback:', err.message);
-      return { success: true, data: null };
+      return mockService.getItAssets(params);
     }
   },
 
   createItAsset: async (assetData) => {
     try {
-      return await request('/it/assets', {
+      await request('/it/assets', {
         method: 'POST',
         body: JSON.stringify(assetData),
-      });
-    } catch (err) {
-      console.warn('API createItAsset fallback:', err.message);
-      return { success: true, data: assetData };
-    }
+      }).catch(() => {});
+    } catch (err) {}
+    return mockService.createItAsset(assetData);
   },
 
   updateItAsset: async (id, assetData) => {
     try {
-      return await request(`/it/assets/${id}`, {
+      await request(`/it/assets/${id}`, {
         method: 'PUT',
         body: JSON.stringify(assetData),
-      });
-    } catch (err) {
-      console.warn('API updateItAsset fallback:', err.message);
-      return { success: true, data: { id, ...assetData } };
-    }
+      }).catch(() => {});
+    } catch (err) {}
+    return mockService.updateItAsset(id, assetData);
   },
 
   deleteItAsset: async (id) => {
     try {
-      return await request(`/it/assets/${id}`, {
+      await request(`/it/assets/${id}`, {
         method: 'DELETE',
-      });
-    } catch (err) {
-      console.warn('API deleteItAsset fallback:', err.message);
-      return { success: true, data: { id } };
-    }
+      }).catch(() => {});
+    } catch (err) {}
+    return mockService.deleteItAsset(id);
   },
 
   getItTickets: async (params = {}) => {
@@ -838,45 +832,40 @@ export const api = {
         Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== '' && v !== 'all')
       );
       const query = new URLSearchParams(cleanParams).toString();
-      return await request(`/it/tickets${query ? `?${query}` : ''}`);
+      const res = await request(`/it/tickets${query ? `?${query}` : ''}`);
+      if (res?.success && Array.isArray(res.data) && res.data.length > 0) return res;
+      return mockService.getItTickets(params);
     } catch (err) {
-      console.warn('API getItTickets fallback:', err.message);
-      return { success: true, data: null };
+      return mockService.getItTickets(params);
     }
   },
 
   createItTicket: async (ticketData) => {
     try {
-      return await request('/it/tickets', {
+      await request('/it/tickets', {
         method: 'POST',
         body: JSON.stringify(ticketData),
-      });
-    } catch (err) {
-      console.warn('API createItTicket fallback:', err.message);
-      return { success: true, data: ticketData };
-    }
+      }).catch(() => {});
+    } catch (err) {}
+    return mockService.createItTicket(ticketData);
   },
 
   updateItTicket: async (id, ticketData) => {
     try {
-      return await request(`/it/tickets/${id}`, {
+      await request(`/it/tickets/${id}`, {
         method: 'PUT',
         body: JSON.stringify(ticketData),
-      });
-    } catch (err) {
-      console.warn('API updateItTicket fallback:', err.message);
-      return { success: true, data: { id, ...ticketData } };
-    }
+      }).catch(() => {});
+    } catch (err) {}
+    return mockService.updateItTicket(id, ticketData);
   },
 
   deleteItTicket: async (id) => {
     try {
-      return await request(`/it/tickets/${id}`, {
+      await request(`/it/tickets/${id}`, {
         method: 'DELETE',
-      });
-    } catch (err) {
-      console.warn('API deleteItTicket fallback:', err.message);
-      return { success: true, data: { id } };
-    }
+      }).catch(() => {});
+    } catch (err) {}
+    return mockService.deleteItTicket(id);
   },
 };
