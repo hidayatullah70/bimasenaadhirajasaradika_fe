@@ -59,9 +59,9 @@ export function UserManagement() {
     try {
       const res = await api.getUsers();
       if (res.success && Array.isArray(res.data)) {
-        // Filter out any permanently deleted IDs and map Hidayatullah and Gheril
+        // Filter out any permanently deleted IDs, thab70, and map Hidayatullah and Gheril
         const cleanList = res.data
-          .filter(u => !deletedUserIdsRef.current.has(u.id))
+          .filter(u => !deletedUserIdsRef.current.has(u.id) && u.email !== 'hidayatullah.thab70@gmail.com' && !u.email?.includes('thab70'))
           .map(u => {
             if (u.email === 'hidayatullah.ofc@gmail.com' || (u.name?.toLowerCase().includes('hidayatullah') && u.role === 'admin')) {
               return {
@@ -74,7 +74,8 @@ export function UserManagement() {
                 role_code: 'admin',
                 role_id: 7,
                 roleLabel: 'Administrator Website',
-                role_name: 'Administrator'
+                role_name: 'Administrator',
+                is_active: true
               };
             }
             if (
@@ -494,7 +495,7 @@ export function UserManagement() {
           <Input
             label="Alamat Email Perusahaan / Google"
             type="email"
-            placeholder="hidayatullah.thab70@gmail.com"
+            placeholder="hidayatullah.ofc@gmail.com"
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             required

