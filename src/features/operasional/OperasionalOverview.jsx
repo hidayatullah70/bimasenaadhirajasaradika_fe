@@ -65,8 +65,9 @@ export function OperasionalOverview({ onNavigate }) {
   }
 
   const kpi = dashboardData?.kpi || {};
-  const activeSites = kpi.activeSites ?? sites.length;
-  const activePlacements = kpi.activePlacements ?? sites.reduce((acc, s) => acc + (Number(s.active_personnel || s.required_personnel) || 0), 0);
+  const activeSites = Number(kpi.activeSites) || Number(kpi.totalSites) || sites.length || 0;
+  const totalSites = Number(kpi.totalSites) || activeSites;
+  const activePlacements = Number(kpi.activePlacements) || sites.reduce((acc, s) => acc + (Number(s.active_personnel || s.required_personnel) || 0), 0);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
