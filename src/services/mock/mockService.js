@@ -1,5 +1,6 @@
 // PT. Bhimasena Adhirajasa Radhika — Mock Service Implementation
 // Implements async simulation according to 04-API-SPEC.md & synchronizes with Rekapitulasi & Dashboards
+// Full Hard-Delete Persistence: Permanently purged items are never displayed again across any view
 
 import {
   INITIAL_SERVICES,
@@ -14,18 +15,40 @@ import {
   INITIAL_NOTIFICATIONS
 } from './mockData';
 
-// Storage Helper
+// Storage & Persistent Deletion Tracking
+function getDeletedIds(key) {
+  try {
+    const raw = localStorage.getItem(`barak_deleted_ids_${key}`);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch (e) {
+    return new Set();
+  }
+}
+
+function saveDeletedId(key, id) {
+  try {
+    const set = getDeletedIds(key);
+    set.add(String(id));
+    localStorage.setItem(`barak_deleted_ids_${key}`, JSON.stringify([...set]));
+  } catch (e) {
+    console.warn(`Failed to save deleted id for ${key}:`, e);
+  }
+}
+
 function loadStore(key, defaultData) {
+  const deletedSet = getDeletedIds(key);
   try {
     const raw = localStorage.getItem(`barak_store_${key}`);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) {
+        return parsed.filter(item => !deletedSet.has(String(item.id)) && !deletedSet.has(String(item.employee_no || item.nik || '')));
+      }
     }
   } catch (e) {
     console.warn(`Failed to read storage for ${key}:`, e);
   }
-  return [...defaultData];
+  return defaultData.filter(item => !deletedSet.has(String(item.id)) && !deletedSet.has(String(item.employee_no || item.nik || '')));
 }
 
 function saveStore(key, data) {
@@ -194,16 +217,32 @@ export const mockService = {
 
   async getUsers() {
     await delay(150);
-    return { success: true, data: [...users] };
+    const deletedUserIds = getDeletedIds('users');
+    return {
+      success: true,
+      data: users.filter(u => !deletedUserIds.has(String(u.id)) && !deletedUserIds.has(u.email?.toLowerCase()))
+    };
   },
 
   async updateUserRole(id, newRole) {
     await delay(150);
-    const index = users.findIndex(u => u.id === id);
+    const index = users.findIndex(u => String(u.id) === String(id));
     if (index === -1) throw new Error('Pengguna tidak ditemukan');
     users[index] = { ...users[index], role: newRole };
     saveStore('users', users);
     return { success: true, message: 'Role pengguna berhasil diperbarui', data: users[index] };
+  },
+
+  async deleteUser(id) {
+    await delay(150);
+    saveDeletedId('users', id);
+    const item = users.find(u => String(u.id) === String(id));
+    if (item && item.email) {
+      saveDeletedId('users', item.email.toLowerCase());
+    }
+    users = users.filter(u => String(u.id) !== String(id));
+    saveStore('users', users);
+    return { success: true, message: 'Pengguna berhasil dihapus permanen' };
   },
 
   // Services
@@ -215,7 +254,8 @@ export const mockService = {
   // Employees / Tenaga Kerja
   async getEmployees({ search = '', service = '', status = '', page = 1, limit = 50 } = {}) {
     await delay(150);
-    let filtered = [...employees];
+    const deletedEmpIds = getDeletedIds('employees');
+    let filtered = employees.filter(e => !deletedEmpIds.has(String(e.id)));
 
     if (search) {
       const q = search.toLowerCase();
@@ -312,17 +352,24 @@ export const mockService = {
 
   async deleteEmployee(id) {
     await delay(150);
+    saveDeletedId('employees', id);
     const item = employees.find(e => String(e.id) === String(id));
-    if (!item) throw new Error('Data karyawan tidak ditemukan');
     employees = employees.filter(e => String(e.id) !== String(id));
     saveStore('employees', employees);
-    return { success: true, message: `Data karyawan ${item.name} berhasil dihapus` };
+
+    // Also purge any active placements associated with this employee
+    placements = placements.filter(p => String(p.employee_id) !== String(id));
+    saveStore('placements', placements);
+
+    return { success: true, message: `Data karyawan ${item?.name || ''} berhasil dihapus permanen dari sistem` };
   },
 
   // Clients
   async getClients({ search = '' } = {}) {
     await delay(150);
-    let filtered = [...clients];
+    const deletedClientIds = getDeletedIds('clients');
+    let filtered = clients.filter(c => !deletedClientIds.has(String(c.id)));
+
     if (search) {
       const q = search.toLowerCase();
       filtered = filtered.filter(c =>
@@ -377,15 +424,17 @@ export const mockService = {
 
   async deleteClient(id) {
     await delay(150);
+    saveDeletedId('clients', id);
     clients = clients.filter(c => String(c.id) !== String(id));
     saveStore('clients', clients);
-    return { success: true, message: 'Data klien berhasil dihapus' };
+    return { success: true, message: 'Data mitra klien berhasil dihapus permanen' };
   },
 
   // Sites
   async getSites({ search = '', clientId = 'all' } = {}) {
     await delay(150);
-    let filtered = [...sites];
+    const deletedSiteIds = getDeletedIds('sites');
+    let filtered = sites.filter(s => !deletedSiteIds.has(String(s.id)));
 
     if (search) {
       const q = search.toLowerCase();
@@ -446,15 +495,20 @@ export const mockService = {
 
   async deleteSite(id) {
     await delay(150);
+    saveDeletedId('sites', id);
     sites = sites.filter(s => String(s.id) !== String(id));
     saveStore('sites', sites);
-    return { success: true, message: 'Data site berhasil dihapus' };
+    return { success: true, message: 'Data site operasional berhasil dihapus permanen' };
   },
 
   // Placements / Penempatan
   async getPlacements(params = {}) {
     await delay(150);
-    return { success: true, data: [...placements] };
+    const deletedPlacementIds = getDeletedIds('placements');
+    return {
+      success: true,
+      data: placements.filter(p => !deletedPlacementIds.has(String(p.id)))
+    };
   },
 
   async createPlacement(data) {
@@ -483,15 +537,17 @@ export const mockService = {
 
   async deletePlacement(id) {
     await delay(150);
+    saveDeletedId('placements', id);
     placements = placements.filter(p => String(p.id) !== String(id));
     saveStore('placements', placements);
-    return { success: true, message: 'Penempatan personil berhasil dihapus' };
+    return { success: true, message: 'Penempatan personil berhasil dihapus permanen' };
   },
 
   // Invoices
   async getInvoices({ search = '', status = 'all', page = 1, limit = 50 } = {}) {
     await delay(150);
-    let filtered = [...invoices];
+    const deletedInvoiceIds = getDeletedIds('invoices');
+    let filtered = invoices.filter(i => !deletedInvoiceIds.has(String(i.id)));
 
     if (search) {
       const q = search.toLowerCase();
@@ -582,10 +638,19 @@ export const mockService = {
     return { success: true, message: `Status invoice berhasil diubah menjadi ${newStatus}`, data: invoices[index] };
   },
 
+  async deleteInvoice(id) {
+    await delay(150);
+    saveDeletedId('invoices', id);
+    invoices = invoices.filter(i => String(i.id) !== String(id));
+    saveStore('invoices', invoices);
+    return { success: true, message: 'Invoice berhasil dihapus permanen' };
+  },
+
   // Leads & CRM
   async getLeads({ search = '', stage = 'all' } = {}) {
     await delay(150);
-    let filtered = [...leads];
+    const deletedLeadIds = getDeletedIds('leads');
+    let filtered = leads.filter(l => !deletedLeadIds.has(String(l.id)));
 
     if (search) {
       const q = search.toLowerCase();
@@ -657,10 +722,19 @@ export const mockService = {
     return { success: true, message: 'Data prospek berhasil diperbarui', data: leads[index] };
   },
 
+  async deleteLead(id) {
+    await delay(150);
+    saveDeletedId('leads', id);
+    leads = leads.filter(l => String(l.id) !== String(id));
+    saveStore('leads', leads);
+    return { success: true, message: 'Data prospek berhasil dihapus permanen' };
+  },
+
   // Attendance
   async getAttendance({ search = '', service = 'all', status = 'all' } = {}) {
     await delay(150);
-    let filtered = [...attendance];
+    const deletedAttendanceIds = getDeletedIds('attendance');
+    let filtered = attendance.filter(a => !deletedAttendanceIds.has(String(a.id)));
 
     if (search) {
       const q = search.toLowerCase();
@@ -697,22 +771,40 @@ export const mockService = {
     return { success: true, message: 'Presensi berhasil dicatat', data: newRecord };
   },
 
+  async deleteAttendance(id) {
+    await delay(150);
+    saveDeletedId('attendance', id);
+    attendance = attendance.filter(a => String(a.id) !== String(id));
+    saveStore('attendance', attendance);
+    return { success: true, message: 'Catatan presensi berhasil dihapus permanen' };
+  },
+
   // Dashboard Role-Aware Summary (Recalculated dynamically from live stores!)
   async getDashboardSummary(role = 'owner') {
     await delay(150);
 
-    const totalEmployees = employees.length;
-    const activeEmployees = employees.filter(e => e.status === 'active').length;
-    const totalClients = clients.length;
-    const activeSites = sites.filter(s => s.status === 'operational' || s.status === 'active').length || sites.length;
-    const totalInvoicesValue = invoices.reduce((sum, i) => sum + (Number(i.total) || 0), 0);
-    const paidInvoicesValue = invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + (Number(i.total) || 0), 0);
-    const pendingInvoicesValue = invoices.filter(i => i.status === 'pending' || i.status === 'sent' || i.status === 'unpaid').reduce((sum, i) => sum + (Number(i.total) || 0), 0);
-    const overdueInvoicesValue = invoices.filter(i => i.status === 'overdue').reduce((sum, i) => sum + (Number(i.total) || 0), 0);
-    const totalLeadsValue = leads.reduce((sum, l) => sum + (Number(l.estimatedValue) || 0), 0);
-    const activePipelineValue = leads.filter(l => l.stage !== 'menang' && l.stage !== 'kalah').reduce((sum, l) => sum + (Number(l.estimatedValue) || 0), 0);
-    const openLeadsCount = leads.filter(l => l.stage !== 'menang').length;
-    const wonLeadsCount = leads.filter(l => l.stage === 'menang').length;
+    const deletedEmpIds = getDeletedIds('employees');
+    const deletedSiteIds = getDeletedIds('sites');
+    const deletedClientIds = getDeletedIds('clients');
+    const deletedInvIds = getDeletedIds('invoices');
+    const deletedLeadIds = getDeletedIds('leads');
+    const deletedPlcIds = getDeletedIds('placements');
+
+    const liveEmployees = employees.filter(e => !deletedEmpIds.has(String(e.id)));
+    const liveSites = sites.filter(s => !deletedSiteIds.has(String(s.id)));
+    const liveClients = clients.filter(c => !deletedClientIds.has(String(c.id)));
+    const liveInvoices = invoices.filter(i => !deletedInvIds.has(String(i.id)));
+    const liveLeads = leads.filter(l => !deletedLeadIds.has(String(l.id)));
+    const livePlacements = placements.filter(p => !deletedPlcIds.has(String(p.id)));
+
+    const activeEmployees = liveEmployees.filter(e => e.status === 'active').length;
+    const activeSites = liveSites.filter(s => s.status === 'operational' || s.status === 'active').length || liveSites.length;
+    const totalInvoicesValue = liveInvoices.reduce((sum, i) => sum + (Number(i.total) || 0), 0);
+    const paidInvoicesValue = liveInvoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + (Number(i.total) || 0), 0);
+    const pendingInvoicesValue = liveInvoices.filter(i => i.status === 'pending' || i.status === 'sent' || i.status === 'unpaid').reduce((sum, i) => sum + (Number(i.total) || 0), 0);
+    const totalLeadsValue = liveLeads.reduce((sum, l) => sum + (Number(l.estimatedValue) || 0), 0);
+    const activePipelineValue = liveLeads.filter(l => l.stage !== 'menang' && l.stage !== 'kalah').reduce((sum, l) => sum + (Number(l.estimatedValue) || 0), 0);
+    const wonLeadsCount = liveLeads.filter(l => l.stage === 'menang').length;
 
     const formatRupiah = (num) => 'Rp ' + Number(num || 0).toLocaleString('id-ID');
 
@@ -723,15 +815,15 @@ export const mockService = {
         kpi: {
           totalEmployees: activeEmployees,
           activeSites: activeSites,
-          totalClients: totalClients,
-          activePlacements: placements.filter(p => p.status === 'active').length || activeEmployees,
+          totalClients: liveClients.length,
+          activePlacements: livePlacements.filter(p => p.status === 'active').length || activeEmployees,
           attendanceRate: '99.4%',
           monthlyRevenue: formatRupiah(paidInvoicesValue || totalInvoicesValue),
           pendingReceivables: formatRupiah(pendingInvoicesValue),
           totalInvoiced: formatRupiah(totalInvoicesValue),
           totalPaid: formatRupiah(paidInvoicesValue),
           totalPending: formatRupiah(pendingInvoicesValue),
-          totalLeads: leads.length,
+          totalLeads: liveLeads.length,
           dealsWon: wonLeadsCount,
           activePipelineValue: formatRupiah(activePipelineValue || totalLeadsValue),
           openIncidents: 0,
@@ -743,10 +835,10 @@ export const mockService = {
           clientCount: s.clientCount
         })),
         recentActivities: activities.slice(0, 5),
-        recentInvoices: invoices.slice(0, 4),
-        recentLeads: leads.slice(0, 4),
-        recentEmployees: employees.slice(0, 5),
-        recentSites: sites.slice(0, 5)
+        recentInvoices: liveInvoices.slice(0, 4),
+        recentLeads: liveLeads.slice(0, 4),
+        recentEmployees: liveEmployees.slice(0, 5),
+        recentSites: liveSites.slice(0, 5)
       }
     };
   },
