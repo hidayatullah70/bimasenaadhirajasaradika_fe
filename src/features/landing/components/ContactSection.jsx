@@ -246,15 +246,20 @@ export function ContactSection({ selectedService }) {
                 </div>
               </a>
 
-              {/* Jam Operasional */}
-              <div className="flex items-start gap-2.5 pt-3 border-t border-slate-100 text-xs text-slate-500 px-3">
-                <Clock className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-                <div className="leading-snug">
-                  <div>
-                    Jam Operasional: <strong className="text-slate-700">{COMPANY_INFO.operationalHoursWeekdays || 'Senin - Jumat: 08:00 - 17:00 WIB |'}</strong>
+              {/* Jam Operasional Card */}
+              <div className="p-3.5 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all duration-200 shadow-2xs">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 transition-colors shadow-2xs">
+                    <Clock className="w-5 h-5" />
                   </div>
-                  <div className="font-bold text-slate-700 mt-0.5">
-                    {COMPANY_INFO.operationalHoursSaturday || 'Sabtu: 08:00 - 12:00 WIB'}
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Jam Operasional</h4>
+                    <p className="text-xs font-bold text-slate-700 mt-0.5">
+                      {COMPANY_INFO.operationalHoursWeekdays || 'Senin - Jumat: 08:00 - 17:00 WIB |'}
+                    </p>
+                    <p className="text-xs font-bold text-slate-700 mt-0.5">
+                      {COMPANY_INFO.operationalHoursSaturday || 'Sabtu: 08:00 - 12:00 WIB'}
+                    </p>
                   </div>
                 </div>
               </div>
