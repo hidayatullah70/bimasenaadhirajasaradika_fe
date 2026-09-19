@@ -30,7 +30,7 @@ export function ContactSection({ selectedService }) {
         if (res?.success && Array.isArray(res.data)) {
           setServices(res.data);
         }
-      } catch (e) {}
+      } catch (e) { }
     }
     loadServices();
   }, []);
@@ -94,13 +94,13 @@ export function ContactSection({ selectedService }) {
   const serviceOptions = services.length > 0
     ? services.map(s => ({ value: s.name, label: `${s.name} (${s.code || ''})` }))
     : [
-        { value: 'Security & Guard Services', label: 'Security & Guard Services (SEC)' },
-        { value: 'Commercial Cleaning Service', label: 'Commercial Cleaning Service (CLN)' },
-        { value: 'Valet & Parking Management', label: 'Valet & Parking Management (VALET)' },
-        { value: 'Driver & Chauffeur Services', label: 'Driver & Chauffeur Services (DRV)' },
-        { value: 'Office Support & Administration', label: 'Office Support & Administration (ADM)' },
-        { value: 'General Labor & Warehousing', label: 'General Labor & Warehousing (WRH)' }
-      ];
+      { value: 'Security & Guard Services', label: 'Security & Guard Services (SEC)' },
+      { value: 'Commercial Cleaning Service', label: 'Commercial Cleaning Service (CLN)' },
+      { value: 'Valet & Parking Management', label: 'Valet & Parking Management (VALET)' },
+      { value: 'Driver & Chauffeur Services', label: 'Driver & Chauffeur Services (DRV)' },
+      { value: 'Office Support & Administration', label: 'Office Support & Administration (ADM)' },
+      { value: 'General Labor & Warehousing', label: 'General Labor & Warehousing (WRH)' }
+    ];
 
   const headcountOptions = [
     { value: '5-15 Personel', label: '5 – 15 Personel (Kebutuhan Ringan)' },
@@ -136,21 +136,7 @@ export function ContactSection({ selectedService }) {
                     <Phone className="w-5 h-5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Telepon & WhatsApp</h4>
-                    
-                    {/* Primary Number Link & Hover to WhatsApp / Telepon */}
-                    <div className="mt-0.5">
-                      <a
-                        href="https://wa.me/6285124799305?text=Halo%20PT.%20BARAK%2C%20saya%20tertarik%20dengan%20layanan%20Anda"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title="Telepon / Chat WhatsApp 0851 2479 9305"
-                        className="inline-flex items-center gap-1.5 text-sm font-bold text-brand-dark hover:text-brand-red transition-colors group/phone cursor-pointer"
-                      >
-                        <span className="group-hover/phone:underline">{COMPANY_INFO.phone}</span>
-                        <ArrowUpRight className="w-3.5 h-3.5 text-slate-400 group-hover/phone:text-brand-red group-hover/phone:translate-x-0.5 transition-all" />
-                      </a>
-                    </div>
+                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Telepon & WhatsApp</h4>
 
                     {/* 2 Nomor WhatsApp Terpisah: Konsultasi & Rekrutmen */}
                     <div className="space-y-1 mt-2 pt-2 border-t border-slate-100 text-xs">
@@ -177,13 +163,13 @@ export function ContactSection({ selectedService }) {
                         target="_blank"
                         rel="noopener noreferrer"
                         title="Chat WhatsApp Rekrutmen Tenaga Kerja: 0851 7433 4336"
-                        className="group/wa2 flex items-center justify-between p-1.5 -mx-1.5 rounded-lg hover:bg-red-50 text-slate-700 hover:text-brand-red transition-all cursor-pointer"
+                        className="group/wa2 flex items-center justify-between p-1.5 -mx-1.5 rounded-lg hover:bg-emerald-50 text-slate-700 hover:text-brand-red transition-all cursor-pointer"
                       >
-                        <span className="text-slate-600 group-hover/wa2:text-brand-red font-medium flex items-center gap-1.5 text-[11.5px]">
-                          <span className="w-1.5 h-1.5 rounded-full bg-slate-400 group-hover/wa2:bg-brand-red"></span>
+                        <span className="text-brand-green font-semibold flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-400 group-hover/wa2:bg-brand-green"></span>
                           WhatsApp Rekrutmen: 0851 7433 4336
                         </span>
-                        <span className="text-[11px] font-semibold text-slate-400 group-hover/wa2:text-brand-red flex items-center gap-0.5 opacity-80 group-hover/wa2:opacity-100 transition-opacity">
+                        <span className="text-[11px] font-semibold text-slate-400 group-hover/wa2:text-brand-green flex items-center gap-0.5 opacity-80 group-hover/wa2:opacity-100 transition-opacity">
                           Chat WA <ArrowUpRight className="w-3.5 h-3.5" />
                         </span>
                       </a>
@@ -205,7 +191,7 @@ export function ContactSection({ selectedService }) {
                     <Mail className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Email Resmi Bisnis</h4>
+                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Email Resmi Bisnis</h4>
                     <p className="text-sm font-bold text-brand-dark group-hover:text-brand-red transition-colors break-all">
                       {COMPANY_INFO.email}
                     </p>
@@ -231,7 +217,7 @@ export function ContactSection({ selectedService }) {
                     <MapPin className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
                       <span>Alamat Kantor Pusat</span>
                       <span className="text-[10px] font-semibold text-brand-red bg-red-50 px-1.5 py-0.5 rounded">Google Maps</span>
                     </h4>
@@ -253,11 +239,11 @@ export function ContactSection({ selectedService }) {
                     <Clock className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Jam Operasional</h4>
-                    <p className="text-xs font-bold text-slate-700 mt-0.5">
-                      {COMPANY_INFO.operationalHoursWeekdays || 'Senin - Jumat: 08:00 - 17:00 WIB |'}
+                    <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Jam Operasional</h4>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {COMPANY_INFO.operationalHoursWeekdays || 'Senin - Jumat: 08:00 - 17:00 WIB'}
                     </p>
-                    <p className="text-xs font-bold text-slate-700 mt-0.5">
+                    <p className="text-xs text-slate-500 mt-0.5">
                       {COMPANY_INFO.operationalHoursSaturday || 'Sabtu: 08:00 - 12:00 WIB'}
                     </p>
                   </div>

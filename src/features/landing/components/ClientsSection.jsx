@@ -93,28 +93,29 @@ export function ClientsSection() {
     : projects.filter((p) => p.category === activeFilter);
 
   return (
-    <section id="klien" className="py-20 sm:py-24 bg-white border-b border-slate-200 scroll-mt-20">
-      <div id="portfolio" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="klien" className="py-16 sm:py-20 bg-white border-b border-slate-200 scroll-mt-20">
+      <div id="portofolio" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-24">
+        <span id="portfolio" className="sr-only" />
         
         {/* Section Header */}
-        <div className="text-center mb-14">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-brand-dark mb-4 tracking-tight">
+        <div className="text-center mb-10">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-brand-dark mb-3 tracking-tight">
             Klien & Proyek <span className="text-brand-red">Kami</span>
           </h2>
-          <div className="w-20 h-1 bg-brand-red mx-auto mb-6 rounded-full"></div>
-          <p className="text-slate-600 max-w-3xl mx-auto text-base sm:text-lg leading-relaxed">
+          <div className="w-16 h-1 bg-brand-red mx-auto mb-4 rounded-full"></div>
+          <p className="text-slate-600 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
             Telah dipercaya oleh berbagai perusahaan ternama dalam penyediaan layanan keamanan dan jasa terintegrasi.
           </p>
         </div>
 
         {/* Filter Pills */}
-        <div className="flex flex-wrap justify-center gap-3 mb-12">
+        <div className="flex flex-wrap justify-center gap-2.5 mb-8">
           <button
             type="button"
             onClick={() => setActiveFilter('all')}
-            className={`px-5 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 ${
+            className={`px-4 py-1.5 rounded-full text-xs sm:text-[13px] font-bold transition-all duration-200 ${
               activeFilter === 'all'
-                ? 'bg-brand-red text-white shadow-md'
+                ? 'bg-brand-red text-white shadow-xs'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
@@ -123,9 +124,9 @@ export function ClientsSection() {
           <button
             type="button"
             onClick={() => setActiveFilter('industrial')}
-            className={`px-5 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 ${
+            className={`px-4 py-1.5 rounded-full text-xs sm:text-[13px] font-bold transition-all duration-200 ${
               activeFilter === 'industrial'
-                ? 'bg-brand-red text-white shadow-md'
+                ? 'bg-brand-red text-white shadow-xs'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
@@ -134,9 +135,9 @@ export function ClientsSection() {
           <button
             type="button"
             onClick={() => setActiveFilter('office')}
-            className={`px-5 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 ${
+            className={`px-4 py-1.5 rounded-full text-xs sm:text-[13px] font-bold transition-all duration-200 ${
               activeFilter === 'office'
-                ? 'bg-brand-red text-white shadow-md'
+                ? 'bg-brand-red text-white shadow-xs'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
@@ -145,48 +146,50 @@ export function ClientsSection() {
         </div>
 
         {/* Portfolio / Project Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
           {filteredProjects.map((project) => (
             <div
               key={project.id}
-              className="bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden border border-slate-200/80 hover:border-slate-300 transition-all duration-300 transform hover:-translate-y-1.5 flex flex-col justify-between group"
+              className="bg-white rounded-xl shadow-xs hover:shadow-md overflow-hidden border border-slate-200/80 hover:border-slate-300 transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between group h-full"
             >
-              <div>
+              <div className="flex flex-col flex-1">
                 {/* Project Image & Badge */}
-                <div className="h-64 overflow-hidden relative bg-slate-100">
+                <div className="h-40 sm:h-44 overflow-hidden relative bg-slate-100">
                   <img
                     src={project.image}
                     alt={project.title}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
                   />
-                  <div className="absolute top-4 right-4 z-10">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold shadow-md ${project.badgeColor}`}>
+                  <div className="absolute top-3 right-3 z-10">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold shadow-xs ${project.badgeColor}`}>
                       {project.badge}
                     </span>
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent pointer-events-none" />
                 </div>
 
                 {/* Content */}
-                <div className="p-6 sm:p-7">
-                  <h3 className="text-xl font-bold text-brand-dark mb-3 group-hover:text-brand-red transition-colors">
-                    {project.title}
-                  </h3>
-                  <p className="text-slate-600 text-sm leading-relaxed mb-6">
-                    {project.description}
-                  </p>
+                <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-base sm:text-lg font-bold text-brand-dark mb-1.5 group-hover:text-brand-red transition-colors line-clamp-1" title={project.title}>
+                      {project.title}
+                    </h3>
+                    <p className="text-slate-600 text-xs sm:text-[13px] leading-relaxed line-clamp-2 min-h-[36px] sm:min-h-[40px]" title={project.description}>
+                      {project.description}
+                    </p>
+                  </div>
                 </div>
               </div>
 
               {/* Card Meta Footer */}
-              <div className="px-6 pb-6 pt-0 sm:px-7 sm:pb-7 border-t border-slate-100 mt-2 flex items-center justify-between text-xs font-semibold text-slate-500">
+              <div className="px-4 py-2.5 sm:px-5 sm:py-3 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between text-[11px] sm:text-xs font-semibold text-slate-500">
                 <div className="flex items-center gap-1.5 text-slate-600">
-                  <Users className="w-4 h-4 text-brand-red" />
+                  <Users className="w-3.5 h-3.5 text-brand-red flex-shrink-0" />
                   <span>{project.headcount}</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-slate-600">
-                  <Calendar className="w-4 h-4 text-brand-green" />
+                  <Calendar className="w-3.5 h-3.5 text-brand-green flex-shrink-0" />
                   <span>{project.period}</span>
                 </div>
               </div>
@@ -195,21 +198,21 @@ export function ClientsSection() {
         </div>
 
         {/* Client Logos / Drop Points */}
-        <div className="mt-20 pt-16 border-t border-slate-200">
-          <h3 className="text-2xl sm:text-3xl font-extrabold text-center text-brand-dark mb-3 tracking-tight">
+        <div className="mt-14 pt-12 border-t border-slate-200">
+          <h3 className="text-xl sm:text-2xl font-extrabold text-center text-brand-dark mb-2 tracking-tight">
             Klien yang Mempercayai Kami
           </h3>
-          <div className="w-16 h-1 bg-brand-red mx-auto mb-10 rounded-full"></div>
+          <div className="w-14 h-1 bg-brand-red mx-auto mb-8 rounded-full"></div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 items-stretch">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 items-stretch">
             {clientLogos.map((client, cIdx) => (
               <div
                 key={cIdx}
-                className="bg-slate-50 hover:bg-white p-5 rounded-xl border border-slate-200/80 hover:border-brand-red/40 hover:shadow-md transition-all duration-200 flex items-center justify-center text-center min-h-[90px] group"
+                className="bg-slate-50 hover:bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200/80 hover:border-brand-red/40 hover:shadow-xs transition-all duration-200 flex items-center justify-center text-center min-h-[72px] group"
               >
                 <div className="flex items-center gap-2">
-                  <Building className="w-4 h-4 text-slate-400 group-hover:text-brand-red transition-colors flex-shrink-0" />
-                  <span className="text-xs sm:text-sm font-bold text-slate-700 group-hover:text-brand-dark transition-colors tracking-wide">
+                  <Building className="w-3.5 h-3.5 text-slate-400 group-hover:text-brand-red transition-colors flex-shrink-0" />
+                  <span className="text-xs sm:text-[13px] font-bold text-slate-700 group-hover:text-brand-dark transition-colors tracking-wide">
                     {client}
                   </span>
                 </div>

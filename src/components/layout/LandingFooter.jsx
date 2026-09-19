@@ -20,14 +20,14 @@ export function LandingFooter({ onNavigate }) {
             </div>
 
             <div className="p-3.5 bg-white/90 rounded-xl border border-slate-200 space-y-1 shadow-2xs">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-brand-green">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-green-700">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>Legalitas Resmi & Patuh Regulasi Ketenagakerjaan</span>
               </div>
-              <p className="text-[11px] text-slate-500 leading-normal">
+              <p className="text-[10px] text-slate-600 leading-normal">
                 {COMPANY_INFO.legal}
               </p>
-              <p className="text-[11px] text-slate-500 leading-normal font-medium">
+              <p className="text-[11px] text-slate-600 leading-normal font-medium">
                 {COMPANY_INFO.nib || 'NIB : 0108230077863'}
               </p>
             </div>
@@ -224,7 +224,7 @@ export function LandingFooter({ onNavigate }) {
               href="https://wa.me/6281384224733"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center font-nasalization tracking-wide text-[13px] hover:opacity-80 transition-opacity duration-200"
+              className="inline-flex items-center font-nasalization tracking-wide text-[11px] hover:opacity-80 transition-opacity duration-200"
             >
               <span className="text-slate-500 font-semibold">Bionora</span>
               <span className="text-[#00A3FF] font-semibold">Dev</span>
