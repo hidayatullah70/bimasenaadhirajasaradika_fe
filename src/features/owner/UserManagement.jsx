@@ -30,6 +30,7 @@ export function UserManagement() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
   const [newRoleId, setNewRoleId] = useState('1');
+  const [newStatus, setNewStatus] = useState(true);
   const [saving, setSaving] = useState(false);
 
   // Set of permanently deleted user IDs to prevent reappearing on screen
@@ -131,12 +132,38 @@ export function UserManagement() {
     setSelectedUser(user);
     const initialRoleId = String(user.role_id || (user.role === 'admin' ? '7' : user.role === 'it_support' ? '6' : user.role === 'direktur' ? '1' : '2'));
     setNewRoleId(initialRoleId);
+    setNewStatus(user.is_active !== 0 && user.is_active !== false);
     setIsEditModalOpen(true);
   };
 
   const handleOpenAction = (user) => {
     setSelectedUser(user);
     setIsActionModalOpen(true);
+  };
+
+  const handleApproveAndActivate = async () => {
+    if (!selectedUser) return;
+    setSaving(true);
+    try {
+      const res = await api.deleteUser(selectedUser.id, false, 'activate');
+      await api.updateUser(selectedUser.id, { is_active: 1 }).catch(() => {});
+      
+      setUsers(prev =>
+        prev.map(u =>
+          u.id === selectedUser.id
+            ? { ...u, is_active: 1 }
+            : u
+        )
+      );
+      setSelectedUser(prev => prev ? { ...prev, is_active: 1 } : null);
+      setNewStatus(true);
+      addToast(`Akun ${selectedUser.name} berhasil DI-APPROVE dan diaktifkan kembali!`, 'success');
+      setIsEditModalOpen(false);
+    } catch (err) {
+      addToast(err.message || 'Gagal menyetujui dan mengaktifkan akun', 'error');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleSaveRole = async () => {
@@ -163,9 +190,10 @@ export function UserManagement() {
         '7': 'Administrator Website'
       };
 
-      const res = await api.updateUserRole(selectedUser.id, {
+      const res = await api.updateUser(selectedUser.id, {
         role_id: parseInt(newRoleId, 10),
-        role: targetRoleCode
+        role: targetRoleCode,
+        is_active: newStatus ? 1 : 0
       });
 
       // Update user in state
@@ -178,16 +206,17 @@ export function UserManagement() {
                 role: targetRoleCode,
                 role_code: targetRoleCode,
                 roleLabel: roleLabelMap[newRoleId] || targetRoleCode,
-                role_name: roleLabelMap[newRoleId] || targetRoleCode
+                role_name: roleLabelMap[newRoleId] || targetRoleCode,
+                is_active: newStatus ? 1 : 0
               }
             : u
         )
       );
 
-      addToast(`Role untuk ${selectedUser.name} berhasil diperbarui menjadi ${roleLabelMap[newRoleId]}.`, 'success');
+      addToast(`Data pengguna ${selectedUser.name} berhasil diperbarui (Status: ${newStatus ? 'Aktif' : 'Non-Aktif'}).`, 'success');
       setIsEditModalOpen(false);
     } catch (err) {
-      addToast(err.message || 'Gagal memperbarui role', 'error');
+      addToast(err.message || 'Gagal memperbarui pengguna', 'error');
     } finally {
       setSaving(false);
     }
@@ -597,40 +626,94 @@ export function UserManagement() {
         </form>
       </Modal>
 
-      {/* Edit Role Modal */}
+      {/* Edit Role & Status Modal */}
       <Modal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        title="Ubah Otoritas Akses Pengguna"
+        title="Kelola Otoritas & Status Pengguna"
+        maxWidth="max-w-lg"
       >
         {selectedUser && (
           <div className="space-y-4">
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs flex items-center gap-3">
-              <Avatar
-                src={selectedUser.avatar || selectedUser.avatar_url}
-                name={selectedUser.name}
-                size="lg"
-                className="ring-1 ring-slate-300"
-              />
-              <div>
-                <p className="font-bold text-brand-dark">{selectedUser.name}</p>
-                <p className="text-slate-500">{selectedUser.email}</p>
+            {/* User Profile Card */}
+            <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <Avatar
+                  src={selectedUser.avatar || selectedUser.avatar_url}
+                  name={selectedUser.name}
+                  size="lg"
+                  className="ring-2 ring-slate-200"
+                />
+                <div>
+                  <p className="font-bold text-sm text-brand-dark">{selectedUser.name}</p>
+                  <p className="text-slate-500 font-mono text-[11px]">{selectedUser.email}</p>
+                </div>
               </div>
+              <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${
+                selectedUser.is_active !== 0 && selectedUser.is_active !== false
+                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  : 'bg-rose-50 text-rose-700 border-rose-200'
+              }`}>
+                {selectedUser.is_active !== 0 && selectedUser.is_active !== false ? '● Aktif' : '● Non-Aktif'}
+              </span>
             </div>
 
+            {/* Tombol Approve & Aktifkan Khusus Akun Non-Aktif */}
+            {(selectedUser.is_active === 0 || selectedUser.is_active === false) && (
+              <div className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl border-2 border-emerald-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-emerald-600 text-white rounded-xl shadow-sm mt-0.5">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm text-emerald-950">Approve & Aktifkan Akun</p>
+                    <p className="text-xs text-emerald-800 leading-relaxed">
+                      Akun saat ini berstatus <strong>Non-Aktif</strong>. Klik tombol approve di samping untuk memberikan otorisasi login dan mengaktifkan kembali akun staf ini.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-700/20 whitespace-nowrap !px-4 !py-2.5 flex items-center gap-1.5 font-bold"
+                  onClick={handleApproveAndActivate}
+                  loading={saving}
+                >
+                  <Check className="w-4 h-4 stroke-[3]" />
+                  <span>Approve & Aktifkan</span>
+                </Button>
+              </div>
+            )}
+
+            {/* Select Status Akun */}
             <Select
-              label="Pilih Otoritas Role"
+              label="Status Akses Akun (Otoritas Direktur)"
+              value={newStatus ? 'true' : 'false'}
+              onChange={(e) => setNewStatus(e.target.value === 'true')}
+              options={[
+                { value: 'true', label: 'Aktif (Diizinkan Login & Akses Modul)' },
+                { value: 'false', label: 'Non-Aktif (Akses Sistem Ditangguhkan)' }
+              ]}
+            />
+
+            {/* Select Role */}
+            <Select
+              label="Otoritas Hak Akses Role"
               value={newRoleId}
               onChange={(e) => setNewRoleId(e.target.value)}
               options={roleOptions}
             />
 
-            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 leading-relaxed">
-              <span className="font-bold">Peringatan:</span> Mengubah role akan langsung menyesuaikan hak akses modul akun yang bersangkutan di backend.
+            <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 leading-relaxed flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold">Otoritas Direktur:</span> Perubahan status maupun role akan langsung disinkronkan ke database backend secara realtime.
+              </div>
             </div>
 
             <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
-              <Button variant="outline" size="sm" onClick={() => setIsEditModalOpen(false)}>
+              <Button variant="outline" size="sm" onClick={() => setIsEditModalOpen(false)} disabled={saving}>
                 Batal
               </Button>
               <Button variant="primary" size="sm" onClick={handleSaveRole} loading={saving}>
