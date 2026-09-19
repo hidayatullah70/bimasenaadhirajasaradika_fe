@@ -3,12 +3,12 @@ import React from 'react';
 export function Badge({ children, variant = 'neutral', size = 'sm', className = '' }) {
   const variants = {
     neutral: 'bg-slate-100 text-slate-700 border-slate-200',
-    green: 'bg-emerald-50 text-emerald-700 border-emerald-200 font-semibold',
-    red: 'bg-red-50 text-brand-red border-red-200 font-semibold',
-    yellow: 'bg-amber-50 text-amber-800 border-amber-200 font-semibold',
-    blue: 'bg-blue-50 text-blue-700 border-blue-200 font-semibold',
-    purple: 'bg-purple-50 text-purple-700 border-purple-200 font-semibold',
-    dark: 'bg-brand-dark text-white border-transparent font-medium'
+    green: 'bg-emerald-50 text-emerald-700 border-emerald-200 font-bold',
+    red: 'bg-red-50 text-brand-red border-red-200 font-bold',
+    yellow: 'bg-amber-50 text-amber-800 border-amber-200 font-bold',
+    blue: 'bg-blue-50 text-blue-700 border-blue-200 font-bold',
+    purple: 'bg-purple-50 text-purple-700 border-purple-200 font-bold',
+    dark: 'bg-brand-dark text-white border-transparent font-bold'
   };
 
   const sizes = {

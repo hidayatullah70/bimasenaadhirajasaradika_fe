@@ -9,15 +9,19 @@ export function StatusBadge({ status, type = 'general' }) {
   // Roles
   if (type === 'role') {
     const roleLabels = {
-      owner: { label: 'Direktur', variant: 'dark' },
+      owner: { label: 'Direktur', variant: 'blue' },
+      direktur: { label: 'Direktur', variant: 'blue' },
+      director: { label: 'Direktur', variant: 'blue' },
+      direksi: { label: 'Direktur', variant: 'blue' },
       hrd: { label: 'HRD', variant: 'blue' },
       operasional: { label: 'Operasional', variant: 'yellow' },
       finance: { label: 'Finance', variant: 'green' },
       marketing: { label: 'Marketing', variant: 'red' },
-      it_support: { label: 'IT Support', variant: 'purple' }
+      it_support: { label: 'IT Support', variant: 'purple' },
+      'it support': { label: 'IT Support', variant: 'purple' }
     };
-    const r = roleLabels[s] || { label: status, variant: 'neutral' };
-    return <Badge variant={r.variant}>{r.label}</Badge>;
+    const r = roleLabels[s] || { label: s === 'direktur' ? 'Direktur' : status, variant: 'neutral' };
+    return <Badge variant={r.variant} className="font-bold">{r.label}</Badge>;
   }
 
   // IT Ticket Status
