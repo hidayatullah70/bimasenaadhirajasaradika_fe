@@ -10,7 +10,8 @@ const QUICK_ACCOUNTS = [
   { role: 'operasional', label: '3. Operasional Site', email: 'operasional@bimasenaadhirajasaradika.com', color: 'hover:border-amber-500' },
   { role: 'finance', label: '4. Finance & Billing', email: 'finance@bimasenaadhirajasaradika.com', color: 'hover:border-emerald-600' },
   { role: 'marketing', label: '5. Marketing / BD', email: 'marketing@bimasenaadhirajasaradika.com', color: 'hover:border-red-500' },
-  { role: 'it_support', label: '6. IT Support', email: 'itsupport@bimasenaadhirajasaradika.com', color: 'hover:border-purple-600' }
+  { role: 'it_support', label: '6. IT Support', email: 'itsupport@bimasenaadhirajasaradika.com', color: 'hover:border-purple-600' },
+  { role: 'admin', label: '7. Admin Website', email: 'admin@bimasenaadhirajasaradika.com', color: 'hover:border-slate-900' }
 ];
 
 export function LoginPage({ onNavigate, onLoginSuccess }) {
@@ -19,6 +20,10 @@ export function LoginPage({ onNavigate, onLoginSuccess }) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isResetReqModalOpen, setIsResetReqModalOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetReason, setResetReason] = useState('');
+  const [resetSuccessMsg, setResetSuccessMsg] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -130,15 +135,18 @@ export function LoginPage({ onNavigate, onLoginSuccess }) {
                 <input type="checkbox" className="rounded text-brand-red focus:ring-brand-red" defaultChecked />
                 <span>Ingat sesi saya</span>
               </label>
-              <a
-                href="https://wa.me/6285124799305?text=Halo%20Admin%20PT.%20BARAK%2C%20saya%20membutuhkan%20bantuan%20reset%20kata%20sandi%20portal%20internal"
-                target="_blank"
-                rel="noopener noreferrer"
-                title="Hubungi Admin via WhatsApp untuk reset kata sandi"
+              <button
+                type="button"
+                onClick={() => {
+                  setResetEmail(email || '');
+                  setResetReason('');
+                  setResetSuccessMsg('');
+                  setIsResetReqModalOpen(true);
+                }}
                 className="text-slate-500 hover:text-brand-red hover:underline transition-colors cursor-pointer"
               >
                 Lupa password? Hubungi Admin
-              </a>
+              </button>
             </div>
 
             <div className="pt-2">
@@ -177,6 +185,77 @@ export function LoginPage({ onNavigate, onLoginSuccess }) {
           </div>
         </div>
       </div>
+
+      {/* Modal Permohonan Reset Password ke Admin */}
+      {isResetReqModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md p-6 space-y-4 text-xs">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-bold text-brand-dark text-base">Permohonan Reset Kata Sandi</h3>
+              <button
+                onClick={() => setIsResetReqModalOpen(false)}
+                className="text-slate-400 hover:text-slate-700 font-bold text-lg cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {resetSuccessMsg ? (
+              <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-200 text-emerald-900 space-y-2">
+                <p className="font-bold text-sm">Permohonan Terkirim ke Administrator!</p>
+                <p className="leading-relaxed">{resetSuccessMsg}</p>
+                <div className="pt-2">
+                  <Button variant="primary" size="sm" className="w-full justify-center" onClick={() => setIsResetReqModalOpen(false)}>
+                    Kembali ke Halaman Login
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!resetEmail) return;
+                  setResetSuccessMsg(
+                    `Permintaan reset kata sandi untuk akun ${resetEmail} telah diteruskan ke dasbor Administrator Website. Admin akan segera memverifikasi dan memperbarui kata sandi Anda.`
+                  );
+                }}
+                className="space-y-4"
+              >
+                <p className="text-slate-600">
+                  Masukkan alamat email akun operasional Anda. Administrator akan memproses reset kata sandi melalui panel kendali admin.
+                </p>
+
+                <Input
+                  label="Alamat Email Karyawan"
+                  type="email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  placeholder="nama@bimasenaadhirajasaradika.com"
+                  required
+                />
+
+                <Input
+                  label="Alasan Permohonan Reset"
+                  type="text"
+                  value={resetReason}
+                  onChange={(e) => setResetReason(e.target.value)}
+                  placeholder="Contoh: Lupa kata sandi / ganti perangkat"
+                  required
+                />
+
+                <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                  <Button variant="outline" size="sm" type="button" onClick={() => setIsResetReqModalOpen(false)}>
+                    Batal
+                  </Button>
+                  <Button variant="primary" size="sm" type="submit" className="!bg-brand-red">
+                    Kirim Permohonan ke Admin
+                  </Button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

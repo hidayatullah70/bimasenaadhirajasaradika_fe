@@ -107,6 +107,18 @@ export function DashboardSidebar({ currentPath, onNavigate, onCloseMobile, onNav
             ]
           }
         ];
+      case 'admin':
+        return [
+          {
+            title: 'Administrator Web',
+            items: [
+              { id: 'admin-overview', label: 'Ringkasan Admin & Security', icon: LayoutDashboard },
+              { id: 'admin-users', label: 'Pengguna & Reset Password', icon: UserCog },
+              { id: 'admin-settings', label: 'Pengaturan Website & Config', icon: SlidersHorizontal },
+              { id: 'admin-seo', label: 'Laporan SEO & Algoritma Google', icon: Activity }
+            ]
+          }
+        ];
       default:
         return [];
     }
@@ -192,7 +204,8 @@ export function DashboardSidebar({ currentPath, onNavigate, onCloseMobile, onNav
               { id: 'operasional', label: 'Operasional' },
               { id: 'finance', label: 'Finance' },
               { id: 'marketing', label: 'Marketing' },
-              { id: 'it_support', label: 'IT Support' }
+              { id: 'it_support', label: 'IT Support' },
+              { id: 'admin', label: 'Admin Web' }
             ].map((r) => (
               <button
                 key={r.id}

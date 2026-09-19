@@ -18,7 +18,9 @@ export function StatusBadge({ status, type = 'general' }) {
       finance: { label: 'Finance', variant: 'green' },
       marketing: { label: 'Marketing', variant: 'red' },
       it_support: { label: 'IT Support', variant: 'purple' },
-      'it support': { label: 'IT Support', variant: 'purple' }
+      'it support': { label: 'IT Support', variant: 'purple' },
+      admin: { label: 'Administrator', variant: 'dark' },
+      superadmin: { label: 'Administrator', variant: 'dark' }
     };
     const r = roleLabels[s] || { label: s === 'direktur' ? 'Direktur' : status, variant: 'neutral' };
     return <Badge variant={r.variant} className="font-bold">{r.label}</Badge>;

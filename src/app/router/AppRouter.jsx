@@ -33,28 +33,27 @@ import { ItOverview } from '../../features/it/ItOverview';
 import { ItAssetManagement } from '../../features/it/ItAssetManagement';
 import { ItHelpdeskManagement } from '../../features/it/ItHelpdeskManagement';
 
+// Admin views
+import { AdminOverview } from '../../features/admin/AdminOverview';
+import { AdminUserManagement } from '../../features/admin/AdminUserManagement';
+import { AdminWebsiteSettings } from '../../features/admin/AdminWebsiteSettings';
+import { AdminSeoReporting } from '../../features/admin/AdminSeoReporting';
+
 import { ShieldAlert, ArrowLeft } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 
 export function AppRouter() {
   const { user, role, isAuthenticated } = useAuth();
-  const [currentPage, setCurrentPage] = useState('landing'); // 'landing', 'login', 'dashboard'
-  const [currentDashboardPath, setCurrentDashboardPath] = useState('');
+  const [currentPage, setCurrentPage] = useState('landing');
+  const [currentDashboardPath, setCurrentDashboardPath] = useState('owner-overview');
 
-  // Synchronize initial dashboard view when role is established
   useEffect(() => {
-    if (role && !currentDashboardPath) {
-      setCurrentDashboardPath(`${role}-overview`);
-    }
-  }, [role, currentDashboardPath]);
-
-  // When user logs in or switches role, adjust default view
-  useEffect(() => {
-    if (role) {
-      const initialPath = (role === 'direktur' || role === 'owner') ? 'owner-overview' : `${role}-overview`;
+    if (isAuthenticated) {
+      setCurrentPage('dashboard');
+      const initialPath = (role === 'direktur' || role === 'owner') ? 'owner-overview' : role === 'admin' ? 'admin-overview' : `${role}-overview`;
       setCurrentDashboardPath(initialPath);
     }
-  }, [role]);
+  }, [isAuthenticated, role]);
 
   // auto-redirect to login when unauthenticated on dashboard
   useEffect(() => {
@@ -151,15 +150,25 @@ export function AppRouter() {
 
     // 6. IT Support Views (Direktur memiliki hak supervisi eksekutif)
     if (currentDashboardPath.startsWith('it')) {
-      if (role !== 'it_support' && !isDirekturOrOwner) return <UnauthorizedState onBack={() => setCurrentDashboardPath(`${role}-overview`)} />;
+      if (role !== 'it_support' && !isDirekturOrOwner && role !== 'admin') return <UnauthorizedState onBack={() => setCurrentDashboardPath(`${role}-overview`)} />;
       if (currentDashboardPath === 'it-overview') return <ItOverview onNavigate={setCurrentDashboardPath} />;
       if (currentDashboardPath === 'it-assets') return <ItAssetManagement />;
       if (currentDashboardPath === 'it-helpdesk') return <ItHelpdeskManagement />;
       return <ItOverview onNavigate={setCurrentDashboardPath} />;
     }
 
+    // 7. Admin / Superadmin Views
+    if (currentDashboardPath.startsWith('admin')) {
+      if (role !== 'admin' && !isDirekturOrOwner) return <UnauthorizedState onBack={() => setCurrentDashboardPath(`${role}-overview`)} />;
+      if (currentDashboardPath === 'admin-overview') return <AdminOverview onNavigate={setCurrentDashboardPath} />;
+      if (currentDashboardPath === 'admin-users') return <AdminUserManagement onNavigate={setCurrentDashboardPath} />;
+      if (currentDashboardPath === 'admin-settings') return <AdminWebsiteSettings />;
+      if (currentDashboardPath === 'admin-seo') return <AdminSeoReporting />;
+      return <AdminOverview onNavigate={setCurrentDashboardPath} />;
+    }
+
     // Default Fallback
-    return <OwnerOverview onNavigate={setCurrentDashboardPath} />;
+    return role === 'admin' ? <AdminOverview onNavigate={setCurrentDashboardPath} /> : <OwnerOverview onNavigate={setCurrentDashboardPath} />;
   };
 
   return (

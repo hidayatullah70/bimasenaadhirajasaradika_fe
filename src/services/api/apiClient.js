@@ -89,6 +89,32 @@ export const api = {
           }
         };
       }
+      if (
+        (email === 'admin@bimasenaadhirajasaradika.com' || email === 'superadmin@bimasenaadhirajasaradika.com') &&
+        (credentials?.password === 'password123' || credentials?.password === 'password')
+      ) {
+        const mockUser = {
+          id: 7,
+          name: 'Administrator Website',
+          email: 'admin@bimasenaadhirajasaradika.com',
+          avatar: '/assets/img/team/person-3.jpeg',
+          avatar_url: '/assets/img/team/person-3.jpeg',
+          role: 'admin',
+          role_code: 'admin',
+          roleName: 'Administrator & Web Manager'
+        };
+        const mockToken = 'mock-jwt-token-admin';
+        localStorage.setItem('barak_auth_token', mockToken);
+        localStorage.setItem('barak_user_role', 'admin');
+        return {
+          success: true,
+          message: 'Login Administrator berhasil.',
+          data: {
+            token: mockToken,
+            user: mockUser
+          }
+        };
+      }
       throw err;
     }
   },
@@ -107,6 +133,21 @@ export const api = {
           role: 'it_support',
           role_code: 'it_support',
           roleName: 'IT Support & Infrastruktur'
+        }
+      };
+    }
+    if (token === 'mock-jwt-token-admin') {
+      return {
+        success: true,
+        data: {
+          id: 7,
+          name: 'Administrator Website',
+          email: 'admin@bimasenaadhirajasaradika.com',
+          avatar: '/assets/img/team/person-3.jpeg',
+          avatar_url: '/assets/img/team/person-3.jpeg',
+          role: 'admin',
+          role_code: 'admin',
+          roleName: 'Administrator & Web Manager'
         }
       };
     }
