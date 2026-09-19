@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, Lock, Mail, ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react';
+import { Lock, Mail, ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useAuth } from '../../app/context/AuthContext';
@@ -86,10 +86,12 @@ export function LoginPage({ onNavigate, onLoginSuccess }) {
       </div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
-        <div className="flex justify-center mb-3">
-          <div className="w-12 h-12 rounded-2xl bg-brand-red flex items-center justify-center text-white shadow-lg shadow-red-900/20">
-            <Shield className="w-7 h-7 text-brand-yellow fill-brand-yellow/20" />
-          </div>
+        <div className="flex justify-center mb-4">
+          <img
+            src="/logoBarakAjaTrans.png"
+            alt="PT. Bhimasena Adhirajasa Radhika"
+            className="h-16 sm:h-20 w-auto object-contain drop-shadow-md hover:scale-105 transition-transform duration-200"
+          />
         </div>
         <h2 className="text-center text-2xl sm:text-3xl font-extrabold text-brand-dark tracking-tight">
           Portal Internal Operasional
