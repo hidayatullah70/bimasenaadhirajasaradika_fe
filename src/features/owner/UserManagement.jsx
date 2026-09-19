@@ -21,6 +21,43 @@ const TEAM_AVATARS = [
   { label: 'Admin', path: '/assets/img/team/jusHidy3.png' }
 ];
 
+const getStoredDeletedIds = () => {
+  try {
+    const raw = localStorage.getItem('barak_deleted_user_ids');
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch (e) {
+    return new Set();
+  }
+};
+
+const getStoredDeletedEmails = () => {
+  try {
+    const raw = localStorage.getItem('barak_deleted_user_emails');
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch (e) {
+    return new Set();
+  }
+};
+
+const saveDeletedUser = (id, email) => {
+  try {
+    const ids = getStoredDeletedIds();
+    const emails = getStoredDeletedEmails();
+    if (id) ids.add(String(id));
+    if (email) emails.add(email.trim().toLowerCase());
+    localStorage.setItem('barak_deleted_user_ids', JSON.stringify([...ids]));
+    localStorage.setItem('barak_deleted_user_emails', JSON.stringify([...emails]));
+  } catch (e) {}
+};
+
+const unmarkDeletedUser = (email) => {
+  try {
+    const emails = getStoredDeletedEmails();
+    emails.delete(email.trim().toLowerCase());
+    localStorage.setItem('barak_deleted_user_emails', JSON.stringify([...emails]));
+  } catch (e) {}
+};
+
 export function UserManagement() {
   const { addToast } = useToast();
   const [users, setUsers] = useState([]);
@@ -61,10 +98,19 @@ export function UserManagement() {
     setLoading(true);
     try {
       const res = await api.getUsers();
+      const deletedIds = getStoredDeletedIds();
+      const deletedEmails = getStoredDeletedEmails();
+
       if (res.success && Array.isArray(res.data)) {
-        // Filter out any permanently deleted IDs, thab70, and map Hidayatullah and Gheril
+        // Filter out any permanently deleted IDs, emails, thab70, and map Hidayatullah and Gheril
         const cleanList = res.data
-          .filter(u => !deletedUserIdsRef.current.has(u.id) && u.email !== 'hidayatullah.thab70@gmail.com' && !u.email?.includes('thab70'))
+          .filter(u => 
+            !deletedUserIdsRef.current.has(u.id) &&
+            !deletedIds.has(String(u.id)) &&
+            !deletedEmails.has(u.email?.trim().toLowerCase()) &&
+            u.email !== 'hidayatullah.thab70@gmail.com' &&
+            !u.email?.includes('thab70')
+          )
           .map(u => {
             if (u.email === 'hidayatullah.ofc@gmail.com' || (u.name?.toLowerCase().includes('hidayatullah') && u.role === 'admin')) {
               return {
@@ -263,6 +309,7 @@ export function UserManagement() {
 
       const res = await api.createUser(payload);
       if (res.success) {
+        unmarkDeletedUser(payload.email);
         addToast(`Pengguna baru ${payload.name} berhasil ditambahkan!`, 'success');
         setIsCreateModalOpen(false);
         setFormData({
@@ -314,14 +361,16 @@ export function UserManagement() {
   const handlePermanentDelete = async () => {
     if (!selectedUser) return;
     const targetId = selectedUser.id;
+    const targetEmail = selectedUser.email;
     const targetName = selectedUser.name;
     setSaving(true);
     try {
-      // Catat di ref agar tidak muncul lagi pada sesi ini
+      // Simpan di persistent localStorage & ref
       deletedUserIdsRef.current.add(targetId);
+      saveDeletedUser(targetId, targetEmail);
       
       // Hapus langsung dari tampilan layar
-      setUsers(prev => prev.filter(u => u.id !== targetId));
+      setUsers(prev => prev.filter(u => u.id !== targetId && u.email !== targetEmail));
       setIsActionModalOpen(false);
       setSelectedUser(null);
 

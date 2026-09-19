@@ -75,7 +75,20 @@ export function AdminUserManagement() {
     try {
       const res = await api.getUsers();
       if (res?.success && Array.isArray(res.data)) {
-        const cleanList = res.data.filter(u => u.email !== 'hidayatullah.thab70@gmail.com' && !u.email?.includes('thab70'));
+        let deletedIds = new Set();
+        let deletedEmails = new Set();
+        try {
+          const rawIds = localStorage.getItem('barak_deleted_user_ids');
+          if (rawIds) deletedIds = new Set(JSON.parse(rawIds));
+          const rawEmails = localStorage.getItem('barak_deleted_user_emails');
+          if (rawEmails) deletedEmails = new Set(JSON.parse(rawEmails));
+        } catch (e) {}
+        const cleanList = res.data.filter(u => 
+          !deletedIds.has(String(u.id)) &&
+          !deletedEmails.has(u.email?.trim().toLowerCase()) &&
+          u.email !== 'hidayatullah.thab70@gmail.com' && 
+          !u.email?.includes('thab70')
+        );
         setUsers(cleanList);
       }
     } catch (err) {
