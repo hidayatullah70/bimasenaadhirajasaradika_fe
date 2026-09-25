@@ -1,0 +1,407 @@
+/**
+ * Mock users for development/testing.
+ * ONE user per role. Credentials are dev-only placeholders.
+ * NEVER use these in production. Remove before production deployment.
+ * Source of Truth: PRD Section 6 (8 roles).
+ */
+
+import { ROLES } from '@/constants/roles';
+import { PERMISSIONS } from '@/constants/permissions';
+
+/** Permission sets per role derived from Matriks Otorisasi & Hak Akses (Permission Matrix) */
+const ROLE_PERMISSIONS = {
+  [ROLES.DIREKTUR]: [
+    PERMISSIONS.EMPLOYEE_VIEW,
+    PERMISSIONS.EMPLOYEE_VIEW_SENSITIVE,
+    PERMISSIONS.EMPLOYEE_CREATE,
+    PERMISSIONS.EMPLOYEE_EDIT,
+    PERMISSIONS.EMPLOYEE_DELETE,
+    PERMISSIONS.EMPLOYEE_EXPORT,
+    PERMISSIONS.ATTENDANCE_VIEW,
+    PERMISSIONS.ATTENDANCE_EDIT,
+    PERMISSIONS.ATTENDANCE_FINALIZE,
+    PERMISSIONS.ATTENDANCE_REOPEN,
+    PERMISSIONS.ATTENDANCE_EXPORT,
+    PERMISSIONS.CLIENT_VIEW,
+    PERMISSIONS.CLIENT_CREATE,
+    PERMISSIONS.CLIENT_EDIT,
+    PERMISSIONS.CLIENT_EXPORT,
+    PERMISSIONS.LOCATION_VIEW,
+    PERMISSIONS.LOCATION_CREATE,
+    PERMISSIONS.LOCATION_EDIT,
+    PERMISSIONS.SHIFT_VIEW,
+    PERMISSIONS.SHIFT_CREATE,
+    PERMISSIONS.SHIFT_EDIT,
+    PERMISSIONS.OPERATIONS_VIEW,
+    PERMISSIONS.ASSIGNMENT_VIEW,
+    PERMISSIONS.ASSIGNMENT_CREATE,
+    PERMISSIONS.ASSIGNMENT_EDIT,
+    PERMISSIONS.INCIDENT_VIEW,
+    PERMISSIONS.INCIDENT_CREATE,
+    PERMISSIONS.INCIDENT_ESCALATE,
+    PERMISSIONS.INVOICE_VIEW,
+    PERMISSIONS.INVOICE_CREATE,
+    PERMISSIONS.INVOICE_EDIT,
+    PERMISSIONS.PAYMENT_VIEW,
+    PERMISSIONS.PAYMENT_CREATE,
+    PERMISSIONS.PAYROLL_VIEW,
+    PERMISSIONS.PAYROLL_CREATE,
+    PERMISSIONS.PAYROLL_APPROVE,
+    PERMISSIONS.COD_VIEW,
+    PERMISSIONS.COD_COLLECT,
+    PERMISSIONS.COD_ESCALATE,
+    PERMISSIONS.COD_SETTLE,
+    PERMISSIONS.COD_RECONCILE,
+    PERMISSIONS.LEGAL_CASE_VIEW,
+    PERMISSIONS.LEGAL_CASE_CREATE,
+    PERMISSIONS.LEGAL_CASE_EDIT,
+    PERMISSIONS.LEGAL_CASE_APPROVE,
+    PERMISSIONS.LEGAL_CASE_CLOSE,
+    PERMISSIONS.LEGAL_DOCUMENT_VIEW,
+    PERMISSIONS.LEGAL_DOCUMENT_UPLOAD,
+    PERMISSIONS.COMPLIANCE_VIEW,
+    PERMISSIONS.COMPLIANCE_EDIT,
+    PERMISSIONS.LEAD_VIEW,
+    PERMISSIONS.LEAD_CREATE,
+    PERMISSIONS.LEAD_EDIT,
+    PERMISSIONS.OPPORTUNITY_VIEW,
+    PERMISSIONS.OPPORTUNITY_CREATE,
+    PERMISSIONS.OPPORTUNITY_EDIT,
+    PERMISSIONS.OPPORTUNITY_WIN,
+    PERMISSIONS.OPPORTUNITY_LOSS,
+    PERMISSIONS.IT_TICKET_VIEW,
+    PERMISSIONS.IT_TICKET_CREATE,
+    PERMISSIONS.IT_TICKET_ASSIGN,
+    PERMISSIONS.IT_TICKET_RESOLVE,
+    PERMISSIONS.IT_ASSET_VIEW,
+    PERMISSIONS.IT_ASSET_MANAGE,
+    PERMISSIONS.CMS_VIEW,
+    PERMISSIONS.CMS_EDIT,
+    PERMISSIONS.CMS_PUBLISH,
+    PERMISSIONS.WEBSITE_LEAD_VIEW,
+    PERMISSIONS.USER_VIEW,
+    PERMISSIONS.USER_MANAGE,
+    PERMISSIONS.AUDIT_LOG_VIEW,
+    PERMISSIONS.NOTIFICATION_VIEW,
+    PERMISSIONS.SEARCH_GLOBAL,
+    PERMISSIONS.APPROVAL_VIEW,
+    PERMISSIONS.APPROVAL_ACT,
+    PERMISSIONS.REPORT_VIEW,
+    PERMISSIONS.REPORT_EXPORT,
+    PERMISSIONS.DIRECTOR_DASHBOARD,
+    PERMISSIONS.DIRECTOR_APPROVAL,
+    PERMISSIONS.EXECUTIVE_REPORT,
+  ],
+  [ROLES.HRD]: [
+    // Tenaga Kerja (R/W)
+    PERMISSIONS.EMPLOYEE_VIEW,
+    PERMISSIONS.EMPLOYEE_VIEW_SENSITIVE,
+    PERMISSIONS.EMPLOYEE_CREATE,
+    PERMISSIONS.EMPLOYEE_EDIT,
+    PERMISSIONS.EMPLOYEE_DELETE,
+    PERMISSIONS.EMPLOYEE_EXPORT,
+    // Kehadiran (R/W)
+    PERMISSIONS.ATTENDANCE_VIEW,
+    PERMISSIONS.ATTENDANCE_EDIT,
+    PERMISSIONS.ATTENDANCE_FINALIZE,
+    PERMISSIONS.ATTENDANCE_EXPORT,
+    // Penempatan & Pos Site (R/W)
+    PERMISSIONS.LOCATION_VIEW,
+    PERMISSIONS.SHIFT_VIEW,
+    PERMISSIONS.ASSIGNMENT_VIEW,
+    PERMISSIONS.ASSIGNMENT_CREATE,
+    PERMISSIONS.ASSIGNMENT_EDIT,
+    // Insiden (R)
+    PERMISSIONS.INCIDENT_VIEW,
+    // Payroll (R)
+    PERMISSIONS.PAYROLL_VIEW,
+    // Kasus Hukum & Kontrak (R)
+    PERMISSIONS.LEGAL_DOCUMENT_VIEW,
+    // Executive Dashboard / Reporting (R)
+    PERMISSIONS.REPORT_VIEW,
+    // Audit Activity (R)
+    PERMISSIONS.AUDIT_LOG_VIEW,
+    PERMISSIONS.NOTIFICATION_VIEW,
+    PERMISSIONS.SEARCH_GLOBAL,
+  ],
+  [ROLES.LEGAL]: [
+    // Kasus Hukum & Kontrak Mitra (R/W)
+    PERMISSIONS.LEGAL_CASE_VIEW,
+    PERMISSIONS.LEGAL_CASE_CREATE,
+    PERMISSIONS.LEGAL_CASE_EDIT,
+    PERMISSIONS.LEGAL_CASE_CLOSE,
+    PERMISSIONS.LEGAL_DOCUMENT_VIEW,
+    PERMISSIONS.LEGAL_DOCUMENT_UPLOAD,
+    PERMISSIONS.COMPLIANCE_VIEW,
+    PERMISSIONS.COMPLIANCE_EDIT,
+    // Rekonsiliasi Kas COD (R/W)
+    PERMISSIONS.COD_VIEW,
+    PERMISSIONS.COD_ESCALATE,
+    PERMISSIONS.COD_SETTLE,
+    // Tenaga Kerja (R)
+    PERMISSIONS.EMPLOYEE_VIEW,
+    // Kehadiran (R)
+    PERMISSIONS.ATTENDANCE_VIEW,
+    // Penempatan & Pos (R)
+    PERMISSIONS.CLIENT_VIEW,
+    PERMISSIONS.LOCATION_VIEW,
+    PERMISSIONS.ASSIGNMENT_VIEW,
+    // Insiden (R)
+    PERMISSIONS.INCIDENT_VIEW,
+    // Faktur & Piutang (R)
+    PERMISSIONS.INVOICE_VIEW,
+    // Payroll (R)
+    PERMISSIONS.PAYROLL_VIEW,
+    // Audit Activity (R)
+    PERMISSIONS.AUDIT_LOG_VIEW,
+    // Executive Dashboard / Reporting (R)
+    PERMISSIONS.REPORT_VIEW,
+    PERMISSIONS.NOTIFICATION_VIEW,
+    PERMISSIONS.SEARCH_GLOBAL,
+  ],
+  [ROLES.OPERASIONAL]: [
+    // Tenaga Kerja (R/W)
+    PERMISSIONS.EMPLOYEE_VIEW,
+    PERMISSIONS.EMPLOYEE_CREATE,
+    PERMISSIONS.EMPLOYEE_EDIT,
+    PERMISSIONS.EMPLOYEE_EXPORT,
+    // Kehadiran (R/W)
+    PERMISSIONS.ATTENDANCE_VIEW,
+    PERMISSIONS.ATTENDANCE_EDIT,
+    PERMISSIONS.ATTENDANCE_EXPORT,
+    // Penempatan & Pos Site (R/W)
+    PERMISSIONS.CLIENT_VIEW,
+    PERMISSIONS.CLIENT_CREATE,
+    PERMISSIONS.CLIENT_EDIT,
+    PERMISSIONS.LOCATION_VIEW,
+    PERMISSIONS.LOCATION_CREATE,
+    PERMISSIONS.LOCATION_EDIT,
+    PERMISSIONS.SHIFT_VIEW,
+    PERMISSIONS.SHIFT_CREATE,
+    PERMISSIONS.SHIFT_EDIT,
+    PERMISSIONS.ASSIGNMENT_VIEW,
+    PERMISSIONS.ASSIGNMENT_CREATE,
+    PERMISSIONS.ASSIGNMENT_EDIT,
+    // Insiden Lapangan & Relief Guard (R/W)
+    PERMISSIONS.OPERATIONS_VIEW,
+    PERMISSIONS.OPERATIONS_CREATE,
+    PERMISSIONS.OPERATIONS_EDIT,
+    PERMISSIONS.INCIDENT_VIEW,
+    PERMISSIONS.INCIDENT_CREATE,
+    PERMISSIONS.INCIDENT_ESCALATE,
+    // Rekonsiliasi Kas COD (R)
+    PERMISSIONS.COD_VIEW,
+    // Audit Activity (R)
+    PERMISSIONS.AUDIT_LOG_VIEW,
+    // Executive Dashboard / Reporting (R)
+    PERMISSIONS.REPORT_VIEW,
+    PERMISSIONS.NOTIFICATION_VIEW,
+    PERMISSIONS.SEARCH_GLOBAL,
+  ],
+  [ROLES.FINANCE]: [
+    // Faktur & Piutang (R/W)
+    PERMISSIONS.INVOICE_VIEW,
+    PERMISSIONS.INVOICE_CREATE,
+    PERMISSIONS.INVOICE_EDIT,
+    PERMISSIONS.PAYMENT_VIEW,
+    PERMISSIONS.PAYMENT_CREATE,
+    // Payroll Ketenagakerjaan (R/W)
+    PERMISSIONS.PAYROLL_VIEW,
+    PERMISSIONS.PAYROLL_CREATE,
+    PERMISSIONS.PAYROLL_APPROVE,
+    // Rekonsiliasi Kas COD Kurir (R/W)
+    PERMISSIONS.COD_VIEW,
+    PERMISSIONS.COD_COLLECT,
+    PERMISSIONS.COD_RECONCILE,
+    PERMISSIONS.COD_SETTLE,
+    PERMISSIONS.COD_ESCALATE,
+    // Tenaga Kerja (R)
+    PERMISSIONS.EMPLOYEE_VIEW,
+    // Kehadiran (R)
+    PERMISSIONS.ATTENDANCE_VIEW,
+    // Penempatan & Pos (R)
+    PERMISSIONS.CLIENT_VIEW,
+    PERMISSIONS.LOCATION_VIEW,
+    PERMISSIONS.ASSIGNMENT_VIEW,
+    // Kasus Hukum & Kontrak (R)
+    PERMISSIONS.LEGAL_CASE_VIEW,
+    PERMISSIONS.LEGAL_DOCUMENT_VIEW,
+    // Audit Activity (R)
+    PERMISSIONS.AUDIT_LOG_VIEW,
+    // Executive Dashboard / Reporting (R)
+    PERMISSIONS.REPORT_VIEW,
+    PERMISSIONS.REPORT_EXPORT,
+    PERMISSIONS.NOTIFICATION_VIEW,
+    PERMISSIONS.SEARCH_GLOBAL,
+  ],
+  [ROLES.MARKETING]: [
+    // Prospek & CRM Pipeline (R/W)
+    PERMISSIONS.LEAD_VIEW,
+    PERMISSIONS.LEAD_CREATE,
+    PERMISSIONS.LEAD_EDIT,
+    PERMISSIONS.OPPORTUNITY_VIEW,
+    PERMISSIONS.OPPORTUNITY_CREATE,
+    PERMISSIONS.OPPORTUNITY_EDIT,
+    PERMISSIONS.OPPORTUNITY_WIN,
+    PERMISSIONS.OPPORTUNITY_LOSS,
+    PERMISSIONS.CLIENT_CREATE,
+    PERMISSIONS.WEBSITE_LEAD_VIEW,
+    // Tenaga Kerja (R)
+    PERMISSIONS.EMPLOYEE_VIEW,
+    // Kehadiran (R)
+    PERMISSIONS.ATTENDANCE_VIEW,
+    // Penempatan & Pos (R)
+    PERMISSIONS.CLIENT_VIEW,
+    PERMISSIONS.LOCATION_VIEW,
+    PERMISSIONS.ASSIGNMENT_VIEW,
+    // Faktur & Piutang (R)
+    PERMISSIONS.INVOICE_VIEW,
+    // Audit Activity (R)
+    PERMISSIONS.AUDIT_LOG_VIEW,
+    // Executive Dashboard / Reporting (R)
+    PERMISSIONS.REPORT_VIEW,
+    PERMISSIONS.NOTIFICATION_VIEW,
+    PERMISSIONS.SEARCH_GLOBAL,
+  ],
+  [ROLES.IT_SUPPORT]: [
+    // Aset IT & Tiket Helpdesk (R/W)
+    PERMISSIONS.IT_TICKET_VIEW,
+    PERMISSIONS.IT_TICKET_CREATE,
+    PERMISSIONS.IT_TICKET_ASSIGN,
+    PERMISSIONS.IT_TICKET_RESOLVE,
+    PERMISSIONS.IT_ASSET_VIEW,
+    PERMISSIONS.IT_ASSET_MANAGE,
+    // Manajemen Pengguna & Staf (R)
+    PERMISSIONS.USER_VIEW,
+    // Tenaga Kerja (R)
+    PERMISSIONS.EMPLOYEE_VIEW,
+    // Kehadiran (R)
+    PERMISSIONS.ATTENDANCE_VIEW,
+    // Penempatan & Pos (R)
+    PERMISSIONS.CLIENT_VIEW,
+    PERMISSIONS.LOCATION_VIEW,
+    PERMISSIONS.ASSIGNMENT_VIEW,
+    // Audit Activity (R)
+    PERMISSIONS.AUDIT_LOG_VIEW,
+    // Executive Dashboard / Reporting (R)
+    PERMISSIONS.REPORT_VIEW,
+    PERMISSIONS.NOTIFICATION_VIEW,
+    PERMISSIONS.SEARCH_GLOBAL,
+  ],
+  [ROLES.ADMIN_WEBSITE]: [
+    // CMS Website & SEO Management (R/W)
+    PERMISSIONS.CMS_VIEW,
+    PERMISSIONS.CMS_EDIT,
+    PERMISSIONS.CMS_PUBLISH,
+    PERMISSIONS.WEBSITE_LEAD_VIEW,
+    // Manajemen Pengguna & Staf (R/W)
+    PERMISSIONS.USER_VIEW,
+    PERMISSIONS.USER_MANAGE,
+    // Tenaga Kerja (R)
+    PERMISSIONS.EMPLOYEE_VIEW,
+    // Audit Activity (R)
+    PERMISSIONS.AUDIT_LOG_VIEW,
+    // Executive Dashboard / Reporting (R)
+    PERMISSIONS.REPORT_VIEW,
+    PERMISSIONS.NOTIFICATION_VIEW,
+    PERMISSIONS.SEARCH_GLOBAL,
+  ],
+};
+
+/**
+ * Mock user accounts — development only.
+ * Passwords are fictional placeholders; backend must hash and verify in production.
+ */
+export const MOCK_USERS = Object.freeze([
+  {
+    id: 'usr-001',
+    username: 'direktur',
+    // DEV-ONLY placeholder — no real credential
+    password: 'dev_direktur_2026',
+    name: 'Juli Priyanto',
+    email: 'direktur@bimasenaadhirajasaradika.com',
+    role: ROLES.DIREKTUR,
+    permissions: ROLE_PERMISSIONS[ROLES.DIREKTUR],
+    avatar: null,
+    department: 'Direksi',
+  },
+  {
+    id: 'usr-002',
+    username: 'hrd',
+    password: 'dev_hrd_2026',
+    name: 'Zaenal Arifin',
+    email: 'hrd@bimasenaadhirajasaradika.com',
+    role: ROLES.HRD,
+    permissions: ROLE_PERMISSIONS[ROLES.HRD],
+    avatar: null,
+    department: 'Human Resources',
+  },
+  {
+    id: 'usr-003',
+    username: 'legal',
+    password: 'dev_legal_2026',
+    name: 'Robyn Topani, SH',
+    email: 'legal@bimasenaadhirajasaradika.com',
+    role: ROLES.LEGAL,
+    permissions: ROLE_PERMISSIONS[ROLES.LEGAL],
+    avatar: null,
+    department: 'Legal',
+  },
+  {
+    id: 'usr-004',
+    username: 'operasional',
+    password: 'dev_ops_2026',
+    name: 'Nazi Rinaldi',
+    email: 'operasional@bimasenaadhirajasaradika.com',
+    role: ROLES.OPERASIONAL,
+    permissions: ROLE_PERMISSIONS[ROLES.OPERASIONAL],
+    avatar: null,
+    department: 'Operasional',
+  },
+  {
+    id: 'usr-005',
+    username: 'finance',
+    password: 'dev_finance_2026',
+    name: 'Nazi Rinaldi',
+    email: 'finance@bimasenaadhirajasaradika.com',
+    role: ROLES.FINANCE,
+    permissions: ROLE_PERMISSIONS[ROLES.FINANCE],
+    avatar: null,
+    department: 'Finance',
+  },
+  {
+    id: 'usr-006',
+    username: 'marketing',
+    password: 'dev_marketing_2026',
+    name: 'Hendri Nopamin',
+    email: 'marketing@bimasenaadhirajasaradika.com',
+    role: ROLES.MARKETING,
+    permissions: ROLE_PERMISSIONS[ROLES.MARKETING],
+    avatar: null,
+    department: 'Marketing',
+  },
+  {
+    id: 'usr-007',
+    username: 'itsupport',
+    password: 'dev_it_2026',
+    name: 'Gheril Ramaditya S.',
+    email: 'itsupport@bimasenaadhirajasaradika.com',
+    role: ROLES.IT_SUPPORT,
+    permissions: ROLE_PERMISSIONS[ROLES.IT_SUPPORT],
+    avatar: null,
+    department: 'IT Support',
+  },
+  {
+    id: 'usr-008',
+    username: 'adminweb',
+    password: 'dev_web_2026',
+    name: 'Hidayatullah',
+    email: 'adminweb@bimasenaadhirajasaradika.com',
+    role: ROLES.ADMIN_WEBSITE,
+    permissions: ROLE_PERMISSIONS[ROLES.ADMIN_WEBSITE],
+    avatar: null,
+    department: 'Admin Website',
+  },
+]);
+
+export { ROLE_PERMISSIONS };
