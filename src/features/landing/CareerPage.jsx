@@ -7,13 +7,15 @@ import React, { useState, useEffect } from 'react';
 import { Briefcase, MapPin, Users, Calendar, CheckCircle2, ArrowRight } from 'lucide-react';
 import PublicNavbar from './PublicNavbar';
 import PublicFooter from './PublicFooter';
+import JobApplicationModal from './JobApplicationModal';
 import { cmsAdapter } from '@/services/adapters/cmsAdapter';
 import { StateLoading } from '@/components/ui/StateViews';
-import toast from 'react-hot-toast';
 
 export default function CareerPage() {
   const [careers, setCareers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
 
   useEffect(() => {
     async function loadCareers() {
@@ -28,9 +30,8 @@ export default function CareerPage() {
   }, []);
 
   const handleApply = (job) => {
-    toast.success(`Silakan kirimkan berkas CV & KTA Anda ke email: hrd@barak.co.id dengan subjek: LAMARAN - ${job.title}`, {
-      duration: 6000,
-    });
+    setSelectedJob(job);
+    setIsApplyModalOpen(true);
   };
 
   return (
@@ -154,6 +155,14 @@ export default function CareerPage() {
         </section>
       </main>
       <PublicFooter />
+
+      {/* Modal Formulir Lamaran Kerja */}
+      <JobApplicationModal
+        isOpen={isApplyModalOpen}
+        onClose={() => setIsApplyModalOpen(false)}
+        job={selectedJob}
+      />
     </div>
   );
 }
+

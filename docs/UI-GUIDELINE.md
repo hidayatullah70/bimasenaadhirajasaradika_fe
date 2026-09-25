@@ -132,3 +132,14 @@ Reuse and elevate the project baseline at https://bimasenaadhirajasaradika.verce
   - **3D Aesthetic**: Multi-stop primary red gradient (`#EF4444` to `--primary-red: #BA1D23` to `#881317`), tactile bevel inset highlights, drop shadow, and top glossy reflection.
   - **Icon**: Upward chevron panah atas (`ChevronUp`) in `--primary-yellow: #F9CE3B` with micro-animation on hover.
   - **Action**: Smooth scroll back to top of the page (`window.scrollTo({ top: 0, behavior: 'smooth' })`).
+
+### 13.6 Career Application Modal (`JobApplicationModal` on `/career`)
+- **Trigger**: Clicking "Kirim Lamaran" on any job vacancy card on `/career` immediately opens the comprehensive application form dialog.
+- **Form Sections**:
+  1. **Data Pribadi (eKTP)**: Nama Lengkap (sesuai eKTP), NIK (16 digit), Tempat & Tanggal Lahir, Usia, Agama, Nomor SIM (khusus Kurir), dan Alamat Lengkap sesuai eKTP.
+  2. **Kontak & Komunikasi**: Email Aktif, Nomor HP / WhatsApp, dan Nomor HP Darurat.
+  3. **Data Rekening Bank**: Nama Bank, Nomor Rekening, dan Nama Pemilik Rekening.
+  4. **Upload Berkas**: Dropzone picker untuk file ZIP / PDF (Maks. 25MB) yang memuat berkas persyaratan (CV, eKTP, SIM, KK, Ijazah Terakhir, Foto Selfie).
+- **Submission Action**:
+  - Validates all required fields and formats.
+  - Compiles formatted structured message and dispatches directly to official WhatsApp Rekrutmen PT. BARAK: `6285187845044` (`https://wa.me/6285187845044?text=...`).
