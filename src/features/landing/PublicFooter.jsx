@@ -153,13 +153,14 @@ export default function PublicFooter() {
                     0851 2479 9305 <span className="text-xs text-white/50">(Konsultasi)</span>
                   </a>
                   <a
-                    href="https://wa.me/6285174334336"
+                    href="https://wa.me/6285187845044"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:text-white transition-colors"
                   >
-                    0851 7433 4336 <span className="text-xs text-white/50">(Pelamar)</span>
+                    0851 8784 5044 <span className="text-xs text-white/50">(Pelamar)</span>
                   </a>
+
                 </div>
               </li>
               <li className="flex items-start gap-2.5 text-sm text-white/70">

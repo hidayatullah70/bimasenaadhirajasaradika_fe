@@ -340,16 +340,17 @@ export default function ContactPage() {
                     </p>
                     <p className="text-xs sm:text-sm text-slate-700 font-medium mt-1">
                       <a
-                        href="https://wa.me/6285174334336"
+                        href="https://wa.me/6285187845044"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="hover:text-primary-red transition-colors inline-block"
                       >
-                        0851 7433 4336{' '}
+                        0851 8784 5044{' '}
                         <span className="text-xs text-slate-500 font-normal">
                           (WhatsApp Lowongan Kerja)
                         </span>
                       </a>
+
                     </p>
                   </div>
                 </div>

@@ -139,8 +139,9 @@ export default function FloatingAdminCTA() {
 
           {/* 1.2 Tombol WA Loker (Bawah/Tengah) */}
           <a
-            href="https://wa.me/6285174334336"
+            href="https://wa.me/6285187845044"
             target="_blank"
+
             rel="noopener noreferrer"
             className="flex items-center gap-3 group/item focus-visible:outline-none"
             title="Chat WhatsApp Lowongan Kerja / Karir"

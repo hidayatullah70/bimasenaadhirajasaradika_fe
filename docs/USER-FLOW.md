@@ -35,7 +35,7 @@ Visitor navigates to /contact (via Navbar CTA / Menu / Footer)
 │       └── Marketing Lead Qualification → Opportunity → Client
 ├── Option 2: Direct WhatsApp Channel
 │   ├── WhatsApp Konsultasi (0851 2479 9305) → Opens WA chat with Client Relations
-│   └── WhatsApp Karir / Pelamar (0851 7433 4336) → Opens WA chat with HR/Recruitment
+│   └── WhatsApp Karir / Pelamar (0851 8784 5044) → Opens WA chat with HR/Recruitment
 └── Option 3: Office Location & Navigation
     ├── Interactive Google Maps Embed (PT. BARAK Tangerang)
     └── Clickable Address → Direct Google Maps pin in new tab
