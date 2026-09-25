@@ -136,7 +136,7 @@ Reuse and elevate the project baseline at https://bimasenaadhirajasaradika.verce
 ### 13.6 Career Application Modal (`JobApplicationModal` on `/career`)
 - **Trigger**: Clicking "Kirim Lamaran" on any job vacancy card on `/career` immediately opens the comprehensive application form dialog.
 - **Form Sections**:
-  1. **Data Pribadi (eKTP)**: Nama Lengkap (sesuai eKTP), NIK (16 digit), Tempat & Tanggal Lahir, Usia, Agama, Nomor SIM (khusus Kurir), dan Alamat Lengkap sesuai eKTP.
+  1. **Data Pribadi (eKTP)**: Nama Lengkap (sesuai eKTP), NIK (16 digit), Tempat & Tanggal Lahir, Usia, Nomor SIM (khusus Kurir), dan Alamat Lengkap sesuai eKTP.
   2. **Kontak & Komunikasi**: Email Aktif, Nomor HP / WhatsApp, dan Nomor HP Darurat.
   3. **Data Rekening Bank**: Nama Bank, Nomor Rekening, dan Nama Pemilik Rekening.
   4. **Petunjuk Berkas Dokumen**: Catatan instruksi pengiriman berkas lengkap (CV, eKTP, SIM, KK, Ijazah Terakhir, Foto Selfie) dalam format ZIP/PDF langsung dari WhatsApp pelamar ke nomor admin `+6285187845044`.

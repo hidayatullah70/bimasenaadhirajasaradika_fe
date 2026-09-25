@@ -18,16 +18,6 @@ import {
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
 
-const AGAMA_OPTIONS = [
-  'Islam',
-  'Kristen Protestan',
-  'Katolik',
-  'Hindu',
-  'Buddha',
-  'Khonghucu',
-  'Lainnya',
-];
-
 const BANK_OPTIONS = [
   'BCA (Bank Central Asia)',
   'Bank Mandiri',
@@ -48,7 +38,6 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
     tempatLahir: '',
     tglLahir: '',
     usia: '',
-    agama: 'Islam',
     alamatLengkap: '',
     nomorSim: '',
     email: '',
@@ -58,6 +47,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
     nomorRekening: '',
     namaPemilikRekening: '',
   });
+
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -129,7 +119,6 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
       `• *NIK:* ${formData.nik}`,
       `• *Tempat, Tgl Lahir:* ${formData.tempatLahir}, ${formData.tglLahir}`,
       `• *Usia:* ${formData.usia} Tahun`,
-      `• *Agama:* ${formData.agama}`,
       `• *Alamat (eKTP):* ${formData.alamatLengkap}`,
       `• *Nomor SIM:* ${formData.nomorSim || '-'}`,
       `• *Email:* ${formData.email}`,
@@ -335,27 +324,8 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                 )}
               </div>
 
-              {/* Agama */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Agama <span className="text-danger">*</span>
-                </label>
-                <select
-                  name="agama"
-                  value={formData.agama}
-                  onChange={handleChange}
-                  className="w-full px-3.5 py-2 text-sm rounded-lg border border-border bg-surface transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red"
-                >
-                  {AGAMA_OPTIONS.map((rel) => (
-                    <option key={rel} value={rel}>
-                      {rel}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
               {/* Nomor SIM (Khusus Kurir) */}
-              <div>
+              <div className="sm:col-span-2">
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Nomor SIM {isCourier ? <span className="text-danger">* (Wajib Kurir)</span> : <span className="text-muted font-normal">(Bila ada)</span>}
                 </label>
@@ -374,6 +344,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   <p className="text-[11px] text-danger mt-1">{errors.nomorSim}</p>
                 )}
               </div>
+
 
               {/* Alamat Lengkap Sesuai eKTP */}
               <div className="sm:col-span-2">
