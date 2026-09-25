@@ -1,21 +1,17 @@
 /**
  * Modal Formulir Lamaran Kerja — PT. BARAK
- * Form pendaftaran lowongan karir dengan data eKTP, rekening, upload berkas ZIP/PDF,
- * dan pengiriman langsung ke WhatsApp Rekrutmen 6285187845044.
+ * Form pendaftaran lowongan karir dengan data eKTP, rekening, catatan pengiriman berkas ZIP/PDF,
+ * dan pengiriman langsung ke WhatsApp Rekrutmen +6285187845044.
  */
 
 import React, { useState } from 'react';
 import { 
   X, 
   Send, 
-  UploadCloud, 
-  FileCheck, 
-  Trash2, 
   User, 
   CreditCard, 
   FileText, 
   Phone, 
-  MapPin, 
   AlertCircle,
   Briefcase
 } from 'lucide-react';
@@ -63,7 +59,6 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
     namaPemilikRekening: '',
   });
 
-  const [uploadedFile, setUploadedFile] = useState(null);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -75,25 +70,6 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: null }));
     }
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Validate file size (max 25MB)
-      if (file.size > 25 * 1024 * 1024) {
-        toast.error('Ukuran file maksimal 25 MB');
-        return;
-      }
-      setUploadedFile(file);
-      if (errors.file) {
-        setErrors((prev) => ({ ...prev, file: null }));
-      }
-    }
-  };
-
-  const handleRemoveFile = () => {
-    setUploadedFile(null);
   };
 
   const validateForm = () => {
@@ -166,11 +142,11 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
       `• *Nama Pemilik Rekening:* ${formData.namaPemilikRekening}`,
       ``,
       `*3. BERKAS DOKUMEN LAMPIRAN:*`,
-      `• *Nama File Upload:* ${uploadedFile ? uploadedFile.name : '(Akan dilampirkan via chat ini)'}`,
-      uploadedFile ? `• *Ukuran File:* ${(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB` : `• *Status:* Siap dikirimkan`,
-      `• *Isi Dokumen:* CV, eKTP, SIM, KK, Ijazah Terakhir, Foto Selfie`,
+      `• *Berkas Persyaratan:* CV, eKTP, SIM, KK, Ijazah Terakhir, Foto Selfie`,
+      `• *Format Berkas:* File ZIP / PDF`,
+      `• *Keterangan:* Dikirimkan langsung melalui chat WhatsApp ini ke nomor admin +6285187845044`,
       `----------------------------------------`,
-      `Halo Tim Rekrutmen & HRD PT. BARAK, saya telah mengisi formulir lamaran kerja di atas secara lengkap dan benar. Berkas dokumen saya siap saya kirimkan melalui chat WhatsApp ini. Mohon diproses untuk tahapan seleksi berikutnya. Terima kasih.`,
+      `Halo Tim Rekrutmen & HRD PT. BARAK, saya telah mengisi formulir data diri di atas secara lengkap dan benar. File berkas dokumen persyaratan (CV, eKTP, SIM, KK, Ijazah Terakhir, Foto Selfie) dalam bentuk zip/PDF akan saya kirimkan langsung melalui chat WhatsApp ini. Mohon diproses untuk tahapan seleksi berikutnya. Terima kasih.`,
     ];
 
     const waMessage = textLines.join('\n');
@@ -570,77 +546,36 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
             </div>
           </div>
 
-          {/* Section 4: Upload File Berkas Dokumen */}
+          {/* Section 4: Catatan Pengiriman Berkas Dokumen */}
           <div>
-            <div className="flex items-center gap-2 mb-2 pb-1 border-b border-border">
+            <div className="flex items-center gap-2 mb-3 pb-1 border-b border-border">
               <FileText className="w-4 h-4 text-primary-red" />
               <h3 className="text-sm font-bold text-ink uppercase tracking-wide">
-                4. Lampiran Berkas Dokumen Pelamar
+                4. Berkas Dokumen Lamaran
               </h3>
             </div>
 
-            <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-3 mb-3 text-xs text-amber-900 flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold">Berkas yang harus disatukan dalam file ZIP atau PDF:</p>
-                <p className="text-[11px] text-amber-800 mt-0.5">
-                  1. CV / Resume &bull; 2. eKTP &bull; 3. SIM (bila ada/kurir) &bull; 4. Kartu Keluarga (KK) &bull; 5. Ijazah Terakhir &bull; 6. Foto Selfie Terbaru.
+            <div className="bg-amber-50/90 border-2 border-amber-300 rounded-2xl p-4 sm:p-5 text-amber-950 flex items-start gap-3.5 shadow-xs">
+              <div className="w-10 h-10 rounded-xl bg-amber-200/80 border border-amber-300 flex items-center justify-center shrink-0 text-amber-800 mt-0.5">
+                <AlertCircle className="w-5 h-5 text-amber-800" />
+              </div>
+              <div className="space-y-1 text-xs sm:text-sm leading-relaxed">
+                <p className="font-bold text-amber-900 text-sm sm:text-base">
+                  Catatan :
+                </p>
+                <p className="text-amber-950">
+                  silahkan kirim file berisi : <strong>(CV, eKTP, SIM, KK, Ijazah Terakhir, Foto Selfie)</strong> dalam bentuk file <strong>zip/PDF</strong> dari WA Pelamar ke nomor WA admin <span className="font-bold text-primary-red">+6285187845044</span>
                 </p>
               </div>
             </div>
-
-            {/* Dropzone Upload Button */}
-            {!uploadedFile ? (
-              <label className="border-2 border-dashed border-border hover:border-primary-red rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors bg-canvas hover:bg-red-50/20 group">
-                <input
-                  type="file"
-                  accept=".zip,.pdf,.rar"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <div className="w-12 h-12 rounded-full bg-white shadow-xs border border-border flex items-center justify-center text-muted group-hover:text-primary-red group-hover:border-primary-red/30 transition-colors mb-2">
-                  <UploadCloud className="w-6 h-6" />
-                </div>
-                <span className="text-xs sm:text-sm font-bold text-ink group-hover:text-primary-red transition-colors">
-                  Pilih atau Tarik File ZIP / PDF ke Sini
-                </span>
-                <span className="text-[11px] text-muted mt-1">
-                  Format didukung: <strong>.ZIP, .PDF, .RAR</strong> (Maksimum 25 MB)
-                </span>
-              </label>
-            ) : (
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 overflow-hidden">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-100 text-accent-green flex items-center justify-center shrink-0">
-                    <FileCheck className="w-5 h-5 text-emerald-700" />
-                  </div>
-                  <div className="truncate">
-                    <p className="text-xs sm:text-sm font-bold text-ink truncate">
-                      {uploadedFile.name}
-                    </p>
-                    <p className="text-[11px] text-muted">
-                      {(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB &bull; File siap dilampirkan
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleRemoveFile}
-                  className="p-2 text-muted hover:text-danger hover:bg-white rounded-lg border border-transparent hover:border-danger/20 transition-colors"
-                  title="Hapus file"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            )}
           </div>
 
           {/* WhatsApp Direct Dispatch Notice */}
-          <div className="p-3 rounded-xl bg-emerald-50/80 border border-emerald-200/80 text-xs text-emerald-900 flex items-center gap-2.5">
+          <div className="p-3.5 rounded-xl bg-emerald-50/80 border border-emerald-200/80 text-xs text-emerald-900 flex items-center gap-2.5">
             <span className="w-2.5 h-2.5 rounded-full bg-accent-green shrink-0 animate-pulse" />
             <p className="leading-relaxed">
-              Saat tombol <strong>"Kirim Lamaran"</strong> ditekan, data lamaran Anda akan otomatis dikirimkan ke 
-              WhatsApp Rekrutmen PT. BARAK (<span className="font-bold">6285187845044</span>). Anda tinggal melampirkan berkas di chat WhatsApp tersebut.
+              Saat tombol <strong>"Kirim Lamaran"</strong> ditekan, data formulir Anda akan otomatis dikirimkan ke 
+              WhatsApp Rekrutmen PT. BARAK (<span className="font-bold">6285187845044</span>).
             </p>
           </div>
         </form>
