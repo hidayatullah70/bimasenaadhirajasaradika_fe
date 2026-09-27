@@ -135,7 +135,7 @@ export default function PublicFooter() {
               <li className="flex items-start gap-2.5 text-sm text-white/70">
                 <MapPin className="h-4 w-4 text-primary-red flex-none mt-1" aria-hidden />
                 <a
-                  href="https://www.google.com/maps/place/PT.+Bimasena+Adhirajasa+Radhika/@-6.1721059,106.6502536,17z/data=!3m1!4b1!4m6!3m5!1s0x2e69f971d739eae9:0x145c3a84a4e07ee1!8m2!3d-6.1721059!4d106.6502536"
+                  href="https://www.google.com/maps/place/PT.+Bimasena+Adhirajasa+Radhika/@-6.1720831,106.6504949,16.75z/data=!4m6!3m5!1s0x2e69f971d739eae9:0x145c3a84a4e07ee1!8m2!3d-6.1721059!4d106.6528339!16s%2Fg%2F11whzk9l18?entry=ttu&g_ep=EgoyMDI2MDkyMy4wIKXMDSoASAFQAw%3D%3D"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="leading-relaxed hover:text-white transition-colors"
@@ -176,10 +176,10 @@ export default function PublicFooter() {
               <li className="flex items-start gap-2.5 text-sm text-white/70">
                 <Mail className="h-4 w-4 text-primary-red flex-none mt-1" aria-hidden />
                 <a
-                  href="mailto:ptbimasenaadhirajasaradika@gmail.com"
+                  href="mailto:admin@bimasenaadhirajasaradika.com"
                   className="hover:text-white transition-colors break-all"
                 >
-                  ptbimasenaadhirajasaradika@gmail.com
+                  admin@bimasenaadhirajasaradika.com
                 </a>
               </li>
             </ul>

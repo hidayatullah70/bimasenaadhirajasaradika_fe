@@ -311,7 +311,7 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <a
-                      href="https://www.google.com/maps/place/PT.+Bimasena+Adhirajasa+Radhika/@-6.1721059,106.6502536,17z/data=!3m1!4b1!4m6!3m5!1s0x2e69f971d739eae9:0x145c3a84a4e07ee1!8m2!3d-6.1721059!4d106.6502536"
+                      href="https://www.google.com/maps/place/PT.+Bimasena+Adhirajasa+Radhika/@-6.1720831,106.6504949,16.75z/data=!4m6!3m5!1s0x2e69f971d739eae9:0x145c3a84a4e07ee1!8m2!3d-6.1721059!4d106.6528339!16s%2Fg%2F11whzk9l18?entry=ttu&g_ep=EgoyMDI2MDkyMy4wIKXMDSoASAFQAw%3D%3D"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs sm:text-sm text-slate-600 leading-relaxed mt-0.5 hover:text-primary-red transition-colors block"
@@ -376,10 +376,10 @@ export default function ContactPage() {
                   <div>
                     <p className="text-xs sm:text-sm text-slate-700 font-medium mt-0.5">
                       <a
-                        href="mailto:ptbimasenaadhirajasaradika@gmail.com"
+                        href="mailto:admin@bimasenaadhirajasaradika.com"
                         className="hover:text-primary-red transition-colors"
                       >
-                        ptbimasenaadhirajasaradika@gmail.com
+                        admin@bimasenaadhirajasaradika.com
                       </a>
                     </p>
                   </div>
