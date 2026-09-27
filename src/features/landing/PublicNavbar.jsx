@@ -254,18 +254,18 @@ export default function PublicNavbar() {
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari..."
               className={clsx(
-                'w-28 sm:w-32 lg:w-36 xl:w-44 pl-3 pr-8 py-1.5 rounded-full text-xs transition-all border focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0',
+                'w-28 sm:w-32 lg:w-36 xl:w-44 pl-3 pr-8 py-1.5 rounded-full text-xs transition-all border focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 font-medium',
                 scrolled
-                  ? 'bg-slate-100 text-ink border-slate-300 placeholder:text-slate-400 focus:bg-slate-100 focus:border-slate-400'
-                  : 'bg-white/15 text-ink placeholder:text-white/80 border-white/60 focus:bg-white/15 focus:border-white focus:text-ink font-medium'
+                  ? 'bg-accent-green text-white border-accent-green placeholder:text-white/85 focus:bg-accent-green focus:border-emerald-600 focus:text-white shadow-xs'
+                  : 'bg-white/15 text-white placeholder:text-white/80 border-white focus:bg-white/20 focus:border-white focus:text-white'
               )}
             />
             <button
               type="submit"
               aria-label="Cari"
               className={clsx(
-                'absolute right-2.5 top-1/2 -translate-y-1/2',
-                scrolled ? 'text-slate-400 hover:text-slate-700' : 'text-white/80 hover:text-white'
+                'absolute right-2.5 top-1/2 -translate-y-1/2 transition-colors',
+                scrolled ? 'text-white hover:text-white/80' : 'text-white/90 hover:text-white'
               )}
             >
               <Search className="w-3.5 h-3.5" />

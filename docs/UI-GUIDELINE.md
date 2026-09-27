@@ -97,7 +97,9 @@ Reuse and elevate the project baseline at https://bimasenaadhirajasaradika.verce
 - **Responsive Breakpoint**: Synchronized at `lg` (1024px).
   - Screens `>= 1024px`: Displays full 9-item menu navigation, Quick Search input (`w-28 sm:w-32 lg:w-36 xl:w-44`), and red "Hubungi Kami" CTA button.
   - Screens `< 1024px`: Displays Brand Logo on left and hamburger menu button on right (`lg:hidden`). All menus, search, and CTA are contained within the mobile drawer.
-- **Quick Search**: Pill input with green background (`bg-white/15`), white border (`border-white/60`), and dark ink text (`text-ink` / `#0F172A`) on focus.
+- **Quick Search**: Pill input with responsive styling:
+  - On green navbar: Transparent/white-tinted background (`bg-white/15`), solid white border (`border-white`), and white text input (`text-white`) with white search icon.
+  - On scrolled white navbar: Solid green background (`bg-accent-green`), solid green border (`border-accent-green`), and white text input (`text-white`) with white search icon.
 - **CTA Button**: Pill red button (`bg-primary-red hover:bg-red-800 text-white rounded-full`) linking directly to `/contact`.
 
 ### 13.2 Hero Sections & Pill Badges
