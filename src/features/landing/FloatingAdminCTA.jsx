@@ -111,7 +111,7 @@ export default function FloatingAdminCTA() {
 
   return (
     <div
-      className="fixed bottom-6 right-6 z-50 flex flex-col items-end select-none pointer-events-auto"
+      className="fixed bottom-16 sm:bottom-20 right-5 sm:right-6 z-50 flex flex-col items-end select-none pointer-events-auto"
       aria-label="Kontak Admin dan Navigasi PT. BARAK"
     >
       {/* ─────────────────────────────────────────────────────────────
