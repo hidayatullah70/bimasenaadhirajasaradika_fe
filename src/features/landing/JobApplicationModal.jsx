@@ -249,9 +249,6 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                     <span>Departemen / Layanan</span>
                     <span className="text-danger">*</span>
                   </label>
-                  <span className="px-2.5 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-800 text-[11px]">
-                    {job?.employmentType || 'Full-time PKWT'}
-                  </span>
                 </div>
                 <select
                   id="modal-departemen"
@@ -277,9 +274,11 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   <span className="font-semibold text-ink">Departemen:</span>
                   <span className="text-ink">{job?.departmentLabel || job?.department || 'Operasional'}</span>
                 </div>
-                <span className="px-2.5 py-1 rounded-full font-semibold bg-emerald-100 text-emerald-800 text-[11px]">
-                  {job?.employmentType || 'Full-time PKWT'}
-                </span>
+                {job?.employmentType && (
+                  <span className="px-2.5 py-1 rounded-full font-semibold bg-emerald-100 text-emerald-800 text-[11px]">
+                    {job.employmentType}
+                  </span>
+                )}
               </div>
             )}
           </div>

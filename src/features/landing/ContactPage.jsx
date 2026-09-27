@@ -351,7 +351,6 @@ export default function ContactPage() {
                             title: 'Pelamar / Lowongan Kerja',
                             department: 'Jasa Pengamanan / Security',
                             location: 'Jabodetabek & Banten',
-                            employmentType: 'Full-time PKWT',
                             targetWa: '6285187845044',
                             isDepartmentSelectable: true,
                           });

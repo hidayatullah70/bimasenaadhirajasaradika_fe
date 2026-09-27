@@ -68,7 +68,6 @@ export default function FloatingAdminCTA() {
       title: 'Pelamar / Lowongan Kerja (Chat Loker)',
       department: 'Jasa Pengamanan / Security',
       location: 'Jabodetabek & Banten',
-      employmentType: 'Full-time PKWT',
       targetWa: '6285187845044',
       isDepartmentSelectable: true,
     });
