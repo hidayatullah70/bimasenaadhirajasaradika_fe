@@ -111,13 +111,13 @@ export default function PublicFooter() {
             <h3 className="font-semibold text-sm uppercase tracking-wide mb-4 text-white/50">Tautan Cepat</h3>
             <ul className="space-y-2">
               {[
+                { label: 'Beranda', to: '/' },
                 { label: 'Perusahaan', to: '/perusahaan/profil' },
                 { label: 'Klien & Portofolio', to: '/client' },
                 { label: 'Karir', to: '/career' },
                 { label: 'News', to: '/news' },
                 { label: 'Blog', to: '/blog' },
                 { label: 'FAQ', to: '/faq' },
-                { label: 'Kontak', to: '/contact' },
               ].map((l) => (
                 <li key={l.to}>
                   <Link to={l.to} className="text-sm text-white/70 hover:text-white transition-colors">
