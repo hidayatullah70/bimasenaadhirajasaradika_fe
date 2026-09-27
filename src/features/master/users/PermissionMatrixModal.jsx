@@ -1,7 +1,7 @@
 /**
  * Permission Matrix Modal — PT. BARAK IOMS
  * Visual interactive representation of RBAC authorization matrix across all roles.
- * Source of Truth: docs/PERMISSION-MATRIX.md
+ * Source of Truth: docs/PRD.md (Section 6.9)
  */
 
 import React, { useState } from 'react';
