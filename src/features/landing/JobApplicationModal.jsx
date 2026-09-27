@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   X, 
   Send, 
@@ -192,9 +193,10 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
     }, 600);
   };
 
-  return (
+  const modalContent = (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto text-slate-900 font-sans"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto text-ink font-sans"
+      style={{ color: '#0F172A' }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="job-application-title"
@@ -207,7 +209,10 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
       />
 
       {/* Modal Container */}
-      <div className="relative w-full max-w-3xl bg-white text-slate-900 rounded-2xl shadow-modal border border-border flex flex-col my-auto max-h-[92vh] z-10 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div
+        className="relative w-full max-w-3xl bg-white text-ink rounded-2xl shadow-modal border border-border flex flex-col my-auto max-h-[92vh] z-10 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        style={{ color: '#0F172A' }}
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 bg-ink border-b border-white/10 text-white flex-none">
           <div className="flex items-center gap-3">
@@ -236,11 +241,11 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
         {/* Form Body (Scrollable) */}
         <form onSubmit={handleSubmit} className="overflow-y-auto flex-1 p-6 space-y-6">
           {/* Posisi Terpilih / Pilihan Departemen */}
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 sm:p-4 text-xs">
+          <div className="bg-canvas border border-border rounded-xl p-3.5 sm:p-4 text-xs" style={{ color: '#0F172A' }}>
             {isDepartmentSelectable ? (
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between gap-2 mb-1">
-                  <label htmlFor="modal-departemen" className="font-bold text-ink flex items-center gap-1.5">
+                  <label htmlFor="modal-departemen" className="font-bold text-ink flex items-center gap-1.5" style={{ color: '#0F172A' }}>
                     <span>Departemen / Layanan</span>
                     <span className="text-danger">*</span>
                   </label>
@@ -253,23 +258,24 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   name="departemen"
                   value={formData.departemen}
                   onChange={handleChange}
-                  className="w-full px-3.5 py-2 text-sm rounded-lg border border-border bg-white text-slate-900 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red font-medium"
+                  style={{ color: '#0F172A', backgroundColor: '#FFFFFF' }}
+                  className="w-full px-3.5 py-2 text-sm rounded-lg border border-border bg-white text-ink transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red font-medium"
                 >
                   {DEPARTMENT_SERVICES.map((dept) => (
-                    <option key={dept} value={dept}>
+                    <option key={dept} value={dept} style={{ color: '#0F172A', backgroundColor: '#FFFFFF' }}>
                       {dept}
                     </option>
                   ))}
                 </select>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-muted">
                   Pilih salah satu dari 6 divisi layanan PT. BARAK yang ingin Anda lamar.
                 </p>
               </div>
             ) : (
               <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 text-slate-700">
+                <div className="flex items-center gap-2 text-ink">
                   <span className="font-semibold text-ink">Departemen:</span>
-                  <span>{job?.departmentLabel || job?.department || 'Operasional'}</span>
+                  <span className="text-ink">{job?.departmentLabel || job?.department || 'Operasional'}</span>
                 </div>
                 <span className="px-2.5 py-1 rounded-full font-semibold bg-emerald-100 text-emerald-800 text-[11px]">
                   {job?.employmentType || 'Full-time PKWT'}
@@ -290,7 +296,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Nama Lengkap */}
               <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-ink mb-1" style={{ color: '#0F172A' }}>
                   Nama Lengkap (sesuai eKTP) <span className="text-danger">*</span>
                 </label>
                 <input
@@ -299,8 +305,9 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   value={formData.namaLengkap}
                   onChange={handleChange}
                   placeholder="Contoh: Muhammad Fauzi Pratama"
+                  style={{ color: '#0F172A', backgroundColor: '#FFFFFF' }}
                   className={clsx(
-                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
+                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-ink placeholder:text-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
                     errors.namaLengkap ? 'border-danger' : 'border-border'
                   )}
                 />
@@ -311,7 +318,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
 
               {/* NIK */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-ink mb-1" style={{ color: '#0F172A' }}>
                   NIK (16 Digit eKTP) <span className="text-danger">*</span>
                 </label>
                 <input
@@ -325,8 +332,9 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                     if (errors.nik) setErrors((prev) => ({ ...prev, nik: null }));
                   }}
                   placeholder="3271xxxxxxxxxxxx"
+                  style={{ color: '#0F172A', backgroundColor: '#FFFFFF' }}
                   className={clsx(
-                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red font-mono',
+                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-ink placeholder:text-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red font-mono',
                     errors.nik ? 'border-danger' : 'border-border'
                   )}
                 />
@@ -335,7 +343,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
 
               {/* Usia */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-ink mb-1" style={{ color: '#0F172A' }}>
                   Usia (Tahun) <span className="text-danger">*</span>
                 </label>
                 <input
@@ -346,8 +354,9 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   value={formData.usia}
                   onChange={handleChange}
                   placeholder="Contoh: 25"
+                  style={{ color: '#0F172A', backgroundColor: '#FFFFFF' }}
                   className={clsx(
-                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
+                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-ink placeholder:text-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
                     errors.usia ? 'border-danger' : 'border-border'
                   )}
                 />
@@ -356,7 +365,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
 
               {/* Tempat Lahir */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-ink mb-1" style={{ color: '#0F172A' }}>
                   Tempat Lahir <span className="text-danger">*</span>
                 </label>
                 <input
@@ -365,8 +374,9 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   value={formData.tempatLahir}
                   onChange={handleChange}
                   placeholder="Kota / Kabupaten Lahir"
+                  style={{ color: '#0F172A', backgroundColor: '#FFFFFF' }}
                   className={clsx(
-                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
+                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-ink placeholder:text-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
                     errors.tempatLahir ? 'border-danger' : 'border-border'
                   )}
                 />
@@ -377,7 +387,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
 
               {/* Tanggal Lahir */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-ink mb-1" style={{ color: '#0F172A' }}>
                   Tanggal Lahir <span className="text-danger">*</span>
                 </label>
                 <input
@@ -385,8 +395,9 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   name="tglLahir"
                   value={formData.tglLahir}
                   onChange={handleChange}
+                  style={{ color: '#0F172A', backgroundColor: '#FFFFFF' }}
                   className={clsx(
-                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
+                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-ink placeholder:text-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
                     errors.tglLahir ? 'border-danger' : 'border-border'
                   )}
                 />
@@ -397,7 +408,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
 
               {/* Nomor SIM (Khusus Ekspedisi Kurir) */}
               <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-ink mb-1" style={{ color: '#0F172A' }}>
                   Nomor SIM (Khusus Ekspedisi Kurir){' '}
                   {isCourier ? (
                     <span className="text-danger font-semibold">* (Wajib Diisi)</span>
@@ -415,8 +426,9 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                       ? 'Contoh: SIM C / SIM A (Wajib untuk Ekspedisi Kurir)'
                       : 'Nomor SIM (opsional jika bukan Ekspedisi Kurir)'
                   }
+                  style={{ color: '#0F172A', backgroundColor: '#FFFFFF' }}
                   className={clsx(
-                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
+                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-ink placeholder:text-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
                     errors.nomorSim ? 'border-danger' : 'border-border'
                   )}
                 />
@@ -425,10 +437,9 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                 )}
               </div>
 
-
               {/* Alamat Lengkap Sesuai eKTP */}
               <div className="sm:col-span-2">
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-ink mb-1" style={{ color: '#0F172A' }}>
                   Alamat Lengkap (sesuai eKTP) <span className="text-danger">*</span>
                 </label>
                 <textarea
@@ -437,8 +448,9 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   value={formData.alamatLengkap}
                   onChange={handleChange}
                   placeholder="Jl. Nama Jalan No. RT/RW, Kelurahan, Kecamatan, Kota/Kabupaten, Provinsi, Kode Pos"
+                  style={{ color: '#0F172A', backgroundColor: '#FFFFFF' }}
                   className={clsx(
-                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red resize-none',
+                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-ink placeholder:text-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red resize-none',
                     errors.alamatLengkap ? 'border-danger' : 'border-border'
                   )}
                 />
@@ -461,7 +473,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {/* Email */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-ink mb-1" style={{ color: '#0F172A' }}>
                   Email Aktif <span className="text-danger">*</span>
                 </label>
                 <input
@@ -470,8 +482,9 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="nama@email.com"
+                  style={{ color: '#0F172A', backgroundColor: '#FFFFFF' }}
                   className={clsx(
-                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
+                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-ink placeholder:text-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
                     errors.email ? 'border-danger' : 'border-border'
                   )}
                 />
@@ -480,7 +493,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
 
               {/* No HP / WhatsApp */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-ink mb-1" style={{ color: '#0F172A' }}>
                   Nomor HP / WhatsApp <span className="text-danger">*</span>
                 </label>
                 <input
@@ -489,8 +502,9 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   value={formData.noHpWa}
                   onChange={handleChange}
                   placeholder="08xxxxxxxxxx"
+                  style={{ color: '#0F172A', backgroundColor: '#FFFFFF' }}
                   className={clsx(
-                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
+                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-ink placeholder:text-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
                     errors.noHpWa ? 'border-danger' : 'border-border'
                   )}
                 />
@@ -499,7 +513,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
 
               {/* No HP Darurat */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-ink mb-1" style={{ color: '#0F172A' }}>
                   Nomor HP Darurat <span className="text-danger">*</span>
                 </label>
                 <input
@@ -508,8 +522,9 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   value={formData.noHpDarurat}
                   onChange={handleChange}
                   placeholder="No. Orang Tua / Kerabat"
+                  style={{ color: '#0F172A', backgroundColor: '#FFFFFF' }}
                   className={clsx(
-                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
+                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-ink placeholder:text-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
                     errors.noHpDarurat ? 'border-danger' : 'border-border'
                   )}
                 />
@@ -532,17 +547,18 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {/* Nama Bank */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-ink mb-1" style={{ color: '#0F172A' }}>
                   Nama Bank <span className="text-danger">*</span>
                 </label>
                 <select
                   name="namaBank"
                   value={formData.namaBank}
                   onChange={handleChange}
-                  className="w-full px-3.5 py-2 text-sm rounded-lg border border-border bg-white text-slate-900 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red"
+                  style={{ color: '#0F172A', backgroundColor: '#FFFFFF' }}
+                  className="w-full px-3.5 py-2 text-sm rounded-lg border border-border bg-white text-ink transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red font-medium"
                 >
                   {BANK_OPTIONS.map((b) => (
-                    <option key={b} value={b}>
+                    <option key={b} value={b} style={{ color: '#0F172A', backgroundColor: '#FFFFFF' }}>
                       {b}
                     </option>
                   ))}
@@ -551,7 +567,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
 
               {/* Nomor Rekening */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-ink mb-1" style={{ color: '#0F172A' }}>
                   Nomor Rekening <span className="text-danger">*</span>
                 </label>
                 <input
@@ -564,8 +580,9 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                     if (errors.nomorRekening) setErrors((prev) => ({ ...prev, nomorRekening: null }));
                   }}
                   placeholder="Nomor rekening bank"
+                  style={{ color: '#0F172A', backgroundColor: '#FFFFFF' }}
                   className={clsx(
-                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red font-mono',
+                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-ink placeholder:text-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red font-mono',
                     errors.nomorRekening ? 'border-danger' : 'border-border'
                   )}
                 />
@@ -576,7 +593,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
 
               {/* Nama Pemilik Rekening */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-ink mb-1" style={{ color: '#0F172A' }}>
                   Nama Pemilik Rekening <span className="text-danger">*</span>
                 </label>
                 <input
@@ -585,8 +602,9 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   value={formData.namaPemilikRekening}
                   onChange={handleChange}
                   placeholder="Sesuai buku tabungan"
+                  style={{ color: '#0F172A', backgroundColor: '#FFFFFF' }}
                   className={clsx(
-                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
+                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-ink placeholder:text-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
                     errors.namaPemilikRekening ? 'border-danger' : 'border-border'
                   )}
                 />
@@ -606,11 +624,11 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
               </h3>
             </div>
 
-            <div className="bg-amber-50/90 border-2 border-amber-300 rounded-2xl p-4 sm:p-5 text-amber-950 flex items-start gap-3.5 shadow-xs">
+            <div className="bg-amber-50/90 border-2 border-amber-300 rounded-2xl p-4 sm:p-5 text-amber-950 flex items-start gap-3.5 shadow-xs" style={{ color: '#451a03' }}>
               <div className="w-10 h-10 rounded-xl bg-amber-200/80 border border-amber-300 flex items-center justify-center shrink-0 text-amber-800 mt-0.5">
                 <AlertCircle className="w-5 h-5 text-amber-800" />
               </div>
-              <div className="space-y-1 text-xs sm:text-sm leading-relaxed">
+              <div className="space-y-1 text-xs sm:text-sm leading-relaxed" style={{ color: '#451a03' }}>
                 <p className="font-bold text-amber-900 text-sm sm:text-base">
                   Catatan :
                 </p>
@@ -622,9 +640,9 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
           </div>
 
           {/* WhatsApp Direct Dispatch Notice */}
-          <div className="p-3.5 rounded-xl bg-emerald-50/80 border border-emerald-200/80 text-xs text-emerald-900 flex items-center gap-2.5">
+          <div className="p-3.5 rounded-xl bg-emerald-50/80 border border-emerald-200/80 text-xs text-emerald-900 flex items-center gap-2.5" style={{ color: '#064e3b' }}>
             <span className="w-2.5 h-2.5 rounded-full bg-accent-green shrink-0 animate-pulse" />
-            <p className="leading-relaxed">
+            <p className="leading-relaxed text-emerald-950">
               Saat tombol <strong>"Kirim Lamaran"</strong> ditekan, data formulir Anda akan otomatis dikirimkan ke 
               WhatsApp Rekrutmen PT. BARAK (<span className="font-bold">{targetWaNumber}</span>).
             </p>
@@ -632,11 +650,12 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
         </form>
 
         {/* Modal Footer */}
-        <div className="px-6 py-4 bg-slate-50 border-t border-border flex items-center justify-between gap-3 flex-none">
+        <div className="px-6 py-4 bg-slate-50 border-t border-border flex items-center justify-between gap-3 flex-none" style={{ color: '#0F172A' }}>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs sm:text-sm font-semibold text-slate-700 hover:text-ink hover:bg-slate-200/60 rounded-xl transition-colors"
+            style={{ color: '#0F172A' }}
+            className="px-4 py-2 text-xs sm:text-sm font-semibold text-ink hover:text-primary-red hover:bg-slate-200/60 rounded-xl transition-colors cursor-pointer"
           >
             Batal
           </button>
@@ -646,7 +665,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
             onClick={handleSubmit}
             disabled={isSubmitting}
             className={clsx(
-              'px-5 py-2.5 bg-primary-red hover:bg-red-800 text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-md inline-flex items-center gap-2',
+              'px-5 py-2.5 bg-primary-red hover:bg-red-800 text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-md inline-flex items-center gap-2 cursor-pointer',
               isSubmitting && 'opacity-60 cursor-not-allowed'
             )}
           >
@@ -657,4 +676,9 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
       </div>
     </div>
   );
+
+  if (typeof document !== 'undefined') {
+    return createPortal(modalContent, document.body);
+  }
+  return modalContent;
 }

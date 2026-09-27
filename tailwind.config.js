@@ -18,7 +18,6 @@ export default {
         'accent-green': '#32B23E',
         // Semantic
         'ink': '#0F172A',
-        'slate': '#334155',
         'muted': '#64748B',
         'border': '#E2E8F0',
         'canvas': '#F8FAFC',
