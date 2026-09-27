@@ -1,11 +1,11 @@
 /**
  * Permission Matrix Modal — PT. BARAK IOMS
- * Visual interactive representation of RBAC authorization matrix across all roles.
- * Source of Truth: docs/PRD.md (Section 6.9)
+ * Visual interactive representation of Granular RBAC authorization matrix across all roles.
+ * Source of Truth: docs/PRD.md (Section 6.9: Matrix Otorisasi & Hak Akses)
  */
 
 import React, { useState } from 'react';
-import { X, ShieldCheck, Check, Minus, Info } from 'lucide-react';
+import { X, ShieldCheck, Minus, Info, CheckCircle2, Lock, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ROLE_LABELS, ROLES } from '@/constants/roles';
 
@@ -13,7 +13,7 @@ const MATRIX_DATA = [
   {
     module: 'Executive Dashboard & KPI',
     access: {
-      [ROLES.DIREKTUR]: 'RW',
+      [ROLES.DIREKTUR]: 'C, R, U, E, X',
       [ROLES.LEGAL]: 'R',
       [ROLES.HRD]: 'R',
       [ROLES.OPERASIONAL]: 'R',
@@ -26,7 +26,7 @@ const MATRIX_DATA = [
   {
     module: 'Approval Center (Otoritas Direksi)',
     access: {
-      [ROLES.DIREKTUR]: 'RW',
+      [ROLES.DIREKTUR]: 'R, X (approval)',
       [ROLES.LEGAL]: '-',
       [ROLES.HRD]: '-',
       [ROLES.OPERASIONAL]: '-',
@@ -39,63 +39,63 @@ const MATRIX_DATA = [
   {
     module: 'Manajemen Pengguna & Staf',
     access: {
-      [ROLES.DIREKTUR]: 'RW',
+      [ROLES.DIREKTUR]: 'C, R, U, D, X (full)',
       [ROLES.LEGAL]: '-',
       [ROLES.HRD]: '-',
       [ROLES.OPERASIONAL]: '-',
       [ROLES.FINANCE]: '-',
       [ROLES.MARKETING]: '-',
-      [ROLES.IT_SUPPORT]: 'R',
-      [ROLES.ADMIN_WEBSITE]: 'RW',
+      [ROLES.IT_SUPPORT]: 'R, U (reset pass)',
+      [ROLES.ADMIN_WEBSITE]: 'C, R, U (registrasi)',
     },
   },
   {
     module: 'Tenaga Kerja (Employees)',
     access: {
-      [ROLES.DIREKTUR]: 'RW',
-      [ROLES.LEGAL]: 'R',
-      [ROLES.HRD]: 'RW',
-      [ROLES.OPERASIONAL]: 'RW',
-      [ROLES.FINANCE]: 'R',
-      [ROLES.MARKETING]: 'R',
-      [ROLES.IT_SUPPORT]: 'R',
-      [ROLES.ADMIN_WEBSITE]: 'R',
+      [ROLES.DIREKTUR]: 'R, E',
+      [ROLES.LEGAL]: 'R, E',
+      [ROLES.HRD]: 'C, R, U, D, E',
+      [ROLES.OPERASIONAL]: 'R, U (pos/shift)',
+      [ROLES.FINANCE]: 'R (bank BCA)',
+      [ROLES.MARKETING]: 'R (kualifikasi)',
+      [ROLES.IT_SUPPORT]: 'R (akun/email)',
+      [ROLES.ADMIN_WEBSITE]: '-',
     },
   },
   {
     module: 'Kehadiran Biometrik (Attendance)',
     access: {
-      [ROLES.DIREKTUR]: 'RW',
+      [ROLES.DIREKTUR]: 'R, E, X (reopen)',
       [ROLES.LEGAL]: 'R',
-      [ROLES.HRD]: 'RW',
-      [ROLES.OPERASIONAL]: 'RW',
-      [ROLES.FINANCE]: 'R',
-      [ROLES.MARKETING]: 'R',
-      [ROLES.IT_SUPPORT]: 'R',
+      [ROLES.HRD]: 'C, R, U, E, X (lock)',
+      [ROLES.OPERASIONAL]: 'R, U (izin site)',
+      [ROLES.FINANCE]: 'R, E',
+      [ROLES.MARKETING]: '-',
+      [ROLES.IT_SUPPORT]: 'R (scanner)',
       [ROLES.ADMIN_WEBSITE]: '-',
     },
   },
   {
     module: 'Penempatan & Pos Site (Placements)',
     access: {
-      [ROLES.DIREKTUR]: 'RW',
+      [ROLES.DIREKTUR]: 'R, E',
       [ROLES.LEGAL]: 'R',
-      [ROLES.HRD]: 'RW',
-      [ROLES.OPERASIONAL]: 'RW',
-      [ROLES.FINANCE]: 'R',
-      [ROLES.MARKETING]: 'R',
-      [ROLES.IT_SUPPORT]: 'R',
+      [ROLES.HRD]: 'R, U (admin/PKWT)',
+      [ROLES.OPERASIONAL]: 'C, R, U, D, X (plotting)',
+      [ROLES.FINANCE]: 'R (billing/site)',
+      [ROLES.MARKETING]: 'R (kapasitas)',
+      [ROLES.IT_SUPPORT]: 'R (geo-tag)',
       [ROLES.ADMIN_WEBSITE]: '-',
     },
   },
   {
     module: 'Insiden Lapangan & Relief Guard',
     access: {
-      [ROLES.DIREKTUR]: 'RW',
-      [ROLES.LEGAL]: 'R',
-      [ROLES.HRD]: 'R',
-      [ROLES.OPERASIONAL]: 'RW',
-      [ROLES.FINANCE]: '-',
+      [ROLES.DIREKTUR]: 'R, X (high risk)',
+      [ROLES.LEGAL]: 'R, U, X (BAP)',
+      [ROLES.HRD]: 'R, U (SP staf)',
+      [ROLES.OPERASIONAL]: 'C, R, U, X (dispatch)',
+      [ROLES.FINANCE]: 'R (lembur/klaim)',
       [ROLES.MARKETING]: '-',
       [ROLES.IT_SUPPORT]: '-',
       [ROLES.ADMIN_WEBSITE]: '-',
@@ -104,12 +104,12 @@ const MATRIX_DATA = [
   {
     module: 'Faktur & Piutang (Invoices)',
     access: {
-      [ROLES.DIREKTUR]: 'RW',
-      [ROLES.LEGAL]: 'R',
+      [ROLES.DIREKTUR]: 'R, E, X (write-off)',
+      [ROLES.LEGAL]: 'R, X (somasi)',
       [ROLES.HRD]: '-',
-      [ROLES.OPERASIONAL]: '-',
-      [ROLES.FINANCE]: 'RW',
-      [ROLES.MARKETING]: 'R',
+      [ROLES.OPERASIONAL]: 'R (hari kerja)',
+      [ROLES.FINANCE]: 'C, R, U, D, E, X (tagih)',
+      [ROLES.MARKETING]: 'R (status bayar)',
       [ROLES.IT_SUPPORT]: '-',
       [ROLES.ADMIN_WEBSITE]: '-',
     },
@@ -117,11 +117,11 @@ const MATRIX_DATA = [
   {
     module: 'Payroll Ketenagakerjaan',
     access: {
-      [ROLES.DIREKTUR]: 'RW',
-      [ROLES.LEGAL]: 'R',
-      [ROLES.HRD]: 'R',
+      [ROLES.DIREKTUR]: 'R, E, X (approve)',
+      [ROLES.LEGAL]: 'R (UMK rule)',
+      [ROLES.HRD]: 'R, U, E (pre-check)',
       [ROLES.OPERASIONAL]: '-',
-      [ROLES.FINANCE]: 'RW',
+      [ROLES.FINANCE]: 'C, R, U, E, X (submit)',
       [ROLES.MARKETING]: '-',
       [ROLES.IT_SUPPORT]: '-',
       [ROLES.ADMIN_WEBSITE]: '-',
@@ -130,25 +130,25 @@ const MATRIX_DATA = [
   {
     module: 'Rekonsiliasi Kas COD Kurir',
     access: {
-      [ROLES.DIREKTUR]: 'RW',
-      [ROLES.LEGAL]: 'RW',
-      [ROLES.HRD]: '-',
-      [ROLES.OPERASIONAL]: 'R',
-      [ROLES.FINANCE]: 'RW',
+      [ROLES.DIREKTUR]: 'R, E, X (write-off)',
+      [ROLES.LEGAL]: 'R, U, X (litigasi)',
+      [ROLES.HRD]: 'R (evaluasi)',
+      [ROLES.OPERASIONAL]: 'R, U (verif fisik)',
+      [ROLES.FINANCE]: 'C, R, U, E, X (reconcile)',
       [ROLES.MARKETING]: '-',
       [ROLES.IT_SUPPORT]: '-',
       [ROLES.ADMIN_WEBSITE]: '-',
     },
   },
   {
-    module: 'Kasus Hukum & Kontrak Mitra',
+    module: 'Kasus Hukum & Kontrak Mitra (PKS)',
     access: {
-      [ROLES.DIREKTUR]: 'RW',
-      [ROLES.LEGAL]: 'RW',
-      [ROLES.HRD]: 'R',
-      [ROLES.OPERASIONAL]: '-',
-      [ROLES.FINANCE]: 'R',
-      [ROLES.MARKETING]: '-',
+      [ROLES.DIREKTUR]: 'R, E, X (sign/tutup)',
+      [ROLES.LEGAL]: 'C, R, U, D, E, X',
+      [ROLES.HRD]: 'R (ketenagakerjaan)',
+      [ROLES.OPERASIONAL]: 'R (lingkup SOP)',
+      [ROLES.FINANCE]: 'R (termin bayar)',
+      [ROLES.MARKETING]: 'R, U (draft tender)',
       [ROLES.IT_SUPPORT]: '-',
       [ROLES.ADMIN_WEBSITE]: '-',
     },
@@ -156,50 +156,50 @@ const MATRIX_DATA = [
   {
     module: 'Prospek & CRM Pipeline (Leads)',
     access: {
-      [ROLES.DIREKTUR]: 'RW',
+      [ROLES.DIREKTUR]: 'R, E, X (strategic)',
       [ROLES.LEGAL]: '-',
       [ROLES.HRD]: '-',
-      [ROLES.OPERASIONAL]: '-',
-      [ROLES.FINANCE]: '-',
-      [ROLES.MARKETING]: 'RW',
+      [ROLES.OPERASIONAL]: 'R (feasibility)',
+      [ROLES.FINANCE]: 'R (prakiraan)',
+      [ROLES.MARKETING]: 'C, R, U, D, E, X',
       [ROLES.IT_SUPPORT]: '-',
-      [ROLES.ADMIN_WEBSITE]: '-',
+      [ROLES.ADMIN_WEBSITE]: 'R, C (web lead)',
     },
   },
   {
     module: 'Aset IT & Tiket Helpdesk',
     access: {
-      [ROLES.DIREKTUR]: 'RW',
+      [ROLES.DIREKTUR]: 'R, E',
       [ROLES.LEGAL]: '-',
-      [ROLES.HRD]: '-',
-      [ROLES.OPERASIONAL]: '-',
-      [ROLES.FINANCE]: '-',
+      [ROLES.HRD]: 'R (inventaris staf)',
+      [ROLES.OPERASIONAL]: 'R (gadget/HT)',
+      [ROLES.FINANCE]: 'R (depresiasi)',
       [ROLES.MARKETING]: '-',
-      [ROLES.IT_SUPPORT]: 'RW',
+      [ROLES.IT_SUPPORT]: 'C, R, U, D, E, X',
       [ROLES.ADMIN_WEBSITE]: '-',
     },
   },
   {
     module: 'CMS Website & SEO Management',
     access: {
-      [ROLES.DIREKTUR]: 'RW',
+      [ROLES.DIREKTUR]: 'R',
       [ROLES.LEGAL]: '-',
-      [ROLES.HRD]: '-',
+      [ROLES.HRD]: 'R (info karir)',
       [ROLES.OPERASIONAL]: '-',
       [ROLES.FINANCE]: '-',
-      [ROLES.MARKETING]: '-',
-      [ROLES.IT_SUPPORT]: '-',
-      [ROLES.ADMIN_WEBSITE]: 'RW',
+      [ROLES.MARKETING]: 'R, U (konten promo)',
+      [ROLES.IT_SUPPORT]: 'R (DNS/infra)',
+      [ROLES.ADMIN_WEBSITE]: 'C, R, U, D, E, X',
     },
   },
   {
     module: 'Audit Activity Feed',
     access: {
-      [ROLES.DIREKTUR]: 'RW',
-      [ROLES.LEGAL]: 'R',
+      [ROLES.DIREKTUR]: 'R, E, X (forensik)',
+      [ROLES.LEGAL]: 'R, E',
       [ROLES.HRD]: 'R',
       [ROLES.OPERASIONAL]: 'R',
-      [ROLES.FINANCE]: 'R',
+      [ROLES.FINANCE]: 'R, E',
       [ROLES.MARKETING]: 'R',
       [ROLES.IT_SUPPORT]: 'R',
       [ROLES.ADMIN_WEBSITE]: 'R',
@@ -223,31 +223,51 @@ export default function PermissionMatrixModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  const renderBadge = (val) => {
-    if (val === 'RW') {
+  const renderBadge = (rawVal) => {
+    if (!rawVal || rawVal === '-') {
       return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-accent-green/15 text-accent-green border border-accent-green/30">
-          R/W
+        <span className="inline-flex items-center text-muted/30 font-mono text-xs">
+          <Minus className="h-3 w-3" />
         </span>
       );
     }
-    if (val === 'R') {
-      return (
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-info/10 text-info border border-info/20">
-          R
-        </span>
-      );
+
+    // Split actions and scope note (e.g., "R, E, X (reopen)")
+    const match = rawVal.match(/^(.*?)(?:\s*\((.*?)\))?$/);
+    const actions = match ? match[1].trim() : rawVal;
+    const note = match && match[2] ? match[2].trim() : null;
+
+    const hasWorkflow = actions.includes('X');
+    const hasCreateOrDelete = actions.includes('C') || actions.includes('D');
+    const hasUpdate = actions.includes('U');
+
+    let badgeClass = 'bg-info/10 text-info border-info/20'; // Read-only default
+
+    if (hasWorkflow) {
+      badgeClass = 'bg-primary-red/10 text-primary-red border-primary-red/30 font-bold';
+    } else if (hasCreateOrDelete) {
+      badgeClass = 'bg-accent-green/15 text-accent-green border-accent-green/30 font-bold';
+    } else if (hasUpdate) {
+      badgeClass = 'bg-amber-50 text-amber-700 border-amber-300 font-semibold';
     }
+
     return (
-      <span className="inline-flex items-center text-muted/40 font-mono text-xs">
-        <Minus className="h-3 w-3" />
-      </span>
+      <div className="flex flex-col items-center justify-center gap-0.5">
+        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] tracking-tight border ${badgeClass}`}>
+          {actions}
+        </span>
+        {note && (
+          <span className="text-[9px] text-muted italic font-medium leading-none whitespace-nowrap">
+            ({note})
+          </span>
+        )}
+      </div>
     );
   };
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-5 animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[92vh] flex flex-col overflow-hidden animate-scale-up border border-border">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-7xl w-full max-h-[94vh] flex flex-col overflow-hidden animate-scale-up border border-border">
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-border flex items-center justify-between bg-canvas/40 flex-none">
           <div className="flex items-center gap-2.5">
@@ -256,10 +276,10 @@ export default function PermissionMatrixModal({ isOpen, onClose }) {
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold text-ink">
-                3. Matriks Otorisasi & Hak Akses (Permission Matrix)
+                Matriks Otorisasi Granular & Hak Akses (Granular RBAC Matrix)
               </h2>
               <p className="text-xs text-muted">
-                Standar matriks RBAC PT. BARAK IOMS untuk 8 peran pengguna dan 15 modul sumber daya.
+                Standar tata kelola hak akses PT. BARAK IOMS — Mengatur 15 modul, 8 peran, prinsip pemisahan wewenang (Maker-Checker), dan hak otoritas tertinggi Direktur.
               </p>
             </div>
           </div>
@@ -272,24 +292,36 @@ export default function PermissionMatrixModal({ isOpen, onClose }) {
           </button>
         </div>
 
-        {/* Legend & Filter Controls */}
+        {/* Governance Rules & Legend Controls */}
         <div className="px-5 py-3 bg-canvas/50 border-b border-border flex flex-wrap items-center justify-between gap-3 text-xs flex-none">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-1.5">
-              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-accent-green/15 text-accent-green border border-accent-green/30">
-                R/W
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-primary-red/10 text-primary-red border border-primary-red/30">
+                X
               </span>
-              <span className="text-slate font-medium">Baca & Tulis (Mutasi)</span>
+              <span className="text-slate font-medium">Tindakan Workflow (Approve/Lock/Reopen/Dispatch)</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-info/10 text-info border border-info/20">
-                R
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-accent-green/15 text-accent-green border border-accent-green/30">
+                C / D
               </span>
-              <span className="text-slate font-medium">Baca Saja (Read-Only)</span>
+              <span className="text-slate font-medium">Create / Soft-Delete</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-300">
+                U
+              </span>
+              <span className="text-slate font-medium">Update</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-info/10 text-info border border-info/20">
+                R / E
+              </span>
+              <span className="text-slate font-medium">Read / Export</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="font-mono text-muted/60 text-xs">-</span>
-              <span className="text-muted">Tidak Memiliki Akses (Forbidden)</span>
+              <span className="text-muted">Forbidden</span>
             </div>
           </div>
 
@@ -342,7 +374,7 @@ export default function PermissionMatrixModal({ isOpen, onClose }) {
                     return (
                       <td
                         key={r}
-                        className={`px-3 py-3 text-center ${
+                        className={`px-2 py-2 text-center align-middle ${
                           isHigh ? 'bg-primary-red/5 font-semibold' : ''
                         }`}
                       >
@@ -357,11 +389,14 @@ export default function PermissionMatrixModal({ isOpen, onClose }) {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-border flex items-center justify-between bg-canvas/30 flex-none text-xs">
-          <p className="text-muted">
-            Keterangan: Otorisasi dikontrol ketat di sisi server (backend) dan diproteksi melalui komponen layout di sisi klien.
-          </p>
-          <Button variant="outline" size="sm" onClick={onClose}>
+        <div className="p-4 border-t border-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-canvas/30 flex-none text-xs">
+          <div className="flex items-center gap-2 text-muted">
+            <Lock className="h-4 w-4 text-primary-red shrink-0" />
+            <span>
+              <strong>Prinsip Segregation of Duties</strong>: Pembuat draf transaksi tidak dapat menyetujui transaksi final. Otoritas tertinggi dan persetujuan eksekutif berada pada <strong>Direktur</strong>.
+            </span>
+          </div>
+          <Button variant="outline" size="sm" onClick={onClose} className="self-end sm:self-auto">
             Tutup
           </Button>
         </div>

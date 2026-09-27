@@ -26,8 +26,13 @@ import Badge from '@/components/ui/Badge';
 import { LoadingState, EmptyState } from '@/components/ui/StateViews';
 import payrollAdapter from '@/services/adapters/payrollAdapter';
 import { STATUS } from '@/constants/status';
+import { useAuth } from '@/app/providers/AuthProvider';
+import { PERMISSIONS } from '@/constants/permissions';
+import { ROLES } from '@/constants/roles';
 
 export default function PayrollListPage() {
+  const { currentUser, hasPermission } = useAuth();
+  const canApprove = hasPermission(PERMISSIONS.PAYROLL_APPROVE) || currentUser?.role === ROLES.DIREKTUR;
   const [periods, setPeriods] = useState([]);
   const [selectedPeriodId, setSelectedPeriodId] = useState('PAYROLL-2026-09');
   const [currentPeriod, setCurrentPeriod] = useState(null);
@@ -228,15 +233,22 @@ export default function PayrollListPage() {
                 )}
 
                 {currentPeriod.status === STATUS.PENDING_APPROVAL && !currentPeriod.approvedByDirector && (
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={handleApproveDirector}
-                    className="gap-1.5 bg-accent-green hover:bg-accent-green/90"
-                  >
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span>Setujui Payroll (Direktur)</span>
-                  </Button>
+                  canApprove ? (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={handleApproveDirector}
+                      className="gap-1.5 bg-accent-green hover:bg-accent-green/90"
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span>Setujui Payroll (Direktur)</span>
+                    </Button>
+                  ) : (
+                    <div className="flex items-center gap-1.5 text-xs text-amber-800 font-semibold bg-amber-50 px-3 py-2 rounded-lg border border-amber-200">
+                      <Clock className="h-4 w-4 text-amber-600 animate-pulse" />
+                      <span>Menunggu Approval Direktur Utama</span>
+                    </div>
+                  )
                 )}
 
                 {currentPeriod.status === STATUS.APPROVED && (

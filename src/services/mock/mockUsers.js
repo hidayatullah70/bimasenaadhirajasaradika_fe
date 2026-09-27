@@ -205,10 +205,9 @@ const ROLE_PERMISSIONS = {
     PERMISSIONS.INVOICE_EDIT,
     PERMISSIONS.PAYMENT_VIEW,
     PERMISSIONS.PAYMENT_CREATE,
-    // Payroll Ketenagakerjaan (R/W)
+    // Payroll Ketenagakerjaan (C, R, U, E, X [submit] - Approval reserved for Direktur)
     PERMISSIONS.PAYROLL_VIEW,
     PERMISSIONS.PAYROLL_CREATE,
-    PERMISSIONS.PAYROLL_APPROVE,
     // Rekonsiliasi Kas COD Kurir (R/W)
     PERMISSIONS.COD_VIEW,
     PERMISSIONS.COD_COLLECT,

@@ -60,9 +60,6 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
       }));
     }
   }, [job]);
-
-  const targetWaNumber = job?.targetWa || '6285187845044';
-
   const activeDept = formData.departemen || job?.departmentLabel || job?.department || '';
   const isCourier =
     activeDept.toLowerCase().includes('kurir') ||
