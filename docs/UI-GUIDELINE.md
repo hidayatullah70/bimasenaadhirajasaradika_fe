@@ -137,7 +137,7 @@ Reuse and elevate the project baseline at https://bimasenaadhirajasaradika.verce
 - **Triggers**:
   1. Clicking "Kirim Lamaran" on any job vacancy card on `/career`.
   2. Clicking "Chat Loker" on the floating CTA popover (`FloatingAdminCTA`).
-  3. Clicking WhatsApp contact numbers on `/contact` ("Hubungi Kami" page) and the footer Kontak section (`PublicFooter`).
+  3. Clicking WhatsApp recruitment number `0851 8784 5044` on `/contact` ("Hubungi Kami" page) and in the footer Kontak section (`PublicFooter`). (Note: `0851 2479 9305` in the footer navigates to `/contact` "Hubungi Kami").
 - **Form Sections**:
   1. **Data Pribadi (eKTP)**: Nama Lengkap (sesuai eKTP), NIK (16 digit), Tempat & Tanggal Lahir, Usia, Nomor SIM (khusus Kurir), dan Alamat Lengkap sesuai eKTP.
   2. **Kontak & Komunikasi**: Email Aktif, Nomor HP / WhatsApp, dan Nomor HP Darurat.

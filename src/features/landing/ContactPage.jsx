@@ -330,26 +330,18 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <p className="text-xs sm:text-sm text-slate-700 font-medium mt-0.5">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedJob({
-                            title: 'Konsultasi Layanan & Karir',
-                            department: 'Layanan & Konsultasi',
-                            location: 'Kota Tangerang & Jabodetabek',
-                            employmentType: 'Konsultasi / Kemitraan',
-                            targetWa: '6285124799305',
-                          });
-                          setIsJobModalOpen(true);
-                        }}
-                        className="hover:text-primary-red transition-colors inline-block text-left cursor-pointer"
-                        title="Klik untuk membuka Formulir Lamaran Kerja / Konsultasi"
+                      <a
+                        href="https://wa.me/6285124799305"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-primary-red transition-colors inline-block"
+                        title="Chat WhatsApp Konsultasi Layanan"
                       >
                         0851 2479 9305{' '}
                         <span className="text-xs text-slate-500 font-normal">
                           (WhatsApp Konsultasi)
                         </span>
-                      </button>
+                      </a>
                     </p>
                     <p className="text-xs sm:text-sm text-slate-700 font-medium mt-1">
                       <button

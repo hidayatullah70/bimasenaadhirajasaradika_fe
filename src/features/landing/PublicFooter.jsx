@@ -147,23 +147,13 @@ export default function PublicFooter() {
               <li className="flex items-start gap-2.5 text-sm text-white/70">
                 <Phone className="h-4 w-4 text-primary-red flex-none mt-1" aria-hidden />
                 <div className="flex flex-col space-y-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedJob({
-                        title: 'Konsultasi Layanan & Karir',
-                        department: 'Konsultasi & Layanan',
-                        location: 'Kota Tangerang & Jabodetabek',
-                        employmentType: 'Konsultasi / Kemitraan',
-                        targetWa: '6285124799305',
-                      });
-                      setIsJobModalOpen(true);
-                    }}
-                    className="hover:text-white transition-colors text-left cursor-pointer"
-                    title="Buka Formulir Konsultasi / Lamaran Kerja"
+                  <Link
+                    to="/contact"
+                    className="hover:text-white transition-colors text-left"
+                    title="Buka Halaman Hubungi Kami (Konsultasi)"
                   >
                     0851 2479 9305 <span className="text-xs text-white/50">(Konsultasi)</span>
-                  </button>
+                  </Link>
                   <button
                     type="button"
                     onClick={() => {
