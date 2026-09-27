@@ -21,7 +21,7 @@ Gate: no blind rewrite.
 - React/Vite app shell
 - router
 - mock auth
-- RBAC/permission guards
+- RBAC/permission guards (conforming to PRD Section 6.9)
 - notification center
 - global search
 - audit infrastructure
@@ -64,7 +64,7 @@ Tickets, SLA, assets, maintenance, monitoring.
 Aggregate dashboards, approval center, executive reports, risk/alert views.
 
 ## 12. Phase 11 — Backend
-Node.js + Express.js, MySQL, migrations, seeders, repositories/services/controllers/routes, auth/RBAC, validation, audit, Hoppscotch collection, frontend adapters.
+Node.js + Express.js, MySQL, migrations, seeders, repositories/services/controllers/routes, auth/RBAC (enforcing PRD Section 6.9 authorization matrix), validation, audit, Hoppscotch collection, frontend adapters.
 
 ## 13. Phase 12 — Deployment
 GitHub → Railway MySQL + Express API → Vercel/agreed frontend host. Configure environment variables and CORS. Smoke test.

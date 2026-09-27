@@ -51,7 +51,7 @@ Visitor navigates to /contact (via Navbar CTA / Menu / Footer)
 → route guard
 → role dashboard
 ```
-Frontend hiding is UX only; backend permission enforcement is mandatory.
+Frontend hiding is UX only; backend permission enforcement is mandatory. Role permissions and resource access levels strictly adhere to the authorization matrix in `docs/PRD.md` Section 6.9.
 
 ## 4. Employee Lifecycle
 ```text

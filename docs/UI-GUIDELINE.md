@@ -144,8 +144,10 @@ Reuse and elevate the project baseline at https://bimasenaadhirajasaradika.verce
   1. **Departemen / Layanan**: Pilihan dropdown 6 layanan utama (Jasa Pengamanan / Security, Ekspedisi Kurir, Parkir, Cleaning Service, Man Power, Loss Prevention) saat dibuka dari kontak/CTA umum.
   2. **Data Pribadi (eKTP)**: Nama Lengkap (sesuai eKTP), NIK (16 digit), Tempat & Tanggal Lahir, Usia, Nomor SIM (Khusus Ekspedisi Kurir — wajib bila memilih Ekspedisi Kurir, opsional untuk selain Ekspedisi Kurir), dan Alamat Lengkap sesuai eKTP.
   3. **Kontak & Komunikasi**: Email Aktif, Nomor HP / WhatsApp, dan Nomor HP Darurat.
-  4. **Data Rekening Bank**: Nama Bank, Nomor Rekening, dan Nama Pemilik Rekening.
-  5. **Petunjuk Berkas Dokumen**: Catatan instruksi pengiriman berkas lengkap (CV, eKTP, SIM, KK, Ijazah Terakhir, Foto Selfie) dalam format ZIP/PDF langsung dari WhatsApp pelamar ke nomor WA admin terkait.
+  4. **Data Rekening Bank BCA**: Nomor Rekening BCA dan Nama Pemilik Rekening (tanpa dropdown, default BCA).
+  5. **Petunjuk Berkas Dokumen**: Catatan instruksi pengiriman berkas lengkap (CV, eKTP, SIM, KK, Ijazah Terakhir, Foto Selfie) dalam format Foto/PDF.
 - **Submission Action**:
   - Validates all required fields and formats (enforcing required SIM number only when Ekspedisi Kurir is selected).
   - Compiles formatted structured message and dispatches directly to official WhatsApp Rekrutmen PT. BARAK: `6285187845044` (or configured target WA: `https://wa.me/{targetWa}?text=...`).
+- **Authorization & Sidebar Role Visibility**:
+  - Internal dashboard navigation and UI permissions strictly conform to the authorization matrix in `docs/PRD.md` Section 6.9.

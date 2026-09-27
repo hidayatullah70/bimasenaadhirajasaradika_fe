@@ -258,43 +258,93 @@ Fokus:
 - website settings
 - incoming website leads
 
-### 6.9 Matriks Otorisasi & Hak Akses (Role-Based Access Control / RBAC)
+### 6.9 Matriks Otorisasi & Hak Akses Granular (Granular RBAC & Workflow Governance)
 
-#### 6.9.1 Definisi Level Otorisasi
-- **R/W (Read / Write)**: Memiliki hak penuh untuk melihat data dan melakukan mutasi data (tambah, ubah, hapus, eskalasi, finalisasi, atau approve).
-- **R (Read-Only)**: Memiliki hak untuk melihat dan membaca data untuk keperluan koordinasi atau pengawasan lintas divisi tanpa hak mutasi.
-- **- (Forbidden)**: Dibatasi penuh. Tidak memiliki hak akses melihat atau mengelola modul/sumber daya tersebut.
+#### 6.9.1 Prinsip Tata Kelola Hak Akses & Kewenangan
+Sistem IOMS PT. BARAK menerapkan prinsip tata kelola akses berbasis peran (*Role-Based Access Control*) yang ketat dengan aturan non-negosiasi berikut:
+1. **Otoritas Tertinggi pada Direktur**: Direktur memegang wewenang eksekutif tertinggi (*Supreme Executive Authority*), memiliki visibilitas lintas modul (Read global), hak persetujuan mutlak (*Executive Sign-off & Final Approval*), hak override pengecualian SOP, serta akses forensik audit trail global.
+2. **Pemisahan Tugas (Segregation of Duties / Maker-Checker Principle)**: Departemen pembuat/pengusul draft (*maker*) dilarang keras mengesahkan persetujuan final atas tindakannya sendiri (*checker*). Contoh: Tim Finance yang menghitung kalkulasi Payroll tidak dapat melakukan persetujuan final (Approval mutlak di tangan Direktur).
+3. **Integritas Transaksi & Anti-Tampering**: Seluruh data yang telah difinalisasi atau disetujui (misal: Absensi Terfinalisasi, Faktur Terbit, Payroll Disetujui, Perjanjian Kontrak Aktif) terkunci secara permanen (*immutable state*). Tindakan pembukaan kembali (*reopen*) atau pembatalan (*void*) mewajibkan otorisasi Direksi dan otomatis dicatat pada audit log.
+4. **Larangan Penghapusan Fisik (No Hard Delete on Core Data)**: Seluruh penghapusan data operasional bersifat *Soft-Delete / Archive / Void*. Data riwayat transaksi, kontrak, absensi, dan keuangan wajib tersimpan permanen untuk kepatuhan hukum dan audit ketenagakerjaan.
 
-#### 6.9.2 Tabel Matriks Otorisasi & Hak Akses
+#### 6.9.2 Definisi Kode Izin Granular (Action Codes)
+Otorisasi pada setiap modul didefinisikan dengan kode aksi granular sebagai berikut:
+- **C (Create)**: Hak membuat record baru atau menginisiasi draft awal transaksi (HTTP `POST`).
+- **R (Read)**: Hak membaca daftar data, meninjau detail record, memfilter pencarian, dan melihat dashboard (HTTP `GET`).
+- **U (Update)**: Hak menyunting, melengkapi, atau mengoreksi data pada status aktif/draft (HTTP `PUT / PATCH`).
+- **D (Delete / Archive)**: Hak menghapus draft sementara atau mengarsipkan/menonaktifkan record aktif melalui *soft-delete* (HTTP `DELETE`).
+- **X (Execute Workflow)**: Hak menjalankan aksi alur kerja kritis (*Approve, Reject, Finalize/Lock, Reopen, Escalate, Reconcile, Handover, Publish*) (HTTP `POST /action`).
+- **E (Export)**: Hak mengunduh dokumen laporan resmi dalam format Excel/PDF/CSV berstempel digital/audit (HTTP `GET /export`).
+- **- (Forbidden)**: Dibatasi penuh. Tidak memiliki izin akses melihat atau mengelola modul/sumber daya tersebut.
+
+#### 6.9.3 Tabel Matriks Otorisasi Granular (15 Modul x 8 Peran)
 
 | No | Modul & Sumber Daya | Direktur | Legal | HRD | Operasional | Finance | Marketing | IT Support | Admin Website |
 |---|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| 1 | **Executive Dashboard & KPI** | **R/W** | **R** | **R** | **R** | **R** | **R** | **R** | **R** |
-| 2 | **Approval Center (Otoritas Direksi)** | **R/W** | **-** | **-** | **-** | **-** | **-** | **-** | **-** |
-| 3 | **Manajemen Pengguna & Staf** | **R/W** | **-** | **-** | **-** | **-** | **-** | **R** | **R/W** |
-| 4 | **Tenaga Kerja (Employees)** | **R/W** | **R** | **R/W** | **R/W** | **R** | **R** | **R** | **R** |
-| 5 | **Kehadiran Biometrik (Attendance)** | **R/W** | **R** | **R/W** | **R/W** | **R** | **R** | **R** | **-** |
-| 6 | **Penempatan & Pos Site (Placements)** | **R/W** | **R** | **R/W** | **R/W** | **R** | **R** | **R** | **-** |
-| 7 | **Insiden Lapangan & Relief Guard** | **R/W** | **R** | **R** | **R/W** | **-** | **-** | **-** | **-** |
-| 8 | **Faktur & Piutang (Invoices)** | **R/W** | **R** | **-** | **-** | **R/W** | **R** | **-** | **-** |
-| 9 | **Payroll Ketenagakerjaan** | **R/W** | **R** | **R** | **-** | **R/W** | **-** | **-** | **-** |
-| 10 | **Rekonsiliasi Kas COD Kurir** | **R/W** | **R/W** | **-** | **R** | **R/W** | **-** | **-** | **-** |
-| 11 | **Kasus Hukum & Kontrak Mitra** | **R/W** | **R/W** | **R** | **-** | **R** | **-** | **-** | **-** |
-| 12 | **Prospek & CRM Pipeline (Leads)** | **R/W** | **-** | **-** | **-** | **-** | **R/W** | **-** | **-** |
-| 13 | **Aset IT & Tiket Helpdesk** | **R/W** | **-** | **-** | **-** | **-** | **-** | **R/W** | **-** |
-| 14 | **CMS Website & SEO Management** | **R/W** | **-** | **-** | **-** | **-** | **-** | **-** | **R/W** |
-| 15 | **Audit Activity Feed** | **R/W** | **R** | **R** | **R** | **R** | **R** | **R** | **R** |
+| 1 | **Executive Dashboard & KPI** | **C, R, U, E, X** | **R** | **R** | **R** | **R** | **R** | **R** | **R** |
+| 2 | **Approval Center (Otoritas Direksi)** | **R, X** | **-** | **-** | **-** | **-** | **-** | **-** | **-** |
+| 3 | **Manajemen Pengguna & Staf** | **C, R, U, D, X** | **-** | **-** | **-** | **-** | **-** | **R, U** | **C, R, U** |
+| 4 | **Tenaga Kerja (Employees)** | **R, E** | **R, E** | **C, R, U, D, E** | **R, U** *(pos/shift)* | **R** *(bank BCA)* | **R** *(kualifikasi)* | **R** *(akun/email)* | **-** |
+| 5 | **Kehadiran Biometrik (Attendance)** | **R, E, X** *(reopen)* | **R** | **C, R, U, E, X** *(lock)*| **R, U** *(izin site)* | **R, E** | **-** | **R** *(scanner)* | **-** |
+| 6 | **Penempatan & Pos Site (Placements)**| **R, E** | **R** | **R, U** *(admin/PKWT)*| **C, R, U, D, X** | **R** *(billing/site)*| **R** *(kapasitas)* | **R** *(geo-tag)* | **-** |
+| 7 | **Insiden Lapangan & Relief Guard** | **R, X** *(high risk)*| **R, U, X** *(BAP)* | **R, U** *(SP staf)* | **C, R, U, X** | **R** *(lembur/klaim)*| **-** | **-** | **-** |
+| 8 | **Faktur & Piutang (Invoices)** | **R, E, X** *(write-off)*| **R, X** *(somasi)* | **-** | **R** *(hari kerja)* | **C, R, U, D, E, X** | **R** *(status bayar)*| **-** | **-** |
+| 9 | **Payroll Ketenagakerjaan** | **R, E, X** *(approve)* | **R** *(UMK rule)* | **R, U, E** *(pre-check)*| **-** | **C, R, U, E, X** *(submit)*| **-** | **-** | **-** |
+| 10 | **Rekonsiliasi Kas COD Kurir** | **R, E, X** *(write-off)*| **R, U, X** *(litigasi)*| **R** *(evaluasi)* | **R, U** *(verif fisik)*| **C, R, U, E, X** | **-** | **-** | **-** |
+| 11 | **Kasus Hukum & Kontrak Mitra (PKS)**| **R, E, X** *(sign/tutup)*| **C, R, U, D, E, X** | **R** *(ketenagakerjaan)*| **R** *(lingkup SOP)*| **R** *(termin bayar)*| **R, U** *(draft tender)*| **-** | **-** |
+| 12 | **Prospek & CRM Pipeline (Leads)** | **R, E, X** *(diskon)* | **R** *(uji tuntas)* | **R** *(proyeksi)* | **R** *(survei site)* | **R** *(termin klien)*| **C, R, U, D, E, X** | **-** | **C, R** *(web inquiry)*|
+| 13 | **Aset IT & Tiket Helpdesk** | **C, R** | **C, R** | **C, R** | **C, R** | **C, R** | **C, R** | **C, R, U, D, E, X** | **C, R** |
+| 14 | **CMS Website & SEO Management** | **R, X** *(approve)* | **-** | **R, U** *(materi loker)*| **-** | **-** | **R** *(materi promo)*| **-** | **C, R, U, D, E, X** |
+| 15 | **Audit Activity Feed & Forensik** | **R, E** *(global)* | **R, E** *(hukum)* | **R** *(divisi)* | **R** *(divisi)* | **R** *(divisi)* | **R** *(divisi)* | **R** *(divisi)* | **R** *(divisi)* |
 
-#### 6.9.3 Aturan Visibilitas Menu Sidebar
-Setiap akun hanya melihat menu navigasi yang relevan sesuai perannya:
-- **Direktur**: Melihat seluruh modul operasional, pengawasan eksekutif, dan pusat persetujuan.
-- **HRD**: Melihat menu **Master Data** (Karyawan, Penempatan, Shift) dan **HRD** (Attendance, Rekap Payroll, Kontrak).
-- **Legal**: Melihat menu **Master Data** (Klien, Karyawan) dan **Legal** (Kasus Hukum, Kontrak PKS, Kepatuhan SIO, Eskalasi COD).
-- **Operasional**: Melihat menu **Master Data** dan **Operasional** (Kesiapan Manpower, Insiden, Pergantian Personel, Jurnal Patroli).
-- **Finance**: Melihat menu **Master Data** dan **Finance** (Faktur & Piutang, Payroll, Rekonsiliasi COD).
-- **Marketing**: Melihat menu **Master Data** (Klien) dan **Marketing** (Manajemen Leads, CRM Pipeline, Handover WON).
-- **IT Support**: Melihat menu **Master Data** (Pengguna) dan **IT Support** (Tiket Helpdesk, Aset Posko, Maintenance).
-- **Admin Website**: Melihat menu **Master Data** (Pengguna) dan **Website** (CMS Artikel, Karir, FAQ, Inquiries, SEO).
+*Catatan Khusus Aksi Granular:*
+- Modul 2 (**Approval Center**): Eksklusif bagi **Direktur** untuk menyetujui mutasi finansial (Payroll), pembukaan kembali data terkunci (Reopen Absensi), penghapusan piutang (Write-off COD), kontrak bernilai strategis, dan eskalasi kasus tingkat tinggi.
+- Modul 4 (**Employees**): Hanya **HRD** yang berhak menambah/mengubah data personal sensitif dan rekening bank BCA. Tim **Operasional** hanya berhak memperbarui status penempatan kualifikasi lapangan, sertifikasi garda, dan jadwal ketersediaan.
+- Modul 5 (**Attendance**): **HRD** memegang wewenang *Finalize/Lock*. Setelah status terkunci, mutasi rekap dilarang total; pembukaan kembali (*Reopen*) hanya dapat dieksekusi dengan otorisasi **Direktur**.
+- Modul 8 & 9 (**Invoices & Payroll**): **Finance** menyusun kalkulasi dan memverifikasi potongan. Pada Payroll, Finance wajib men-submit ke Direktur untuk proses *Approval* (Finance dilarang meng-approve kalkulasi gajinya sendiri).
+- Modul 10 (**COD Kurir**): **Operasional** memverifikasi fisik paket/uang kurir di lapangan. Jika terjadi selisih kas tak terselesaikan, **Finance** merekonsiliasi dan melimpahkan kasus ke **Legal** untuk penindakan hukum/somasi.
+- Modul 13 (**Aset IT & Tiket Helpdesk**): Seluruh departemen memiliki hak `C, R` (dapat membuat tiket permohonan bantuan teknis atau keluhan fasilitas dan memantau status tiketnya). Hak alokasi teknisi, pembaruan progres, dan penyelesaian (*Close/Resolve*) tiket dipegang oleh **IT Support**.
+
+#### 6.9.4 Matriks Keterkaitan Alur Kerja Antar-Departemen (Cross-Department Workflow Handover)
+Sistem IOMS PT. BARAK menghubungkan aktivitas antar-divisi melalui gerbang otorisasi (*Workflow Gates*) yang berkesinambungan:
+```text
+1. Alur Klien & Komersial:
+   Marketing (Leads → Proposal → WON) 
+   → Legal (Penyusunan & Pengesahan PKS Kontrak Klien) 
+   → Operasional (Survei Lokasi, Alokasi Pos, & Penempatan Personel) 
+   → Finance (Penerbitan Invoice Tagihan & Penerimaan Piutang).
+
+2. Alur Karyawan, Presensi, & Penggajian:
+   HRD (Rekrutmen Karyawan, Berkas eKTP, Rekening BCA, & Kontrak PKWT) 
+   → Operasional (Penugasan Pos Site, Alokasi Shift, & Laporan Kehadiran Site) 
+   → HRD (Koreksi Jam Kerja, Validasi Kehadiran, & Finalisasi/Lock Absensi) 
+   → Finance (Penarikan Data Absensi Final, Perhitungan Tunjangan/Potongan, & Submit Payroll) 
+   → Direktur (Persetujuan Final di Approval Center & Otorisasi Pencairan Gaji).
+
+3. Alur Rekonsiliasi Kas COD Ekspedisi:
+   Finance (Impor Manifest Transaksi & Identifikasi Selisih Kas Kurir) 
+   → Operasional (Verifikasi Lapangan & Klarifikasi Berita Acara Kurir) 
+   → Finance (Penagihan Kasbon/Potongan Kurir Jika Bersedia Ganti Rugi) 
+   → Legal (Eskalasi Somasi/Tindakan Hukum Jika Terjadi Penggelapan/Unresolved) 
+   → Direktur (Otorisasi Penghapusan Piutang Macet / Persetujuan Jalur Litigasi).
+
+4. Alur Manajemen Insiden Lapangan:
+   Operasional (Pencatatan Insiden Pos Site & Pengerahan Personel Pengganti/Relief Guard) 
+   → HRD (Penerbitan Surat Peringatan/Tindakan Disiplin Karyawan Pelanggar) 
+   → Legal (Investigasi BAP Hukum, Mediasi Klien, atau Laporan Kepolisian) 
+   → Direktur (Monitoring Eskalasi Insiden Kritis Berdampak Finansial/Reputasi).
+```
+
+#### 6.9.5 Aturan Visibilitas Menu Sidebar
+Setiap akun staf yang berhasil terotentikasi hanya akan disajikan menu navigasi yang relevan sesuai perannya untuk menjamin kerapian antarmuka dan keamanan data:
+- **Direktur**: Menampilkan seluruh menu navigasi modul: Executive Dashboard, Approval Center, Audit Forensik, Master Data, HRD, Operasional, Finance, Legal, Marketing, IT Support, dan CMS Website.
+- **HRD**: Menampilkan menu **Master Data** (Karyawan, Penempatan Administratif, Shift) dan **HRD** (Attendance Spreadsheet, Rekap Payroll, Kontrak PKWT/PKWTT).
+- **Legal**: Menampilkan menu **Master Data** (Klien, Karyawan) dan **Legal** (Kontrak PKS, Kepatuhan SIO/BPJS, Kasus Hukum, Eskalasi COD).
+- **Operasional**: Menampilkan menu **Master Data** (Klien, Proyek, Lokasi, Pos Site) dan **Operasional** (Monitoring Manpower, Penjadwalan Shift, Insiden, Pergantian Personel, Laporan Lapangan).
+- **Finance**: Menampilkan menu **Master Data** (Klien, Proyek) dan **Finance** (Faktur & Piutang, Payroll Karyawan, Rekonsiliasi Kas COD).
+- **Marketing**: Menampilkan menu **Master Data** (Klien) dan **Marketing** (Manajemen Leads, CRM Pipeline, Peluang Tender, Handover WON).
+- **IT Support**: Menampilkan menu **Master Data** (Pengguna & Peran) dan **IT Support** (Tiket Helpdesk, Aset Perangkat Posko, Jadwal Pemeliharaan).
+- **Admin Website**: Menampilkan menu **Master Data** (Pengguna) dan **Website CMS** (Kelola Berita, Blog, Karir Loker, FAQ, Media, SEO, Web Inquiries).
 
 ---
 

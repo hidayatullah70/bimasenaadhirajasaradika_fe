@@ -18,7 +18,7 @@ Error:
 - `POST /auth/login`
 - `POST /auth/logout`
 - `GET /auth/me`
-Backend enforces authentication + RBAC.
+Backend enforces authentication + RBAC based on the authorization matrix in `docs/PRD.md` Section 6.9.
 
 ## 3. Core Master
 - `GET/POST /employees`
