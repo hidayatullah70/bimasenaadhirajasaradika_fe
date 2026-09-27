@@ -65,7 +65,7 @@ export default function FloatingAdminCTA() {
 
   const handleOpenJobModal = () => {
     setSelectedJob({
-      title: 'Pelamar / Lowongan Kerja (Chat Loker)',
+      title: 'Pelamar / Lowongan Kerja (Kirim Lamaran)',
       department: 'Jasa Pengamanan / Security',
       location: 'Jabodetabek & Banten',
       targetWa: '6285187845044',
@@ -157,12 +157,12 @@ export default function FloatingAdminCTA() {
             type="button"
             onClick={handleOpenJobModal}
             className="flex items-center gap-3 group/item focus-visible:outline-none cursor-pointer"
-            title="Isi Formulir Lamaran Kerja (Chat Loker)"
+            title="Isi Formulir Lamaran Kerja (Kirim Lamaran)"
           >
             {/* Label Pill: Border Hijau, Background Putih, Teks Ink Jelas */}
             <div className="bg-white border-2 border-[#25D366] py-1.5 px-4 rounded-full shadow-lg transition-transform duration-200 group-hover/item:scale-102 flex flex-col items-end text-right">
               <span className="text-xs sm:text-sm text-[#0F172A] tracking-tight leading-tight">
-                Chat Loker
+                Kirim Lamaran
               </span>
             </div>
 

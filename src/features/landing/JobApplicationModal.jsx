@@ -28,19 +28,6 @@ const DEPARTMENT_SERVICES = [
   'Loss Prevention',
 ];
 
-const BANK_OPTIONS = [
-  'BCA (Bank Central Asia)',
-  'Bank Mandiri',
-  'BRI (Bank Rakyat Indonesia)',
-  'BNI (Bank Negara Indonesia)',
-  'BSI (Bank Syariah Indonesia)',
-  'Bank Danamon',
-  'CIMB Niaga',
-  'Bank Permata',
-  'Bank BTN',
-  'Bank Lainnya',
-];
-
 export default function JobApplicationModal({ isOpen, onClose, job }) {
   const isDepartmentSelectable = Boolean(job?.isDepartmentSelectable || !job?.id);
 
@@ -55,7 +42,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
     email: '',
     noHpWa: '',
     noHpDarurat: '',
-    namaBank: 'BCA (Bank Central Asia)',
+    namaBank: 'BCA',
     nomorRekening: '',
     namaPemilikRekening: '',
     departemen: job?.departmentLabel || job?.department || DEPARTMENT_SERVICES[0],
@@ -167,17 +154,16 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
       `• *No. HP / WA:* ${formData.noHpWa}`,
       `• *No. HP Darurat:* ${formData.noHpDarurat}`,
       ``,
-      `*2. DATA REKENING BANK:*`,
-      `• *Nama Bank:* ${formData.namaBank}`,
+      `*2. DATA REKENING BANK BCA:*`,
+      `• *Bank:* BCA`,
       `• *Nomor Rekening:* ${formData.nomorRekening}`,
       `• *Nama Pemilik Rekening:* ${formData.namaPemilikRekening}`,
       ``,
       `*3. BERKAS DOKUMEN LAMPIRAN:*`,
       `• *Berkas Persyaratan:* CV, eKTP, SIM, KK, Ijazah Terakhir, Foto Selfie`,
-      `• *Format Berkas:* File ZIP / PDF`,
-      `• *Keterangan:* Dikirimkan langsung melalui chat WhatsApp ini ke nomor admin +${targetWaNumber}`,
+      `• *Format Berkas:* File Foto / PDF`,
       `----------------------------------------`,
-      `Halo Tim Rekrutmen & HRD PT. BARAK, saya telah mengisi formulir data diri di atas secara lengkap dan benar untuk Departemen ${deptName}. File berkas dokumen persyaratan (CV, eKTP, SIM, KK, Ijazah Terakhir, Foto Selfie) dalam bentuk zip/PDF akan saya kirimkan langsung melalui chat WhatsApp ini. Mohon diproses untuk tahapan seleksi berikutnya. Terima kasih.`,
+      `Halo Tim Rekrutmen & HRD PT. BARAK, saya telah mengisi formulir data diri di atas secara lengkap dan benar untuk Departemen ${deptName}. File berkas dokumen persyaratan (CV, eKTP, SIM, KK, Ijazah Terakhir, Foto Selfie) dalam bentuk Foto/PDF akan saya kirimkan langsung melalui chat WhatsApp ini. Mohon diproses untuk tahapan seleksi berikutnya. Terima kasih.`,
     ];
 
     const waMessage = textLines.join('\n');
@@ -539,35 +525,15 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
             <div className="flex items-center gap-2 mb-3 pb-1 border-b border-border">
               <CreditCard className="w-4 h-4 text-primary-red" />
               <h3 className="text-sm font-bold text-ink uppercase tracking-wide">
-                3. Informasi Rekening Bank
+                3. Informasi Rekening Bank BCA
               </h3>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {/* Nama Bank */}
-              <div>
-                <label className="block text-xs font-semibold text-ink mb-1" style={{ color: '#0F172A' }}>
-                  Nama Bank <span className="text-danger">*</span>
-                </label>
-                <select
-                  name="namaBank"
-                  value={formData.namaBank}
-                  onChange={handleChange}
-                  style={{ color: '#0F172A', backgroundColor: '#FFFFFF' }}
-                  className="w-full px-3.5 py-2 text-sm rounded-lg border border-border bg-white text-ink transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red font-medium"
-                >
-                  {BANK_OPTIONS.map((b) => (
-                    <option key={b} value={b} style={{ color: '#0F172A', backgroundColor: '#FFFFFF' }}>
-                      {b}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Nomor Rekening */}
               <div>
                 <label className="block text-xs font-semibold text-ink mb-1" style={{ color: '#0F172A' }}>
-                  Nomor Rekening <span className="text-danger">*</span>
+                  Nomor Rekening BCA <span className="text-danger">*</span>
                 </label>
                 <input
                   type="text"
@@ -578,7 +544,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                     setFormData((prev) => ({ ...prev, nomorRekening: val }));
                     if (errors.nomorRekening) setErrors((prev) => ({ ...prev, nomorRekening: null }));
                   }}
-                  placeholder="Nomor rekening bank"
+                  placeholder="Nomor rekening BCA"
                   style={{ color: '#0F172A', backgroundColor: '#FFFFFF' }}
                   className={clsx(
                     'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-ink placeholder:text-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red font-mono',
@@ -600,7 +566,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   name="namaPemilikRekening"
                   value={formData.namaPemilikRekening}
                   onChange={handleChange}
-                  placeholder="Sesuai buku tabungan"
+                  placeholder="Sesuai buku tabungan BCA"
                   style={{ color: '#0F172A', backgroundColor: '#FFFFFF' }}
                   className={clsx(
                     'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-ink placeholder:text-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
@@ -632,7 +598,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   Catatan :
                 </p>
                 <p className="text-amber-950">
-                  silahkan kirim file berisi : <strong>(CV, eKTP, SIM, KK, Ijazah Terakhir, Foto Selfie)</strong> dalam bentuk file <strong>zip/PDF</strong> dari WA Pelamar ke nomor WA admin <span className="font-bold text-primary-red">+{targetWaNumber}</span>
+                  silahkan kirim file berisi : <strong>(CV, eKTP, SIM, KK, Ijazah Terakhir, Foto Selfie)</strong> dalam bentuk file <strong>Foto/PDF</strong>
                 </p>
               </div>
             </div>

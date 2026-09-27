@@ -169,7 +169,7 @@ export default function PublicFooter() {
                     className="hover:text-white transition-colors text-left cursor-pointer"
                     title="Buka Formulir Lamaran Kerja"
                   >
-                    0851 8784 5044 <span className="text-xs text-white/50">(Pelamar)</span>
+                    0851 8784 5044 <span className="text-xs text-white/50">(Kirim Lamaran)</span>
                   </button>
                 </div>
               </li>
