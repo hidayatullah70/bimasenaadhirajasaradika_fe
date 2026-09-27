@@ -126,7 +126,7 @@ Reuse and elevate the project baseline at https://bimasenaadhirajasaradika.verce
 - **Position**: Fixed bottom-right (`fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3`).
 - **Main Admin Trigger Button**: 3D Emerald gradient sphere (`#10B981` to `#047857`) with inner top-edge gloss reflection and drop shadow. Admin Headset icon (`Headset`) remains visible at all times (both default and hover/active states). Pulsing beacon ring active when closed.
 - **Hover/Click Popover**: Stacks 2 WhatsApp action buttons directly above the trigger, vertically center-aligned with the trigger button:
-  1. **WA Konsultasi**: White pill badge with green border (`border-[#25D366]`), dark ink text (`text-[#0F172A]`) "Chat Konsultasi", and 3D WhatsApp Green sphere icon (`w-12 h-12`). Links to `https://wa.me/6285124799305`.
+  1. **WA Konsultasi**: White pill badge with green border (`border-[#25D366]`), dark ink text (`text-[#0F172A]`) "Chat Konsultasi", and 3D WhatsApp Green sphere icon (`w-12 h-12`). Navigates to `/contact` ("Hubungi Kami").
   2. **WA Loker**: White pill badge with green border (`border-[#25D366]`), dark ink text (`text-[#0F172A]`) "Chat Loker", and 3D WhatsApp Green sphere icon (`w-12 h-12`). Clicking directly opens `JobApplicationModal`.
 - **Back To Top CTA Button**:
   - **Position**: Directly below the Admin button (`w-14 h-14 rounded-full`).

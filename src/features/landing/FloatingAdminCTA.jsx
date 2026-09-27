@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { Headset, ChevronUp } from 'lucide-react';
 import clsx from 'clsx';
 import JobApplicationModal from './JobApplicationModal';
@@ -131,13 +132,12 @@ export default function FloatingAdminCTA() {
               : 'opacity-0 translate-y-5 pointer-events-none'
           )}
         >
-          {/* 1.1 Tombol WA Konsultasi (Atas) */}
-          <a
-            href="https://wa.me/6285124799305"
-            target="_blank"
-            rel="noopener noreferrer"
+          {/* 1.1 Tombol Konsultasi (Atas) - Arahkan ke Halaman Hubungi Kami */}
+          <Link
+            to="/contact"
+            onClick={() => setIsOpen(false)}
             className="flex items-center gap-3 group/item focus-visible:outline-none"
-            title="Chat WhatsApp Konsultasi Layanan"
+            title="Buka Halaman Hubungi Kami (Chat Konsultasi)"
           >
             {/* Label Pill: Border Hijau, Background Putih, Teks Ink Jelas */}
             <div className="bg-white border-2 border-[#25D366] py-1.5 px-4 rounded-full shadow-lg transition-transform duration-200 group-hover/item:scale-102 flex flex-col items-end text-right">
@@ -150,7 +150,7 @@ export default function FloatingAdminCTA() {
             <div className="relative w-12 h-12 mr-1 rounded-full flex items-center justify-center flex-none transition-transform duration-200 group-hover/item:scale-110 active:scale-95 shadow-[0_6px_16px_rgba(37,211,102,0.45)]">
               <WhatsApp3DIcon variant="green" className="w-12 h-12" />
             </div>
-          </a>
+          </Link>
 
           {/* 1.2 Tombol WA Loker (Bawah/Tengah) - Buka Formulir Lamaran Kerja */}
           <button
