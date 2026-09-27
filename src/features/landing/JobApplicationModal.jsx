@@ -604,14 +604,6 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
             </div>
           </div>
 
-          {/* WhatsApp Direct Dispatch Notice */}
-          <div className="p-3.5 rounded-xl bg-emerald-50/80 border border-emerald-200/80 text-xs text-emerald-900 flex items-center gap-2.5" style={{ color: '#064e3b' }}>
-            <span className="w-2.5 h-2.5 rounded-full bg-accent-green shrink-0 animate-pulse" />
-            <p className="leading-relaxed text-emerald-950">
-              Saat tombol <strong>"Kirim Lamaran"</strong> ditekan, data formulir Anda akan otomatis dikirimkan ke 
-              WhatsApp Rekrutmen PT. BARAK (<span className="font-bold">{targetWaNumber}</span>).
-            </p>
-          </div>
         </form>
 
         {/* Modal Footer */}
