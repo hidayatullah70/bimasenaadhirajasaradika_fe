@@ -52,6 +52,8 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const targetWaNumber = job?.targetWa || '6285187845044';
+
   if (!isOpen) return null;
 
   const handleChange = (e) => {
@@ -104,7 +106,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
 
     setIsSubmitting(true);
 
-    const targetWaNumber = '6285187845044';
+    const targetWaNumber = job?.targetWa || '6285187845044';
     const jobTitle = job?.title || 'Umum / Lowongan Terbuka';
 
     // Format text pesan WhatsApp rapi dan komprehensif
@@ -133,7 +135,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
       `*3. BERKAS DOKUMEN LAMPIRAN:*`,
       `• *Berkas Persyaratan:* CV, eKTP, SIM, KK, Ijazah Terakhir, Foto Selfie`,
       `• *Format Berkas:* File ZIP / PDF`,
-      `• *Keterangan:* Dikirimkan langsung melalui chat WhatsApp ini ke nomor admin +6285187845044`,
+      `• *Keterangan:* Dikirimkan langsung melalui chat WhatsApp ini ke nomor admin +${targetWaNumber}`,
       `----------------------------------------`,
       `Halo Tim Rekrutmen & HRD PT. BARAK, saya telah mengisi formulir data diri di atas secara lengkap dan benar. File berkas dokumen persyaratan (CV, eKTP, SIM, KK, Ijazah Terakhir, Foto Selfie) dalam bentuk zip/PDF akan saya kirimkan langsung melalui chat WhatsApp ini. Mohon diproses untuk tahapan seleksi berikutnya. Terima kasih.`,
     ];
@@ -535,7 +537,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   Catatan :
                 </p>
                 <p className="text-amber-950">
-                  silahkan kirim file berisi : <strong>(CV, eKTP, SIM, KK, Ijazah Terakhir, Foto Selfie)</strong> dalam bentuk file <strong>zip/PDF</strong> dari WA Pelamar ke nomor WA admin <span className="font-bold text-primary-red">+6285187845044</span>
+                  silahkan kirim file berisi : <strong>(CV, eKTP, SIM, KK, Ijazah Terakhir, Foto Selfie)</strong> dalam bentuk file <strong>zip/PDF</strong> dari WA Pelamar ke nomor WA admin <span className="font-bold text-primary-red">+{targetWaNumber}</span>
                 </p>
               </div>
             </div>
@@ -546,7 +548,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
             <span className="w-2.5 h-2.5 rounded-full bg-accent-green shrink-0 animate-pulse" />
             <p className="leading-relaxed">
               Saat tombol <strong>"Kirim Lamaran"</strong> ditekan, data formulir Anda akan otomatis dikirimkan ke 
-              WhatsApp Rekrutmen PT. BARAK (<span className="font-bold">6285187845044</span>).
+              WhatsApp Rekrutmen PT. BARAK (<span className="font-bold">{targetWaNumber}</span>).
             </p>
           </div>
         </form>

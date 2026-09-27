@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Facebook, Instagram, Twitter } from 'lucide-react';
 import clsx from 'clsx';
 import { SERVICE_TYPES } from '@/constants/business';
 import FloatingAdminCTA from './FloatingAdminCTA';
+import JobApplicationModal from './JobApplicationModal';
 
 function TikTokIcon({ className }) {
   return (
@@ -46,6 +47,8 @@ const SOCIAL_LINKS = [
 
 export default function PublicFooter() {
   const year = new Date().getFullYear();
+  const [isJobModalOpen, setIsJobModalOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
   return (
     <footer className="bg-ink text-white w-full">
       <div className="w-full px-4 sm:px-6 lg:px-8 py-14">
@@ -144,23 +147,40 @@ export default function PublicFooter() {
               <li className="flex items-start gap-2.5 text-sm text-white/70">
                 <Phone className="h-4 w-4 text-primary-red flex-none mt-1" aria-hidden />
                 <div className="flex flex-col space-y-1">
-                  <a
-                    href="https://wa.me/6285124799305"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-white transition-colors"
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedJob({
+                        title: 'Konsultasi Layanan & Karir',
+                        department: 'Konsultasi & Layanan',
+                        location: 'Kota Tangerang & Jabodetabek',
+                        employmentType: 'Konsultasi / Kemitraan',
+                        targetWa: '6285124799305',
+                      });
+                      setIsJobModalOpen(true);
+                    }}
+                    className="hover:text-white transition-colors text-left cursor-pointer"
+                    title="Buka Formulir Konsultasi / Lamaran Kerja"
                   >
                     0851 2479 9305 <span className="text-xs text-white/50">(Konsultasi)</span>
-                  </a>
-                  <a
-                    href="https://wa.me/6285187845044"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-white transition-colors"
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedJob({
+                        title: 'Pelamar / Lowongan Kerja',
+                        department: 'Rekrutmen & Karir',
+                        location: 'Jabodetabek & Banten',
+                        employmentType: 'Full-time PKWT',
+                        targetWa: '6285187845044',
+                      });
+                      setIsJobModalOpen(true);
+                    }}
+                    className="hover:text-white transition-colors text-left cursor-pointer"
+                    title="Buka Formulir Lamaran Kerja"
                   >
                     0851 8784 5044 <span className="text-xs text-white/50">(Pelamar)</span>
-                  </a>
-
+                  </button>
                 </div>
               </li>
               <li className="flex items-start gap-2.5 text-sm text-white/70">
@@ -202,6 +222,13 @@ export default function PublicFooter() {
       </div>
       {/* Floating 3D Admin CTA with WhatsApp actions */}
       <FloatingAdminCTA />
+
+      {/* Modal Formulir Lamaran Kerja */}
+      <JobApplicationModal
+        isOpen={isJobModalOpen}
+        onClose={() => setIsJobModalOpen(false)}
+        job={selectedJob}
+      />
     </footer>
   );
 }

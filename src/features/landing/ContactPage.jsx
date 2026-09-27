@@ -16,6 +16,7 @@ import {
 import toast from 'react-hot-toast';
 import PublicNavbar from './PublicNavbar';
 import PublicFooter from './PublicFooter';
+import JobApplicationModal from './JobApplicationModal';
 import { cmsAdapter } from '@/services/adapters/cmsAdapter';
 
 export default function ContactPage() {
@@ -27,6 +28,9 @@ export default function ContactPage() {
     service: '',
     message: '',
   });
+
+  const [isJobModalOpen, setIsJobModalOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -326,31 +330,48 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <p className="text-xs sm:text-sm text-slate-700 font-medium mt-0.5">
-                      <a
-                        href="https://wa.me/6285124799305"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:text-primary-red transition-colors inline-block"
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedJob({
+                            title: 'Konsultasi Layanan & Karir',
+                            department: 'Layanan & Konsultasi',
+                            location: 'Kota Tangerang & Jabodetabek',
+                            employmentType: 'Konsultasi / Kemitraan',
+                            targetWa: '6285124799305',
+                          });
+                          setIsJobModalOpen(true);
+                        }}
+                        className="hover:text-primary-red transition-colors inline-block text-left cursor-pointer"
+                        title="Klik untuk membuka Formulir Lamaran Kerja / Konsultasi"
                       >
                         0851 2479 9305{' '}
                         <span className="text-xs text-slate-500 font-normal">
                           (WhatsApp Konsultasi)
                         </span>
-                      </a>
+                      </button>
                     </p>
                     <p className="text-xs sm:text-sm text-slate-700 font-medium mt-1">
-                      <a
-                        href="https://wa.me/6285187845044"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:text-primary-red transition-colors inline-block"
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedJob({
+                            title: 'Pelamar / Lowongan Kerja',
+                            department: 'Rekrutmen & Karir',
+                            location: 'Jabodetabek & Banten',
+                            employmentType: 'Full-time PKWT',
+                            targetWa: '6285187845044',
+                          });
+                          setIsJobModalOpen(true);
+                        }}
+                        className="hover:text-primary-red transition-colors inline-block text-left cursor-pointer"
+                        title="Klik untuk membuka Formulir Lamaran Kerja"
                       >
                         0851 8784 5044{' '}
                         <span className="text-xs text-slate-500 font-normal">
                           (WhatsApp Lowongan Kerja)
                         </span>
-                      </a>
-
+                      </button>
                     </p>
                   </div>
                 </div>
@@ -396,6 +417,13 @@ export default function ContactPage() {
       </main>
 
       <PublicFooter />
+
+      {/* Modal Formulir Lamaran Kerja */}
+      <JobApplicationModal
+        isOpen={isJobModalOpen}
+        onClose={() => setIsJobModalOpen(false)}
+        job={selectedJob}
+      />
     </div>
   );
 }

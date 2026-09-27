@@ -125,7 +125,7 @@ Reuse and elevate the project baseline at https://bimasenaadhirajasaradika.verce
 - **Main Admin Trigger Button**: 3D Emerald gradient sphere (`#10B981` to `#047857`) with inner top-edge gloss reflection and drop shadow. Admin Headset icon (`Headset`) remains visible at all times (both default and hover/active states). Pulsing beacon ring active when closed.
 - **Hover/Click Popover**: Stacks 2 WhatsApp action buttons directly above the trigger, vertically center-aligned with the trigger button:
   1. **WA Konsultasi**: White pill badge with green border (`border-[#25D366]`), dark ink text (`text-[#0F172A]`) "Chat Konsultasi", and 3D WhatsApp Green sphere icon (`w-12 h-12`). Links to `https://wa.me/6285124799305`.
-  2. **WA Loker**: White pill badge with green border (`border-[#25D366]`), dark ink text (`text-[#0F172A]`) "Chat Loker", and 3D WhatsApp Green sphere icon (`w-12 h-12`). Links to `https://wa.me/6285187845044`.
+  2. **WA Loker**: White pill badge with green border (`border-[#25D366]`), dark ink text (`text-[#0F172A]`) "Chat Loker", and 3D WhatsApp Green sphere icon (`w-12 h-12`). Clicking directly opens `JobApplicationModal`.
 - **Back To Top CTA Button**:
   - **Position**: Directly below the Admin button (`w-14 h-14 rounded-full`).
   - **Visibility**: Default hidden (`opacity-0 max-h-0 pointer-events-none`). Automatically slides in with smooth ease-out when user scrolls at least half of the viewport height (`window.scrollY > window.innerHeight / 2`).
@@ -133,13 +133,16 @@ Reuse and elevate the project baseline at https://bimasenaadhirajasaradika.verce
   - **Icon**: Upward chevron panah atas (`ChevronUp`) in `--primary-yellow: #F9CE3B` with micro-animation on hover.
   - **Action**: Smooth scroll back to top of the page (`window.scrollTo({ top: 0, behavior: 'smooth' })`).
 
-### 13.6 Career Application Modal (`JobApplicationModal` on `/career`)
-- **Trigger**: Clicking "Kirim Lamaran" on any job vacancy card on `/career` immediately opens the comprehensive application form dialog.
+### 13.6 Career Application Modal (`JobApplicationModal`)
+- **Triggers**:
+  1. Clicking "Kirim Lamaran" on any job vacancy card on `/career`.
+  2. Clicking "Chat Loker" on the floating CTA popover (`FloatingAdminCTA`).
+  3. Clicking WhatsApp contact numbers on `/contact` ("Hubungi Kami" page) and the footer Kontak section (`PublicFooter`).
 - **Form Sections**:
   1. **Data Pribadi (eKTP)**: Nama Lengkap (sesuai eKTP), NIK (16 digit), Tempat & Tanggal Lahir, Usia, Nomor SIM (khusus Kurir), dan Alamat Lengkap sesuai eKTP.
   2. **Kontak & Komunikasi**: Email Aktif, Nomor HP / WhatsApp, dan Nomor HP Darurat.
   3. **Data Rekening Bank**: Nama Bank, Nomor Rekening, dan Nama Pemilik Rekening.
-  4. **Petunjuk Berkas Dokumen**: Catatan instruksi pengiriman berkas lengkap (CV, eKTP, SIM, KK, Ijazah Terakhir, Foto Selfie) dalam format ZIP/PDF langsung dari WhatsApp pelamar ke nomor admin `+6285187845044`.
+  4. **Petunjuk Berkas Dokumen**: Catatan instruksi pengiriman berkas lengkap (CV, eKTP, SIM, KK, Ijazah Terakhir, Foto Selfie) dalam format ZIP/PDF langsung dari WhatsApp pelamar ke nomor WA admin terkait.
 - **Submission Action**:
   - Validates all required fields and formats.
-  - Compiles formatted structured message and dispatches directly to official WhatsApp Rekrutmen PT. BARAK: `6285187845044` (`https://wa.me/6285187845044?text=...`).
+  - Compiles formatted structured message and dispatches directly to official WhatsApp Rekrutmen PT. BARAK: `6285187845044` (or configured target WA: `https://wa.me/{targetWa}?text=...`).

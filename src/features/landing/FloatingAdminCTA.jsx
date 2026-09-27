@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Headset, ChevronUp } from 'lucide-react';
 import clsx from 'clsx';
+import JobApplicationModal from './JobApplicationModal';
 
 /**
  * 3D WhatsApp Icon with realistic depth, glossy reflection, and brand gradients.
@@ -57,7 +58,21 @@ function WhatsApp3DIcon({ variant = 'green', className = 'w-12 h-12' }) {
 export default function FloatingAdminCTA() {
   const [isOpen, setIsOpen] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [isJobModalOpen, setIsJobModalOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
   const containerRef = useRef(null);
+
+  const handleOpenJobModal = () => {
+    setSelectedJob({
+      title: 'Pelamar / Lowongan Kerja (Chat Loker)',
+      department: 'Rekrutmen & Karir',
+      location: 'Jabodetabek & Banten',
+      employmentType: 'Full-time PKWT',
+      targetWa: '6285187845044',
+    });
+    setIsJobModalOpen(true);
+    setIsOpen(false);
+  };
 
   // Close WhatsApp popover on outside click
   useEffect(() => {
@@ -137,14 +152,12 @@ export default function FloatingAdminCTA() {
             </div>
           </a>
 
-          {/* 1.2 Tombol WA Loker (Bawah/Tengah) */}
-          <a
-            href="https://wa.me/6285187845044"
-            target="_blank"
-
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 group/item focus-visible:outline-none"
-            title="Chat WhatsApp Lowongan Kerja / Karir"
+          {/* 1.2 Tombol WA Loker (Bawah/Tengah) - Buka Formulir Lamaran Kerja */}
+          <button
+            type="button"
+            onClick={handleOpenJobModal}
+            className="flex items-center gap-3 group/item focus-visible:outline-none cursor-pointer"
+            title="Isi Formulir Lamaran Kerja (Chat Loker)"
           >
             {/* Label Pill: Border Hijau, Background Putih, Teks Ink Jelas */}
             <div className="bg-white border-2 border-[#25D366] py-1.5 px-4 rounded-full shadow-lg transition-transform duration-200 group-hover/item:scale-102 flex flex-col items-end text-right">
@@ -157,7 +170,7 @@ export default function FloatingAdminCTA() {
             <div className="relative w-12 h-12 mr-1 rounded-full flex items-center justify-center flex-none transition-transform duration-200 group-hover/item:scale-110 active:scale-95 shadow-[0_6px_16px_rgba(37,211,102,0.45)]">
               <WhatsApp3DIcon variant="green" className="w-12 h-12" />
             </div>
-          </a>
+          </button>
         </div>
 
         {/* MAIN TRIGGER BUTTON: ICON ADMIN (HEADSET) 3 DIMENSI */}
@@ -221,6 +234,13 @@ export default function FloatingAdminCTA() {
           <ChevronUp className="w-7 h-7 sm:w-8 sm:h-8 text-[#F9CE3B] stroke-[3] drop-shadow-[0_1.5px_3px_rgba(0,0,0,0.6)] transition-transform duration-200 group-hover/top:-translate-y-1" />
         </button>
       </div>
+
+      {/* Modal Formulir Lamaran Kerja */}
+      <JobApplicationModal
+        isOpen={isJobModalOpen}
+        onClose={() => setIsJobModalOpen(false)}
+        job={selectedJob}
+      />
     </div>
   );
 }
