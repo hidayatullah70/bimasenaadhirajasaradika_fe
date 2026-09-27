@@ -4,7 +4,7 @@
  * dan pengiriman langsung ke WhatsApp Rekrutmen +6285187845044.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   Send, 
@@ -17,6 +17,15 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
+
+const DEPARTMENT_SERVICES = [
+  'Jasa Pengamanan / Security',
+  'Ekspedisi Kurir',
+  'Parkir',
+  'Cleaning Service',
+  'Man Power',
+  'Loss Prevention',
+];
 
 const BANK_OPTIONS = [
   'BCA (Bank Central Asia)',
@@ -32,6 +41,8 @@ const BANK_OPTIONS = [
 ];
 
 export default function JobApplicationModal({ isOpen, onClose, job }) {
+  const isDepartmentSelectable = Boolean(job?.isDepartmentSelectable || !job?.id);
+
   const [formData, setFormData] = useState({
     namaLengkap: '',
     nik: '',
@@ -46,13 +57,29 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
     namaBank: 'BCA (Bank Central Asia)',
     nomorRekening: '',
     namaPemilikRekening: '',
+    departemen: job?.departmentLabel || job?.department || DEPARTMENT_SERVICES[0],
   });
-
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Sync departemen saat job prop berubah
+  useEffect(() => {
+    if (job?.departmentLabel || job?.department) {
+      setFormData((prev) => ({
+        ...prev,
+        departemen: job.departmentLabel || job.department,
+      }));
+    }
+  }, [job]);
+
   const targetWaNumber = job?.targetWa || '6285187845044';
+
+  const activeDept = formData.departemen || job?.departmentLabel || job?.department || '';
+  const isCourier =
+    activeDept.toLowerCase().includes('kurir') ||
+    activeDept.toLowerCase().includes('ekspedisi') ||
+    job?.title?.toLowerCase().includes('kurir');
 
   if (!isOpen) return null;
 
@@ -61,6 +88,13 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: null }));
+    }
+    // Jika ganti departemen dan bukan kurir, bersihkan error nomorSim jika ada
+    if (name === 'departemen') {
+      const willBeCourier = value.toLowerCase().includes('kurir') || value.toLowerCase().includes('ekspedisi');
+      if (!willBeCourier && errors.nomorSim) {
+        setErrors((prev) => ({ ...prev, nomorSim: null }));
+      }
     }
   };
 
@@ -86,10 +120,9 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
     if (!formData.nomorRekening.trim()) newErrors.nomorRekening = 'Nomor rekening wajib diisi';
     if (!formData.namaPemilikRekening.trim()) newErrors.namaPemilikRekening = 'Nama pemilik rekening wajib diisi';
 
-    // Khusus posisi Kurir, nomor SIM sangat disarankan / wajib
-    const isCourier = job?.title?.toLowerCase().includes('kurir') || job?.department?.toLowerCase().includes('ekspedisi');
+    // Khusus posisi Ekspedisi Kurir, nomor SIM wajib (required)
     if (isCourier && !formData.nomorSim.trim()) {
-      newErrors.nomorSim = 'Nomor SIM wajib diisi untuk posisi Kurir';
+      newErrors.nomorSim = 'Nomor SIM wajib diisi untuk posisi Ekspedisi Kurir';
     }
 
     setErrors(newErrors);
@@ -107,12 +140,18 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
     setIsSubmitting(true);
 
     const targetWaNumber = job?.targetWa || '6285187845044';
-    const jobTitle = job?.title || 'Umum / Lowongan Terbuka';
+    const deptName = isDepartmentSelectable
+      ? formData.departemen
+      : (job?.departmentLabel || job?.department || formData.departemen || 'Operasional');
+    const jobTitle = job?.title && !job?.isDepartmentSelectable
+      ? job.title
+      : `Pelamar - ${deptName}`;
 
     // Format text pesan WhatsApp rapi dan komprehensif
     const textLines = [
       `*FORMULIR LAMARAN KERJA - PT. BARAK*`,
       `----------------------------------------`,
+      `*Departemen / Layanan:* ${deptName}`,
       `*Posisi yang Dilamar:* ${jobTitle}`,
       `*Penempatan:* ${job?.location || 'Jabodetabek & Banten'}`,
       ``,
@@ -137,7 +176,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
       `• *Format Berkas:* File ZIP / PDF`,
       `• *Keterangan:* Dikirimkan langsung melalui chat WhatsApp ini ke nomor admin +${targetWaNumber}`,
       `----------------------------------------`,
-      `Halo Tim Rekrutmen & HRD PT. BARAK, saya telah mengisi formulir data diri di atas secara lengkap dan benar. File berkas dokumen persyaratan (CV, eKTP, SIM, KK, Ijazah Terakhir, Foto Selfie) dalam bentuk zip/PDF akan saya kirimkan langsung melalui chat WhatsApp ini. Mohon diproses untuk tahapan seleksi berikutnya. Terima kasih.`,
+      `Halo Tim Rekrutmen & HRD PT. BARAK, saya telah mengisi formulir data diri di atas secara lengkap dan benar untuk Departemen ${deptName}. File berkas dokumen persyaratan (CV, eKTP, SIM, KK, Ijazah Terakhir, Foto Selfie) dalam bentuk zip/PDF akan saya kirimkan langsung melalui chat WhatsApp ini. Mohon diproses untuk tahapan seleksi berikutnya. Terima kasih.`,
     ];
 
     const waMessage = textLines.join('\n');
@@ -152,8 +191,6 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
       onClose();
     }, 600);
   };
-
-  const isCourier = job?.title?.toLowerCase().includes('kurir') || job?.department?.toLowerCase().includes('ekspedisi');
 
   return (
     <div
@@ -182,7 +219,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                 Formulir Lamaran Kerja
               </h2>
               <p className="text-xs text-white/70 mt-0.5">
-                Posisi: <span className="text-primary-yellow font-semibold">{job?.title || 'Umum'}</span>
+                Posisi: <span className="text-primary-yellow font-semibold">{isDepartmentSelectable ? formData.departemen : (job?.title || 'Umum')}</span>
                 {job?.location && <span> &bull; {job.location}</span>}
               </p>
             </div>
@@ -198,15 +235,47 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
 
         {/* Form Body (Scrollable) */}
         <form onSubmit={handleSubmit} className="overflow-y-auto flex-1 p-6 space-y-6">
-          {/* Posisi Terpilih Banner */}
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 flex items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-2 text-slate-700">
-              <span className="font-semibold text-ink">Departemen:</span>
-              <span>{job?.departmentLabel || job?.department || 'Operasional'}</span>
-            </div>
-            <span className="px-2.5 py-1 rounded-full font-semibold bg-emerald-100 text-emerald-800 text-[11px]">
-              {job?.employmentType || 'Full-time PKWT'}
-            </span>
+          {/* Posisi Terpilih / Pilihan Departemen */}
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 sm:p-4 text-xs">
+            {isDepartmentSelectable ? (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <label htmlFor="modal-departemen" className="font-bold text-ink flex items-center gap-1.5">
+                    <span>Departemen / Layanan</span>
+                    <span className="text-danger">*</span>
+                  </label>
+                  <span className="px-2.5 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-800 text-[11px]">
+                    {job?.employmentType || 'Full-time PKWT'}
+                  </span>
+                </div>
+                <select
+                  id="modal-departemen"
+                  name="departemen"
+                  value={formData.departemen}
+                  onChange={handleChange}
+                  className="w-full px-3.5 py-2 text-sm rounded-lg border border-border bg-white text-slate-900 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red font-medium"
+                >
+                  {DEPARTMENT_SERVICES.map((dept) => (
+                    <option key={dept} value={dept}>
+                      {dept}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[11px] text-slate-500">
+                  Pilih salah satu dari 6 divisi layanan PT. BARAK yang ingin Anda lamar.
+                </p>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-slate-700">
+                  <span className="font-semibold text-ink">Departemen:</span>
+                  <span>{job?.departmentLabel || job?.department || 'Operasional'}</span>
+                </div>
+                <span className="px-2.5 py-1 rounded-full font-semibold bg-emerald-100 text-emerald-800 text-[11px]">
+                  {job?.employmentType || 'Full-time PKWT'}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Section 1: Data Identitas eKTP */}
@@ -326,17 +395,26 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                 )}
               </div>
 
-              {/* Nomor SIM (Khusus Kurir) */}
+              {/* Nomor SIM (Khusus Ekspedisi Kurir) */}
               <div className="sm:col-span-2">
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Nomor SIM {isCourier ? <span className="text-danger">* (Wajib Kurir)</span> : <span className="text-muted font-normal">(Bila ada)</span>}
+                  Nomor SIM (Khusus Ekspedisi Kurir){' '}
+                  {isCourier ? (
+                    <span className="text-danger font-semibold">* (Wajib Diisi)</span>
+                  ) : (
+                    <span className="text-muted font-normal">(Opsional)</span>
+                  )}
                 </label>
                 <input
                   type="text"
                   name="nomorSim"
                   value={formData.nomorSim}
                   onChange={handleChange}
-                  placeholder={isCourier ? "Contoh: SIM C 1234-5678-xxxx" : "SIM A / C / B1 (jika ada)"}
+                  placeholder={
+                    isCourier
+                      ? 'Contoh: SIM C / SIM A (Wajib untuk Ekspedisi Kurir)'
+                      : 'Nomor SIM (opsional jika bukan Ekspedisi Kurir)'
+                  }
                   className={clsx(
                     'w-full px-3.5 py-2 text-sm rounded-lg border bg-surface transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
                     errors.nomorSim ? 'border-danger' : 'border-border'

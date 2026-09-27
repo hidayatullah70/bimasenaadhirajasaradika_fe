@@ -159,10 +159,11 @@ export default function PublicFooter() {
                     onClick={() => {
                       setSelectedJob({
                         title: 'Pelamar / Lowongan Kerja',
-                        department: 'Rekrutmen & Karir',
+                        department: 'Jasa Pengamanan / Security',
                         location: 'Jabodetabek & Banten',
                         employmentType: 'Full-time PKWT',
                         targetWa: '6285187845044',
+                        isDepartmentSelectable: true,
                       });
                       setIsJobModalOpen(true);
                     }}

@@ -141,10 +141,11 @@ Reuse and elevate the project baseline at https://bimasenaadhirajasaradika.verce
   2. Clicking "Chat Loker" on the floating CTA popover (`FloatingAdminCTA`).
   3. Clicking WhatsApp recruitment number `0851 8784 5044` on `/contact` ("Hubungi Kami" page) and in the footer Kontak section (`PublicFooter`). (Note: `0851 2479 9305` in the footer navigates to `/contact` "Hubungi Kami").
 - **Form Sections**:
-  1. **Data Pribadi (eKTP)**: Nama Lengkap (sesuai eKTP), NIK (16 digit), Tempat & Tanggal Lahir, Usia, Nomor SIM (khusus Kurir), dan Alamat Lengkap sesuai eKTP.
-  2. **Kontak & Komunikasi**: Email Aktif, Nomor HP / WhatsApp, dan Nomor HP Darurat.
-  3. **Data Rekening Bank**: Nama Bank, Nomor Rekening, dan Nama Pemilik Rekening.
-  4. **Petunjuk Berkas Dokumen**: Catatan instruksi pengiriman berkas lengkap (CV, eKTP, SIM, KK, Ijazah Terakhir, Foto Selfie) dalam format ZIP/PDF langsung dari WhatsApp pelamar ke nomor WA admin terkait.
+  1. **Departemen / Layanan**: Pilihan dropdown 6 layanan utama (Jasa Pengamanan / Security, Ekspedisi Kurir, Parkir, Cleaning Service, Man Power, Loss Prevention) saat dibuka dari kontak/CTA umum.
+  2. **Data Pribadi (eKTP)**: Nama Lengkap (sesuai eKTP), NIK (16 digit), Tempat & Tanggal Lahir, Usia, Nomor SIM (Khusus Ekspedisi Kurir — wajib bila memilih Ekspedisi Kurir, opsional untuk selain Ekspedisi Kurir), dan Alamat Lengkap sesuai eKTP.
+  3. **Kontak & Komunikasi**: Email Aktif, Nomor HP / WhatsApp, dan Nomor HP Darurat.
+  4. **Data Rekening Bank**: Nama Bank, Nomor Rekening, dan Nama Pemilik Rekening.
+  5. **Petunjuk Berkas Dokumen**: Catatan instruksi pengiriman berkas lengkap (CV, eKTP, SIM, KK, Ijazah Terakhir, Foto Selfie) dalam format ZIP/PDF langsung dari WhatsApp pelamar ke nomor WA admin terkait.
 - **Submission Action**:
-  - Validates all required fields and formats.
+  - Validates all required fields and formats (enforcing required SIM number only when Ekspedisi Kurir is selected).
   - Compiles formatted structured message and dispatches directly to official WhatsApp Rekrutmen PT. BARAK: `6285187845044` (or configured target WA: `https://wa.me/{targetWa}?text=...`).
