@@ -194,7 +194,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto text-slate-900 font-sans"
       role="dialog"
       aria-modal="true"
       aria-labelledby="job-application-title"
@@ -207,7 +207,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
       />
 
       {/* Modal Container */}
-      <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-modal border border-border flex flex-col my-auto max-h-[92vh] z-10 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-3xl bg-white text-slate-900 rounded-2xl shadow-modal border border-border flex flex-col my-auto max-h-[92vh] z-10 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 bg-ink border-b border-white/10 text-white flex-none">
           <div className="flex items-center gap-3">
@@ -300,7 +300,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   onChange={handleChange}
                   placeholder="Contoh: Muhammad Fauzi Pratama"
                   className={clsx(
-                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-surface transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
+                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
                     errors.namaLengkap ? 'border-danger' : 'border-border'
                   )}
                 />
@@ -326,7 +326,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   }}
                   placeholder="3271xxxxxxxxxxxx"
                   className={clsx(
-                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-surface transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red font-mono',
+                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red font-mono',
                     errors.nik ? 'border-danger' : 'border-border'
                   )}
                 />
@@ -347,7 +347,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   onChange={handleChange}
                   placeholder="Contoh: 25"
                   className={clsx(
-                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-surface transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
+                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
                     errors.usia ? 'border-danger' : 'border-border'
                   )}
                 />
@@ -366,7 +366,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   onChange={handleChange}
                   placeholder="Kota / Kabupaten Lahir"
                   className={clsx(
-                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-surface transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
+                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
                     errors.tempatLahir ? 'border-danger' : 'border-border'
                   )}
                 />
@@ -386,7 +386,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   value={formData.tglLahir}
                   onChange={handleChange}
                   className={clsx(
-                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-surface transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
+                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
                     errors.tglLahir ? 'border-danger' : 'border-border'
                   )}
                 />
@@ -416,7 +416,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                       : 'Nomor SIM (opsional jika bukan Ekspedisi Kurir)'
                   }
                   className={clsx(
-                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-surface transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
+                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
                     errors.nomorSim ? 'border-danger' : 'border-border'
                   )}
                 />
@@ -438,7 +438,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   onChange={handleChange}
                   placeholder="Jl. Nama Jalan No. RT/RW, Kelurahan, Kecamatan, Kota/Kabupaten, Provinsi, Kode Pos"
                   className={clsx(
-                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-surface transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red resize-none',
+                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red resize-none',
                     errors.alamatLengkap ? 'border-danger' : 'border-border'
                   )}
                 />
@@ -471,7 +471,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   onChange={handleChange}
                   placeholder="nama@email.com"
                   className={clsx(
-                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-surface transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
+                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
                     errors.email ? 'border-danger' : 'border-border'
                   )}
                 />
@@ -490,7 +490,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   onChange={handleChange}
                   placeholder="08xxxxxxxxxx"
                   className={clsx(
-                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-surface transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
+                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
                     errors.noHpWa ? 'border-danger' : 'border-border'
                   )}
                 />
@@ -509,7 +509,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   onChange={handleChange}
                   placeholder="No. Orang Tua / Kerabat"
                   className={clsx(
-                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-surface transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
+                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
                     errors.noHpDarurat ? 'border-danger' : 'border-border'
                   )}
                 />
@@ -539,7 +539,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   name="namaBank"
                   value={formData.namaBank}
                   onChange={handleChange}
-                  className="w-full px-3.5 py-2 text-sm rounded-lg border border-border bg-surface transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red"
+                  className="w-full px-3.5 py-2 text-sm rounded-lg border border-border bg-white text-slate-900 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red"
                 >
                   {BANK_OPTIONS.map((b) => (
                     <option key={b} value={b}>
@@ -565,7 +565,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   }}
                   placeholder="Nomor rekening bank"
                   className={clsx(
-                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-surface transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red font-mono',
+                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red font-mono',
                     errors.nomorRekening ? 'border-danger' : 'border-border'
                   )}
                 />
@@ -586,7 +586,7 @@ export default function JobApplicationModal({ isOpen, onClose, job }) {
                   onChange={handleChange}
                   placeholder="Sesuai buku tabungan"
                   className={clsx(
-                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-surface transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
+                    'w-full px-3.5 py-2 text-sm rounded-lg border bg-white text-slate-900 placeholder:text-slate-400 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red',
                     errors.namaPemilikRekening ? 'border-danger' : 'border-border'
                   )}
                 />
