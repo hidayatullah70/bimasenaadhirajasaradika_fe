@@ -6,14 +6,23 @@
 import apiClient from '@/services/apiClient';
 import { MOCK_SHIFTS } from '@/services/mock/mockMasterData';
 import { emitAudit } from '@/utils/auditLogger';
+import { getStoredCollection, saveStoredCollection } from '@/utils/storage';
 
 const isMock = import.meta.env.VITE_API_MODE !== 'rest';
-let shiftsStore = [...MOCK_SHIFTS];
+const STORAGE_KEY = 'barak_shifts';
+
+function getStore() {
+  return getStoredCollection(STORAGE_KEY, () => [...MOCK_SHIFTS]);
+}
+
+function saveStore(store) {
+  saveStoredCollection(STORAGE_KEY, store);
+}
 
 export const shiftAdapter = {
   async getShifts() {
     if (isMock) {
-      return { data: [...shiftsStore], error: null };
+      return { data: [...getStore()], error: null };
     }
     const { data } = await apiClient.get('/shifts');
     return data;
@@ -21,7 +30,8 @@ export const shiftAdapter = {
 
   async getShiftById(id) {
     if (isMock) {
-      const shift = shiftsStore.find((s) => s.id === id);
+      const store = getStore();
+      const shift = store.find((s) => s.id === id);
       if (!shift) return { data: null, error: { message: 'Shift tidak ditemukan.' } };
       return { data: { ...shift }, error: null };
     }
@@ -31,9 +41,11 @@ export const shiftAdapter = {
 
   async createShift(payload) {
     if (isMock) {
-      const newId = `SH-${payload.code?.toUpperCase() || (shiftsStore.length + 1).toString()}`;
+      const store = getStore();
+      const newId = `SH-${payload.code?.toUpperCase() || (store.length + 1).toString()}`;
       const newShift = { ...payload, id: newId };
-      shiftsStore = [...shiftsStore, newShift];
+      const updatedStore = [...store, newShift];
+      saveStore(updatedStore);
 
       await emitAudit({
         action: 'SHIFT_CREATE',
@@ -52,11 +64,13 @@ export const shiftAdapter = {
 
   async updateShift(id, payload) {
     if (isMock) {
-      const idx = shiftsStore.findIndex((s) => s.id === id);
+      const store = getStore();
+      const idx = store.findIndex((s) => s.id === id);
       if (idx === -1) return { data: null, error: { message: 'Shift tidak ditemukan.' } };
 
-      const updated = { ...shiftsStore[idx], ...payload };
-      shiftsStore[idx] = updated;
+      const updated = { ...store[idx], ...payload };
+      store[idx] = updated;
+      saveStore(store);
 
       await emitAudit({
         action: 'SHIFT_EDIT',

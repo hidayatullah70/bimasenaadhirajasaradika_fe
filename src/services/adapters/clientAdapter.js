@@ -6,14 +6,23 @@
 import apiClient from '@/services/apiClient';
 import { MOCK_CLIENTS } from '@/services/mock/mockMasterData';
 import { emitAudit } from '@/utils/auditLogger';
+import { getStoredCollection, saveStoredCollection } from '@/utils/storage';
 
 const isMock = import.meta.env.VITE_API_MODE !== 'rest';
-let clientsStore = [...MOCK_CLIENTS];
+const STORAGE_KEY = 'barak_clients';
+
+function getStore() {
+  return getStoredCollection(STORAGE_KEY, () => [...MOCK_CLIENTS]);
+}
+
+function saveStore(store) {
+  saveStoredCollection(STORAGE_KEY, store);
+}
 
 export const clientAdapter = {
   async getClients({ search = '', type = '', status = '', page = 1, pageSize = 20 } = {}) {
     if (isMock) {
-      let filtered = [...clientsStore];
+      let filtered = [...getStore()];
 
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -53,7 +62,8 @@ export const clientAdapter = {
 
   async getClientById(id) {
     if (isMock) {
-      const client = clientsStore.find((c) => c.id === id);
+      const store = getStore();
+      const client = store.find((c) => c.id === id);
       if (!client) return { data: null, error: { message: 'Klien tidak ditemukan.' } };
       return { data: { ...client }, error: null };
     }
@@ -64,7 +74,8 @@ export const clientAdapter = {
 
   async createClient(payload) {
     if (isMock) {
-      const newId = `CLI-${(clientsStore.length + 1).toString().padStart(6, '0')}`;
+      const store = getStore();
+      const newId = `CLI-${(store.length + 1).toString().padStart(6, '0')}`;
       const newClient = {
         ...payload,
         id: newId,
@@ -73,7 +84,8 @@ export const clientAdapter = {
         monthlyBillingValue: payload.monthlyBillingValue || 0,
         createdAt: new Date().toISOString(),
       };
-      clientsStore = [newClient, ...clientsStore];
+      const updatedStore = [newClient, ...store];
+      saveStore(updatedStore);
 
       await emitAudit({
         action: 'CLIENT_CREATE',
@@ -92,11 +104,13 @@ export const clientAdapter = {
 
   async updateClient(id, payload) {
     if (isMock) {
-      const idx = clientsStore.findIndex((c) => c.id === id);
+      const store = getStore();
+      const idx = store.findIndex((c) => c.id === id);
       if (idx === -1) return { data: null, error: { message: 'Klien tidak ditemukan.' } };
 
-      const updated = { ...clientsStore[idx], ...payload, updatedAt: new Date().toISOString() };
-      clientsStore[idx] = updated;
+      const updated = { ...store[idx], ...payload, updatedAt: new Date().toISOString() };
+      store[idx] = updated;
+      saveStore(store);
 
       await emitAudit({
         action: 'CLIENT_EDIT',

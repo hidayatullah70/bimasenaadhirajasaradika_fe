@@ -6,7 +6,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { ShieldCheck, Search, Plus, User, CheckCircle2, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
 import userAdapter from '@/services/adapters/userAdapter';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { PERMISSIONS } from '@/constants/permissions';
@@ -22,7 +21,7 @@ export default function UserListPage() {
   const { hasPermission, hasRole } = useAuth();
   const canManage = hasRole([ROLES.DIREKTUR, ROLES.HRD]) && hasPermission(PERMISSIONS.USER_MANAGE);
 
-  const [users, setUsers] = useLocalStorage('barak_users', []);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [role, setRole] = useState('');
@@ -46,7 +45,7 @@ export default function UserListPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, role, page, setUsers]);
+  }, [search, role, page]);
 
   useEffect(() => {
     loadData();

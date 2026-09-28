@@ -8,14 +8,23 @@ import apiClient from '@/services/apiClient';
 import { MOCK_REPLACEMENTS } from '@/services/mock/mockOperationsData';
 import { emitAudit } from '@/utils/auditLogger';
 import { STATUS } from '@/constants/status';
+import { getStoredCollection, saveStoredCollection } from '@/utils/storage';
 
 const isMock = import.meta.env.VITE_API_MODE !== 'rest';
-let replacementsStore = [...MOCK_REPLACEMENTS];
+const STORAGE_KEY = 'barak_replacements';
+
+function getStore() {
+  return getStoredCollection(STORAGE_KEY, () => [...MOCK_REPLACEMENTS]);
+}
+
+function saveStore(store) {
+  saveStoredCollection(STORAGE_KEY, store);
+}
 
 export const replacementAdapter = {
   async getReplacementRequests({ search = '', status = '', clientId = '', page = 1, pageSize = 15 } = {}) {
     if (isMock) {
-      let filtered = [...replacementsStore];
+      let filtered = [...getStore()];
 
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -51,15 +60,17 @@ export const replacementAdapter = {
 
   async createReplacementRequest(payload) {
     if (isMock) {
-      const newId = `REP-2026-09-${(replacementsStore.length + 1).toString().padStart(3, '0')}`;
+      const store = getStore();
+      const newId = `REP-2026-09-${(store.length + 1).toString().padStart(3, '0')}`;
       const newRep = {
         ...payload,
         id: newId,
-        requestNumber: `REP/BARAK/2026/09/${(replacementsStore.length + 1).toString().padStart(3, '0')}`,
+        requestNumber: `REP/BARAK/2026/09/${(store.length + 1).toString().padStart(3, '0')}`,
         status: STATUS.PENDING_APPROVAL,
         createdAt: new Date().toISOString(),
       };
-      replacementsStore = [newRep, ...replacementsStore];
+      const updatedStore = [newRep, ...store];
+      saveStore(updatedStore);
 
       await emitAudit({
         action: 'REPLACEMENT_CREATE',
@@ -82,16 +93,18 @@ export const replacementAdapter = {
 
   async approveReplacement(id, actorName = 'Juli Priyanto (Direktur Ops)') {
     if (isMock) {
-      const idx = replacementsStore.findIndex((r) => r.id === id);
+      const store = getStore();
+      const idx = store.findIndex((r) => r.id === id);
       if (idx === -1) return { data: null, error: { message: 'Pengajuan tidak ditemukan.' } };
 
       const updated = {
-        ...replacementsStore[idx],
+        ...store[idx],
         status: STATUS.APPROVED,
         approvedBy: actorName,
         approvedAt: new Date().toISOString(),
       };
-      replacementsStore[idx] = updated;
+      store[idx] = updated;
+      saveStore(store);
 
       await emitAudit({
         action: 'REPLACEMENT_APPROVE',
@@ -110,17 +123,19 @@ export const replacementAdapter = {
 
   async rejectReplacement(id, { reason, actorName = 'Juli Priyanto' }) {
     if (isMock) {
-      const idx = replacementsStore.findIndex((r) => r.id === id);
+      const store = getStore();
+      const idx = store.findIndex((r) => r.id === id);
       if (idx === -1) return { data: null, error: { message: 'Pengajuan tidak ditemukan.' } };
 
       const updated = {
-        ...replacementsStore[idx],
+        ...store[idx],
         status: STATUS.REJECTED,
         rejectedBy: actorName,
         rejectedReason: reason,
         rejectedAt: new Date().toISOString(),
       };
-      replacementsStore[idx] = updated;
+      store[idx] = updated;
+      saveStore(store);
 
       await emitAudit({
         action: 'REPLACEMENT_REJECT',

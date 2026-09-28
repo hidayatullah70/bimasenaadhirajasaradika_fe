@@ -6,15 +6,28 @@
 import apiClient from '@/services/apiClient';
 import { MOCK_LOCATIONS, MOCK_PROJECTS } from '@/services/mock/mockMasterData';
 import { emitAudit } from '@/utils/auditLogger';
+import { getStoredCollection, saveStoredCollection } from '@/utils/storage';
 
 const isMock = import.meta.env.VITE_API_MODE !== 'rest';
-let locationsStore = [...MOCK_LOCATIONS];
-let projectsStore = [...MOCK_PROJECTS];
+const LOCATIONS_STORAGE_KEY = 'barak_locations';
+const PROJECTS_STORAGE_KEY = 'barak_projects';
+
+function getLocationsStore() {
+  return getStoredCollection(LOCATIONS_STORAGE_KEY, () => [...MOCK_LOCATIONS]);
+}
+
+function saveLocationsStore(store) {
+  saveStoredCollection(LOCATIONS_STORAGE_KEY, store);
+}
+
+function getProjectsStore() {
+  return getStoredCollection(PROJECTS_STORAGE_KEY, () => [...MOCK_PROJECTS]);
+}
 
 export const locationAdapter = {
   async getLocations({ search = '', clientId = '', projectId = '', city = '', page = 1, pageSize = 20 } = {}) {
     if (isMock) {
-      let filtered = [...locationsStore];
+      let filtered = [...getLocationsStore()];
 
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -58,7 +71,8 @@ export const locationAdapter = {
 
   async getLocationById(id) {
     if (isMock) {
-      const loc = locationsStore.find((l) => l.id === id);
+      const store = getLocationsStore();
+      const loc = store.find((l) => l.id === id);
       if (!loc) return { data: null, error: { message: 'Lokasi tidak ditemukan.' } };
       return { data: { ...loc }, error: null };
     }
@@ -69,7 +83,7 @@ export const locationAdapter = {
 
   async getProjects() {
     if (isMock) {
-      return { data: [...projectsStore], error: null };
+      return { data: [...getProjectsStore()], error: null };
     }
     const { data } = await apiClient.get('/projects');
     return data;
@@ -77,14 +91,16 @@ export const locationAdapter = {
 
   async createLocation(payload) {
     if (isMock) {
-      const newId = `LOC-${(locationsStore.length + 1).toString().padStart(3, '0')}`;
+      const store = getLocationsStore();
+      const newId = `LOC-${(store.length + 1).toString().padStart(3, '0')}`;
       const newLoc = {
         ...payload,
         id: newId,
         activeManpower: payload.activeManpower || 0,
         createdAt: new Date().toISOString(),
       };
-      locationsStore = [newLoc, ...locationsStore];
+      const updatedStore = [newLoc, ...store];
+      saveLocationsStore(updatedStore);
 
       await emitAudit({
         action: 'LOCATION_CREATE',
@@ -103,11 +119,13 @@ export const locationAdapter = {
 
   async updateLocation(id, payload) {
     if (isMock) {
-      const idx = locationsStore.findIndex((l) => l.id === id);
+      const store = getLocationsStore();
+      const idx = store.findIndex((l) => l.id === id);
       if (idx === -1) return { data: null, error: { message: 'Lokasi tidak ditemukan.' } };
 
-      const updated = { ...locationsStore[idx], ...payload, updatedAt: new Date().toISOString() };
-      locationsStore[idx] = updated;
+      const updated = { ...store[idx], ...payload, updatedAt: new Date().toISOString() };
+      store[idx] = updated;
+      saveLocationsStore(store);
 
       await emitAudit({
         action: 'LOCATION_EDIT',

@@ -9,7 +9,6 @@ import {
   Users, Search, Filter, Plus, Download, Eye, EyeOff,
   MoreVertical, Shield, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle
 } from 'lucide-react';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
 import employeeAdapter from '@/services/adapters/employeeAdapter';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ROLES } from '@/constants/roles';
@@ -29,7 +28,7 @@ export default function EmployeeListPage() {
   const canExport = hasPermission(PERMISSIONS.EMPLOYEE_EXPORT);
   const canViewSensitive = hasPermission(PERMISSIONS.EMPLOYEE_VIEW_SENSITIVE);
 
-  const [employees, setEmployees] = useLocalStorage('barak_employees', []);
+  const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [department, setDepartment] = useState('');

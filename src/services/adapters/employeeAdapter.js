@@ -7,14 +7,23 @@
 import apiClient from '@/services/apiClient';
 import { MOCK_EMPLOYEES } from '@/services/mock/mockMasterData';
 import { emitAudit } from '@/utils/auditLogger';
+import { getStoredCollection, saveStoredCollection } from '@/utils/storage';
 
 const isMock = import.meta.env.VITE_API_MODE !== 'rest';
+const STORAGE_KEY = 'barak_employees';
 
-// In-memory / sessionStorage cache to persist mutations during user review
-let employeesStore = MOCK_EMPLOYEES.map((e) => ({
-  ...e,
-  NIK: (e.NIK || '').replace(/\D/g, '').slice(0, 16),
-}));
+function getStore() {
+  return getStoredCollection(STORAGE_KEY, () =>
+    MOCK_EMPLOYEES.map((e) => ({
+      ...e,
+      NIK: (e.NIK || '').replace(/\D/g, '').slice(0, 16),
+    }))
+  );
+}
+
+function saveStore(store) {
+  saveStoredCollection(STORAGE_KEY, store);
+}
 
 export const employeeAdapter = {
   /**
@@ -22,7 +31,7 @@ export const employeeAdapter = {
    */
   async getEmployees({ search = '', department = '', serviceType = '', status = '', page = 1, pageSize = 10 } = {}) {
     if (isMock) {
-      let filtered = [...employeesStore];
+      let filtered = [...getStore()];
 
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -70,7 +79,8 @@ export const employeeAdapter = {
    */
   async getEmployeeById(id) {
     if (isMock) {
-      const emp = employeesStore.find((e) => e.id === id || e.id_karyawan === id);
+      const store = getStore();
+      const emp = store.find((e) => e.id === id || e.id_karyawan === id);
       if (!emp) return { data: null, error: { message: 'Karyawan tidak ditemukan.' } };
       return { data: { ...emp }, error: null };
     }
@@ -84,7 +94,8 @@ export const employeeAdapter = {
    */
   async createEmployee(payload) {
     if (isMock) {
-      const newId = `BRK-EMP-${(employeesStore.length + 1).toString().padStart(3, '0')}`;
+      const store = getStore();
+      const newId = `BRK-EMP-${(store.length + 1).toString().padStart(3, '0')}`;
       const newEmp = {
         ...payload,
         id: newId,
@@ -97,7 +108,8 @@ export const employeeAdapter = {
         kelengkapan_dokumen: payload.kelengkapan_dokumen || { percentage: 100 },
         foto_3x4: payload.foto_3x4 || '',
       };
-      employeesStore = [newEmp, ...employeesStore];
+      const updatedStore = [newEmp, ...store];
+      saveStore(updatedStore);
 
       await emitAudit({
         action: 'EMPLOYEE_CREATE',
@@ -119,17 +131,19 @@ export const employeeAdapter = {
    */
   async updateEmployee(id, payload) {
     if (isMock) {
-      const idx = employeesStore.findIndex((e) => e.id === id || e.id_karyawan === id);
+      const store = getStore();
+      const idx = store.findIndex((e) => e.id === id || e.id_karyawan === id);
       if (idx === -1) return { data: null, error: { message: 'Karyawan tidak ditemukan.' } };
 
-      const oldEmp = employeesStore[idx];
+      const oldEmp = store[idx];
       const updated = {
         ...oldEmp,
         ...payload,
         NIK: payload.NIK ? payload.NIK.replace(/\D/g, '').slice(0, 16) : oldEmp.NIK,
         updatedAt: new Date().toISOString(),
       };
-      employeesStore[idx] = updated;
+      store[idx] = updated;
+      saveStore(store);
 
       await emitAudit({
         action: 'EMPLOYEE_EDIT',
@@ -151,11 +165,13 @@ export const employeeAdapter = {
    */
   async deleteEmployee(id) {
     if (isMock) {
-      const idx = employeesStore.findIndex((e) => e.id === id || e.id_karyawan === id);
+      const store = getStore();
+      const idx = store.findIndex((e) => e.id === id || e.id_karyawan === id);
       if (idx === -1) return { data: null, error: { message: 'Karyawan tidak ditemukan.' } };
 
-      const removed = employeesStore[idx];
-      employeesStore = employeesStore.filter((e) => e.id !== id && e.id_karyawan !== id);
+      const removed = store[idx];
+      const updatedStore = store.filter((e) => e.id !== id && e.id_karyawan !== id);
+      saveStore(updatedStore);
 
       await emitAudit({
         action: 'EMPLOYEE_DELETE',

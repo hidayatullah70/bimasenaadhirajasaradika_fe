@@ -21,7 +21,6 @@ import { Card, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { LoadingState, EmptyState } from '@/components/ui/StateViews';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
 import replacementAdapter from '@/services/adapters/replacementAdapter';
 import clientAdapter from '@/services/adapters/clientAdapter';
 import locationAdapter from '@/services/adapters/locationAdapter';
@@ -30,7 +29,7 @@ import ReplacementFormModal from './ReplacementFormModal';
 import { STATUS } from '@/constants/status';
 
 export default function ReplacementListPage() {
-  const [replacements, setReplacements] = useLocalStorage('barak_replacements', []);
+  const [replacements, setReplacements] = useState([]);
   const [clients, setClients] = useState([]);
   const [locations, setLocations] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -71,7 +70,7 @@ export default function ReplacementListPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, selectedStatus, selectedClient, setReplacements]);
+  }, [search, selectedStatus, selectedClient]);
 
   useEffect(() => {
     loadData();

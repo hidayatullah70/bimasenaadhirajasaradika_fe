@@ -7,14 +7,23 @@ import apiClient from '@/services/apiClient';
 import { MOCK_SYSTEM_USERS } from '@/services/mock/mockMasterData';
 import { emitAudit } from '@/utils/auditLogger';
 import { STATUS } from '@/constants/status';
+import { getStoredCollection, saveStoredCollection } from '@/utils/storage';
 
 const isMock = import.meta.env.VITE_API_MODE !== 'rest';
-let usersStore = [...MOCK_SYSTEM_USERS];
+const STORAGE_KEY = 'barak_users';
+
+function getStore() {
+  return getStoredCollection(STORAGE_KEY, () => [...MOCK_SYSTEM_USERS]);
+}
+
+function saveStore(store) {
+  saveStoredCollection(STORAGE_KEY, store);
+}
 
 export const userAdapter = {
   async getUsers({ search = '', role = '', status = '', page = 1, pageSize = 20 } = {}) {
     if (isMock) {
-      let filtered = [...usersStore];
+      let filtered = [...getStore()];
 
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -54,7 +63,8 @@ export const userAdapter = {
 
   async getUserById(id) {
     if (isMock) {
-      const user = usersStore.find((u) => u.id === id);
+      const store = getStore();
+      const user = store.find((u) => u.id === id);
       if (!user) return { data: null, error: { message: 'Pengguna tidak ditemukan.' } };
       return { data: { ...user }, error: null };
     }
@@ -64,14 +74,16 @@ export const userAdapter = {
 
   async createUser(payload) {
     if (isMock) {
-      const newId = `USR-${(usersStore.length + 1).toString().padStart(3, '0')}`;
+      const store = getStore();
+      const newId = `USR-${(store.length + 1).toString().padStart(3, '0')}`;
       const newUser = {
         ...payload,
         id: newId,
         status: payload.status || STATUS.ACTIVE,
         createdAt: new Date().toISOString(),
       };
-      usersStore = [...usersStore, newUser];
+      const updatedStore = [...store, newUser];
+      saveStore(updatedStore);
 
       await emitAudit({
         action: 'USER_CREATE',
@@ -90,11 +102,13 @@ export const userAdapter = {
 
   async updateUser(id, payload) {
     if (isMock) {
-      const idx = usersStore.findIndex((u) => u.id === id);
+      const store = getStore();
+      const idx = store.findIndex((u) => u.id === id);
       if (idx === -1) return { data: null, error: { message: 'Pengguna tidak ditemukan.' } };
 
-      const updated = { ...usersStore[idx], ...payload, updatedAt: new Date().toISOString() };
-      usersStore[idx] = updated;
+      const updated = { ...store[idx], ...payload, updatedAt: new Date().toISOString() };
+      store[idx] = updated;
+      saveStore(store);
 
       await emitAudit({
         action: 'USER_EDIT',
@@ -113,13 +127,15 @@ export const userAdapter = {
 
   async toggleUserStatus(id) {
     if (isMock) {
-      const idx = usersStore.findIndex((u) => u.id === id);
+      const store = getStore();
+      const idx = store.findIndex((u) => u.id === id);
       if (idx === -1) return { data: null, error: { message: 'Pengguna tidak ditemukan.' } };
 
-      const current = usersStore[idx];
+      const current = store[idx];
       const newStatus = current.status === STATUS.ACTIVE ? STATUS.INACTIVE : STATUS.ACTIVE;
       const updated = { ...current, status: newStatus, updatedAt: new Date().toISOString() };
-      usersStore[idx] = updated;
+      store[idx] = updated;
+      saveStore(store);
 
       await emitAudit({
         action: 'USER_STATUS_CHANGE',

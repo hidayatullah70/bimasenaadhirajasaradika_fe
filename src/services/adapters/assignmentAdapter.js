@@ -8,14 +8,23 @@ import apiClient from '@/services/apiClient';
 import { MOCK_ASSIGNMENTS } from '@/services/mock/mockMasterData';
 import { emitAudit } from '@/utils/auditLogger';
 import { STATUS } from '@/constants/status';
+import { getStoredCollection, saveStoredCollection } from '@/utils/storage';
 
 const isMock = import.meta.env.VITE_API_MODE !== 'rest';
-let assignmentsStore = [...MOCK_ASSIGNMENTS];
+const STORAGE_KEY = 'barak_assignments';
+
+function getStore() {
+  return getStoredCollection(STORAGE_KEY, () => [...MOCK_ASSIGNMENTS]);
+}
+
+function saveStore(store) {
+  saveStoredCollection(STORAGE_KEY, store);
+}
 
 export const assignmentAdapter = {
   async getAssignments({ search = '', clientId = '', locationId = '', shiftId = '', status = '', page = 1, pageSize = 20 } = {}) {
     if (isMock) {
-      let filtered = [...assignmentsStore];
+      let filtered = [...getStore()];
 
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -64,18 +73,20 @@ export const assignmentAdapter = {
 
   async getAssignmentById(id) {
     if (isMock) {
-      const asn = assignmentsStore.find((a) => a.id === id || a.assignmentCode === id);
+      const store = getStore();
+      const asn = store.find((a) => a.id === id || a.assignmentCode === id);
       if (!asn) return { data: null, error: { message: 'Penugasan tidak ditemukan.' } };
       return { data: { ...asn }, error: null };
     }
+
     const { data } = await apiClient.get(`/assignments/${id}`);
     return data;
   },
 
   async createAssignment(payload) {
     if (isMock) {
-      // Check if employee already has active assignment for same period
-      const existing = assignmentsStore.find(
+      const store = getStore();
+      const existing = store.find(
         (a) => a.employeeId === payload.employeeId && a.status === STATUS.ACTIVE
       );
       if (existing) {
@@ -83,16 +94,17 @@ export const assignmentAdapter = {
         // If necessary, mark previous as TRANSFERRED/COMPLETED
       }
 
-      const newId = `BRK-ASN-${(assignmentsStore.length + 1).toString().padStart(3, '0')}`;
+      const newId = `BRK-ASN-${(store.length + 1).toString().padStart(3, '0')}`;
       const newAsn = {
         ...payload,
         id: newId,
-        assignmentCode: `ASN-${(assignmentsStore.length + 1).toString().padStart(3, '0')}`,
+        assignmentCode: `ASN-${(store.length + 1).toString().padStart(3, '0')}`,
         status: payload.status || STATUS.ACTIVE,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      assignmentsStore = [newAsn, ...assignmentsStore];
+      const updatedStore = [newAsn, ...store];
+      saveStore(updatedStore);
 
       await emitAudit({
         action: 'ASSIGNMENT_CREATE',
@@ -115,11 +127,13 @@ export const assignmentAdapter = {
 
   async updateAssignment(id, payload) {
     if (isMock) {
-      const idx = assignmentsStore.findIndex((a) => a.id === id || a.assignmentCode === id);
+      const store = getStore();
+      const idx = store.findIndex((a) => a.id === id || a.assignmentCode === id);
       if (idx === -1) return { data: null, error: { message: 'Penugasan tidak ditemukan.' } };
 
-      const updated = { ...assignmentsStore[idx], ...payload, updatedAt: new Date().toISOString() };
-      assignmentsStore[idx] = updated;
+      const updated = { ...store[idx], ...payload, updatedAt: new Date().toISOString() };
+      store[idx] = updated;
+      saveStore(store);
 
       await emitAudit({
         action: 'ASSIGNMENT_EDIT',
@@ -138,17 +152,19 @@ export const assignmentAdapter = {
 
   async endAssignment(id, reason = 'Rotasi / Selesai Penugasan') {
     if (isMock) {
-      const idx = assignmentsStore.findIndex((a) => a.id === id || a.assignmentCode === id);
+      const store = getStore();
+      const idx = store.findIndex((a) => a.id === id || a.assignmentCode === id);
       if (idx === -1) return { data: null, error: { message: 'Penugasan tidak ditemukan.' } };
 
       const updated = {
-        ...assignmentsStore[idx],
+        ...store[idx],
         status: STATUS.CLOSED,
         endDate: new Date().toISOString().split('T')[0],
-        notes: `${assignmentsStore[idx].notes || ''} [Selesai: ${reason}]`,
+        notes: `${store[idx].notes || ''} [Selesai: ${reason}]`,
         updatedAt: new Date().toISOString(),
       };
-      assignmentsStore[idx] = updated;
+      store[idx] = updated;
+      saveStore(store);
 
       await emitAudit({
         action: 'ASSIGNMENT_END',

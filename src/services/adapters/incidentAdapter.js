@@ -7,14 +7,23 @@ import apiClient from '@/services/apiClient';
 import { MOCK_INCIDENTS } from '@/services/mock/mockOperationsData';
 import { emitAudit } from '@/utils/auditLogger';
 import { STATUS } from '@/constants/status';
+import { getStoredCollection, saveStoredCollection } from '@/utils/storage';
 
 const isMock = import.meta.env.VITE_API_MODE !== 'rest';
-let incidentsStore = [...MOCK_INCIDENTS];
+const STORAGE_KEY = 'barak_incidents';
+
+function getStore() {
+  return getStoredCollection(STORAGE_KEY, () => [...MOCK_INCIDENTS]);
+}
+
+function saveStore(store) {
+  saveStoredCollection(STORAGE_KEY, store);
+}
 
 export const incidentAdapter = {
   async getIncidents({ search = '', type = '', severity = '', status = '', clientId = '', page = 1, pageSize = 15 } = {}) {
     if (isMock) {
-      let filtered = [...incidentsStore];
+      let filtered = [...getStore()];
 
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -52,7 +61,8 @@ export const incidentAdapter = {
 
   async getIncidentById(id) {
     if (isMock) {
-      const inc = incidentsStore.find((i) => i.id === id);
+      const store = getStore();
+      const inc = store.find((i) => i.id === id);
       if (!inc) return { data: null, error: { message: 'Insiden tidak ditemukan.' } };
       return { data: { ...inc }, error: null };
     }
@@ -62,15 +72,17 @@ export const incidentAdapter = {
 
   async createIncident(payload) {
     if (isMock) {
-      const newId = `INC-2026-09-${(incidentsStore.length + 1).toString().padStart(3, '0')}`;
+      const store = getStore();
+      const newId = `INC-2026-09-${(store.length + 1).toString().padStart(3, '0')}`;
       const newIncident = {
         ...payload,
         id: newId,
-        incidentNumber: `INC/BARAK/2026/09/${(incidentsStore.length + 1).toString().padStart(3, '0')}`,
+        incidentNumber: `INC/BARAK/2026/09/${(store.length + 1).toString().padStart(3, '0')}`,
         status: STATUS.OPEN,
         createdAt: new Date().toISOString(),
       };
-      incidentsStore = [newIncident, ...incidentsStore];
+      const updatedStore = [newIncident, ...store];
+      saveStore(updatedStore);
 
       await emitAudit({
         action: 'INCIDENT_CREATE',
@@ -89,17 +101,19 @@ export const incidentAdapter = {
 
   async resolveIncident(id, { resolutionNotes, actorName = 'Tim Operasional' }) {
     if (isMock) {
-      const idx = incidentsStore.findIndex((i) => i.id === id);
+      const store = getStore();
+      const idx = store.findIndex((i) => i.id === id);
       if (idx === -1) return { data: null, error: { message: 'Insiden tidak ditemukan.' } };
 
       const updated = {
-        ...incidentsStore[idx],
+        ...store[idx],
         status: STATUS.RESOLVED,
         resolutionNotes,
         resolvedAt: new Date().toISOString(),
         resolvedBy: actorName,
       };
-      incidentsStore[idx] = updated;
+      store[idx] = updated;
+      saveStore(store);
 
       await emitAudit({
         action: 'INCIDENT_RESOLVE',
@@ -118,18 +132,20 @@ export const incidentAdapter = {
 
   async escalateIncident(id, { targetDept, reason, actorName = 'Operasional' }) {
     if (isMock) {
-      const idx = incidentsStore.findIndex((i) => i.id === id);
+      const store = getStore();
+      const idx = store.findIndex((i) => i.id === id);
       if (idx === -1) return { data: null, error: { message: 'Insiden tidak ditemukan.' } };
 
       const updated = {
-        ...incidentsStore[idx],
+        ...store[idx],
         status: STATUS.ESCALATED,
         escalatedTo: targetDept,
         escalatedReason: reason,
         escalatedAt: new Date().toISOString(),
         escalatedBy: actorName,
       };
-      incidentsStore[idx] = updated;
+      store[idx] = updated;
+      saveStore(store);
 
       await emitAudit({
         action: 'INCIDENT_ESCALATE',

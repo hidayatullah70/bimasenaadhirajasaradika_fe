@@ -6,14 +6,23 @@
 import apiClient from '@/services/apiClient';
 import { MOCK_FIELD_REPORTS } from '@/services/mock/mockOperationsData';
 import { emitAudit } from '@/utils/auditLogger';
+import { getStoredCollection, saveStoredCollection } from '@/utils/storage';
 
 const isMock = import.meta.env.VITE_API_MODE !== 'rest';
-let fieldReportsStore = [...MOCK_FIELD_REPORTS];
+const STORAGE_KEY = 'barak_field_reports';
+
+function getStore() {
+  return getStoredCollection(STORAGE_KEY, () => [...MOCK_FIELD_REPORTS]);
+}
+
+function saveStore(store) {
+  saveStoredCollection(STORAGE_KEY, store);
+}
 
 export const fieldReportAdapter = {
   async getFieldReports({ search = '', clientId = '', locationId = '', page = 1, pageSize = 15 } = {}) {
     if (isMock) {
-      let filtered = [...fieldReportsStore];
+      let filtered = [...getStore()];
 
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -49,15 +58,17 @@ export const fieldReportAdapter = {
 
   async createFieldReport(payload) {
     if (isMock) {
+      const store = getStore();
       const dateStr = new Date().toISOString().slice(0, 10);
-      const newId = `REP-FLD-${(fieldReportsStore.length + 1).toString().padStart(3, '0')}`;
+      const newId = `REP-FLD-${(store.length + 1).toString().padStart(3, '0')}`;
       const newReport = {
         ...payload,
         id: newId,
-        reportCode: `JRN-${dateStr}-${(fieldReportsStore.length + 1).toString().padStart(2, '0')}`,
+        reportCode: `JRN-${dateStr}-${(store.length + 1).toString().padStart(2, '0')}`,
         loggedAt: new Date().toISOString().replace('T', ' ').slice(0, 19),
       };
-      fieldReportsStore = [newReport, ...fieldReportsStore];
+      const updatedStore = [newReport, ...store];
+      saveStore(updatedStore);
 
       await emitAudit({
         action: 'PATROL_REPORT_CREATE',

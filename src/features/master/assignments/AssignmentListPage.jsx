@@ -6,7 +6,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { UserCheck, Search, Plus, MapPin, Building2, Clock, Calendar, ChevronLeft, ChevronRight, XCircle } from 'lucide-react';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
 import assignmentAdapter from '@/services/adapters/assignmentAdapter';
 import { MOCK_CLIENTS, MOCK_LOCATIONS, MOCK_SHIFTS } from '@/services/mock/mockMasterData';
 import { useAuth } from '@/app/providers/AuthProvider';
@@ -23,7 +22,7 @@ export default function AssignmentListPage() {
   const canEdit = hasRole([ROLES.DIREKTUR, ROLES.HRD]);
   const canCreate = canEdit && hasPermission(PERMISSIONS.ASSIGNMENT_CREATE);
 
-  const [assignments, setAssignments] = useLocalStorage('barak_assignments', []);
+  const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [clientId, setClientId] = useState('');
@@ -55,7 +54,7 @@ export default function AssignmentListPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, clientId, locationId, shiftId, page, setAssignments]);
+  }, [search, clientId, locationId, shiftId, page]);
 
   useEffect(() => {
     loadData();

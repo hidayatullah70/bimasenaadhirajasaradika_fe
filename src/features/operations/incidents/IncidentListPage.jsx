@@ -21,7 +21,6 @@ import { Card, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { LoadingState, EmptyState } from '@/components/ui/StateViews';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
 import incidentAdapter from '@/services/adapters/incidentAdapter';
 import clientAdapter from '@/services/adapters/clientAdapter';
 import locationAdapter from '@/services/adapters/locationAdapter';
@@ -30,7 +29,7 @@ import IncidentEscalateModal from './IncidentEscalateModal';
 import { STATUS } from '@/constants/status';
 
 export default function IncidentListPage() {
-  const [incidents, setIncidents] = useLocalStorage('barak_incidents', []);
+  const [incidents, setIncidents] = useState([]);
   const [clients, setClients] = useState([]);
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -74,7 +73,7 @@ export default function IncidentListPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, selectedSeverity, selectedStatus, selectedClient, setIncidents]);
+  }, [search, selectedSeverity, selectedStatus, selectedClient]);
 
   useEffect(() => {
     loadData();
