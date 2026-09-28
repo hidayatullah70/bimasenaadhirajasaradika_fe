@@ -4,15 +4,17 @@
  * Source of Truth: PRD Section 9 / IMPLEMENTATION-PLAN Phase 2.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Building2, Search, Plus, MapPin, Phone, Mail, Users, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import clientAdapter from '@/services/adapters/clientAdapter';
+import { MOCK_CLIENTS } from '@/services/mock/mockMasterData';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ROLES } from '@/constants/roles';
 import { PERMISSIONS } from '@/constants/permissions';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { StateLoading, StateEmpty } from '@/components/ui/StateViews';
+import { StateEmpty } from '@/components/ui/StateViews';
 import ClientFormModal from './ClientFormModal';
 import toast from 'react-hot-toast';
 
@@ -21,34 +23,40 @@ export default function ClientListPage() {
   const canEdit = hasRole([ROLES.DIREKTUR, ROLES.HRD]);
   const canCreate = canEdit && hasPermission(PERMISSIONS.CLIENT_CREATE);
 
-  const [clients, setClients] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Authoritative persistent state with MOCK_CLIENTS as initial fallback
+  const [clients, setClients] = useLocalStorage('barak_clients', MOCK_CLIENTS);
   const [search, setSearch] = useState('');
   const [type, setType] = useState('');
   const [page, setPage] = useState(1);
-  const [meta, setMeta] = useState({ total: 0, totalPages: 1 });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await clientAdapter.getClients({ search, type, page, pageSize: 12 });
-      if (res.data) {
-        setClients(res.data);
-        setMeta(res.meta);
-      }
-    } catch {
-      toast.error('Gagal memuat data klien.');
-    } finally {
-      setLoading(false);
+  const filteredClients = useMemo(() => {
+    let result = Array.isArray(clients) ? clients : [];
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter(
+        (c) =>
+          c.name?.toLowerCase().includes(q) ||
+          c.code?.toLowerCase().includes(q) ||
+          c.city?.toLowerCase().includes(q) ||
+          c.contactPerson?.toLowerCase().includes(q)
+      );
     }
-  }, [search, type, page]);
+    if (type) {
+      result = result.filter((c) => c.industry === type);
+    }
+    return result;
+  }, [clients, search, type]);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  const pageSize = 12;
+  const total = filteredClients.length;
+  const totalPages = Math.ceil(total / pageSize) || 1;
+  const displayedClients = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredClients.slice(start, start + pageSize);
+  }, [filteredClients, page, pageSize]);
 
   const handleOpenCreate = () => {
     setEditingClient(null);
@@ -64,13 +72,21 @@ export default function ClientListPage() {
     try {
       if (editingClient) {
         await clientAdapter.updateClient(editingClient.id, payload);
+        const updated = { ...editingClient, ...payload, updatedAt: new Date().toISOString() };
+        setClients((prev) => (Array.isArray(prev) ? prev.map((c) => (c.id === editingClient.id ? updated : c)) : [updated]));
         toast.success(`Data klien ${payload.name} berhasil diperbarui.`);
       } else {
-        await clientAdapter.createClient(payload);
+        const res = await clientAdapter.createClient(payload);
+        const newClient = res?.data || {
+          ...payload,
+          id: `CLT-${((clients?.length || 0) + 1).toString().padStart(3, '0')}`,
+          status: 'ACTIVE',
+          createdAt: new Date().toISOString(),
+        };
+        setClients((prev) => [newClient, ...(Array.isArray(prev) ? prev : [])]);
         toast.success(`Klien baru ${payload.name} berhasil ditambahkan.`);
       }
       setIsModalOpen(false);
-      loadData();
     } catch {
       toast.error('Terjadi kesalahan saat menyimpan klien.');
     }
@@ -127,11 +143,7 @@ export default function ClientListPage() {
       </div>
 
       {/* Clients Grid */}
-      {loading ? (
-        <div className="bg-white p-8 rounded-xl border border-border shadow-xs">
-          <StateLoading message="Memuat daftar 18 klien otoritatif PT. BARAK..." />
-        </div>
-      ) : clients.length === 0 ? (
+      {filteredClients.length === 0 ? (
         <div className="bg-white p-8 rounded-xl border border-border shadow-xs">
           <StateEmpty
             title="Klien tidak ditemukan"
@@ -142,7 +154,7 @@ export default function ClientListPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {clients.map((c) => (
+          {displayedClients.map((c) => (
             <div
               key={c.id}
               className="bg-white rounded-xl border border-border p-5 shadow-xs hover:border-primary-red/40 hover:shadow-md transition-all flex flex-col justify-between"
@@ -212,10 +224,10 @@ export default function ClientListPage() {
       )}
 
       {/* Pagination */}
-      {!loading && clients.length > 0 && (
+      {filteredClients.length > 0 && (
         <div className="bg-white p-3.5 rounded-xl border border-border shadow-xs flex items-center justify-between text-xs text-muted">
           <p>
-            Total <span className="font-semibold text-ink">{meta.total}</span> klien mitra terdaftar (18 Otoritatif PRD)
+            Total <span className="font-semibold text-ink">{total}</span> klien mitra terdaftar
           </p>
           <div className="flex items-center gap-1">
             <Button
@@ -228,12 +240,12 @@ export default function ClientListPage() {
               <ChevronLeft className="h-3.5 w-3.5" />
             </Button>
             <span className="px-2 font-medium text-ink">
-              Hal {page} dari {meta.totalPages || 1}
+              Hal {page} dari {totalPages}
             </span>
             <Button
               variant="outline"
               size="sm"
-              disabled={page >= meta.totalPages}
+              disabled={page >= totalPages}
               onClick={() => setPage(page + 1)}
               className="h-7 w-7 p-0"
             >

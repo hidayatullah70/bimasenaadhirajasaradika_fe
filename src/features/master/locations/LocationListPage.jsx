@@ -4,16 +4,17 @@
  * Source of Truth: PRD Section 20 / IMPLEMENTATION-PLAN Phase 2.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import { MapPin, Search, Plus, Building2, Users, Compass, ChevronLeft, ChevronRight } from 'lucide-react';
 import locationAdapter from '@/services/adapters/locationAdapter';
-import { MOCK_CLIENTS } from '@/services/mock/mockMasterData';
+import { MOCK_CLIENTS, MOCK_LOCATIONS } from '@/services/mock/mockMasterData';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ROLES } from '@/constants/roles';
 import { PERMISSIONS } from '@/constants/permissions';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { StateLoading, StateEmpty } from '@/components/ui/StateViews';
+import { StateEmpty } from '@/components/ui/StateViews';
 import LocationFormModal from './LocationFormModal';
 import toast from 'react-hot-toast';
 
@@ -22,34 +23,40 @@ export default function LocationListPage() {
   const canEdit = hasRole([ROLES.DIREKTUR, ROLES.HRD]);
   const canCreate = canEdit && hasPermission(PERMISSIONS.LOCATION_CREATE);
 
-  const [locations, setLocations] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Authoritative persistent state with MOCK_LOCATIONS as initial fallback
+  const [locations, setLocations] = useLocalStorage('barak_locations', MOCK_LOCATIONS);
   const [search, setSearch] = useState('');
   const [clientId, setClientId] = useState('');
   const [page, setPage] = useState(1);
-  const [meta, setMeta] = useState({ total: 0, totalPages: 1 });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLocation, setEditingLocation] = useState(null);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await locationAdapter.getLocations({ search, clientId, page, pageSize: 10 });
-      if (res.data) {
-        setLocations(res.data);
-        setMeta(res.meta);
-      }
-    } catch {
-      toast.error('Gagal memuat data lokasi.');
-    } finally {
-      setLoading(false);
+  const filteredLocations = useMemo(() => {
+    let result = Array.isArray(locations) ? locations : [];
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter(
+        (loc) =>
+          loc.name?.toLowerCase().includes(q) ||
+          loc.code?.toLowerCase().includes(q) ||
+          loc.city?.toLowerCase().includes(q) ||
+          loc.contactPerson?.toLowerCase().includes(q)
+      );
     }
-  }, [search, clientId, page]);
+    if (clientId) {
+      result = result.filter((loc) => loc.clientId === clientId);
+    }
+    return result;
+  }, [locations, search, clientId]);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  const pageSize = 10;
+  const total = filteredLocations.length;
+  const totalPages = Math.ceil(total / pageSize) || 1;
+  const displayedLocations = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredLocations.slice(start, start + pageSize);
+  }, [filteredLocations, page, pageSize]);
 
   const handleOpenCreate = () => {
     setEditingLocation(null);
@@ -65,13 +72,21 @@ export default function LocationListPage() {
     try {
       if (editingLocation) {
         await locationAdapter.updateLocation(editingLocation.id, payload);
+        const updated = { ...editingLocation, ...payload, updatedAt: new Date().toISOString() };
+        setLocations((prev) => (Array.isArray(prev) ? prev.map((loc) => (loc.id === editingLocation.id ? updated : loc)) : [updated]));
         toast.success(`Data lokasi ${payload.name} berhasil diperbarui.`);
       } else {
-        await locationAdapter.createLocation(payload);
+        const res = await locationAdapter.createLocation(payload);
+        const newLoc = res?.data || {
+          ...payload,
+          id: `LOC-${((locations?.length || 0) + 1).toString().padStart(3, '0')}`,
+          activeManpower: payload.activeManpower || 0,
+          createdAt: new Date().toISOString(),
+        };
+        setLocations((prev) => [newLoc, ...(Array.isArray(prev) ? prev : [])]);
         toast.success(`Lokasi baru ${payload.name} berhasil ditambahkan.`);
       }
       setIsModalOpen(false);
-      loadData();
     } catch {
       toast.error('Terjadi kesalahan saat menyimpan lokasi.');
     }
@@ -121,9 +136,7 @@ export default function LocationListPage() {
 
       {/* Main Table */}
       <div className="bg-white rounded-xl border border-border shadow-xs overflow-hidden">
-        {loading ? (
-          <StateLoading message="Memuat lokasi pos penempatan personel..." />
-        ) : locations.length === 0 ? (
+        {filteredLocations.length === 0 ? (
           <StateEmpty
             title="Lokasi tidak ditemukan"
             description="Tidak ada pos fasilitas yang sesuai dengan pencarian."
@@ -144,7 +157,7 @@ export default function LocationListPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {locations.map((loc) => {
+                {displayedLocations.map((loc) => {
                   const client = MOCK_CLIENTS.find((c) => c.id === loc.clientId);
                   const isFull = loc.activeManpower >= loc.manpowerQuota;
                   return (
@@ -204,12 +217,12 @@ export default function LocationListPage() {
         )}
 
         {/* Pagination */}
-        {!loading && locations.length > 0 && (
+        {filteredLocations.length > 0 && (
           <div className="p-3.5 border-t border-border bg-canvas/30 flex items-center justify-between text-xs text-muted">
             <p>
-              Menampilkan <span className="font-medium text-ink">{(page - 1) * 10 + 1}</span> -{' '}
-              <span className="font-medium text-ink">{Math.min(page * 10, meta.total)}</span> dari{' '}
-              <span className="font-medium text-ink">{meta.total}</span> lokasi fasilitas
+              Menampilkan <span className="font-medium text-ink">{(page - 1) * pageSize + 1}</span> -{' '}
+              <span className="font-medium text-ink">{Math.min(page * pageSize, total)}</span> dari{' '}
+              <span className="font-medium text-ink">{total}</span> lokasi fasilitas
             </p>
             <div className="flex items-center gap-1">
               <Button
@@ -222,12 +235,12 @@ export default function LocationListPage() {
                 <ChevronLeft className="h-3.5 w-3.5" />
               </Button>
               <span className="px-2 font-medium text-ink">
-                Halaman {page} dari {meta.totalPages || 1}
+                Halaman {page} dari {totalPages}
               </span>
               <Button
                 variant="outline"
                 size="sm"
-                disabled={page >= meta.totalPages}
+                disabled={page >= totalPages}
                 onClick={() => setPage(page + 1)}
                 className="h-7 w-7 p-0"
               >

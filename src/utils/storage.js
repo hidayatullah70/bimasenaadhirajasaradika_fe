@@ -13,21 +13,9 @@ export function getStoredCollection(key, defaultDataFactory) {
 
   try {
     const raw = window.localStorage.getItem(key);
-    if (raw) {
+    if (raw !== null && raw !== 'undefined' && raw !== 'null' && raw !== '') {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        // Recovery check: if collection was previously truncated by the pagination slice bug
-        if (Array.isArray(defaultData) && defaultData.length > parsed.length) {
-          const defaultIds = new Set(
-            defaultData.map((d) => d.id || d.id_karyawan || d.code || d.username || d.ticketNumber)
-          );
-          const userCreated = parsed.filter(
-            (p) => !defaultIds.has(p.id || p.id_karyawan || p.code || p.username || p.ticketNumber)
-          );
-          const merged = [...userCreated, ...defaultData];
-          window.localStorage.setItem(key, JSON.stringify(merged));
-          return merged;
-        }
+      if (parsed !== undefined && parsed !== null) {
         return parsed;
       }
     }
@@ -48,6 +36,7 @@ export function saveStoredCollection(key, data) {
   if (typeof window === 'undefined') return;
   try {
     window.localStorage.setItem(key, JSON.stringify(data));
+    window.dispatchEvent(new Event('storage'));
   } catch (err) {
     console.error(`[Storage] Failed to save ${key}:`, err);
   }

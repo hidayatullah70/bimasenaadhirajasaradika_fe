@@ -4,15 +4,17 @@
  * Source of Truth: PRD Section 20 & 21 / IMPLEMENTATION-PLAN Phase 2.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Clock, Plus, Moon, Sun, Sunrise, Building2 } from 'lucide-react';
 import shiftAdapter from '@/services/adapters/shiftAdapter';
+import { MOCK_SHIFTS } from '@/services/mock/mockMasterData';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ROLES } from '@/constants/roles';
 import { PERMISSIONS } from '@/constants/permissions';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { StateLoading, StateEmpty } from '@/components/ui/StateViews';
+import { StateEmpty } from '@/components/ui/StateViews';
 import ShiftFormModal from './ShiftFormModal';
 import toast from 'react-hot-toast';
 
@@ -20,26 +22,10 @@ export default function ShiftListPage() {
   const { hasRole } = useAuth();
   const canManage = hasRole([ROLES.DIREKTUR, ROLES.HRD]);
 
-  const [shifts, setShifts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Authoritative persistent state with MOCK_SHIFTS as initial fallback
+  const [shifts, setShifts] = useLocalStorage('barak_shifts', MOCK_SHIFTS);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingShift, setEditingShift] = useState(null);
-
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await shiftAdapter.getShifts();
-      if (res.data) setShifts(res.data);
-    } catch {
-      toast.error('Gagal memuat data shift.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
 
   const handleOpenCreate = () => {
     setEditingShift(null);
@@ -55,13 +41,19 @@ export default function ShiftListPage() {
     try {
       if (editingShift) {
         await shiftAdapter.updateShift(editingShift.id, payload);
+        const updated = { ...editingShift, ...payload, updatedAt: new Date().toISOString() };
+        setShifts((prev) => (Array.isArray(prev) ? prev.map((s) => (s.id === editingShift.id ? updated : s)) : [updated]));
         toast.success(`Shift ${payload.name} berhasil diperbarui.`);
       } else {
-        await shiftAdapter.createShift(payload);
+        const res = await shiftAdapter.createShift(payload);
+        const newShift = res?.data || {
+          ...payload,
+          id: `SHIFT-${((shifts?.length || 0) + 1).toString().padStart(2, '0')}`,
+        };
+        setShifts((prev) => [newShift, ...(Array.isArray(prev) ? prev : [])]);
         toast.success(`Shift ${payload.name} berhasil ditambahkan.`);
       }
       setIsModalOpen(false);
-      loadData();
     } catch {
       toast.error('Gagal menyimpan shift.');
     }
@@ -91,9 +83,7 @@ export default function ShiftListPage() {
         )}
       </div>
 
-      {loading ? (
-        <StateLoading message="Memuat shift kerja operasional..." />
-      ) : shifts.length === 0 ? (
+      {shifts.length === 0 ? (
         <StateEmpty title="Belum ada shift" description="Silakan buat konfigurasi shift pertama." />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -4,16 +4,17 @@
  * Source of Truth: PRD Section 11.2, 14, 20 / IMPLEMENTATION-PLAN Phase 2.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import { UserCheck, Search, Plus, MapPin, Building2, Clock, Calendar, ChevronLeft, ChevronRight, XCircle } from 'lucide-react';
 import assignmentAdapter from '@/services/adapters/assignmentAdapter';
-import { MOCK_CLIENTS, MOCK_LOCATIONS, MOCK_SHIFTS } from '@/services/mock/mockMasterData';
+import { MOCK_CLIENTS, MOCK_LOCATIONS, MOCK_SHIFTS, MOCK_ASSIGNMENTS } from '@/services/mock/mockMasterData';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ROLES } from '@/constants/roles';
 import { PERMISSIONS } from '@/constants/permissions';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { StateLoading, StateEmpty } from '@/components/ui/StateViews';
+import { StateEmpty } from '@/components/ui/StateViews';
 import AssignmentFormModal from './AssignmentFormModal';
 import toast from 'react-hot-toast';
 
@@ -22,43 +23,48 @@ export default function AssignmentListPage() {
   const canEdit = hasRole([ROLES.DIREKTUR, ROLES.HRD]);
   const canCreate = canEdit && hasPermission(PERMISSIONS.ASSIGNMENT_CREATE);
 
-  const [assignments, setAssignments] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Authoritative persistent state with MOCK_ASSIGNMENTS as initial fallback
+  const [assignments, setAssignments] = useLocalStorage('barak_assignments', MOCK_ASSIGNMENTS);
   const [search, setSearch] = useState('');
   const [clientId, setClientId] = useState('');
   const [locationId, setLocationId] = useState('');
   const [shiftId, setShiftId] = useState('');
   const [page, setPage] = useState(1);
-  const [meta, setMeta] = useState({ total: 0, totalPages: 1 });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState(null);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await assignmentAdapter.getAssignments({
-        search,
-        clientId,
-        locationId,
-        shiftId,
-        page,
-        pageSize: 10,
-      });
-      if (res.data) {
-        setAssignments(res.data);
-        setMeta(res.meta);
-      }
-    } catch {
-      toast.error('Gagal memuat data penugasan.');
-    } finally {
-      setLoading(false);
+  const filteredAssignments = useMemo(() => {
+    let result = Array.isArray(assignments) ? assignments : [];
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter(
+        (a) =>
+          a.employeeName?.toLowerCase().includes(q) ||
+          a.locationName?.toLowerCase().includes(q) ||
+          a.role?.toLowerCase().includes(q) ||
+          a.id?.toLowerCase().includes(q)
+      );
     }
-  }, [search, clientId, locationId, shiftId, page]);
+    if (clientId) {
+      result = result.filter((a) => a.clientId === clientId);
+    }
+    if (locationId) {
+      result = result.filter((a) => a.locationId === locationId);
+    }
+    if (shiftId) {
+      result = result.filter((a) => a.shiftId === shiftId);
+    }
+    return result;
+  }, [assignments, search, clientId, locationId, shiftId]);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  const pageSize = 10;
+  const total = filteredAssignments.length;
+  const totalPages = Math.ceil(total / pageSize) || 1;
+  const displayedAssignments = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredAssignments.slice(start, start + pageSize);
+  }, [filteredAssignments, page, pageSize]);
 
   const handleOpenCreate = () => {
     setEditingAssignment(null);
@@ -74,8 +80,12 @@ export default function AssignmentListPage() {
     if (!window.confirm(`Akhiri penugasan ${asn.employeeName} di ${asn.locationName}?`)) return;
     try {
       await assignmentAdapter.endAssignment(asn.id, 'Rotasi penempatan');
+      setAssignments((prev) =>
+        Array.isArray(prev)
+          ? prev.map((a) => (a.id === asn.id ? { ...a, status: 'ENDED', endDate: new Date().toISOString() } : a))
+          : []
+      );
       toast.success(`Penugasan ${asn.employeeName} telah diakhiri.`);
-      loadData();
     } catch {
       toast.error('Gagal mengakhiri penugasan.');
     }
@@ -85,13 +95,21 @@ export default function AssignmentListPage() {
     try {
       if (editingAssignment) {
         await assignmentAdapter.updateAssignment(editingAssignment.id, payload);
+        const updated = { ...editingAssignment, ...payload, updatedAt: new Date().toISOString() };
+        setAssignments((prev) => (Array.isArray(prev) ? prev.map((a) => (a.id === editingAssignment.id ? updated : a)) : [updated]));
         toast.success(`Penugasan ${payload.employeeName} berhasil diperbarui.`);
       } else {
-        await assignmentAdapter.createAssignment(payload);
+        const res = await assignmentAdapter.createAssignment(payload);
+        const newAsn = res?.data || {
+          ...payload,
+          id: `ASN-${((assignments?.length || 0) + 1).toString().padStart(4, '0')}`,
+          status: 'ACTIVE',
+          createdAt: new Date().toISOString(),
+        };
+        setAssignments((prev) => [newAsn, ...(Array.isArray(prev) ? prev : [])]);
         toast.success(`Penugasan baru untuk ${payload.employeeName} berhasil disimpan.`);
       }
       setIsModalOpen(false);
-      loadData();
     } catch {
       toast.error('Gagal menyimpan penugasan.');
     }
@@ -169,9 +187,7 @@ export default function AssignmentListPage() {
 
       {/* Main Table */}
       <div className="bg-white rounded-xl border border-border shadow-xs overflow-hidden">
-        {loading ? (
-          <StateLoading message="Memuat 30 data penugasan personel aktif..." />
-        ) : assignments.length === 0 ? (
+        {filteredAssignments.length === 0 ? (
           <StateEmpty
             title="Tidak ada penugasan"
             description="Tidak ada penugasan personel yang sesuai dengan kriteria filter."
@@ -193,7 +209,7 @@ export default function AssignmentListPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {assignments.map((asn) => (
+                {displayedAssignments.map((asn) => (
                   <tr key={asn.id} className="hover:bg-primary-red/5 transition-colors">
                     {/* Kode */}
                     <td className="px-4 py-3 font-mono font-semibold text-primary-red">
@@ -273,12 +289,12 @@ export default function AssignmentListPage() {
         )}
 
         {/* Pagination */}
-        {!loading && assignments.length > 0 && (
+        {filteredAssignments.length > 0 && (
           <div className="p-3.5 border-t border-border bg-canvas/30 flex items-center justify-between text-xs text-muted">
             <p>
-              Menampilkan <span className="font-medium text-ink">{(page - 1) * 10 + 1}</span> -{' '}
-              <span className="font-medium text-ink">{Math.min(page * 10, meta.total)}</span> dari{' '}
-              <span className="font-medium text-ink">{meta.total}</span> penugasan aktif (30 Otoritatif PRD)
+              Menampilkan <span className="font-medium text-ink">{(page - 1) * pageSize + 1}</span> -{' '}
+              <span className="font-medium text-ink">{Math.min(page * pageSize, total)}</span> dari{' '}
+              <span className="font-medium text-ink">{total}</span> penugasan personel
             </p>
             <div className="flex items-center gap-1">
               <Button
@@ -291,12 +307,12 @@ export default function AssignmentListPage() {
                 <ChevronLeft className="h-3.5 w-3.5" />
               </Button>
               <span className="px-2 font-medium text-ink">
-                Halaman {page} dari {meta.totalPages || 1}
+                Halaman {page} dari {totalPages}
               </span>
               <Button
                 variant="outline"
                 size="sm"
-                disabled={page >= meta.totalPages}
+                disabled={page >= totalPages}
                 onClick={() => setPage(page + 1)}
                 className="h-7 w-7 p-0"
               >

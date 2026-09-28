@@ -3,7 +3,7 @@
  * Source of Truth: PRD Section 13 (Operations Module), Section 18 (Cross-department workflow: Incident Escalation).
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   AlertTriangle,
   Plus,
@@ -24,15 +24,17 @@ import { LoadingState, EmptyState } from '@/components/ui/StateViews';
 import incidentAdapter from '@/services/adapters/incidentAdapter';
 import clientAdapter from '@/services/adapters/clientAdapter';
 import locationAdapter from '@/services/adapters/locationAdapter';
+import { MOCK_INCIDENTS } from '@/services/mock/mockOperationsData';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 import IncidentFormModal from './IncidentFormModal';
 import IncidentEscalateModal from './IncidentEscalateModal';
 import { STATUS } from '@/constants/status';
 
 export default function IncidentListPage() {
-  const [incidents, setIncidents] = useState([]);
+  // Authoritative persistent state with MOCK_INCIDENTS as initial fallback
+  const [incidents, setIncidents] = useLocalStorage('barak_incidents', MOCK_INCIDENTS);
   const [clients, setClients] = useState([]);
   const [locations, setLocations] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   // Filters & Search
   const [search, setSearch] = useState('');
@@ -49,48 +51,87 @@ export default function IncidentListPage() {
   const [resolvingId, setResolvingId] = useState(null);
   const [resolutionText, setResolutionText] = useState('');
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [incRes, clientRes, locRes] = await Promise.all([
-        incidentAdapter.getIncidents({
-          search,
-          severity: selectedSeverity,
-          status: selectedStatus,
-          clientId: selectedClient,
-          pageSize: 50,
-        }),
-        clientAdapter.getClients({ pageSize: 50 }),
-        locationAdapter.getLocations({ pageSize: 50 }),
-      ]);
-
-      if (incRes.data) setIncidents(incRes.data);
-      if (clientRes.data) setClients(clientRes.data);
-      if (locRes.data) setLocations(locRes.data);
-    } catch (err) {
-      console.error('Failed to load incidents:', err);
-      toast.error('Gagal memuat data insiden.');
-    } finally {
-      setLoading(false);
-    }
-  }, [search, selectedSeverity, selectedStatus, selectedClient]);
-
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    const loadDropdownData = async () => {
+      try {
+        const [clientRes, locRes] = await Promise.all([
+          clientAdapter.getClients({ pageSize: 50 }),
+          locationAdapter.getLocations({ pageSize: 50 }),
+        ]);
+        if (clientRes.data) setClients(clientRes.data);
+        if (locRes.data) setLocations(locRes.data);
+      } catch (err) {
+        console.error('Failed to load dropdown data:', err);
+      }
+    };
+    loadDropdownData();
+  }, []);
+
+  const filteredIncidents = useMemo(() => {
+    let result = Array.isArray(incidents) ? incidents : [];
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter(
+        (inc) =>
+          inc.title?.toLowerCase().includes(q) ||
+          inc.incidentNumber?.toLowerCase().includes(q) ||
+          inc.locationName?.toLowerCase().includes(q) ||
+          inc.clientName?.toLowerCase().includes(q) ||
+          inc.reportedBy?.toLowerCase().includes(q) ||
+          inc.description?.toLowerCase().includes(q)
+      );
+    }
+    if (selectedSeverity) {
+      result = result.filter((inc) => inc.severity === selectedSeverity);
+    }
+    if (selectedStatus) {
+      result = result.filter((inc) => inc.status === selectedStatus);
+    }
+    if (selectedClient) {
+      result = result.filter((inc) => inc.clientId === selectedClient);
+    }
+    return result;
+  }, [incidents, search, selectedSeverity, selectedStatus, selectedClient]);
 
   const handleCreateIncident = async (payload) => {
-    const res = await incidentAdapter.createIncident(payload);
-    if (res.error) throw res.error;
-    toast.success('Laporan insiden berhasil dicatat.');
-    loadData();
+    try {
+      const res = await incidentAdapter.createIncident(payload);
+      const newInc = res?.data || {
+        ...payload,
+        id: `INC-${Date.now()}`,
+        incidentNumber: `INC-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${((incidents?.length || 0) + 1).toString().padStart(3, '0')}`,
+        status: STATUS.OPEN,
+        createdAt: new Date().toISOString(),
+      };
+      setIncidents((prev) => [newInc, ...(Array.isArray(prev) ? prev : [])]);
+      toast.success('Laporan insiden berhasil dicatat.');
+    } catch (err) {
+      toast.error(err.message || 'Gagal membuat laporan insiden.');
+    }
   };
 
   const handleEscalateIncident = async (id, { targetDept, reason }) => {
-    const res = await incidentAdapter.escalateIncident(id, { targetDept, reason });
-    if (res.error) throw res.error;
-    toast.success(`Insiden berhasil dieskalasi ke divisi ${targetDept}.`);
-    loadData();
+    try {
+      await incidentAdapter.escalateIncident(id, { targetDept, reason });
+      setIncidents((prev) =>
+        Array.isArray(prev)
+          ? prev.map((inc) =>
+              inc.id === id
+                ? {
+                    ...inc,
+                    escalatedTo: targetDept,
+                    status: STATUS.ESCALATED,
+                    escalationReason: reason,
+                    escalatedAt: new Date().toISOString(),
+                  }
+                : inc
+            )
+          : []
+      );
+      toast.success(`Insiden berhasil dieskalasi ke divisi ${targetDept}.`);
+    } catch (err) {
+      toast.error(err.message || 'Gagal eskalasi insiden.');
+    }
   };
 
   const handleResolveIncident = async (id) => {
@@ -98,15 +139,28 @@ export default function IncidentListPage() {
       toast.error('Catatan penyelesaian wajib diisi.');
       return;
     }
-    const res = await incidentAdapter.resolveIncident(id, { resolutionNotes: resolutionText });
-    if (res.error) {
-      toast.error(res.error.message || 'Gagal menyelesaikan insiden.');
-      return;
+    try {
+      await incidentAdapter.resolveIncident(id, { resolutionNotes: resolutionText });
+      setIncidents((prev) =>
+        Array.isArray(prev)
+          ? prev.map((inc) =>
+              inc.id === id
+                ? {
+                    ...inc,
+                    status: STATUS.RESOLVED,
+                    resolutionNotes: resolutionText,
+                    resolvedAt: new Date().toISOString(),
+                  }
+                : inc
+            )
+          : []
+      );
+      toast.success('Insiden dinyatakan selesai (Resolved).');
+      setResolvingId(null);
+      setResolutionText('');
+    } catch (err) {
+      toast.error(err.message || 'Gagal menyelesaikan insiden.');
     }
-    toast.success('Insiden dinyatakan selesai (Resolved).');
-    setResolvingId(null);
-    setResolutionText('');
-    loadData();
   };
 
   // Severity styling helper
@@ -210,9 +264,7 @@ export default function IncidentListPage() {
       </Card>
 
       {/* Incidents Table */}
-      {loading ? (
-        <LoadingState message="Memuat daftar insiden operasional..." />
-      ) : incidents.length === 0 ? (
+      {filteredIncidents.length === 0 ? (
         <EmptyState
           title="Tidak Ada Laporan Insiden"
           description="Tidak ditemukan insiden dengan filter pencarian yang diterapkan saat ini."
@@ -233,7 +285,7 @@ export default function IncidentListPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {incidents.map((inc) => {
+                {filteredIncidents.map((inc) => {
                   const isExpanded = expandedId === inc.id;
                   const isResolving = resolvingId === inc.id;
 
