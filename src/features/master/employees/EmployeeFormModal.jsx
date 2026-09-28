@@ -368,7 +368,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
                 type="text"
                 value={formData.nama_lengkap_sesuai_KTP}
                 onChange={(e) => setFormData({ ...formData, nama_lengkap_sesuai_KTP: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red"
                 placeholder="Contoh: Budi Prasetyo"
               />
               {errors.nama_lengkap_sesuai_KTP && <p className="text-error text-[11px] mt-1">{errors.nama_lengkap_sesuai_KTP}</p>}
@@ -380,7 +380,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
                 maxLength={16}
                 value={formData.NIK}
                 onChange={(e) => setFormData({ ...formData, NIK: e.target.value.replace(/\D/g, '') })}
-                className="w-full px-3 py-2 font-mono border rounded-lg focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red"
+                className="w-full px-3 py-2 font-mono border border-border rounded-lg bg-white text-ink focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red"
                 placeholder="3201xxxxxxxxxxxx"
               />
               {errors.NIK && <p className="text-error text-[11px] mt-1">{errors.NIK}</p>}
@@ -394,7 +394,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
               <select
                 value={formData.jenis_kelamin}
                 onChange={(e) => setFormData({ ...formData, jenis_kelamin: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg bg-white"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
               >
                 <option value="L">Laki-laki</option>
                 <option value="P">Perempuan</option>
@@ -406,7 +406,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
                 type="text"
                 value={formData.tempat_lahir}
                 onChange={(e) => setFormData({ ...formData, tempat_lahir: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
               />
             </div>
             <div>
@@ -415,7 +415,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
                 type="date"
                 value={formData.tanggal_lahir}
                 onChange={(e) => setFormData({ ...formData, tanggal_lahir: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
               />
             </div>
           </div>
@@ -428,7 +428,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
                 type="tel"
                 value={formData.nomor_telepon}
                 onChange={(e) => setFormData({ ...formData, nomor_telepon: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
                 placeholder="0812xxxxxxxx"
               />
               {errors.nomor_telepon && <p className="text-error text-[11px] mt-1">{errors.nomor_telepon}</p>}
@@ -439,7 +439,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
                 placeholder="budi@barak.co.id"
               />
             </div>
@@ -449,7 +449,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
                 rows={2}
                 value={formData.alamat_sesuai_KTP}
                 onChange={(e) => setFormData({ ...formData, alamat_sesuai_KTP: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
                 placeholder="Alamat domisili sesuai KTP..."
               />
               {errors.alamat_sesuai_KTP && <p className="text-error text-[11px] mt-1">{errors.alamat_sesuai_KTP}</p>}
@@ -465,7 +465,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
                 <select
                   value={formData.jenis_layanan}
                   onChange={(e) => setFormData({ ...formData, jenis_layanan: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg bg-white"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
                 >
                   {SERVICE_TYPES.map((s) => (
                     <option key={s.key} value={s.key}>{s.label}</option>
@@ -477,7 +477,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
                 <select
                   value={formData.jabatan}
                   onChange={(e) => setFormData({ ...formData, jabatan: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg bg-white"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
                 >
                   <option value="Staff">Staff</option>
                   <option value="Danru">Danru (Komandan Regu)</option>
@@ -490,7 +490,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
                 <select
                   value={formData.status_kerja}
                   onChange={(e) => setFormData({ ...formData, status_kerja: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg bg-white"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
                 >
                   <option value="TETAP">TETAP (PKWTT)</option>
                   <option value="KONTRAK">KONTRAK (PKWT)</option>
@@ -503,7 +503,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
                   type="date"
                   value={formData.tanggal_masuk}
                   onChange={(e) => setFormData({ ...formData, tanggal_masuk: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg bg-white"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
                 />
                 {errors.tanggal_masuk && <p className="text-error text-[11px] mt-1">{errors.tanggal_masuk}</p>}
               </div>
@@ -515,7 +515,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
                 <select
                   value={formData.penugasan_klien}
                   onChange={(e) => setFormData({ ...formData, penugasan_klien: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg bg-white"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
                 >
                   {MOCK_CLIENTS.map((c) => (
                     <option key={c.id} value={c.id}>{c.name} ({c.type})</option>
@@ -527,7 +527,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
                 <select
                   value={formData.lokasi_penugasan}
                   onChange={(e) => setFormData({ ...formData, lokasi_penugasan: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg bg-white"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
                 >
                   {MOCK_LOCATIONS.map((l) => (
                     <option key={l.id} value={l.id}>{l.name} - {l.city}</option>
@@ -546,7 +546,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
                 <select
                   value={formData.nama_bank}
                   onChange={(e) => setFormData({ ...formData, nama_bank: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg bg-white"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
                 >
                   <option value="Bank Mandiri">Bank Mandiri</option>
                   <option value="BCA">BCA</option>
@@ -560,7 +560,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
                   type="text"
                   value={formData.nomor_rekening_bank}
                   onChange={(e) => setFormData({ ...formData, nomor_rekening_bank: e.target.value })}
-                  className="w-full px-3 py-2 font-mono border rounded-lg"
+                  className="w-full px-3 py-2 font-mono border border-border rounded-lg bg-white text-ink"
                   placeholder="123000xxxxxxx"
                 />
               </div>
@@ -570,7 +570,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
                   type="text"
                   value={formData.NPWP}
                   onChange={(e) => setFormData({ ...formData, NPWP: e.target.value })}
-                  className="w-full px-3 py-2 font-mono border rounded-lg"
+                  className="w-full px-3 py-2 font-mono border border-border rounded-lg bg-white text-ink"
                   placeholder="00.000.000.0-000.000"
                 />
               </div>
@@ -579,7 +579,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
                 <select
                   value={formData.status_pajak}
                   onChange={(e) => setFormData({ ...formData, status_pajak: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg bg-white font-medium"
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink font-medium"
                 >
                   {PTKP_OPTIONS.map((ptkp) => (
                     <option key={ptkp.value} value={ptkp.value}>
@@ -594,7 +594,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
                   type="text"
                   value={formData.BPJS_kesehatan}
                   onChange={(e) => setFormData({ ...formData, BPJS_kesehatan: e.target.value })}
-                  className="w-full px-3 py-2 font-mono border rounded-lg"
+                  className="w-full px-3 py-2 font-mono border border-border rounded-lg bg-white text-ink"
                   placeholder="0001xxxxxxxx"
                 />
               </div>
@@ -604,7 +604,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
                   type="text"
                   value={formData.BPJS_ketenagakerjaan}
                   onChange={(e) => setFormData({ ...formData, BPJS_ketenagakerjaan: e.target.value })}
-                  className="w-full px-3 py-2 font-mono border rounded-lg"
+                  className="w-full px-3 py-2 font-mono border border-border rounded-lg bg-white text-ink"
                   placeholder="1901xxxxxxxx"
                 />
               </div>

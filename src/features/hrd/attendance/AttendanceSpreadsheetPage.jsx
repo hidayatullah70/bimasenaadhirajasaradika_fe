@@ -532,7 +532,7 @@ export default function AttendanceSpreadsheetPage() {
                               ? 'bg-transparent border-transparent cursor-not-allowed text-ink'
                               : isLate
                               ? 'border-error bg-error/10 text-error font-bold'
-                              : 'border-border bg-white focus:border-primary-red focus:ring-1 focus:ring-primary-red'
+                              : 'border-border bg-white text-ink focus:border-primary-red focus:ring-1 focus:ring-primary-red'
                           }`}
                         />
                       </td>
@@ -547,7 +547,7 @@ export default function AttendanceSpreadsheetPage() {
                           className={`w-24 px-2 py-1 font-mono text-xs border rounded transition-colors ${
                             isFinalized
                               ? 'bg-transparent border-transparent cursor-not-allowed text-ink'
-                              : 'border-border bg-white focus:border-primary-red focus:ring-1 focus:ring-primary-red'
+                              : 'border-border bg-white text-ink focus:border-primary-red focus:ring-1 focus:ring-primary-red'
                           }`}
                         />
                       </td>

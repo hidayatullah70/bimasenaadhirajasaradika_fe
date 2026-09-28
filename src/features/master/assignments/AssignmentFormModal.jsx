@@ -183,7 +183,7 @@ export default function AssignmentFormModal({ isOpen, assignment, onClose, onSav
                 type="date"
                 value={formData.startDate}
                 onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
               />
             </div>
             <div>
@@ -192,7 +192,7 @@ export default function AssignmentFormModal({ isOpen, assignment, onClose, onSav
                 type="date"
                 value={formData.endDate}
                 onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
               />
             </div>
           </div>
@@ -203,7 +203,7 @@ export default function AssignmentFormModal({ isOpen, assignment, onClose, onSav
               rows={2}
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg"
+              className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
               placeholder="Instruksi khusus atau catatan penempatan personel..."
             />
           </div>

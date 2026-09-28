@@ -110,7 +110,7 @@ export default function AssignmentListPage() {
               setPage(1);
             }}
             placeholder="Cari personel, NIK, klien, atau kode penugasan..."
-            className="w-full pl-9 pr-4 py-2 text-xs border border-border rounded-lg bg-canvas/30 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red"
+            className="w-full pl-9 pr-4 py-2 text-xs border border-border rounded-lg bg-white text-ink focus:outline-none focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red"
           />
         </div>
 

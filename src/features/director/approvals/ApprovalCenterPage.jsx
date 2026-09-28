@@ -179,7 +179,7 @@ export default function ApprovalCenterPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Cari nomor, judul, atau pengusul..."
-                className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm bg-slate-50 border border-border rounded-lg focus:outline-hidden focus:ring-1 focus:ring-primary-red"
+                className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm bg-white text-ink border border-border rounded-lg focus:outline-hidden focus:ring-1 focus:ring-primary-red"
               />
             </div>
 
@@ -192,7 +192,7 @@ export default function ApprovalCenterPage() {
               <select
                 value={departmentFilter}
                 onChange={(e) => setDepartmentFilter(e.target.value)}
-                className="px-2.5 py-1.5 text-xs bg-slate-50 border border-border rounded-lg text-ink"
+                className="px-2.5 py-1.5 text-xs bg-white text-ink border border-border rounded-lg"
               >
                 <option value="">Semua Departemen</option>
                 <option value="FINANCE">Finance (Payroll)</option>

@@ -132,7 +132,7 @@ export default function ArticleFormModal({ isOpen, onClose, article, onSuccess }
                   onChange={handleChange}
                   placeholder="Contoh: Standar Operasional Pengamanan Terpadu BUJP"
                   required
-                  className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+                  className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
                 />
               </div>
 
@@ -144,7 +144,7 @@ export default function ArticleFormModal({ isOpen, onClose, article, onSuccess }
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white"
+                  className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white text-ink"
                 >
                   {CATEGORIES.map((cat) => (
                     <option key={cat.value} value={cat.value}>
@@ -166,7 +166,7 @@ export default function ArticleFormModal({ isOpen, onClose, article, onSuccess }
                   value={formData.author}
                   onChange={handleChange}
                   placeholder="Contoh: Mayor (Purn.) Sudrajat"
-                  className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+                  className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
                 />
               </div>
 
@@ -180,7 +180,7 @@ export default function ArticleFormModal({ isOpen, onClose, article, onSuccess }
                   value={formData.authorRole}
                   onChange={handleChange}
                   placeholder="Contoh: Direktur Operasional & Keamanan"
-                  className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+                  className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
                 />
               </div>
             </div>
@@ -196,7 +196,7 @@ export default function ArticleFormModal({ isOpen, onClose, article, onSuccess }
                 onChange={handleChange}
                 placeholder="Rangkuman 1-2 kalimat pengantar yang tampil di kartu daftar artikel..."
                 required
-                className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+                className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
               />
             </div>
 
@@ -211,7 +211,7 @@ export default function ArticleFormModal({ isOpen, onClose, article, onSuccess }
                 onChange={handleChange}
                 placeholder="Tuliskan naskah artikel berita, panduan teknis, atau pengumuman secara terperinci..."
                 required
-                className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red font-sans"
+                className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red font-sans"
               />
             </div>
 
@@ -223,7 +223,7 @@ export default function ArticleFormModal({ isOpen, onClose, article, onSuccess }
                     name="status"
                     value={formData.status}
                     onChange={handleChange}
-                    className="text-xs border border-border rounded px-2 py-1 bg-white focus:outline-none focus:border-primary-red font-medium"
+                    className="text-xs border border-border rounded px-2 py-1 bg-white text-ink focus:outline-none focus:border-primary-red font-medium"
                   >
                     <option value="PUBLISHED">Tayang (Published)</option>
                     <option value="DRAFT">Konsep (Draft)</option>
@@ -256,7 +256,7 @@ export default function ArticleFormModal({ isOpen, onClose, article, onSuccess }
                 onChange={handleChange}
                 placeholder="standar-operasional-pengamanan-terpadu-bujp"
                 required
-                className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red font-mono"
+                className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red font-mono"
               />
               <p className="text-[11px] text-muted mt-1">
                 URL Publik:{' '}
@@ -276,7 +276,7 @@ export default function ArticleFormModal({ isOpen, onClose, article, onSuccess }
                 value={formData.metaTitle}
                 onChange={handleChange}
                 placeholder={formData.title || 'Judul untuk Google Search'}
-                className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+                className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
               />
             </div>
 
@@ -290,7 +290,7 @@ export default function ArticleFormModal({ isOpen, onClose, article, onSuccess }
                 value={formData.metaDescription}
                 onChange={handleChange}
                 placeholder={formData.excerpt || 'Deskripsi singkat cuplikan hasil pencarian Google...'}
-                className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+                className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
               />
             </div>
           </div>

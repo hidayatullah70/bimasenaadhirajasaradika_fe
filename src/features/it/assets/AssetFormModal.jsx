@@ -102,7 +102,7 @@ export default function AssetFormModal({ isOpen, onClose, onSuccess }) {
               onChange={handleChange}
               placeholder="Contoh: Automatic Barrier Gate MX-50"
               required
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -114,7 +114,7 @@ export default function AssetFormModal({ isOpen, onClose, onSuccess }) {
               name="assetType"
               value={formData.assetType}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white text-ink"
             >
               {ASSET_TYPES.map((type) => (
                 <option key={type.value} value={type.value}>
@@ -135,7 +135,7 @@ export default function AssetFormModal({ isOpen, onClose, onSuccess }) {
               onChange={handleChange}
               placeholder="Contoh: MX50-SN-882910-ID"
               required
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red font-mono"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red font-mono"
             />
           </div>
 
@@ -147,7 +147,7 @@ export default function AssetFormModal({ isOpen, onClose, onSuccess }) {
               name="locationName"
               value={formData.locationName}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white text-ink"
             >
               {LOCATIONS.map((loc) => (
                 <option key={loc} value={loc}>
@@ -166,7 +166,7 @@ export default function AssetFormModal({ isOpen, onClose, onSuccess }) {
               name="purchaseDate"
               value={formData.purchaseDate}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -179,7 +179,7 @@ export default function AssetFormModal({ isOpen, onClose, onSuccess }) {
               name="warrantyExpiry"
               value={formData.warrantyExpiry}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -193,7 +193,7 @@ export default function AssetFormModal({ isOpen, onClose, onSuccess }) {
               value={formData.condition}
               onChange={handleChange}
               placeholder="Contoh: Baik / Beroperasi Optimal"
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -207,7 +207,7 @@ export default function AssetFormModal({ isOpen, onClose, onSuccess }) {
               value={formData.pic}
               onChange={handleChange}
               placeholder="Contoh: Hadi Suprianto (Korlap)"
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -221,7 +221,7 @@ export default function AssetFormModal({ isOpen, onClose, onSuccess }) {
               value={formData.notes}
               onChange={handleChange}
               placeholder="Spesifikasi tambahan, IP address perangkat, atau riwayat uji fungsi..."
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
         </div>

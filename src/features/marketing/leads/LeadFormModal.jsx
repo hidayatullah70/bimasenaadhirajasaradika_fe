@@ -107,7 +107,7 @@ export default function LeadFormModal({ isOpen, onClose, onSuccess }) {
               onChange={handleChange}
               placeholder="Contoh: PT. Cikarang Logistic Park"
               required
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -122,7 +122,7 @@ export default function LeadFormModal({ isOpen, onClose, onSuccess }) {
               onChange={handleChange}
               placeholder="Contoh: Bapak Rudi Hermawan"
               required
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -137,7 +137,7 @@ export default function LeadFormModal({ isOpen, onClose, onSuccess }) {
               onChange={handleChange}
               placeholder="Contoh: 0812-8821-9920"
               required
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -151,7 +151,7 @@ export default function LeadFormModal({ isOpen, onClose, onSuccess }) {
               value={formData.email}
               onChange={handleChange}
               placeholder="Contoh: rudi.hermawan@perusahaan.co.id"
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -163,7 +163,7 @@ export default function LeadFormModal({ isOpen, onClose, onSuccess }) {
               name="source"
               value={formData.source}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white text-ink"
             >
               {SOURCE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -181,7 +181,7 @@ export default function LeadFormModal({ isOpen, onClose, onSuccess }) {
               name="serviceInterest"
               value={formData.serviceInterest}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white text-ink"
             >
               {SERVICE_OPTIONS.map((srv) => (
                 <option key={srv} value={srv}>
@@ -201,7 +201,7 @@ export default function LeadFormModal({ isOpen, onClose, onSuccess }) {
               min="1"
               value={formData.estimatedManpower}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -215,7 +215,7 @@ export default function LeadFormModal({ isOpen, onClose, onSuccess }) {
               value={formData.locationCity}
               onChange={handleChange}
               placeholder="Contoh: Cikarang, Bekasi / Tangerang"
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -227,7 +227,7 @@ export default function LeadFormModal({ isOpen, onClose, onSuccess }) {
               name="assignedSales"
               value={formData.assignedSales}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white text-ink"
             >
               {SALES_REPS.map((rep) => (
                 <option key={rep} value={rep}>
@@ -247,7 +247,7 @@ export default function LeadFormModal({ isOpen, onClose, onSuccess }) {
               value={formData.notes}
               onChange={handleChange}
               placeholder="Catatan tambahan mengenai luas area, kendala di pengelola lama, atau waktu pertemuan..."
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
         </div>

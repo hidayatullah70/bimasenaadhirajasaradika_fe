@@ -98,7 +98,7 @@ export default function OpportunityWonModal({ isOpen, onClose, opportunity, onSu
               value={formData.signedContractNumber}
               onChange={handleChange}
               required
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red font-mono"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red font-mono"
             />
           </div>
 
@@ -110,7 +110,7 @@ export default function OpportunityWonModal({ isOpen, onClose, opportunity, onSu
               name="billingTerm"
               value={formData.billingTerm}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white text-ink"
             >
               <option value="Net 14 Hari">Net 14 Hari</option>
               <option value="Net 30 Hari">Net 30 Hari (Standar)</option>
@@ -129,7 +129,7 @@ export default function OpportunityWonModal({ isOpen, onClose, opportunity, onSu
               min="1"
               value={formData.manpowerQuota}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -144,7 +144,7 @@ export default function OpportunityWonModal({ isOpen, onClose, opportunity, onSu
               step="500000"
               value={formData.monthlyBilling}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -158,7 +158,7 @@ export default function OpportunityWonModal({ isOpen, onClose, opportunity, onSu
               name="operationsPic"
               value={formData.operationsPic}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -172,7 +172,7 @@ export default function OpportunityWonModal({ isOpen, onClose, opportunity, onSu
               name="financePic"
               value={formData.financePic}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -185,7 +185,7 @@ export default function OpportunityWonModal({ isOpen, onClose, opportunity, onSu
               rows={3}
               value={formData.notes}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
         </div>

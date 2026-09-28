@@ -77,7 +77,7 @@ export default function TicketResolveModal({ isOpen, onClose, ticket, onSuccess 
             onChange={(e) => setResolutionText(e.target.value)}
             placeholder="Jelaskan langkah teknis yang telah dikerjakan, hasil pengujian, dan status perangkat/sistem saat ini..."
             required
-            className="w-full px-3 py-2 text-xs sm:text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+            className="w-full px-3 py-2 text-xs sm:text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
           />
         </div>
 
@@ -90,7 +90,7 @@ export default function TicketResolveModal({ isOpen, onClose, ticket, onSuccess 
             value={sparepartNote}
             onChange={(e) => setSparepartNote(e.target.value)}
             placeholder="Contoh: Penggantian Adaptor 12V 1.5A original TP-Link"
-            className="w-full px-3 py-2 text-xs sm:text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+            className="w-full px-3 py-2 text-xs sm:text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
           />
         </div>
 

@@ -135,7 +135,7 @@ export default function SeoSettingsPage() {
                       type="text"
                       value={p.metaTitle}
                       onChange={(e) => handleChange(p.pageKey, 'metaTitle', e.target.value)}
-                      className="w-full px-3 py-2 text-xs sm:text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+                      className="w-full px-3 py-2 text-xs sm:text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
                     />
                     <div className="text-[11px] text-muted mt-1 text-right">
                       {p.metaTitle?.length || 0} / 60 karakter
@@ -150,7 +150,7 @@ export default function SeoSettingsPage() {
                       rows={2}
                       value={p.metaDescription}
                       onChange={(e) => handleChange(p.pageKey, 'metaDescription', e.target.value)}
-                      className="w-full px-3 py-2 text-xs sm:text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+                      className="w-full px-3 py-2 text-xs sm:text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
                     />
                     <div className="text-[11px] text-muted mt-1 text-right">
                       {p.metaDescription?.length || 0} / 160 karakter
@@ -165,7 +165,7 @@ export default function SeoSettingsPage() {
                       type="text"
                       value={p.canonical}
                       onChange={(e) => handleChange(p.pageKey, 'canonical', e.target.value)}
-                      className="w-full px-3 py-2 text-xs sm:text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red font-mono"
+                      className="w-full px-3 py-2 text-xs sm:text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red font-mono"
                     />
                   </div>
 
@@ -177,7 +177,7 @@ export default function SeoSettingsPage() {
                       type="text"
                       value={p.ogImage}
                       onChange={(e) => handleChange(p.pageKey, 'ogImage', e.target.value)}
-                      className="w-full px-3 py-2 text-xs sm:text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red font-mono"
+                      className="w-full px-3 py-2 text-xs sm:text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red font-mono"
                     />
                   </div>
                 </div>

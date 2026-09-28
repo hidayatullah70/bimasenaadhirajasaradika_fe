@@ -111,7 +111,7 @@ export default function ClientFormModal({ isOpen, client, onClose, onSave }) {
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red"
+              className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red"
               placeholder="Contoh: PT. Sumber Bahagia Logistik"
             />
             {errors.name && <p className="text-error text-[11px] mt-1">{errors.name}</p>}
@@ -123,7 +123,7 @@ export default function ClientFormModal({ isOpen, client, onClose, onSave }) {
               <select
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg bg-white"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
               >
                 <option value="Logistik">Logistik & Ekspedisi</option>
                 <option value="Area">Kawasan Industri / Komersial</option>
@@ -137,7 +137,7 @@ export default function ClientFormModal({ isOpen, client, onClose, onSave }) {
                 type="text"
                 value={formData.city}
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
               />
             </div>
           </div>
@@ -149,7 +149,7 @@ export default function ClientFormModal({ isOpen, client, onClose, onSave }) {
                 type="text"
                 value={formData.picName}
                 onChange={(e) => setFormData({ ...formData, picName: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
                 placeholder="Pak Hendra"
               />
               {errors.picName && <p className="text-error text-[11px] mt-1">{errors.picName}</p>}
@@ -160,7 +160,7 @@ export default function ClientFormModal({ isOpen, client, onClose, onSave }) {
                 type="tel"
                 value={formData.picPhone}
                 onChange={(e) => setFormData({ ...formData, picPhone: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
                 placeholder="0812xxxxxxxx"
               />
               {errors.picPhone && <p className="text-error text-[11px] mt-1">{errors.picPhone}</p>}
@@ -171,7 +171,7 @@ export default function ClientFormModal({ isOpen, client, onClose, onSave }) {
                 type="email"
                 value={formData.picEmail}
                 onChange={(e) => setFormData({ ...formData, picEmail: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
                 placeholder="pic@perusahaan.com"
               />
             </div>
@@ -183,7 +183,7 @@ export default function ClientFormModal({ isOpen, client, onClose, onSave }) {
               rows={2}
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg"
+              className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
               placeholder="Alamat lengkap fasilitas atau kantor klien..."
             />
             {errors.address && <p className="text-error text-[11px] mt-1">{errors.address}</p>}
@@ -196,7 +196,7 @@ export default function ClientFormModal({ isOpen, client, onClose, onSave }) {
                 type="number"
                 value={formData.activeHeadcount}
                 onChange={(e) => setFormData({ ...formData, activeHeadcount: parseInt(e.target.value, 10) || 0 })}
-                className="w-full px-3 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
               />
             </div>
             <div>
@@ -205,7 +205,7 @@ export default function ClientFormModal({ isOpen, client, onClose, onSave }) {
                 type="number"
                 value={formData.monthlyBillingValue}
                 onChange={(e) => setFormData({ ...formData, monthlyBillingValue: parseInt(e.target.value, 10) || 0 })}
-                className="w-full px-3 py-2 border rounded-lg font-mono"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink font-mono"
               />
             </div>
           </div>

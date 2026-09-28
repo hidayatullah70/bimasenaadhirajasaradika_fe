@@ -74,7 +74,7 @@ export default function OpportunityLostModal({ isOpen, onClose, opportunity, onS
           <select
             value={selectedPreset}
             onChange={(e) => setSelectedPreset(e.target.value)}
-            className="w-full px-3 py-2 text-xs sm:text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white"
+            className="w-full px-3 py-2 text-xs sm:text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white text-ink"
           >
             {COMMON_REASONS.map((reason, idx) => (
               <option key={idx} value={reason}>
@@ -93,7 +93,7 @@ export default function OpportunityLostModal({ isOpen, onClose, opportunity, onS
             value={customReason}
             onChange={(e) => setCustomReason(e.target.value)}
             placeholder="Jelaskan faktor spesifik dari feedback klien, vendor pemenang jika diketahui, dll..."
-            className="w-full px-3 py-2 text-xs sm:text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+            className="w-full px-3 py-2 text-xs sm:text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
           />
         </div>
 

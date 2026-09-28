@@ -98,7 +98,7 @@ export default function LoginPage() {
                   onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))}
                   placeholder="Masukkan username"
                   required
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-canvas text-ink text-sm focus:outline-none focus:ring-2 focus:ring-primary-red/30 focus:border-primary-red transition-all"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-white text-ink text-sm focus:outline-none focus:ring-2 focus:ring-primary-red/30 focus:border-primary-red transition-all"
                 />
               </div>
 
@@ -115,7 +115,7 @@ export default function LoginPage() {
                     onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
                     placeholder="Masukkan password"
                     required
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-canvas text-ink text-sm focus:outline-none focus:ring-2 focus:ring-primary-red/30 focus:border-primary-red transition-all pr-10"
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-white text-ink text-sm focus:outline-none focus:ring-2 focus:ring-primary-red/30 focus:border-primary-red transition-all pr-10"
                   />
                   <button
                     type="button"

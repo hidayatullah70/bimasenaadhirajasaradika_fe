@@ -89,7 +89,7 @@ export default function UserFormModal({ isOpen, user, onClose, onSave }) {
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red"
+              className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red"
               placeholder="Contoh: Ahmad Yani, S.Kom"
             />
             {errors.name && <p className="text-error text-[11px] mt-1">{errors.name}</p>}
@@ -102,7 +102,7 @@ export default function UserFormModal({ isOpen, user, onClose, onSave }) {
                 type="text"
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg font-mono"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink font-mono"
                 placeholder="ahmad.yani"
               />
               {errors.username && <p className="text-error text-[11px] mt-1">{errors.username}</p>}
@@ -113,7 +113,7 @@ export default function UserFormModal({ isOpen, user, onClose, onSave }) {
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
                 placeholder="ahmad@barak.co.id"
               />
               {errors.email && <p className="text-error text-[11px] mt-1">{errors.email}</p>}
@@ -125,7 +125,7 @@ export default function UserFormModal({ isOpen, user, onClose, onSave }) {
             <select
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg bg-white"
+              className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
             >
               {Object.keys(ROLES).map((key) => (
                 <option key={key} value={ROLES[key]}>
@@ -141,7 +141,7 @@ export default function UserFormModal({ isOpen, user, onClose, onSave }) {
               type="text"
               value={formData.department}
               onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg"
+              className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
               placeholder="Operasional Lapangan"
             />
           </div>

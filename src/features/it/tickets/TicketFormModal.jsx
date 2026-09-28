@@ -117,7 +117,7 @@ export default function TicketFormModal({ isOpen, onClose, onSuccess }) {
               onChange={handleChange}
               placeholder="Contoh: Hadi Suprianto (Korlap Ops)"
               required
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -129,7 +129,7 @@ export default function TicketFormModal({ isOpen, onClose, onSuccess }) {
               name="department"
               value={formData.department}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white text-ink"
             >
               {DEPARTMENTS.map((dept) => (
                 <option key={dept.value} value={dept.value}>
@@ -147,7 +147,7 @@ export default function TicketFormModal({ isOpen, onClose, onSuccess }) {
               name="category"
               value={formData.category}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white text-ink"
             >
               {CATEGORIES.map((cat) => (
                 <option key={cat.value} value={cat.value}>
@@ -165,7 +165,7 @@ export default function TicketFormModal({ isOpen, onClose, onSuccess }) {
               name="priority"
               value={formData.priority}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white font-medium"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white text-ink font-medium"
             >
               {PRIORITIES.map((p) => (
                 <option key={p.value} value={p.value}>
@@ -183,7 +183,7 @@ export default function TicketFormModal({ isOpen, onClose, onSuccess }) {
               name="locationName"
               value={formData.locationName}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white text-ink"
             >
               {LOCATIONS.map((loc) => (
                 <option key={loc} value={loc}>
@@ -204,7 +204,7 @@ export default function TicketFormModal({ isOpen, onClose, onSuccess }) {
               onChange={handleChange}
               placeholder="Contoh: Sensor Barrier Gate Pintu Keluar Tidak Merespon Tiket"
               required
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -219,7 +219,7 @@ export default function TicketFormModal({ isOpen, onClose, onSuccess }) {
               onChange={handleChange}
               placeholder="Jelaskan secara rinci tanda-tanda kerusakan, waktu mulai terjadi, dan dampak operasional di posko..."
               required
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -231,7 +231,7 @@ export default function TicketFormModal({ isOpen, onClose, onSuccess }) {
               name="assignedTo"
               value={formData.assignedTo}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white text-ink"
             >
               <option value="Bagus Prakoso (IT Field Support)">Bagus Prakoso (IT Field Support — Hardware & Posko)</option>
               <option value="Fajar Nugroho (IT System Administrator)">Fajar Nugroho (IT System Administrator — Server & App)</option>

@@ -79,7 +79,7 @@ export default function ShiftFormModal({ isOpen, shift, onClose, onSave }) {
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red"
+              className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red"
               placeholder="Contoh: Shift Pagi Operasional"
             />
           </div>
@@ -91,7 +91,7 @@ export default function ShiftFormModal({ isOpen, shift, onClose, onSave }) {
                 type="time"
                 value={formData.startTime}
                 onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg font-mono"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink font-mono"
               />
             </div>
             <div>
@@ -100,7 +100,7 @@ export default function ShiftFormModal({ isOpen, shift, onClose, onSave }) {
                 type="time"
                 value={formData.endTime}
                 onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg font-mono"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink font-mono"
               />
             </div>
           </div>
@@ -112,7 +112,7 @@ export default function ShiftFormModal({ isOpen, shift, onClose, onSave }) {
                 type="number"
                 value={formData.durationHours}
                 onChange={(e) => setFormData({ ...formData, durationHours: parseInt(e.target.value, 10) || 8 })}
-                className="w-full px-3 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
               />
             </div>
             <div>
@@ -121,7 +121,7 @@ export default function ShiftFormModal({ isOpen, shift, onClose, onSave }) {
                 type="number"
                 value={formData.gracePeriodMinutes}
                 onChange={(e) => setFormData({ ...formData, gracePeriodMinutes: parseInt(e.target.value, 10) || 0 })}
-                className="w-full px-3 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
               />
             </div>
           </div>
@@ -145,7 +145,7 @@ export default function ShiftFormModal({ isOpen, shift, onClose, onSave }) {
               rows={2}
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg"
+              className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
               placeholder="Deskripsi tugas dan catatan shift..."
             />
           </div>

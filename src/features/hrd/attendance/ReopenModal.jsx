@@ -70,7 +70,7 @@ export default function ReopenModal({ isOpen, sheet, onClose, onConfirm }) {
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="Contoh: Koreksi absensi pergantian shift malam atas izin Danru pos JNT..."
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red"
+              className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red"
             />
           </div>
 

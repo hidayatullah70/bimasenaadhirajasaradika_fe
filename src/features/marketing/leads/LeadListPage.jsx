@@ -100,7 +100,7 @@ export default function LeadListPage() {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -113,7 +113,7 @@ export default function LeadListPage() {
                 setSource(e.target.value);
                 setPage(1);
               }}
-              className="text-xs sm:text-sm border border-border rounded-lg px-2.5 py-2 bg-white focus:outline-none focus:border-primary-red"
+              className="text-xs sm:text-sm border border-border rounded-lg px-2.5 py-2 bg-white text-ink focus:outline-none focus:border-primary-red"
             >
               {SOURCE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -130,7 +130,7 @@ export default function LeadListPage() {
               setStatus(e.target.value);
               setPage(1);
             }}
-            className="text-xs sm:text-sm border border-border rounded-lg px-2.5 py-2 bg-white focus:outline-none focus:border-primary-red"
+            className="text-xs sm:text-sm border border-border rounded-lg px-2.5 py-2 bg-white text-ink focus:outline-none focus:border-primary-red"
           >
             {STATUS_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>

@@ -94,7 +94,7 @@ export default function CareerFormModal({ isOpen, onClose, onSuccess }) {
               onChange={handleChange}
               placeholder="Contoh: Anggota Satpam Kualifikasi Gada Pratama"
               required
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -106,7 +106,7 @@ export default function CareerFormModal({ isOpen, onClose, onSuccess }) {
               name="department"
               value={formData.department}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white text-ink"
             >
               {DEPARTMENTS.map((dept) => (
                 <option key={dept.value} value={dept.value}>
@@ -124,7 +124,7 @@ export default function CareerFormModal({ isOpen, onClose, onSuccess }) {
               name="employmentType"
               value={formData.employmentType}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white text-ink"
             >
               <option value="KONTRAK (PKWT)">KONTRAK (PKWT)</option>
               <option value="TETAP (PKWTT)">TETAP (PKWTT)</option>
@@ -142,7 +142,7 @@ export default function CareerFormModal({ isOpen, onClose, onSuccess }) {
               value={formData.location}
               onChange={handleChange}
               placeholder="Contoh: Cikarang, Bekasi & Tangerang"
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -156,7 +156,7 @@ export default function CareerFormModal({ isOpen, onClose, onSuccess }) {
               min="1"
               value={formData.manpowerQuota}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -170,7 +170,7 @@ export default function CareerFormModal({ isOpen, onClose, onSuccess }) {
               value={formData.salaryRange}
               onChange={handleChange}
               placeholder="Contoh: Rp 5.200.000 - Rp 5.600.000 / bln"
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -183,7 +183,7 @@ export default function CareerFormModal({ isOpen, onClose, onSuccess }) {
               name="deadline"
               value={formData.deadline}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -198,7 +198,7 @@ export default function CareerFormModal({ isOpen, onClose, onSuccess }) {
               onChange={handleChange}
               placeholder="Jelaskan peran utama dan tugas harian yang akan dijalankan pelamar di posko..."
               required
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -212,7 +212,7 @@ export default function CareerFormModal({ isOpen, onClose, onSuccess }) {
               value={formData.requirementsText}
               onChange={handleChange}
               placeholder="Masukkan 1 persyaratan per baris..."
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red font-mono text-xs"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red font-mono text-xs"
             />
           </div>
         </div>

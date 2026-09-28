@@ -80,7 +80,7 @@ export default function FaqFormModal({ isOpen, onClose, onSuccess }) {
             name="category"
             value={formData.category}
             onChange={handleChange}
-            className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white"
+            className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white text-ink"
           >
             {CATEGORIES.map((cat) => (
               <option key={cat.value} value={cat.value}>
@@ -101,7 +101,7 @@ export default function FaqFormModal({ isOpen, onClose, onSuccess }) {
             onChange={handleChange}
             placeholder="Contoh: Apakah PT. BARAK memiliki legalitas resmi BUJP?"
             required
-            className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+            className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
           />
         </div>
 
@@ -116,7 +116,7 @@ export default function FaqFormModal({ isOpen, onClose, onSuccess }) {
             onChange={handleChange}
             placeholder="Tuliskan jawaban yang jelas, transparan, dan mencantumkan landasan regulasi jika diperlukan..."
             required
-            className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+            className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
           />
         </div>
 

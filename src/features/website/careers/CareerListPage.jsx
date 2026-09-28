@@ -96,7 +96,7 @@ export default function CareerListPage() {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -107,7 +107,7 @@ export default function CareerListPage() {
               setStatus(e.target.value);
               setPage(1);
             }}
-            className="text-xs sm:text-sm border border-border rounded-lg px-2.5 py-2 bg-white focus:outline-none focus:border-primary-red"
+            className="text-xs sm:text-sm border border-border rounded-lg px-2.5 py-2 bg-white text-ink focus:outline-none focus:border-primary-red"
           >
             <option value="">Semua Status</option>
             <option value="PUBLISHED">Aktif Terbuka</option>

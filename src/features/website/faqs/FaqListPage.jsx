@@ -73,7 +73,7 @@ export default function FaqListPage() {
               placeholder="Cari pertanyaan atau kata kunci..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -81,7 +81,7 @@ export default function FaqListPage() {
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="text-xs sm:text-sm border border-border rounded-lg px-2.5 py-2 bg-white focus:outline-none focus:border-primary-red"
+            className="text-xs sm:text-sm border border-border rounded-lg px-2.5 py-2 bg-white text-ink focus:outline-none focus:border-primary-red"
           >
             {CATEGORIES.map((c) => (
               <option key={c.value} value={c.value}>

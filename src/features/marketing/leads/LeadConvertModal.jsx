@@ -102,7 +102,7 @@ export default function LeadConvertModal({ isOpen, onClose, lead, onSuccess }) {
             value={formData.monthlyValue}
             onChange={handleChange}
             required
-            className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+            className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
           />
           <p className="text-xs text-muted mt-1">
             Estimasi Nilai Tahunan (ARR): <span className="font-semibold text-ink">{formatRupiah(Number(formData.monthlyValue) * 12)}</span>
@@ -120,7 +120,7 @@ export default function LeadConvertModal({ isOpen, onClose, lead, onSuccess }) {
               min="1"
               value={formData.estimatedManpower}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
 
@@ -133,7 +133,7 @@ export default function LeadConvertModal({ isOpen, onClose, lead, onSuccess }) {
               name="expectedCloseDate"
               value={formData.expectedCloseDate}
               onChange={handleChange}
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
             />
           </div>
         </div>
@@ -146,7 +146,7 @@ export default function LeadConvertModal({ isOpen, onClose, lead, onSuccess }) {
             name="stage"
             value={formData.stage}
             onChange={handleChange}
-            className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white"
+            className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red bg-white text-ink"
           >
             {STAGE_OPTIONS.map((stg) => (
               <option key={stg.value} value={stg.value}>
@@ -165,7 +165,7 @@ export default function LeadConvertModal({ isOpen, onClose, lead, onSuccess }) {
             name="salesOwner"
             value={formData.salesOwner}
             onChange={handleChange}
-            className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:border-primary-red"
+            className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-white text-ink focus:outline-none focus:border-primary-red"
           />
         </div>
 

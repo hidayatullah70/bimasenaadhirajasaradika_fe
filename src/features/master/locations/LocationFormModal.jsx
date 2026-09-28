@@ -112,7 +112,7 @@ export default function LocationFormModal({ isOpen, location, onClose, onSave })
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red"
+              className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red"
               placeholder="Contoh: Central Hub JNT Rawa Bokor"
             />
             {errors.name && <p className="text-error text-[11px] mt-1">{errors.name}</p>}
@@ -124,7 +124,7 @@ export default function LocationFormModal({ isOpen, location, onClose, onSave })
               <select
                 value={formData.clientId}
                 onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg bg-white"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
               >
                 {MOCK_CLIENTS.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
@@ -137,7 +137,7 @@ export default function LocationFormModal({ isOpen, location, onClose, onSave })
                 type="text"
                 value={formData.city}
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
               />
             </div>
           </div>
@@ -148,7 +148,7 @@ export default function LocationFormModal({ isOpen, location, onClose, onSave })
               rows={2}
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              className="w-full px-3 py-2 border rounded-lg"
+              className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
               placeholder="Alamat rinci pos penempatan..."
             />
             {errors.address && <p className="text-error text-[11px] mt-1">{errors.address}</p>}
@@ -161,7 +161,7 @@ export default function LocationFormModal({ isOpen, location, onClose, onSave })
                 type="text"
                 value={formData.contactPerson}
                 onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
                 placeholder="Pak Roni (Head Security)"
               />
               {errors.contactPerson && <p className="text-error text-[11px] mt-1">{errors.contactPerson}</p>}
@@ -172,7 +172,7 @@ export default function LocationFormModal({ isOpen, location, onClose, onSave })
                 type="tel"
                 value={formData.contactPhone}
                 onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
                 placeholder="0812xxxxxxxx"
               />
             </div>
@@ -185,7 +185,7 @@ export default function LocationFormModal({ isOpen, location, onClose, onSave })
                 type="number"
                 value={formData.manpowerQuota}
                 onChange={(e) => setFormData({ ...formData, manpowerQuota: parseInt(e.target.value, 10) || 0 })}
-                className="w-full px-3 py-2 border rounded-lg"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
               />
             </div>
             <div>
@@ -195,7 +195,7 @@ export default function LocationFormModal({ isOpen, location, onClose, onSave })
                 step="0.0001"
                 value={formData.lat}
                 onChange={(e) => setFormData({ ...formData, lat: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg font-mono"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink font-mono"
               />
             </div>
             <div>
@@ -205,7 +205,7 @@ export default function LocationFormModal({ isOpen, location, onClose, onSave })
                 step="0.0001"
                 value={formData.lng}
                 onChange={(e) => setFormData({ ...formData, lng: e.target.value })}
-                className="w-full px-3 py-2 border rounded-lg font-mono"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink font-mono"
               />
             </div>
           </div>

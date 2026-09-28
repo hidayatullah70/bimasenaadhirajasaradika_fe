@@ -88,7 +88,7 @@ export default function ExecutiveActivityPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Cari aksi, entitas, atau kata kunci keputusan..."
-                className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm bg-slate-50 border border-border rounded-lg focus:outline-hidden focus:ring-1 focus:ring-primary-red"
+                className="w-full pl-9 pr-4 py-2 text-xs sm:text-sm bg-white text-ink border border-border rounded-lg focus:outline-hidden focus:ring-1 focus:ring-primary-red"
               />
             </div>
             <span className="text-xs text-muted">
