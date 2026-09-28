@@ -49,12 +49,13 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
   const cameraInputRef = useRef(null);
   const videoRef = useRef(null);
   const streamRef = useRef(null);
+  const formRef = useRef(null);
 
   useEffect(() => {
     if (employee) {
       setFormData({
         nama_lengkap_sesuai_KTP: employee.nama_lengkap_sesuai_KTP || '',
-        NIK: employee.NIK || '',
+        NIK: (employee.NIK || '').replace(/\D/g, '').slice(0, 16),
         jenis_kelamin: employee.jenis_kelamin || 'L',
         tempat_lahir: employee.tempat_lahir || 'Jakarta',
         tanggal_lahir: employee.tanggal_lahir || '1990-01-01',
@@ -209,19 +210,35 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
 
   const validate = () => {
     const errs = {};
-    if (!formData.nama_lengkap_sesuai_KTP.trim()) errs.nama_lengkap_sesuai_KTP = 'Nama lengkap wajib diisi.';
-    if (!formData.NIK.trim() || formData.NIK.trim().length !== 16) errs.NIK = 'NIK harus 16 digit angka.';
-    if (!formData.nomor_telepon.trim()) errs.nomor_telepon = 'Nomor telepon wajib diisi.';
-    if (!formData.alamat_sesuai_KTP.trim()) errs.alamat_sesuai_KTP = 'Alamat KTP wajib diisi.';
-    if (!formData.tanggal_masuk) errs.tanggal_masuk = 'Tanggal bergabung wajib diisi.';
+    if (!formData.nama_lengkap_sesuai_KTP.trim()) {
+      errs.nama_lengkap_sesuai_KTP = 'Nama lengkap wajib diisi.';
+    }
+    const cleanNik = (formData.NIK || '').trim();
+    if (!cleanNik) {
+      errs.NIK = 'NIK wajib diisi.';
+    } else if (cleanNik.length !== 16) {
+      errs.NIK = `NIK harus tepat 16 digit angka (saat ini ${cleanNik.length} digit).`;
+    }
+    if (!formData.nomor_telepon.trim()) {
+      errs.nomor_telepon = 'Nomor telepon wajib diisi.';
+    }
+    if (!formData.alamat_sesuai_KTP.trim()) {
+      errs.alamat_sesuai_KTP = 'Alamat KTP wajib diisi.';
+    }
+    if (!formData.tanggal_masuk) {
+      errs.tanggal_masuk = 'Tanggal bergabung wajib diisi.';
+    }
     setErrors(errs);
-    return Object.keys(errs).length === 0;
+    return errs;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!validate()) {
-      toast.error('Mohon lengkapi kolom yang wajib diisi.');
+    const errs = validate();
+    if (Object.keys(errs).length > 0) {
+      const firstErrorMessage = Object.values(errs)[0];
+      toast.error(firstErrorMessage);
+      formRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
@@ -261,7 +278,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 text-xs">
+        <form ref={formRef} onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 text-xs">
           {/* Card Pas Foto 3x4 */}
           <div className="p-3.5 bg-canvas/70 rounded-xl border border-border flex flex-col sm:flex-row items-center sm:items-start gap-4">
             {/* Frame 3x4 Preview */}
@@ -368,7 +385,9 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
                 type="text"
                 value={formData.nama_lengkap_sesuai_KTP}
                 onChange={(e) => setFormData({ ...formData, nama_lengkap_sesuai_KTP: e.target.value })}
-                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red"
+                className={`w-full px-3 py-2 border rounded-lg bg-white text-ink focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red ${
+                  errors.nama_lengkap_sesuai_KTP ? 'border-error ring-1 ring-error/30' : 'border-border'
+                }`}
                 placeholder="Contoh: Budi Prasetyo"
               />
               {errors.nama_lengkap_sesuai_KTP && <p className="text-error text-[11px] mt-1">{errors.nama_lengkap_sesuai_KTP}</p>}
@@ -379,8 +398,10 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
                 type="text"
                 maxLength={16}
                 value={formData.NIK}
-                onChange={(e) => setFormData({ ...formData, NIK: e.target.value.replace(/\D/g, '') })}
-                className="w-full px-3 py-2 font-mono border border-border rounded-lg bg-white text-ink focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red"
+                onChange={(e) => setFormData({ ...formData, NIK: e.target.value.replace(/\D/g, '').slice(0, 16) })}
+                className={`w-full px-3 py-2 font-mono border rounded-lg bg-white text-ink focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red ${
+                  errors.NIK ? 'border-error ring-1 ring-error/30' : 'border-border'
+                }`}
                 placeholder="3201xxxxxxxxxxxx"
               />
               {errors.NIK && <p className="text-error text-[11px] mt-1">{errors.NIK}</p>}
@@ -428,7 +449,9 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
                 type="tel"
                 value={formData.nomor_telepon}
                 onChange={(e) => setFormData({ ...formData, nomor_telepon: e.target.value })}
-                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
+                className={`w-full px-3 py-2 border rounded-lg bg-white text-ink ${
+                  errors.nomor_telepon ? 'border-error ring-1 ring-error/30' : 'border-border'
+                }`}
                 placeholder="0812xxxxxxxx"
               />
               {errors.nomor_telepon && <p className="text-error text-[11px] mt-1">{errors.nomor_telepon}</p>}
@@ -449,7 +472,9 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
                 rows={2}
                 value={formData.alamat_sesuai_KTP}
                 onChange={(e) => setFormData({ ...formData, alamat_sesuai_KTP: e.target.value })}
-                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
+                className={`w-full px-3 py-2 border rounded-lg bg-white text-ink ${
+                  errors.alamat_sesuai_KTP ? 'border-error ring-1 ring-error/30' : 'border-border'
+                }`}
                 placeholder="Alamat domisili sesuai KTP..."
               />
               {errors.alamat_sesuai_KTP && <p className="text-error text-[11px] mt-1">{errors.alamat_sesuai_KTP}</p>}
@@ -503,7 +528,9 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
                   type="date"
                   value={formData.tanggal_masuk}
                   onChange={(e) => setFormData({ ...formData, tanggal_masuk: e.target.value })}
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
+                  className={`w-full px-3 py-2 border rounded-lg bg-white text-ink ${
+                    errors.tanggal_masuk ? 'border-error ring-1 ring-error/30' : 'border-border'
+                  }`}
                 />
                 {errors.tanggal_masuk && <p className="text-error text-[11px] mt-1">{errors.tanggal_masuk}</p>}
               </div>

@@ -513,7 +513,7 @@ const RAW_EMPLOYEES_SEED = [
 export const MOCK_EMPLOYEES = RAW_EMPLOYEES_SEED.map((raw, idx) => {
   const empNumber = (idx + 1).toString().padStart(3, '0');
   const idKaryawan = `BRK-EMP-${empNumber}`;
-  const nik = `32010${(idx + 1).toString().padStart(2, '0')}150889000${(idx % 9) + 1}`;
+  const nik = `3201${(idx + 1).toString().padStart(2, '0')}150889000${(idx % 9) + 1}`;
   const assignedClient = MOCK_CLIENTS[idx % MOCK_CLIENTS.length];
   const assignedLocation = MOCK_LOCATIONS[idx % MOCK_LOCATIONS.length];
 

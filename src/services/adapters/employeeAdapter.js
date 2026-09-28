@@ -11,7 +11,10 @@ import { emitAudit } from '@/utils/auditLogger';
 const isMock = import.meta.env.VITE_API_MODE !== 'rest';
 
 // In-memory / sessionStorage cache to persist mutations during user review
-let employeesStore = [...MOCK_EMPLOYEES];
+let employeesStore = MOCK_EMPLOYEES.map((e) => ({
+  ...e,
+  NIK: (e.NIK || '').replace(/\D/g, '').slice(0, 16),
+}));
 
 export const employeeAdapter = {
   /**
@@ -86,6 +89,7 @@ export const employeeAdapter = {
         ...payload,
         id: newId,
         id_karyawan: newId,
+        NIK: payload.NIK ? payload.NIK.replace(/\D/g, '').slice(0, 16) : '',
         tanggal_masuk: payload.tanggal_masuk || new Date().toISOString().split('T')[0],
         status_pajak: payload.status_pajak || 'TK0',
         NPWP: payload.NPWP || '',
@@ -119,7 +123,12 @@ export const employeeAdapter = {
       if (idx === -1) return { data: null, error: { message: 'Karyawan tidak ditemukan.' } };
 
       const oldEmp = employeesStore[idx];
-      const updated = { ...oldEmp, ...payload, updatedAt: new Date().toISOString() };
+      const updated = {
+        ...oldEmp,
+        ...payload,
+        NIK: payload.NIK ? payload.NIK.replace(/\D/g, '').slice(0, 16) : oldEmp.NIK,
+        updatedAt: new Date().toISOString(),
+      };
       employeesStore[idx] = updated;
 
       await emitAudit({
