@@ -6,6 +6,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Clock, Plus, Moon, Sun, Sunrise, Building2 } from 'lucide-react';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 import shiftAdapter from '@/services/adapters/shiftAdapter';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ROLES } from '@/constants/roles';
@@ -17,10 +18,10 @@ import ShiftFormModal from './ShiftFormModal';
 import toast from 'react-hot-toast';
 
 export default function ShiftListPage() {
-  const { hasPermission, hasRole } = useAuth();
+  const { hasRole } = useAuth();
   const canManage = hasRole([ROLES.DIREKTUR, ROLES.HRD]);
 
-  const [shifts, setShifts] = useState([]);
+  const [shifts, setShifts] = useLocalStorage('barak_shifts', []);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingShift, setEditingShift] = useState(null);
@@ -35,7 +36,7 @@ export default function ShiftListPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setShifts]);
 
   useEffect(() => {
     loadData();

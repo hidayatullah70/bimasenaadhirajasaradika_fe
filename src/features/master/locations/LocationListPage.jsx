@@ -6,6 +6,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { MapPin, Search, Plus, Building2, Users, Compass, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 import locationAdapter from '@/services/adapters/locationAdapter';
 import { MOCK_CLIENTS } from '@/services/mock/mockMasterData';
 import { useAuth } from '@/app/providers/AuthProvider';
@@ -22,7 +23,7 @@ export default function LocationListPage() {
   const canEdit = hasRole([ROLES.DIREKTUR, ROLES.HRD]);
   const canCreate = canEdit && hasPermission(PERMISSIONS.LOCATION_CREATE);
 
-  const [locations, setLocations] = useState([]);
+  const [locations, setLocations] = useLocalStorage('barak_locations', []);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [clientId, setClientId] = useState('');
@@ -45,7 +46,7 @@ export default function LocationListPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, clientId, page]);
+  }, [search, clientId, page, setLocations]);
 
   useEffect(() => {
     loadData();

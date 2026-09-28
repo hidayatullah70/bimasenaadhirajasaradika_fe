@@ -6,6 +6,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Building2, Search, Plus, MapPin, Phone, Mail, Users, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 import clientAdapter from '@/services/adapters/clientAdapter';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ROLES } from '@/constants/roles';
@@ -21,7 +22,7 @@ export default function ClientListPage() {
   const canEdit = hasRole([ROLES.DIREKTUR, ROLES.HRD]);
   const canCreate = canEdit && hasPermission(PERMISSIONS.CLIENT_CREATE);
 
-  const [clients, setClients] = useState([]);
+  const [clients, setClients] = useLocalStorage('barak_clients', []);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [type, setType] = useState('');
@@ -44,7 +45,7 @@ export default function ClientListPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, type, page]);
+  }, [search, type, page, setClients]);
 
   useEffect(() => {
     loadData();

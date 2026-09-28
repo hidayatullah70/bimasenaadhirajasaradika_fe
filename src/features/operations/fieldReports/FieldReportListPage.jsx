@@ -20,13 +20,14 @@ import toast from 'react-hot-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { LoadingState, EmptyState } from '@/components/ui/StateViews';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 import fieldReportAdapter from '@/services/adapters/fieldReportAdapter';
 import clientAdapter from '@/services/adapters/clientAdapter';
 import locationAdapter from '@/services/adapters/locationAdapter';
 import FieldReportFormModal from './FieldReportFormModal';
 
 export default function FieldReportListPage() {
-  const [reports, setReports] = useState([]);
+  const [reports, setReports] = useLocalStorage('barak_field_reports', []);
   const [clients, setClients] = useState([]);
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +63,7 @@ export default function FieldReportListPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, selectedClient, selectedLocation]);
+  }, [search, selectedClient, selectedLocation, setReports]);
 
   useEffect(() => {
     loadData();
