@@ -4,21 +4,19 @@
  * Source of Truth: PRD Section 11.1 / IMPLEMENTATION-PLAN Phase 2.
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Users, Search, Filter, Plus, Download, Eye, EyeOff,
   MoreVertical, Shield, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle
 } from 'lucide-react';
 import employeeAdapter from '@/services/adapters/employeeAdapter';
-import { MOCK_EMPLOYEES } from '@/services/mock/mockMasterData';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ROLES } from '@/constants/roles';
 import { PERMISSIONS } from '@/constants/permissions';
 import { SERVICE_TYPES } from '@/constants/business';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { StateEmpty } from '@/components/ui/StateViews';
+import { StateLoading, StateEmpty } from '@/components/ui/StateViews';
 import EmployeeDetailDrawer from './EmployeeDetailDrawer';
 import EmployeeFormModal from './EmployeeFormModal';
 import toast from 'react-hot-toast';
@@ -30,13 +28,14 @@ export default function EmployeeListPage() {
   const canExport = hasPermission(PERMISSIONS.EMPLOYEE_EXPORT);
   const canViewSensitive = hasPermission(PERMISSIONS.EMPLOYEE_VIEW_SENSITIVE);
 
-  // Authoritative persistent state with MOCK_EMPLOYEES as initial fallback
-  const [employees, setEmployees] = useLocalStorage('barak_employees', MOCK_EMPLOYEES);
+  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [department, setDepartment] = useState('');
   const [serviceType, setServiceType] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
+  const [meta, setMeta] = useState({ total: 0, totalPages: 1 });
 
   // Sensitive data global toggle
   const [showSensitive, setShowSensitive] = useState(false);
@@ -47,38 +46,31 @@ export default function EmployeeListPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
 
-  const filteredEmployees = useMemo(() => {
-    let result = Array.isArray(employees) ? employees : [];
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      result = result.filter(
-        (e) =>
-          e.nama_lengkap_sesuai_KTP?.toLowerCase().includes(q) ||
-          e.id_karyawan?.toLowerCase().includes(q) ||
-          e.NIK?.includes(q) ||
-          e.jenis_pekerjaan?.toLowerCase().includes(q) ||
-          (e.clientName && e.clientName.toLowerCase().includes(q))
-      );
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await employeeAdapter.getEmployees({
+        search,
+        department,
+        serviceType,
+        status,
+        page,
+        pageSize: 10,
+      });
+      if (res.data) {
+        setEmployees(res.data);
+        setMeta(res.meta);
+      }
+    } catch {
+      toast.error('Gagal memuat data karyawan.');
+    } finally {
+      setLoading(false);
     }
-    if (department) {
-      result = result.filter((e) => e.departemen === department);
-    }
-    if (serviceType) {
-      result = result.filter((e) => e.jenis_layanan === serviceType);
-    }
-    if (status) {
-      result = result.filter((e) => e.status_kerja === status);
-    }
-    return result;
-  }, [employees, search, department, serviceType, status]);
+  }, [search, department, serviceType, status, page, setEmployees]);
 
-  const pageSize = 10;
-  const total = filteredEmployees.length;
-  const totalPages = Math.ceil(total / pageSize) || 1;
-  const displayedEmployees = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return filteredEmployees.slice(start, start + pageSize);
-  }, [filteredEmployees, page, pageSize]);
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleRowClick = (emp) => {
     setSelectedEmployee(emp);
@@ -99,26 +91,13 @@ export default function EmployeeListPage() {
     try {
       if (editingEmployee) {
         await employeeAdapter.updateEmployee(editingEmployee.id, payload);
-        const updated = { ...editingEmployee, ...payload, updatedAt: new Date().toISOString() };
-        setEmployees((prev) =>
-          Array.isArray(prev)
-            ? prev.map((e) => (e.id === editingEmployee.id || e.id_karyawan === editingEmployee.id_karyawan ? updated : e))
-            : [updated]
-        );
         toast.success(`Data ${payload.nama_lengkap_sesuai_KTP} berhasil diperbarui.`);
       } else {
-        const res = await employeeAdapter.createEmployee(payload);
-        const newEmp = res?.data || {
-          ...payload,
-          id: `EMP-${((employees?.length || 0) + 1).toString().padStart(4, '0')}`,
-          id_karyawan: `BARAK-${((employees?.length || 0) + 1).toString().padStart(4, '0')}`,
-          status_kerja: payload.status_kerja || 'PKWT',
-          createdAt: new Date().toISOString(),
-        };
-        setEmployees((prev) => [newEmp, ...(Array.isArray(prev) ? prev : [])]);
+        await employeeAdapter.createEmployee(payload);
         toast.success(`Karyawan baru ${payload.nama_lengkap_sesuai_KTP} berhasil didaftarkan.`);
       }
       setIsModalOpen(false);
+      loadData();
     } catch {
       toast.error('Terjadi kesalahan saat menyimpan data karyawan.');
     }
@@ -258,7 +237,9 @@ export default function EmployeeListPage() {
 
       {/* Main Table */}
       <div className="bg-white rounded-xl border border-border shadow-xs overflow-hidden">
-        {filteredEmployees.length === 0 ? (
+        {loading ? (
+          <StateLoading message="Memuat daftar master karyawan PT. BARAK..." />
+        ) : employees.length === 0 ? (
           <StateEmpty
             title="Tidak ada karyawan ditemukan"
             description="Tidak ada data karyawan yang cocok dengan kriteria pencarian atau filter yang dipilih."
@@ -280,7 +261,7 @@ export default function EmployeeListPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {displayedEmployees.map((emp) => (
+                {employees.map((emp) => (
                   <tr
                     key={emp.id}
                     onClick={() => handleRowClick(emp)}
@@ -365,12 +346,12 @@ export default function EmployeeListPage() {
         )}
 
         {/* Pagination Bar */}
-        {filteredEmployees.length > 0 && (
+        {!loading && employees.length > 0 && (
           <div className="p-3.5 border-t border-border bg-canvas/30 flex items-center justify-between text-xs text-muted">
             <p>
-              Menampilkan <span className="font-medium text-ink">{(page - 1) * pageSize + 1}</span> -{' '}
-              <span className="font-medium text-ink">{Math.min(page * pageSize, total)}</span> dari{' '}
-              <span className="font-medium text-ink">{total}</span> data karyawan
+              Menampilkan <span className="font-medium text-ink">{(page - 1) * 10 + 1}</span> -{' '}
+              <span className="font-medium text-ink">{Math.min(page * 10, meta.total)}</span> dari{' '}
+              <span className="font-medium text-ink">{meta.total}</span> data karyawan
             </p>
             <div className="flex items-center gap-1">
               <Button
@@ -383,12 +364,12 @@ export default function EmployeeListPage() {
                 <ChevronLeft className="h-3.5 w-3.5" />
               </Button>
               <span className="px-2 font-medium text-ink">
-                Halaman {page} dari {totalPages}
+                Halaman {page} dari {meta.totalPages || 1}
               </span>
               <Button
                 variant="outline"
                 size="sm"
-                disabled={page >= totalPages}
+                disabled={page >= meta.totalPages}
                 onClick={() => setPage(page + 1)}
                 className="h-7 w-7 p-0"
               >

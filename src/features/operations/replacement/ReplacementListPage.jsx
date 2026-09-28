@@ -3,7 +3,7 @@
  * Source of Truth: PRD Section 13 (Replacement) & Section 18 (Cross-department workflow).
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   UserCheck,
   Plus,
@@ -25,17 +25,15 @@ import replacementAdapter from '@/services/adapters/replacementAdapter';
 import clientAdapter from '@/services/adapters/clientAdapter';
 import locationAdapter from '@/services/adapters/locationAdapter';
 import employeeAdapter from '@/services/adapters/employeeAdapter';
-import { MOCK_REPLACEMENTS } from '@/services/mock/mockOperationsData';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
 import ReplacementFormModal from './ReplacementFormModal';
 import { STATUS } from '@/constants/status';
 
 export default function ReplacementListPage() {
-  // Authoritative persistent state with MOCK_REPLACEMENTS as initial fallback
-  const [replacements, setReplacements] = useLocalStorage('barak_replacements', MOCK_REPLACEMENTS);
+  const [replacements, setReplacements] = useState([]);
   const [clients, setClients] = useState([]);
   const [locations, setLocations] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Filters & Search
   const [search, setSearch] = useState('');
@@ -47,78 +45,52 @@ export default function ReplacementListPage() {
   const [rejectingId, setRejectingId] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
 
-  useEffect(() => {
-    const loadDropdownData = async () => {
-      try {
-        const [clientRes, locRes, empRes] = await Promise.all([
-          clientAdapter.getClients({ pageSize: 50 }),
-          locationAdapter.getLocations({ pageSize: 50 }),
-          employeeAdapter.getEmployees({ pageSize: 100 }),
-        ]);
-        if (clientRes.data) setClients(clientRes.data);
-        if (locRes.data) setLocations(locRes.data);
-        if (empRes.data) setEmployees(empRes.data);
-      } catch (err) {
-        console.error('Failed to load dropdown data:', err);
-      }
-    };
-    loadDropdownData();
-  }, []);
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [repRes, clientRes, locRes, empRes] = await Promise.all([
+        replacementAdapter.getReplacementRequests({
+          search,
+          status: selectedStatus,
+          clientId: selectedClient,
+          pageSize: 50,
+        }),
+        clientAdapter.getClients({ pageSize: 50 }),
+        locationAdapter.getLocations({ pageSize: 50 }),
+        employeeAdapter.getEmployees({ pageSize: 100 }),
+      ]);
 
-  const filteredReplacements = useMemo(() => {
-    let result = Array.isArray(replacements) ? replacements : [];
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      result = result.filter(
-        (rep) =>
-          rep.currentEmployeeName?.toLowerCase().includes(q) ||
-          rep.candidateEmployeeName?.toLowerCase().includes(q) ||
-          rep.locationName?.toLowerCase().includes(q) ||
-          rep.clientName?.toLowerCase().includes(q) ||
-          rep.reason?.toLowerCase().includes(q) ||
-          rep.requestNumber?.toLowerCase().includes(q)
-      );
+      if (repRes.data) setReplacements(repRes.data);
+      if (clientRes.data) setClients(clientRes.data);
+      if (locRes.data) setLocations(locRes.data);
+      if (empRes.data) setEmployees(empRes.data);
+    } catch (err) {
+      console.error('Failed to load replacement data:', err);
+      toast.error('Gagal memuat data pergantian personel.');
+    } finally {
+      setLoading(false);
     }
-    if (selectedStatus) {
-      result = result.filter((rep) => rep.status === selectedStatus);
-    }
-    if (selectedClient) {
-      result = result.filter((rep) => rep.clientId === selectedClient);
-    }
-    return result;
-  }, [replacements, search, selectedStatus, selectedClient]);
+  }, [search, selectedStatus, selectedClient]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleCreateReplacement = async (payload) => {
-    try {
-      const res = await replacementAdapter.createReplacementRequest(payload);
-      const newRep = res?.data || {
-        ...payload,
-        id: `REP-${Date.now()}`,
-        requestNumber: `REP-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${((replacements?.length || 0) + 1).toString().padStart(3, '0')}`,
-        status: STATUS.PENDING,
-        createdAt: new Date().toISOString(),
-      };
-      setReplacements((prev) => [newRep, ...(Array.isArray(prev) ? prev : [])]);
-      toast.success('Pengajuan pergantian personel berhasil dikirim.');
-    } catch (err) {
-      toast.error(err.message || 'Gagal mengajukan pergantian personel.');
-    }
+    const res = await replacementAdapter.createReplacementRequest(payload);
+    if (res.error) throw res.error;
+    toast.success('Pengajuan pergantian personel berhasil dikirim.');
+    loadData();
   };
 
   const handleApprove = async (id) => {
-    try {
-      await replacementAdapter.approveReplacement(id);
-      setReplacements((prev) =>
-        Array.isArray(prev)
-          ? prev.map((r) =>
-              r.id === id ? { ...r, status: STATUS.APPROVED, approvedAt: new Date().toISOString() } : r
-            )
-          : []
-      );
-      toast.success('Pengajuan pergantian personel telah disetujui.');
-    } catch (err) {
-      toast.error(err.message || 'Gagal menyetujui pengajuan.');
+    const res = await replacementAdapter.approveReplacement(id);
+    if (res.error) {
+      toast.error(res.error.message || 'Gagal menyetujui pengajuan.');
+      return;
     }
+    toast.success('Pengajuan pergantian personel telah disetujui.');
+    loadData();
   };
 
   const handleReject = async (id) => {
@@ -126,28 +98,15 @@ export default function ReplacementListPage() {
       toast.error('Alasan penolakan wajib diisi.');
       return;
     }
-    try {
-      await replacementAdapter.rejectReplacement(id, { reason: rejectReason });
-      setReplacements((prev) =>
-        Array.isArray(prev)
-          ? prev.map((r) =>
-              r.id === id
-                ? {
-                    ...r,
-                    status: STATUS.REJECTED,
-                    rejectionReason: rejectReason,
-                    rejectedAt: new Date().toISOString(),
-                  }
-                : r
-            )
-          : []
-      );
-      toast.success('Pengajuan pergantian personel telah ditolak.');
-      setRejectingId(null);
-      setRejectReason('');
-    } catch (err) {
-      toast.error(err.message || 'Gagal menolak pengajuan.');
+    const res = await replacementAdapter.rejectReplacement(id, { reason: rejectReason });
+    if (res.error) {
+      toast.error(res.error.message || 'Gagal menolak pengajuan.');
+      return;
     }
+    toast.success('Pengajuan pergantian personel telah ditolak.');
+    setRejectingId(null);
+    setRejectReason('');
+    loadData();
   };
 
   return (
@@ -222,7 +181,9 @@ export default function ReplacementListPage() {
       </Card>
 
       {/* Replacement Table */}
-      {filteredReplacements.length === 0 ? (
+      {loading ? (
+        <LoadingState message="Memuat daftar pengajuan pergantian personel..." />
+      ) : replacements.length === 0 ? (
         <EmptyState
           title="Tidak Ada Pengajuan Pergantian"
           description="Tidak ditemukan berkas permohonan pergantian personel dengan filter saat ini."
@@ -243,7 +204,7 @@ export default function ReplacementListPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filteredReplacements.map((rep) => {
+                {replacements.map((rep) => {
                   const isRejecting = rejectingId === rep.id;
 
                   return (

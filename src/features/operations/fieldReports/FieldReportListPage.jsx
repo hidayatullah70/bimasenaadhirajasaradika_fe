@@ -3,7 +3,7 @@
  * Source of Truth: PRD Section 13 (Field Reports & Patrol Journal).
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   ClipboardList,
   Plus,
@@ -23,15 +23,13 @@ import { LoadingState, EmptyState } from '@/components/ui/StateViews';
 import fieldReportAdapter from '@/services/adapters/fieldReportAdapter';
 import clientAdapter from '@/services/adapters/clientAdapter';
 import locationAdapter from '@/services/adapters/locationAdapter';
-import { MOCK_FIELD_REPORTS } from '@/services/mock/mockOperationsData';
-import { useLocalStorage } from '@/hooks/useLocalStorage';
 import FieldReportFormModal from './FieldReportFormModal';
 
 export default function FieldReportListPage() {
-  // Authoritative persistent state with MOCK_FIELD_REPORTS as initial fallback
-  const [reports, setReports] = useLocalStorage('barak_field_reports', MOCK_FIELD_REPORTS);
+  const [reports, setReports] = useState([]);
   const [clients, setClients] = useState([]);
   const [locations, setLocations] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Filters & Search
   const [search, setSearch] = useState('');
@@ -41,58 +39,40 @@ export default function FieldReportListPage() {
   // Modal
   const [isFormOpen, setIsFormOpen] = useState(false);
 
-  useEffect(() => {
-    const loadDropdownData = async () => {
-      try {
-        const [clientRes, locRes] = await Promise.all([
-          clientAdapter.getClients({ pageSize: 50 }),
-          locationAdapter.getLocations({ pageSize: 50 }),
-        ]);
-        if (clientRes.data) setClients(clientRes.data);
-        if (locRes.data) setLocations(locRes.data);
-      } catch (err) {
-        console.error('Failed to load dropdown data:', err);
-      }
-    };
-    loadDropdownData();
-  }, []);
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [repRes, clientRes, locRes] = await Promise.all([
+        fieldReportAdapter.getFieldReports({
+          search,
+          clientId: selectedClient,
+          locationId: selectedLocation,
+          pageSize: 50,
+        }),
+        clientAdapter.getClients({ pageSize: 50 }),
+        locationAdapter.getLocations({ pageSize: 50 }),
+      ]);
 
-  const filteredReports = useMemo(() => {
-    let result = Array.isArray(reports) ? reports : [];
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      result = result.filter(
-        (rep) =>
-          rep.notes?.toLowerCase().includes(q) ||
-          rep.locationName?.toLowerCase().includes(q) ||
-          rep.danruName?.toLowerCase().includes(q) ||
-          rep.reportNumber?.toLowerCase().includes(q) ||
-          rep.ticketNumber?.toLowerCase().includes(q)
-      );
+      if (repRes.data) setReports(repRes.data);
+      if (clientRes.data) setClients(clientRes.data);
+      if (locRes.data) setLocations(locRes.data);
+    } catch (err) {
+      console.error('Failed to load patrol reports:', err);
+      toast.error('Gagal memuat jurnal patroli lapangan.');
+    } finally {
+      setLoading(false);
     }
-    if (selectedClient) {
-      result = result.filter((rep) => rep.clientId === selectedClient);
-    }
-    if (selectedLocation) {
-      result = result.filter((rep) => rep.locationId === selectedLocation);
-    }
-    return result;
-  }, [reports, search, selectedClient, selectedLocation]);
+  }, [search, selectedClient, selectedLocation]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleCreateReport = async (payload) => {
-    try {
-      const res = await fieldReportAdapter.createFieldReport(payload);
-      const newRep = res?.data || {
-        ...payload,
-        id: `FR-${Date.now()}`,
-        reportNumber: `PTR-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${((reports?.length || 0) + 1).toString().padStart(3, '0')}`,
-        createdAt: new Date().toISOString(),
-      };
-      setReports((prev) => [newRep, ...(Array.isArray(prev) ? prev : [])]);
-      toast.success('Jurnal patroli pos berhasil dicatat.');
-    } catch (err) {
-      toast.error(err.message || 'Gagal mencatat jurnal patroli.');
-    }
+    const res = await fieldReportAdapter.createFieldReport(payload);
+    if (res.error) throw res.error;
+    toast.success('Jurnal patroli pos berhasil dicatat.');
+    loadData();
   };
 
   return (
@@ -173,14 +153,16 @@ export default function FieldReportListPage() {
       </Card>
 
       {/* Reports List */}
-      {filteredReports.length === 0 ? (
+      {loading ? (
+        <LoadingState message="Memuat jurnal patroli pos..." />
+      ) : reports.length === 0 ? (
         <EmptyState
           title="Tidak Ada Jurnal Patroli"
           description="Belum ada catatan log patroli pos lapangan yang cocok dengan filter yang dipilih."
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredReports.map((rep) => {
+          {reports.map((rep) => {
             const checklistItems = [
               { label: 'APAR Siaga', status: rep.checklist?.aparReady },
               { label: 'CCTV Aktif', status: rep.checklist?.cctvActive },
