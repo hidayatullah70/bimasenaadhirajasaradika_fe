@@ -66,18 +66,18 @@
     color-scheme: light;
   }
 
-  /* Universal form control base styles: crisp white background and clear ink text */
-  input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="color"]),
-  textarea,
-  select {
+  /* Universal form control base styles: crisp white background and clear ink text by default (0 specificity via :where) */
+  :where(input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="color"])),
+  :where(textarea),
+  :where(select) {
     background-color: #ffffff;
     color: var(--color-ink);
     color-scheme: light;
   }
 
-  input:disabled,
-  textarea:disabled,
-  select:disabled {
+  :where(input:disabled),
+  :where(textarea:disabled),
+  :where(select:disabled) {
     background-color: #f8fafc;
     color: var(--color-muted);
     cursor: not-allowed;

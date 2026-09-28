@@ -256,8 +256,8 @@ export default function PublicNavbar() {
               className={clsx(
                 'w-28 sm:w-32 lg:w-36 xl:w-44 pl-3 pr-8 py-1.5 rounded-full text-xs transition-all border focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 font-medium',
                 scrolled
-                  ? 'bg-accent-green text-white border-accent-green placeholder:text-white/85 focus:bg-accent-green focus:border-emerald-600 focus:text-white shadow-xs'
-                  : 'bg-white/15 text-white placeholder:text-white/80 border-white focus:bg-white/20 focus:border-white focus:text-white'
+                  ? 'bg-accent-green/15 hover:bg-accent-green/20 text-ink border-accent-green placeholder:text-emerald-800/70 focus:bg-accent-green/25 focus:border-accent-green shadow-xs'
+                  : 'bg-accent-green/20 hover:bg-accent-green/30 text-white placeholder:text-white/80 border-white/60 focus:bg-accent-green/35 focus:border-white focus:text-white'
               )}
             />
             <button
@@ -265,7 +265,7 @@ export default function PublicNavbar() {
               aria-label="Cari"
               className={clsx(
                 'absolute right-2.5 top-1/2 -translate-y-1/2 transition-colors',
-                scrolled ? 'text-white hover:text-white/80' : 'text-white/90 hover:text-white'
+                scrolled ? 'text-accent-green hover:text-emerald-700' : 'text-white/90 hover:text-white'
               )}
             >
               <Search className="w-3.5 h-3.5" />
@@ -310,11 +310,12 @@ export default function PublicNavbar() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Cari layanan, karir, informasi..."
-                className="w-full pl-3 pr-9 py-2 rounded-xl text-xs border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary-red bg-white"
+                className="w-full pl-3 pr-9 py-2 rounded-xl text-xs border border-accent-green/30 focus:outline-none focus:ring-2 focus:ring-accent-green bg-accent-green/10 text-ink placeholder:text-emerald-850"
               />
               <button
                 type="submit"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                aria-label="Cari"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-accent-green hover:text-emerald-700"
               >
                 <Search className="w-4 h-4" />
               </button>
