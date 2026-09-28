@@ -9,6 +9,7 @@ import { MapPin, Search, Plus, Building2, Users, Compass, ChevronLeft, ChevronRi
 import locationAdapter from '@/services/adapters/locationAdapter';
 import { MOCK_CLIENTS } from '@/services/mock/mockMasterData';
 import { useAuth } from '@/app/providers/AuthProvider';
+import { ROLES } from '@/constants/roles';
 import { PERMISSIONS } from '@/constants/permissions';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -17,9 +18,9 @@ import LocationFormModal from './LocationFormModal';
 import toast from 'react-hot-toast';
 
 export default function LocationListPage() {
-  const { hasPermission } = useAuth();
-  const canCreate = hasPermission(PERMISSIONS.LOCATION_CREATE);
-  const canEdit = hasPermission(PERMISSIONS.LOCATION_EDIT);
+  const { hasPermission, hasRole } = useAuth();
+  const canEdit = hasRole([ROLES.DIREKTUR, ROLES.HRD]);
+  const canCreate = canEdit && hasPermission(PERMISSIONS.LOCATION_CREATE);
 
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -182,7 +183,7 @@ export default function LocationListPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        {canEdit && (
+                        {canEdit ? (
                           <button
                             type="button"
                             onClick={() => handleOpenEdit(loc)}
@@ -190,6 +191,8 @@ export default function LocationListPage() {
                           >
                             Ubah
                           </button>
+                        ) : (
+                          <span className="text-muted text-xs font-mono">-</span>
                         )}
                       </td>
                     </tr>

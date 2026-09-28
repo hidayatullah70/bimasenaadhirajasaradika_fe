@@ -9,6 +9,7 @@ import { UserCheck, Search, Plus, MapPin, Building2, Clock, Calendar, ChevronLef
 import assignmentAdapter from '@/services/adapters/assignmentAdapter';
 import { MOCK_CLIENTS, MOCK_LOCATIONS, MOCK_SHIFTS } from '@/services/mock/mockMasterData';
 import { useAuth } from '@/app/providers/AuthProvider';
+import { ROLES } from '@/constants/roles';
 import { PERMISSIONS } from '@/constants/permissions';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -17,9 +18,9 @@ import AssignmentFormModal from './AssignmentFormModal';
 import toast from 'react-hot-toast';
 
 export default function AssignmentListPage() {
-  const { hasPermission } = useAuth();
-  const canCreate = hasPermission(PERMISSIONS.ASSIGNMENT_CREATE);
-  const canEdit = hasPermission(PERMISSIONS.ASSIGNMENT_EDIT);
+  const { hasPermission, hasRole } = useAuth();
+  const canEdit = hasRole([ROLES.DIREKTUR, ROLES.HRD]);
+  const canCreate = canEdit && hasPermission(PERMISSIONS.ASSIGNMENT_CREATE);
 
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -240,27 +241,29 @@ export default function AssignmentListPage() {
 
                     {/* Aksi */}
                     <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        {canEdit && (
+                      {canEdit ? (
+                        <div className="flex items-center justify-end gap-1.5">
                           <button
                             type="button"
                             onClick={() => handleOpenEdit(asn)}
-                            className="px-2 py-1 text-xs rounded border border-border bg-white text-muted hover:text-ink font-medium"
+                            className="px-2.5 py-1 text-xs rounded border border-border bg-white text-muted hover:text-ink font-medium"
                           >
                             Ubah
                           </button>
-                        )}
-                        {canEdit && asn.status === 'ACTIVE' && (
-                          <button
-                            type="button"
-                            onClick={() => handleEndAssignment(asn)}
-                            className="px-2 py-1 text-xs rounded border border-red-200 bg-white text-error hover:bg-error/10 font-medium"
-                            title="Rotasi / Selesai Penugasan"
-                          >
-                            Akhiri
-                          </button>
-                        )}
-                      </div>
+                          {asn.status === 'ACTIVE' && (
+                            <button
+                              type="button"
+                              onClick={() => handleEndAssignment(asn)}
+                              className="px-2 py-1 text-xs rounded border border-red-200 bg-white text-error hover:bg-error/10 font-medium"
+                              title="Rotasi / Selesai Penugasan"
+                            >
+                              Akhiri
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-muted text-xs font-mono">-</span>
+                      )}
                     </td>
                   </tr>
                 ))}

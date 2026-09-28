@@ -8,6 +8,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Clock, Plus, Moon, Sun, Sunrise, Building2 } from 'lucide-react';
 import shiftAdapter from '@/services/adapters/shiftAdapter';
 import { useAuth } from '@/app/providers/AuthProvider';
+import { ROLES } from '@/constants/roles';
 import { PERMISSIONS } from '@/constants/permissions';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -16,8 +17,8 @@ import ShiftFormModal from './ShiftFormModal';
 import toast from 'react-hot-toast';
 
 export default function ShiftListPage() {
-  const { hasPermission } = useAuth();
-  const canManage = hasPermission(PERMISSIONS.SHIFT_CREATE) || hasPermission(PERMISSIONS.SHIFT_EDIT);
+  const { hasPermission, hasRole } = useAuth();
+  const canManage = hasRole([ROLES.DIREKTUR, ROLES.HRD]);
 
   const [shifts, setShifts] = useState([]);
   const [loading, setLoading] = useState(true);

@@ -18,8 +18,8 @@ import PermissionMatrixModal from './PermissionMatrixModal';
 import toast from 'react-hot-toast';
 
 export default function UserListPage() {
-  const { hasPermission } = useAuth();
-  const canManage = hasPermission(PERMISSIONS.USER_MANAGE);
+  const { hasPermission, hasRole } = useAuth();
+  const canManage = hasRole([ROLES.DIREKTUR, ROLES.HRD]) && hasPermission(PERMISSIONS.USER_MANAGE);
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -193,7 +193,7 @@ export default function UserListPage() {
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      {canManage && (
+                      {canManage ? (
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             type="button"
@@ -214,6 +214,8 @@ export default function UserListPage() {
                             {u.status === 'ACTIVE' ? 'Nonaktifkan' : 'Aktifkan'}
                           </button>
                         </div>
+                      ) : (
+                        <span className="text-muted text-xs font-mono">-</span>
                       )}
                     </td>
                   </tr>

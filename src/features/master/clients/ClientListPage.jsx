@@ -8,6 +8,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Building2, Search, Plus, MapPin, Phone, Mail, Users, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import clientAdapter from '@/services/adapters/clientAdapter';
 import { useAuth } from '@/app/providers/AuthProvider';
+import { ROLES } from '@/constants/roles';
 import { PERMISSIONS } from '@/constants/permissions';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -16,9 +17,9 @@ import ClientFormModal from './ClientFormModal';
 import toast from 'react-hot-toast';
 
 export default function ClientListPage() {
-  const { hasPermission } = useAuth();
-  const canCreate = hasPermission(PERMISSIONS.CLIENT_CREATE);
-  const canEdit = hasPermission(PERMISSIONS.CLIENT_EDIT);
+  const { hasPermission, hasRole } = useAuth();
+  const canEdit = hasRole([ROLES.DIREKTUR, ROLES.HRD]);
+  const canCreate = canEdit && hasPermission(PERMISSIONS.CLIENT_CREATE);
 
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);

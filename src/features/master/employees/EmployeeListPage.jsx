@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import employeeAdapter from '@/services/adapters/employeeAdapter';
 import { useAuth } from '@/app/providers/AuthProvider';
+import { ROLES } from '@/constants/roles';
 import { PERMISSIONS } from '@/constants/permissions';
 import { SERVICE_TYPES } from '@/constants/business';
 import { Badge } from '@/components/ui/Badge';
@@ -21,8 +22,9 @@ import EmployeeFormModal from './EmployeeFormModal';
 import toast from 'react-hot-toast';
 
 export default function EmployeeListPage() {
-  const { hasPermission } = useAuth();
-  const canCreate = hasPermission(PERMISSIONS.EMPLOYEE_CREATE);
+  const { hasPermission, hasRole } = useAuth();
+  const canEdit = hasRole([ROLES.DIREKTUR, ROLES.HRD]);
+  const canCreate = canEdit && hasPermission(PERMISSIONS.EMPLOYEE_CREATE);
   const canExport = hasPermission(PERMISSIONS.EMPLOYEE_EXPORT);
   const canViewSensitive = hasPermission(PERMISSIONS.EMPLOYEE_VIEW_SENSITIVE);
 
@@ -324,13 +326,17 @@ export default function EmployeeListPage() {
 
                     {/* Aksi Button */}
                     <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        type="button"
-                        onClick={() => handleOpenEdit(emp)}
-                        className="px-2.5 py-1 text-xs rounded border border-border bg-white text-muted hover:text-primary-red hover:border-primary-red/30 transition-colors font-medium"
-                      >
-                        Ubah
-                      </button>
+                      {canEdit ? (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEdit(emp)}
+                          className="px-2.5 py-1 text-xs rounded border border-border bg-white text-muted hover:text-primary-red hover:border-primary-red/30 transition-colors font-medium"
+                        >
+                          Ubah
+                        </button>
+                      ) : (
+                        <span className="text-muted text-xs font-mono">-</span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -379,7 +385,7 @@ export default function EmployeeListPage() {
         employee={selectedEmployee}
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
-        onEdit={handleOpenEdit}
+        onEdit={canEdit ? handleOpenEdit : undefined}
       />
 
       <EmployeeFormModal
