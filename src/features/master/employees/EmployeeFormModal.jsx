@@ -11,7 +11,10 @@ import { SERVICE_TYPES, PTKP_OPTIONS } from '@/constants/business';
 import { resizeImageTo3x4 } from '@/utils/imageResize';
 import toast from 'react-hot-toast';
 
-export default function EmployeeFormModal({ isOpen, employee, onClose, onSave }) {
+export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, clients = [], locations = [] }) {
+  const allClients = clients && clients.length > 0 ? clients : MOCK_CLIENTS;
+  const allLocations = locations && locations.length > 0 ? locations : MOCK_LOCATIONS;
+
   const [formData, setFormData] = useState({
     nama_lengkap_sesuai_KTP: '',
     NIK: '',
@@ -27,8 +30,8 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
     jabatan: 'Staff',
     departemen: 'Operasional',
     jenis_layanan: 'security',
-    penugasan_klien: MOCK_CLIENTS[0]?.id || '',
-    lokasi_penugasan: MOCK_LOCATIONS[0]?.id || '',
+    penugasan_klien: allClients[0]?.id || '',
+    lokasi_penugasan: allLocations[0]?.id || '',
     sertifikasi: 'Gada Pratama',
     nama_bank: 'Bank Mandiri',
     nomor_rekening_bank: '',
@@ -213,7 +216,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
     if (!formData.nama_lengkap_sesuai_KTP.trim()) {
       errs.nama_lengkap_sesuai_KTP = 'Nama lengkap wajib diisi.';
     }
-    const cleanNik = (formData.NIK || '').trim();
+    const cleanNik = (formData.NIK || '').replace(/\D/g, '');
     if (!cleanNik) {
       errs.NIK = 'NIK wajib diisi.';
     } else if (cleanNik.length !== 16) {
@@ -242,8 +245,8 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
       return;
     }
 
-    const clientObj = MOCK_CLIENTS.find((c) => c.id === formData.penugasan_klien);
-    const locObj = MOCK_LOCATIONS.find((l) => l.id === formData.lokasi_penugasan);
+    const clientObj = allClients.find((c) => c.id === formData.penugasan_klien || c.code === formData.penugasan_klien);
+    const locObj = allLocations.find((l) => l.id === formData.lokasi_penugasan || l.code === formData.lokasi_penugasan);
 
     const payload = {
       ...formData,
@@ -544,7 +547,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
                   onChange={(e) => setFormData({ ...formData, penugasan_klien: e.target.value })}
                   className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
                 >
-                  {MOCK_CLIENTS.map((c) => (
+                  {allClients.map((c) => (
                     <option key={c.id} value={c.id}>{c.name} ({c.type})</option>
                   ))}
                 </select>
@@ -556,7 +559,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave })
                   onChange={(e) => setFormData({ ...formData, lokasi_penugasan: e.target.value })}
                   className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
                 >
-                  {MOCK_LOCATIONS.map((l) => (
+                  {allLocations.map((l) => (
                     <option key={l.id} value={l.id}>{l.name} - {l.city}</option>
                   ))}
                 </select>

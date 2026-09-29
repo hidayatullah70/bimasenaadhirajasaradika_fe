@@ -4,9 +4,9 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import reactPlugin from "eslint-plugin-react";
 
 export default [
-  { ignores: ["dist"] },
+  { ignores: ["dist", "node_modules"] },
   {
-    files: ["**/*.{js,jsx}"],
+    files: ["src/**/*.{js,jsx}"],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
@@ -29,6 +29,22 @@ export default [
         "warn",
         { allowConstantExport: true },
       ],
+      "no-unused-vars": ["warn", { varsIgnorePattern: "^[A-Z_]" }],
+      "no-console": ["warn", { allow: ["warn", "error"] }],
+      "no-undef": "error",
+    },
+  },
+  {
+    files: ["scripts/**/*.js"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      globals: {
+        ...globals.node,
+      },
+      sourceType: "module",
+    },
+    rules: {
+      "no-undef": "error",
       "no-unused-vars": ["warn", { varsIgnorePattern: "^[A-Z_]" }],
       "no-console": ["warn", { allow: ["warn", "error"] }],
     },

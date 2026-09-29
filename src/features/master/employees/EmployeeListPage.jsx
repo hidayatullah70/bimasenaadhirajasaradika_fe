@@ -10,6 +10,8 @@ import {
   MoreVertical, Shield, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle
 } from 'lucide-react';
 import employeeAdapter from '@/services/adapters/employeeAdapter';
+import clientAdapter from '@/services/adapters/clientAdapter';
+import locationAdapter from '@/services/adapters/locationAdapter';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ROLES } from '@/constants/roles';
 import { PERMISSIONS } from '@/constants/permissions';
@@ -19,12 +21,13 @@ import { Button } from '@/components/ui/Button';
 import { StateLoading, StateEmpty } from '@/components/ui/StateViews';
 import EmployeeDetailDrawer from './EmployeeDetailDrawer';
 import EmployeeFormModal from './EmployeeFormModal';
+import DeleteRequestModal from './DeleteRequestModal';
 import toast from 'react-hot-toast';
 
 export default function EmployeeListPage() {
   const { hasPermission, hasRole } = useAuth();
-  const canEdit = hasRole([ROLES.DIREKTUR, ROLES.HRD]);
-  const canCreate = canEdit && hasPermission(PERMISSIONS.EMPLOYEE_CREATE);
+  const canEdit = hasRole([ROLES.DIREKTUR, ROLES.HRD]) || hasPermission(PERMISSIONS.EMPLOYEE_EDIT);
+  const canCreate = (hasRole([ROLES.DIREKTUR, ROLES.HRD]) && hasPermission(PERMISSIONS.EMPLOYEE_CREATE)) || hasPermission(PERMISSIONS.EMPLOYEE_CREATE);
   const canExport = hasPermission(PERMISSIONS.EMPLOYEE_EXPORT);
   const canViewSensitive = hasPermission(PERMISSIONS.EMPLOYEE_VIEW_SENSITIVE);
 
@@ -45,6 +48,28 @@ export default function EmployeeListPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
+  const [deletingEmployee, setDeletingEmployee] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  // Dynamic client & location options for modal
+  const [clients, setClients] = useState([]);
+  const [locations, setLocations] = useState([]);
+
+  useEffect(() => {
+    async function loadFormOptions() {
+      try {
+        const [cRes, lRes] = await Promise.all([
+          clientAdapter.getClients({ pageSize: 100 }),
+          locationAdapter.getLocations({ pageSize: 100 }),
+        ]);
+        if (cRes.data) setClients(cRes.data);
+        if (lRes.data) setLocations(lRes.data);
+      } catch (err) {
+        console.warn('Failed to load dynamic form options in EmployeeListPage:', err);
+      }
+    }
+    loadFormOptions();
+  }, []);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -87,10 +112,16 @@ export default function EmployeeListPage() {
     setIsModalOpen(true);
   };
 
+  const handleOpenDelete = (emp) => {
+    setDeletingEmployee(emp);
+    setIsDeleteModalOpen(true);
+  };
+
   const handleSave = async (payload) => {
     try {
       if (editingEmployee) {
-        await employeeAdapter.updateEmployee(editingEmployee.id, payload);
+        const empId = editingEmployee.id || editingEmployee.id_karyawan;
+        await employeeAdapter.updateEmployee(empId, payload);
         toast.success(`Data ${payload.nama_lengkap_sesuai_KTP} berhasil diperbarui.`);
       } else {
         await employeeAdapter.createEmployee(payload);
@@ -263,7 +294,7 @@ export default function EmployeeListPage() {
               <tbody className="divide-y divide-border">
                 {employees.map((emp) => (
                   <tr
-                    key={emp.id}
+                    key={emp.id || emp.id_karyawan}
                     onClick={() => handleRowClick(emp)}
                     className="hover:bg-primary-red/5 transition-colors cursor-pointer group"
                   >
@@ -326,17 +357,42 @@ export default function EmployeeListPage() {
 
                     {/* Aksi Button */}
                     <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
-                      {canEdit ? (
+                      <div className="flex items-center justify-end gap-1.5">
                         <button
                           type="button"
-                          onClick={() => handleOpenEdit(emp)}
-                          className="px-2.5 py-1 text-xs rounded border border-border bg-white text-muted hover:text-primary-red hover:border-primary-red/30 transition-colors font-medium"
+                          onClick={() => handleRowClick(emp)}
+                          className="px-2 py-1 text-xs rounded border border-border bg-white text-muted hover:text-ink hover:border-slate/40 transition-colors font-medium"
+                          title="Lihat Detail Karyawan"
                         >
-                          Ubah
+                          Detail
                         </button>
-                      ) : (
-                        <span className="text-muted text-xs font-mono">-</span>
-                      )}
+                        {canEdit && (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEdit(emp)}
+                            className="px-2 py-1 text-xs rounded border border-border bg-white text-muted hover:text-primary-red hover:border-primary-red/30 transition-colors font-medium"
+                            title="Ubah Data Karyawan"
+                          >
+                            Ubah
+                          </button>
+                        )}
+                        {emp.pendingDelete ? (
+                          <span className="px-2 py-0.5 text-[10px] font-semibold rounded bg-amber-100 text-amber-800 border border-amber-300">
+                            Menunggu Approval
+                          </span>
+                        ) : (
+                          canEdit && (
+                            <button
+                              type="button"
+                              onClick={() => handleOpenDelete(emp)}
+                              className="px-2 py-1 text-xs rounded border border-border bg-white text-danger/80 hover:text-danger hover:border-danger/30 hover:bg-danger/5 transition-colors font-medium"
+                              title="Ajukan Penghapusan Karyawan"
+                            >
+                              Hapus
+                            </button>
+                          )
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -393,6 +449,15 @@ export default function EmployeeListPage() {
         employee={editingEmployee}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSave}
+        clients={clients}
+        locations={locations}
+      />
+
+      <DeleteRequestModal
+        isOpen={isDeleteModalOpen}
+        employee={deletingEmployee}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onSuccess={loadData}
       />
     </div>
   );

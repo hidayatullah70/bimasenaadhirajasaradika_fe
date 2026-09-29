@@ -1,10 +1,17 @@
 # USER FLOW — PT. BARAK IOMS
-Version 1.0
+**Versi:** 2.0 (Authoritative Cross-Department Operational Workflows)  
+**Tanggal:** 29 September 2026  
+**Status:** COMPLETE & AUTHORITATIVE  
+**Sinkronisasi:** Mengintegrasikan `05_WORKFLOW_CONTRACT.md`, `06_STATUS_ENUMS.md`, dan seluruh alur kerja operasional teruji.
 
-## 1. Prinsip
-Single Source of Truth → Workflow → Permission → Auditability → Usability.
+---
 
-## 2. Public → Lead & Visitor Journey
+## 1. Prinsip Utama Alur Kerja
+$$\text{Single Source of Truth} \longrightarrow \text{Business Workflow} \longrightarrow \text{Permission Boundary} \longrightarrow \text{Auditability} \longrightarrow \text{Graceful Recovery}$$
+
+---
+
+## 2. Public Visitor & Inbound Journey
 
 ### 2.1 Public Navigation & Quick Search Flow
 ```text
@@ -20,162 +27,222 @@ Public Visitor
 │   ├── "profil" / "tentang" / "direksi"  → /perusahaan/profil
 │   └── other queries                     → /news
 └── Company Profile Download
-    └── Sidebar / Landing CTA → direct download /assets/documents/company-profile-barak.pdf (with cache-bust timestamp)
+    └── Direct download official PDF: /assets/documents/company-profile-barak.pdf
 ```
 
-### 2.2 Consultation Inquiry & Direct Contact Flow (/contact)
+### 2.2 Inbound Consultation & CRM Lead Flow (`/contact`)
 ```text
-Visitor navigates to /contact (via Navbar CTA / Menu / Footer)
+Visitor navigates to /contact (via Navbar CTA / Menu / Footer / Floating CTA)
 ├── Option 1: Inquiry Form Submission ("Kirim Pesan")
-│   ├── Input: Name, Company, Email, Phone, Service, Message
+│   ├── Input: Nama Lengkap, Perusahaan, Email, No. Telepon, Jenis Layanan, Pesan
 │   ├── Client Validation
-│   ├── cmsAdapter.submitInquiry()
-│   ├── Success confirmation banner + state reset
-│   └── Website Lead record generated in Marketing Queue
-│       └── Marketing Lead Qualification → Opportunity → Client
-├── Option 2: Direct WhatsApp Channel
-│   ├── WhatsApp Konsultasi (0851 2479 9305) → Opens WA chat with Client Relations
-│   └── WhatsApp Karir / Pelamar (0851 8784 5044) → Opens WA chat with HR/Recruitment
-└── Option 3: Office Location & Navigation
-    ├── Interactive Google Maps Embed (PT. BARAK Tangerang)
-    └── Clickable Address → Direct Google Maps pin in new tab
+│   ├── POST /cms/inquiries (cmsAdapter.submitInquiry())
+│   ├── Success banner & state reset
+│   └── Marketing Lead Queue otomatis terisi (Status: NEW)
+│       └── Lead Qualification → Opportunity Pipeline → Deal WON
+├── Option 2: Direct WhatsApp Channels
+│   ├── WhatsApp Konsultasi (0851 2479 9305) → Chat Langsung Hubungan Klien
+│   └── WhatsApp Karir / Rekrutmen (0851 8784 5044) → Chat Rekrutmen & eKTP
+└── Option 3: Kantor Tangerang & Navigasi Peta
+    ├── Embed Peta Google Maps Resmi PT. BARAK Tangerang
+    └── Klik Alamat → Navigasi Google Maps di tab baru
 ```
 
-## 3. Authentication & RBAC
+---
+
+## 3. Autentikasi Internal, Sesi & Error Boundary
 ```text
 /ops/login
-→ authenticate
-→ session/token
-→ load role
-→ load permissions
-→ route guard
-→ role dashboard
-```
-Frontend hiding is UX only; backend permission enforcement is mandatory. Role permissions and resource access levels strictly adhere to the authorization matrix in `docs/PRD.md` Section 6.9.
+└── Input: Username & Password
+    └── POST /auth/login
+        ├── Sukses → Simpan Token JWT + Muat Hak Akses (Role & Permissions)
+        │   └── Redirect ke Dashboard Sesuai Peran (/ops/director, /ops/hrd, dll.)
+        └── Gagal → Tampilkan pesan kesalahan & cegah login
 
-## 4. Employee Lifecycle
+Jika Terjadi Token Kedaluwarsa (HTTP 401):
+└── Interceptor otomatis menghapus sesi → Redirect ke /ops/login dengan toast peringatan.
+
+Jika Terjadi Error Runtime Antarmuka (Route Error Boundary):
+└── Tangkap via RouteErrorBoundary → Tampilkan layar ramah pemulihan dengan opsi "Muat Ulang" atau "Kembali ke Operasional".
+```
+
+---
+
+## 4. Alur Penghapusan & Nonaktif Personil (Employee Deletion Workflow)
+
+Mencegah penghapusan sepihak atau kehilangan data historis personil pengamanan:
+
 ```text
-HRD Employee Create
-→ Document Completeness
-→ Employment Contract
-→ Operations Assignment
-→ Attendance Roster
-→ Payroll Input
-→ Legal Monitoring
-→ Mutation / Promotion
-→ Offboarding
+[HRD / Staf]
+     │ Mengajukan Permohonan Hapus (input alasan tertulis)
+     ▼
+[POST /employees/:id/delete-request]
+     │
+     ├──> Karyawan ditandai: pendingDelete = true
+     ├──> Backend menerbitkan rekaman di antrean `approvals`:
+     │    (category = 'EMPLOYEE_DELETE', status = 'PENDING')
+     └──> Log Audit tercatat: 'EMPLOYEE_DELETE_REQUEST'
+     │
+     ▼
+[Antrean Approval Center Direktur]
+     │
+     ├───> OPSI A: DIREKTUR MENYETUJUI (APPROVE)
+     │       │
+     │       ├──> Eksekusi: [POST /employees/:id/soft-delete]
+     │       ├──> Status Karyawan: is_deleted = true, status_kerja = 'NON_AKTIF'
+     │       ├──> Penugasan aktif diakhiri (status = 'ENDED')
+     │       ├──> Status Approval: 'APPROVED'
+     │       └──> Log Audit Permanen: 'DIRECTOR_APPROVAL' & 'EMPLOYEE_SOFT_DELETE'
+     │
+     └───> OPSI B: DIREKTUR MENOLAK (REJECT)
+             │
+             ├──> Direktur menginput alasan penolakan
+             ├──> Status Karyawan: pendingDelete = false (Karyawan tetap AKTIF)
+             ├──> Status Approval: 'REJECTED' (dengan catatan rejectionReason)
+             └──> Log Audit Permanen: 'DIRECTOR_REJECT'
 ```
-Employee remains one master record.
 
-## 5. Attendance
+---
+
+## 5. Alur Penugasan & Rotasi Posko (Placement Lifecycle)
 ```text
-Select Month
-→ Client
-→ Location
-→ Service
-→ Generate Roster from Active Assignment
-→ HRD edits Check-in/Check-out only
-→ Validate
-→ Save Draft
-→ Finalize
-→ Finance Payroll Summary
-→ Operations Billing Validation (if applicable)
-```
-Finalized sheets require privileged reopen + approval/audit.
+Plotting Baru (POST /placements)
+└── Status: ACTIVE (Mengikat Personil + Klien + Posko + Shift + Layanan)
 
-## 6. Operations
+Kebutuhan Pemindahan / Rotasi Lapangan:
+└── POST /placements/:id/transfer
+    ├── Penugasan Lama: status = 'ROTATED', tanggal_berakhir = NOW()
+    ├── Penugasan Baru: status = 'ACTIVE' (Posko / Klien baru)
+    └── Histori Mobilitas Karyawan terjaga utuh (karyawan tidak terikat permanen ke satu klien)
+```
+
+---
+
+## 6. Alur Presensi Posko & Finalisasi Bulanan (Attendance Workflow)
 ```text
-Client
-→ Project
-→ Location
-→ Post/Area
-→ Shift
-→ Assignment
-→ Attendance / Incident / Replacement
+[Penugasan Aktif (Placements)]
+     │ Membentuk formasi roster harian di setiap site klien
+     ▼
+[Presensi Harian Pos Jaga]
+     │ Rekam jam masuk/pulang personil (PRESENT, LATE, ABSENT, ALPHA)
+     ▼
+[HRD Verifikasi & Koreksi]
+     │ HRD hanya berwenang mengoreksi jam/alasan (tidak dapat mengubah formasi posko)
+     ▼
+[Finalisasi Akhir Bulan (HRD)]
+     │ HRD mengeksekusi: [POST /attendance/finalize]
+     ▼
+[Lembar Absensi Terkunci (is_locked = true)]
+     │ Seluruh rekaman absensi bulan tersebut dikunci permanen
+     ▼
+[Pengecualian Pembukaan Kunci (Reopen Exception)]
+     │ Jika ada data tertinggal, HRD tidak dapat membuka sendiri
+     │ Harus mengajukan permohonan dispensasi khusus ke Direktur
+     │ Direktur mengeksekusi: [POST /attendance/reopen]
+     └──> Log Audit mencatat alasan pembukaan kembali & aktor Direktur
 ```
 
-## 7. COD
+---
+
+## 7. Alur Pemenangan Tender Penjualan (Marketing WON Cascade)
+
+Ketika sebuah peluang tender B2B berhasil dimenangkan, sistem memicu **Cascade Otomatis Lintas 4 Departemen**:
+
 ```text
-Finance Import/Reconcile
-→ Difference
-→ Operations Verification
-→ Employee Clarification
-→ Collection
-├─ Settled → Settlement → Closed
-└─ Unresolved → Legal Review
-              → Applicable Warning/Statement/Somasi
-              → Legal Process
-              → Resolution
-              → Closed
+[Website Inquiry / Form Kontak]
+     │
+     ▼
+[Lead Masuk] ──> [Contacted] ──> [Qualified] ──> [Site Survey] ──> [Quotation Proposal] ──> [Negotiation]
+     │
+     ▼
+[Status Ditandai: WON] (Deal Closed)
+     │
+     ├───────────────────────┬───────────────────────┬───────────────────────┐
+     ▼                       ▼                       ▼                       ▼
+1. MODUL LEGAL          2. MODUL FINANCE        3. MODUL OPERASIONAL    4. MODUL HRD
+Menerbitkan draf        Membentuk profil akun   Mendaftarkan posko      Menerbitkan tiket
+kontrak PKS baru        penagihan klien baru    jaga/lokasi baru        kuota formasi rekrutmen
+(status: LEGAL_REVIEW)  & draf faktur uang muka (target kuota jaga)     & plotting personil
 ```
-System records facts and workflow; it does not infer criminal conduct.
 
-## 8. Payroll
+---
+
+## 8. Alur Rekonsiliasi Kas Titipan COD & Eskalasi Hukum (COD Workflow)
 ```text
-Attendance Finalized
-→ Payroll Calculation
-→ HRD Review
-→ Finance Review
-→ Director Approval
-→ Processed
+[Kurir Menyerahkan Titipan Kas COD]
+     │
+     ▼
+[Staf Keuangan Memeriksa Setoran (Reconciliation)]
+     │
+     ├───> KONDISI A: Uang Kas Klop & Sesuai
+     │       └──> Status: 'RECONCILED' (Uang masuk ke kas perusahaan)
+     │
+     └───> KONDISI B: Terjadi Selisih / Uang Tidak Disetorkan
+             │
+             ├──> Operasional melakukan klarifikasi lapangan ke kurir
+             ├──> Jika dalam 3 hari tidak terselesaikan:
+             │    Keuangan mengeksekusi: [POST /finance/cod/:id/escalate]
+             │
+             ▼
+        [Eskalasi ke Bagian Legal]
+             │ Kasus otomatis tercatat di tabel `legal_cases`
+             │ Tim Legal menerbitkan Surat Somasi / Mediasi
+             └──> Penyelesaian hukum (status: 'SETTLED' atau 'LEGAL_DISPUTE')
 ```
 
-## 9. Contract Expiry
+---
+
+## 9. Alur Siklus Penggajian Karyawan (Payroll Lifecycle)
 ```text
-Contract/Document Expiry Signal
-→ HRD Alert
-→ Legal Alert
-→ Operations Alert
-→ Director Alert (severity rule)
+[Presensi Posko Selesai Difinalisasi]
+     │
+     ▼
+[HRD Review Kehadiran]
+     │ Memastikan kalkulasi hari kerja, lembur, dan potongan absen
+     ▼
+[Finance Review (Maker)]
+     │ Bagian Keuangan menyusun draf payroll: [POST /finance/payroll]
+     │ Menghitung total gaji kotor, PPh 21, BPJS, dan take-home pay
+     │ Status: 'FINANCE_REVIEW'
+     ▼
+[Pengajuan ke Direktur]
+     │ Masuk ke antrean Approval Center Direktur
+     ▼
+[Director Approval (Checker)]
+     │ Direktur meninjau ringkasan total dana & jumlah personil
+     │ Direktur mengeksekusi: [POST /finance/payroll/:id/approve]
+     │ Status: 'APPROVED'
+     ▼
+[Pencairan Dana (Disbursement)]
+     │ Bagian Keuangan menginstruksikan transfer bank payroll
+     └──> Status Akhir: 'PROCESSED'
 ```
 
-## 10. Incident
+---
+
+## 10. Alur Penanganan Insiden Posko & Tiket IT Helpdesk
 ```text
-Operations Incident
-→ Triage
-├─ HRD
-├─ Legal if escalated
-└─ Director if high priority
-→ Resolution
-→ Audit
+Insiden Posko:
+[Laporan Baru] ──> [Triage Tingkat Keparahan]
+                         ├── Minor/Sedang → Diselesaikan Pengawas Lapangan → Status: RESOLVED
+                         └── Berat/Kriminal → Eskalasi ke Legal & Direktur → Investigasi & Pelaporan Polsek
+
+Tiket IT Helpdesk:
+[Tiket Masuk (OPEN)] ──> [Ditugaskan Teknisi (ASSIGNED)] ──> [Pengerjaan (IN_PROGRESS)] ──> [Penyelesaian (RESOLVED)] ──> [Konfirmasi Pelapor (CLOSED)]
 ```
 
-## 11. Marketing Handover
-```text
-Lead
-→ Contacted
-→ Qualified
-→ Opportunity
-→ Proposal/Quotation
-→ Negotiation
-├─ WON → Client + Handover
-└─ LOST → Reason + Close
-```
+---
 
-## 12. IT Ticket
-```text
-OPEN
-→ ASSIGNED
-→ IN_PROGRESS
-→ WAITING
-→ RESOLVED
-→ CLOSED
-```
-SLA breach creates notification/escalation according to configurable rules.
-
-## 13. Cross-module ownership
-| Data | Source of Truth | Consumers |
+## 11. Matriks Kepemilikan Data Antar-Modul (Cross-Module Ownership)
+| Entitas Data | Pemilik Utama (*Source of Truth*) | Konsumen (*Consumers*) |
 |---|---|---|
-| Employee | HRD | Ops, Finance, Legal |
-| Assignment | Operations | HRD, Finance |
-| Attendance | HRD | Finance, Operations |
-| Client | Operations/Commercial handover | Finance, Marketing, Director |
-| Invoice | Finance | Director, Operations |
-| COD Transaction | Finance | Operations, Legal |
-| Legal Case | Legal | Director |
-| Lead | Marketing | Operations, Finance |
-| IT Ticket | IT | All departments |
-| Website Content | Admin Website | Public site |
-
-## 14. Global UX states
-Every async flow: Loading → Success/Empty/Error. Destructive/critical actions require confirmation and audit.
+| Karyawan (`employees`) | HRD | Operasional, Keuangan, Legal |
+| Penugasan (`placements`) | Operasional | HRD, Keuangan, Direktur |
+| Presensi (`attendance`) | HRD | Keuangan (Payroll), Operasional |
+| Klien (`clients`) | Operasional / Komersial | Keuangan, Marketing, Direktur |
+| Faktur Tagihan (`invoices`) | Keuangan | Direktur, Operasional |
+| Kas Titipan COD (`cod_transactions`) | Keuangan | Operasional, Legal |
+| Kontrak PKS & Sengketa (`legal_cases`) | Legal | Direktur, Keuangan |
+| Prospek Penjualan (`leads`) | Marketing | Operasional, Keuangan |
+| Tiket & Aset IT (`it_tickets`) | IT Support | Seluruh Departemen |
+| Konten Publik (`cms`) | Admin Website | Pengunjung Situs Publik |

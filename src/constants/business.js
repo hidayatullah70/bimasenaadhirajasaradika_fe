@@ -54,6 +54,90 @@ export const SERVICE_TYPES = Object.freeze([
   { key: 'loss-prevention', label: 'Loss Prevention', slug: 'loss-prevention' },
 ]);
 
+/**
+ * 6 Canonical Outsourcing Service Types (Requirement 8)
+ */
+export const OUTSOURCING_SERVICES = Object.freeze({
+  SECURITY: 'SECURITY',
+  COURIER_EXPEDITION: 'COURIER_EXPEDITION',
+  CLEANING_SERVICE: 'CLEANING_SERVICE',
+  PARKING: 'PARKING',
+  MAN_POWER: 'MAN_POWER',
+  LOSS_PREVENTION: 'LOSS_PREVENTION',
+});
+
+/**
+ * Canonical Service Master Catalog (Requirement 8)
+ */
+export const SERVICE_MASTER = Object.freeze([
+  {
+    id: 'SRV-SEC',
+    service_type: 'SECURITY',
+    code: 'SECURITY',
+    name: 'Jasa Pengamanan Fisik / Security',
+    label: 'Security & Pengamanan',
+    slug: 'security',
+    positions: ['Danru', 'Staff', 'Koordinator Lapangan', 'Chief Security'],
+    certifications: ['Gada Pratama', 'Gada Madya', 'Gada Utama'],
+    status: 'ACTIVE',
+  },
+  {
+    id: 'SRV-EXP',
+    service_type: 'COURIER_EXPEDITION',
+    code: 'COURIER_EXPEDITION',
+    name: 'Ekspedisi Kurir & Drop Point Logistics',
+    label: 'Kurir / Ekspedisi',
+    slug: 'kurir',
+    positions: ['Driver / Kurir', 'Sorter', 'Drop Point Staff', 'Koordinator Drop Point'],
+    certifications: ['SIM A', 'SIM B1 Umum', 'SIM C'],
+    status: 'ACTIVE',
+  },
+  {
+    id: 'SRV-CLN',
+    service_type: 'CLEANING_SERVICE',
+    code: 'CLEANING_SERVICE',
+    name: 'Cleaning Service & Sanitasi Fasilitas',
+    label: 'Cleaning Service',
+    slug: 'cleaning-service',
+    positions: ['Cleaner Staff', 'Team Leader Cleaning', 'Specialist Cleaner'],
+    certifications: ['Basic Housekeeping', 'Chemical Handling K3'],
+    status: 'ACTIVE',
+  },
+  {
+    id: 'SRV-PRK',
+    service_type: 'PARKING',
+    code: 'PARKING',
+    name: 'Pengelolaan Parkir & Valet Service',
+    label: 'Pengelolaan Parkir',
+    slug: 'parkir',
+    positions: ['Petugas Parkir', 'Kasir Parkir', 'Supervisor Parkir'],
+    certifications: ['Sertifikasi Manajemen Parkir'],
+    status: 'ACTIVE',
+  },
+  {
+    id: 'SRV-MPW',
+    service_type: 'MAN_POWER',
+    code: 'MAN_POWER',
+    name: 'Penyedia Tenaga Kerja Alih Daya (Man Power)',
+    label: 'Man Power Supply',
+    slug: 'man-power',
+    positions: ['Admin Operasional', 'Resepsionis', 'Operator Produksi', 'Office Boy/Girl'],
+    certifications: ['Service Excellence', 'Sertifikasi K3 Perkantoran'],
+    status: 'ACTIVE',
+  },
+  {
+    id: 'SRV-LPR',
+    service_type: 'LOSS_PREVENTION',
+    code: 'LOSS_PREVENTION',
+    name: 'Loss Prevention & Investigasi Internal',
+    label: 'Loss Prevention',
+    slug: 'loss-prevention',
+    positions: ['Loss Prevention Officer', 'Investigator', 'Auditor Lapangan'],
+    certifications: ['Gada Madya', 'Fraud & Risk Mitigation'],
+    status: 'ACTIVE',
+  },
+]);
+
 /** Notification categories (PRD Section 23) */
 export const NOTIFICATION_CATEGORIES = Object.freeze({
   APPROVAL: 'approval',

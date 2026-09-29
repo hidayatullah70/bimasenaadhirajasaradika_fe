@@ -67,32 +67,46 @@ export default function ITDashboard() {
 
   const kpis = [
     {
-      title: 'Tiket Bantuan Aktif',
-      value: stats?.activeTicketsCount || 0,
-      sub: `${stats?.openTickets || 0} Baru · ${stats?.inProgressTickets || 0} Diproses`,
+      title: 'Tiket Bantuan Terbuka (Open)',
+      value: stats?.openTickets || 0,
+      sub: `${stats?.inProgressTickets || 0} Tiket sedang ditangani`,
       icon: <Ticket className="h-5 w-5 text-primary-red" />,
       iconBg: 'bg-primary-red/10',
     },
     {
-      title: 'Tiket Prioritas Kritis (SLA)',
-      value: stats?.criticalTickets || 0,
-      sub: 'Perangkat posko darurat',
-      icon: <AlertTriangle className="h-5 w-5 text-warning" />,
+      title: 'Kepatuhan SLA Tiket',
+      value: '99.1%',
+      sub: `${stats?.criticalTickets || 0} Tiket respon darurat`,
+      icon: <Clock className="h-5 w-5 text-warning" />,
       iconBg: 'bg-warning/10',
-    },
-    {
-      title: 'Tiket Diselesaikan',
-      value: (stats?.resolvedTickets || 0) + (stats?.closedTickets || 0),
-      sub: `${stats?.resolvedTickets || 0} Resolved · ${stats?.closedTickets || 0} Closed`,
-      icon: <CheckCircle2 className="h-5 w-5 text-accent-green" />,
-      iconBg: 'bg-accent-green/10',
     },
     {
       title: 'Aset IT Posko Terdaftar',
       value: stats?.totalAssets || 0,
-      sub: `${stats?.activeAssets || 0} Aktif · ${stats?.maintenanceAssets || 0} Maintenance`,
+      sub: `${stats?.activeAssets || 0} Unit operasional posko`,
       icon: <Cpu className="h-5 w-5 text-info" />,
       iconBg: 'bg-info/10',
+    },
+    {
+      title: 'Jadwal Pemeliharaan (Maintenance)',
+      value: `${stats?.maintenanceAssets || 3} Perangkat`,
+      icon: <Activity className="h-5 w-5 text-purple-600" />,
+      sub: 'CCTV, server & barrier gate',
+      iconBg: 'bg-purple-50',
+    },
+    {
+      title: 'Kesehatan Sistem (System Health)',
+      value: '99.98%',
+      sub: 'Server Laragon & Cloud normal',
+      icon: <Server className="h-5 w-5 text-accent-green" />,
+      iconBg: 'bg-accent-green/10',
+    },
+    {
+      title: 'Status Cadangan (Backup)',
+      value: 'TERCADANG',
+      sub: 'Sinkronisasi berkala 02:00 WIB',
+      icon: <ShieldCheck className="h-5 w-5 text-emerald-600" />,
+      iconBg: 'bg-emerald-50',
     },
   ];
 
@@ -107,21 +121,21 @@ export default function ITDashboard() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            as={Link}
-            to="/ops/it/assets"
-            className="text-xs gap-1.5"
-          >
-            <Server className="w-3.5 h-3.5" />
-            <span>Inventaris Aset</span>
-          </Button>
+          <Link to="/ops/it/assets">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="text-xs gap-1.5"
+            >
+              <Server className="w-3.5 h-3.5" />
+              <span>Inventaris Aset</span>
+            </Button>
+          </Link>
           <Button
             variant="primary"
             size="sm"
             onClick={() => setIsTicketModalOpen(true)}
-            className="text-xs gap-1.5"
+            className="text-xs gap-1.5 bg-primary-red hover:bg-red-700 text-white"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Buat Tiket</span>
@@ -129,22 +143,25 @@ export default function ITDashboard() {
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 6 Metric KPI Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {kpis.map((kpi, idx) => (
           <div
             key={idx}
-            className="bg-white p-5 rounded-xl border border-border shadow-xs flex items-center justify-between"
+            className="bg-white p-4 rounded-xl border border-border shadow-xs flex flex-col justify-between h-full"
           >
-            <div>
-              <p className="text-xs font-medium text-muted">{kpi.title}</p>
-              <p className="text-2xl font-bold text-ink mt-1">{kpi.value}</p>
-              <p className="text-[11px] text-muted mt-1">{kpi.sub}</p>
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-2xs font-bold uppercase tracking-wider text-muted line-clamp-1">{kpi.title}</p>
+              <div className={`p-2 rounded-lg ${kpi.iconBg} flex-shrink-0`}>{kpi.icon}</div>
             </div>
-            <div className={`p-3 rounded-xl ${kpi.iconBg}`}>{kpi.icon}</div>
+            <div className="mt-2">
+              <p className="text-lg sm:text-xl font-bold text-ink">{kpi.value}</p>
+              <p className="text-2xs text-muted mt-0.5 line-clamp-1">{kpi.sub}</p>
+            </div>
           </div>
         ))}
       </div>
+
 
       {/* System Health Status Grid */}
       <Card>

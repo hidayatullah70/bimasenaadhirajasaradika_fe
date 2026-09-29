@@ -18,17 +18,32 @@ import {
 } from '@/services/mock/mockAttendanceData';
 import { emitAudit } from '@/utils/auditLogger';
 import { STATUS } from '@/constants/status';
+import { getStoredCollection, saveStoredCollection } from '@/utils/storage';
 
 const isMock = import.meta.env.VITE_API_MODE !== 'rest';
 
-// In-memory store for sheets and rows
-let sheetsStore = [...INITIAL_ATTENDANCE_SHEETS];
-let rowsStore = {};
+function getSheetsStore() {
+  return getStoredCollection('attendance_sheets', () => [...INITIAL_ATTENDANCE_SHEETS]);
+}
 
-// Initialize rows for initial sheets
-sheetsStore.forEach((sheet) => {
-  rowsStore[sheet.id] = generateRowsForSheet(sheet);
-});
+function saveSheetsStore(sheets) {
+  saveStoredCollection('attendance_sheets', sheets);
+}
+
+function getRowsStore() {
+  return getStoredCollection('attendance_rows', () => {
+    const initialRows = {};
+    const sheets = getSheetsStore();
+    sheets.forEach((sheet) => {
+      initialRows[sheet.id] = generateRowsForSheet(sheet);
+    });
+    return initialRows;
+  });
+}
+
+function saveRowsStore(rows) {
+  saveStoredCollection('attendance_rows', rows);
+}
 
 export const attendanceAdapter = {
   /**
@@ -36,7 +51,7 @@ export const attendanceAdapter = {
    */
   async getSheets({ year, month, clientId, locationId, status } = {}) {
     if (isMock) {
-      let filtered = [...sheetsStore];
+      let filtered = [...getSheetsStore()];
 
       if (year) filtered = filtered.filter((s) => s.periodYear === parseInt(year, 10));
       if (month) filtered = filtered.filter((s) => s.periodMonth === parseInt(month, 10));
@@ -58,17 +73,20 @@ export const attendanceAdapter = {
    */
   async getSheetById(sheetId) {
     if (isMock) {
-      const sheet = sheetsStore.find((s) => s.id === sheetId);
+      const sheets = getSheetsStore();
+      const sheet = sheets.find((s) => s.id === sheetId);
       if (!sheet) return { data: null, error: { message: 'Lembar absensi tidak ditemukan.' } };
 
-      if (!rowsStore[sheetId]) {
-        rowsStore[sheetId] = generateRowsForSheet(sheet);
+      const allRows = getRowsStore();
+      if (!allRows[sheetId]) {
+        allRows[sheetId] = generateRowsForSheet(sheet);
+        saveRowsStore(allRows);
       }
 
       return {
         data: {
           sheet,
-          rows: rowsStore[sheetId],
+          rows: allRows[sheetId],
         },
         error: null,
       };
@@ -87,7 +105,8 @@ export const attendanceAdapter = {
         '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
         'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
       ];
-      const newId = `SHT-${year}-${month.toString().padStart(2, '0')}-${(sheetsStore.length + 1).toString().padStart(3, '0')}`;
+      const sheets = getSheetsStore();
+      const newId = `SHT-${year}-${month.toString().padStart(2, '0')}-${(sheets.length + 1).toString().padStart(3, '0')}`;
       const newSheet = {
         id: newId,
         sheetCode: `ATT-${year}-${month.toString().padStart(2, '0')}-${locationId}`,
@@ -107,8 +126,10 @@ export const attendanceAdapter = {
         totalPersonnel: 8,
       };
 
-      sheetsStore = [newSheet, ...sheetsStore];
-      rowsStore[newId] = generateRowsForSheet(newSheet);
+      saveSheetsStore([newSheet, ...sheets]);
+      const allRows = getRowsStore();
+      allRows[newId] = generateRowsForSheet(newSheet);
+      saveRowsStore(allRows);
 
       await emitAudit({
         action: 'ATTENDANCE_GENERATE',
@@ -137,13 +158,15 @@ export const attendanceAdapter = {
    */
   async updateAttendanceRow(sheetId, rowId, { checkIn, checkOut, notes = '' }) {
     if (isMock) {
-      const sheet = sheetsStore.find((s) => s.id === sheetId);
+      const sheets = getSheetsStore();
+      const sheet = sheets.find((s) => s.id === sheetId);
       if (!sheet) return { data: null, error: { message: 'Lembar absensi tidak ditemukan.' } };
       if (sheet.status === STATUS.FINALIZED) {
         return { data: null, error: { message: 'Lembar absensi sudah final dan terkunci. Reopen terlebih dahulu untuk mengedit.' } };
       }
 
-      const rows = rowsStore[sheetId] || [];
+      const allRows = getRowsStore();
+      const rows = allRows[sheetId] || [];
       const rowIndex = rows.findIndex((r) => r.id === rowId);
       if (rowIndex === -1) return { data: null, error: { message: 'Baris absensi tidak ditemukan.' } };
 
@@ -169,7 +192,8 @@ export const attendanceAdapter = {
       };
 
       rows[rowIndex] = updatedRow;
-      rowsStore[sheetId] = [...rows];
+      allRows[sheetId] = [...rows];
+      saveRowsStore(allRows);
 
       return { data: updatedRow, error: null };
     }
@@ -187,13 +211,15 @@ export const attendanceAdapter = {
    */
   async bulkFillTime(sheetId, { timeIn, timeOut, rowIds = [] }) {
     if (isMock) {
-      const sheet = sheetsStore.find((s) => s.id === sheetId);
+      const sheets = getSheetsStore();
+      const sheet = sheets.find((s) => s.id === sheetId);
       if (!sheet || sheet.status === STATUS.FINALIZED) {
         return { data: null, error: { message: 'Tidak dapat mengisi lembar yang terkunci.' } };
       }
 
-      const rows = rowsStore[sheetId] || [];
-      rowsStore[sheetId] = rows.map((r) => {
+      const allRows = getRowsStore();
+      const rows = allRows[sheetId] || [];
+      allRows[sheetId] = rows.map((r) => {
         if (rowIds.length === 0 || rowIds.includes(r.id)) {
           const metrics = calculateAttendanceMetrics(r.scheduledIn, r.scheduledOut, timeIn, timeOut, 15);
           return {
@@ -209,6 +235,7 @@ export const attendanceAdapter = {
         }
         return r;
       });
+      saveRowsStore(allRows);
 
       return { data: { success: true, count: rowIds.length || rows.length }, error: null };
     }
@@ -226,7 +253,8 @@ export const attendanceAdapter = {
    */
   async validateSheet(sheetId) {
     if (isMock) {
-      const rows = rowsStore[sheetId] || [];
+      const allRows = getRowsStore();
+      const rows = allRows[sheetId] || [];
       const totalRows = rows.length;
       const unfilled = rows.filter((r) => r.status === STATUS.UNFILLED).length;
       const partial = rows.filter((r) => r.status === STATUS.PRESENT_PARTIAL).length;
@@ -260,17 +288,19 @@ export const attendanceAdapter = {
    */
   async finalizeSheet(sheetId, actorName = 'Siti Rahmawati (HRD)') {
     if (isMock) {
-      const idx = sheetsStore.findIndex((s) => s.id === sheetId);
+      const sheets = getSheetsStore();
+      const idx = sheets.findIndex((s) => s.id === sheetId);
       if (idx === -1) return { data: null, error: { message: 'Lembar tidak ditemukan.' } };
 
       const updated = {
-        ...sheetsStore[idx],
+        ...sheets[idx],
         status: STATUS.FINALIZED,
         finalizedAt: new Date().toISOString(),
         finalizedBy: actorName,
-        version: sheetsStore[idx].version + 1,
+        version: sheets[idx].version + 1,
       };
-      sheetsStore[idx] = updated;
+      sheets[idx] = updated;
+      saveSheetsStore(sheets);
 
       await emitAudit({
         action: 'ATTENDANCE_FINALIZE',
@@ -292,18 +322,20 @@ export const attendanceAdapter = {
    */
   async reopenSheet(sheetId, { reason, reopenedBy = 'Juli Priyanto (Direktur)' }) {
     if (isMock) {
-      const idx = sheetsStore.findIndex((s) => s.id === sheetId);
+      const sheets = getSheetsStore();
+      const idx = sheets.findIndex((s) => s.id === sheetId);
       if (idx === -1) return { data: null, error: { message: 'Lembar tidak ditemukan.' } };
 
       const updated = {
-        ...sheetsStore[idx],
+        ...sheets[idx],
         status: STATUS.REOPENED,
         reopenedAt: new Date().toISOString(),
         reopenedBy,
         reopenReason: reason,
-        version: sheetsStore[idx].version + 1,
+        version: sheets[idx].version + 1,
       };
-      sheetsStore[idx] = updated;
+      sheets[idx] = updated;
+      saveSheetsStore(sheets);
 
       await emitAudit({
         action: 'ATTENDANCE_REOPEN',
@@ -326,7 +358,8 @@ export const attendanceAdapter = {
    */
   async getPayrollAttendanceSummary(sheetId) {
     if (isMock) {
-      const rows = rowsStore[sheetId] || [];
+      const allRows = getRowsStore();
+      const rows = allRows[sheetId] || [];
       const employeeMap = {};
 
       rows.forEach((r) => {

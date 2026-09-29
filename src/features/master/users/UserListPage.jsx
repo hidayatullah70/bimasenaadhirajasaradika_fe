@@ -19,7 +19,9 @@ import toast from 'react-hot-toast';
 
 export default function UserListPage() {
   const { hasPermission, hasRole } = useAuth();
-  const canManage = hasRole([ROLES.DIREKTUR, ROLES.HRD]) && hasPermission(PERMISSIONS.USER_MANAGE);
+  const canManage =
+    hasRole([ROLES.DIREKTUR, ROLES.IT_SUPPORT, ROLES.ADMIN_WEBSITE, ROLES.HRD]) ||
+    hasPermission(PERMISSIONS.USER_MANAGE);
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -74,7 +76,8 @@ export default function UserListPage() {
   const handleSave = async (payload) => {
     try {
       if (editingUser) {
-        await userAdapter.updateUser(editingUser.id, payload);
+        const uId = editingUser.id || editingUser.username;
+        await userAdapter.updateUser(uId, payload);
         toast.success(`Akun ${payload.username} berhasil diperbarui.`);
       } else {
         await userAdapter.createUser(payload);

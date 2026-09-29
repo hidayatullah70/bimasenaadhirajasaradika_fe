@@ -18,8 +18,13 @@ import toast from 'react-hot-toast';
 
 export default function ClientListPage() {
   const { hasPermission, hasRole } = useAuth();
-  const canEdit = hasRole([ROLES.DIREKTUR, ROLES.HRD]);
-  const canCreate = canEdit && hasPermission(PERMISSIONS.CLIENT_CREATE);
+  const canEdit =
+    hasRole([ROLES.DIREKTUR, ROLES.MARKETING, ROLES.HRD]) ||
+    hasPermission(PERMISSIONS.CLIENT_EDIT);
+  const canCreate =
+    (hasRole([ROLES.DIREKTUR, ROLES.MARKETING, ROLES.HRD]) &&
+      hasPermission(PERMISSIONS.CLIENT_CREATE)) ||
+    hasPermission(PERMISSIONS.CLIENT_CREATE);
 
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -63,7 +68,8 @@ export default function ClientListPage() {
   const handleSave = async (payload) => {
     try {
       if (editingClient) {
-        await clientAdapter.updateClient(editingClient.id, payload);
+        const cId = editingClient.id || editingClient.code;
+        await clientAdapter.updateClient(cId, payload);
         toast.success(`Data klien ${payload.name} berhasil diperbarui.`);
       } else {
         await clientAdapter.createClient(payload);

@@ -195,9 +195,11 @@ export default function ApprovalCenterPage() {
                 className="px-2.5 py-1.5 text-xs bg-white text-ink border border-border rounded-lg"
               >
                 <option value="">Semua Departemen</option>
-                <option value="FINANCE">Finance (Payroll)</option>
+                <option value="FINANCE">Finance (Payroll & Biaya)</option>
                 <option value="LEGAL">Legal (PKS & Kasus)</option>
-                <option value="OPERASIONAL">Operasional (CapEx)</option>
+                <option value="OPERASIONAL">Operasional (CapEx & Rotasi)</option>
+                <option value="HRD">HRD (Personel & Status)</option>
+                <option value="MARKETING">Marketing (Quotation & Diskon)</option>
               </select>
 
               <select
@@ -212,13 +214,14 @@ export default function ApprovalCenterPage() {
               </select>
 
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 onClick={fetchApprovals}
                 title="Refresh"
               >
                 <RefreshCw className="h-3.5 w-3.5" />
               </Button>
+
             </div>
           </div>
         </CardContent>
@@ -427,12 +430,13 @@ export default function ApprovalCenterPage() {
             {selectedItem.status === 'PENDING' && (
               <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-3 border-t border-border">
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   onClick={closeReviewModal}
                   disabled={isSubmitting}
                 >
                   Tutup
                 </Button>
+
                 <Button
                   onClick={handleReject}
                   disabled={isSubmitting}

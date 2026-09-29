@@ -4,17 +4,46 @@
  * Features: Sensitive data masking, document completeness checklist, assignment history.
  */
 
-import React, { useState } from 'react';
-import { X, Shield, Eye, EyeOff, User, Phone, Mail, MapPin, Building, CreditCard, FileCheck, Calendar } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import {
+  X, Shield, Eye, EyeOff, User, Phone, Mail, MapPin, Building,
+  CreditCard, FileCheck, Calendar, History, Briefcase, CheckCircle2, Clock
+} from 'lucide-react';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { PERMISSIONS } from '@/constants/permissions';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import placementRepository from '@/data/repositories/placementRepository';
 
 export default function EmployeeDetailDrawer({ employee, isOpen, onClose, onEdit }) {
   const { hasPermission } = useAuth();
   const canViewSensitive = hasPermission(PERMISSIONS.EMPLOYEE_VIEW_SENSITIVE);
   const [showSensitive, setShowSensitive] = useState(false);
+  const [placements, setPlacements] = useState([]);
+  const [loadingPlacements, setLoadingPlacements] = useState(false);
+
+  useEffect(() => {
+    if (!employee || !isOpen) return;
+    const empId = employee.id || employee.id_karyawan;
+    let active = true;
+    async function loadPlacementHistory() {
+      setLoadingPlacements(true);
+      try {
+        const res = await placementRepository.getHistoryByEmployeeId(empId);
+        if (active && res.data) {
+          setPlacements(res.data);
+        }
+      } catch (err) {
+        console.warn('Failed to load placement history:', err);
+      } finally {
+        if (active) setLoadingPlacements(false);
+      }
+    }
+    loadPlacementHistory();
+    return () => {
+      active = false;
+    };
+  }, [employee, isOpen]);
 
   if (!isOpen || !employee) return null;
 
@@ -157,6 +186,45 @@ export default function EmployeeDetailDrawer({ employee, isOpen, onClose, onEdit
                 <p className="text-muted">Sertifikasi & Lisensi</p>
                 <p className="font-semibold text-primary-red mt-0.5">{employee.sertifikasi || 'Gada Pratama'}</p>
               </div>
+            </div>
+
+            {/* Riwayat Penempatan & Rotasi (Requirement 4) */}
+            <div className="mt-3 p-3 rounded-lg bg-canvas border border-border space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-ink flex items-center gap-1.5">
+                  <History className="h-3.5 w-3.5 text-muted" />
+                  Riwayat Penempatan & Rotasi ({placements.length})
+                </span>
+                <span className="text-[10px] text-muted font-mono">Authoritative Placement</span>
+              </div>
+
+              {loadingPlacements ? (
+                <p className="text-[11px] text-muted italic">Memuat riwayat penempatan...</p>
+              ) : placements.length > 0 ? (
+                <div className="divide-y divide-border/60">
+                  {placements.map((plc) => (
+                    <div key={plc.id} className="py-2 first:pt-1 last:pb-0 flex items-start justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-medium text-ink">{plc.clientName || 'Klien'}</span>
+                          <span className="text-[10px] text-muted">• {plc.locationName || plc.siteName || '-'}</span>
+                        </div>
+                        <p className="text-[11px] text-muted font-mono mt-0.5">
+                          {plc.shiftName || 'Shift'} • {plc.roleInUnit || plc.position || 'Staff'} • {plc.startDate} s/d {plc.endDate || 'Sekarang'}
+                        </p>
+                      </div>
+                      <Badge
+                        variant={plc.status === 'ACTIVE' ? 'success' : plc.status === 'ROTATED' ? 'warning' : 'outline'}
+                        className="text-[10px] py-0 px-1.5"
+                      >
+                        {plc.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-[11px] text-muted">Belum ada catatan rotasi penempatan (Personel Standby / Cadangan).</p>
+              )}
             </div>
           </div>
 

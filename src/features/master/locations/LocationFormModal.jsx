@@ -3,17 +3,19 @@
  * Source of Truth: PRD Section 20 & API-SPEC Section 3.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { X, Save } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { MOCK_CLIENTS, MOCK_PROJECTS } from '@/services/mock/mockMasterData';
 import toast from 'react-hot-toast';
 
-export default function LocationFormModal({ isOpen, location, onClose, onSave }) {
+export default function LocationFormModal({ isOpen, location, onClose, onSave, clients = [] }) {
+  const allClients = useMemo(() => (clients && clients.length > 0 ? clients : MOCK_CLIENTS), [clients]);
+
   const [formData, setFormData] = useState({
     name: '',
     code: '',
-    clientId: MOCK_CLIENTS[0]?.id || '',
+    clientId: allClients[0]?.id || '',
     projectId: MOCK_PROJECTS[0]?.id || '',
     address: '',
     city: 'Tangerang',
@@ -32,7 +34,7 @@ export default function LocationFormModal({ isOpen, location, onClose, onSave })
       setFormData({
         name: location.name || '',
         code: location.code || '',
-        clientId: location.clientId || MOCK_CLIENTS[0]?.id || '',
+        clientId: location.clientId || allClients[0]?.id || '',
         projectId: location.projectId || MOCK_PROJECTS[0]?.id || '',
         address: location.address || '',
         city: location.city || 'Tangerang',
@@ -47,7 +49,7 @@ export default function LocationFormModal({ isOpen, location, onClose, onSave })
       setFormData({
         name: '',
         code: `LOC-${Date.now().toString().slice(-4)}`,
-        clientId: MOCK_CLIENTS[0]?.id || '',
+        clientId: allClients[0]?.id || '',
         projectId: MOCK_PROJECTS[0]?.id || '',
         address: '',
         city: 'Tangerang',
@@ -60,7 +62,7 @@ export default function LocationFormModal({ isOpen, location, onClose, onSave })
       });
     }
     setErrors({});
-  }, [location, isOpen]);
+  }, [location, isOpen, allClients]);
 
   if (!isOpen) return null;
 
@@ -126,7 +128,7 @@ export default function LocationFormModal({ isOpen, location, onClose, onSave })
                 onChange={(e) => setFormData({ ...formData, clientId: e.target.value })}
                 className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
               >
-                {MOCK_CLIENTS.map((c) => (
+                {allClients.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>

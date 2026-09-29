@@ -311,9 +311,42 @@ export default function InvoiceListPage() {
                                 <span>Bayar</span>
                               </button>
                             )}
+
+                            {inv.status === STATUS.DRAFT && (
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  await invoiceAdapter.updateInvoiceStatus(inv.id, STATUS.SENT || 'ISSUED', 'Diterbitkan ke Klien');
+                                  toast.success(`Faktur ${inv.invoiceNumber} resmi diterbitkan.`);
+                                  loadData();
+                                }}
+                                className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg font-medium text-xs flex items-center gap-1"
+                                title="Terbitkan Faktur"
+                              >
+                                Terbitkan
+                              </button>
+                            )}
+
+                            {inv.status !== STATUS.PAID && inv.status !== 'VOID' && (
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  if (window.confirm(`Batalkan faktur ${inv.invoiceNumber}? Tindakan ini akan mencatat status VOID pada audit log.`)) {
+                                    await invoiceAdapter.updateInvoiceStatus(inv.id, 'VOID', 'Faktur dibatalkan oleh Finance');
+                                    toast.success(`Faktur ${inv.invoiceNumber} berhasil dibatalkan (VOID).`);
+                                    loadData();
+                                  }
+                                }}
+                                className="p-1.5 text-slate-400 hover:text-danger hover:bg-danger/10 rounded-lg text-xs"
+                                title="Batalkan Faktur (VOID)"
+                              >
+                                VOID
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
+
 
                       {/* Expandable Payment History Panel */}
                       {isExpanded && (
@@ -337,7 +370,7 @@ export default function InvoiceListPage() {
                                 <div className="space-y-2">
                                   {inv.paymentHistory.map((pay, pIdx) => (
                                     <div
-                                      key={pIdx}
+                                      key={pay.referenceNumber || pIdx}
                                       className="flex flex-col sm:flex-row sm:items-center justify-between p-2.5 bg-surface rounded-lg border border-border text-xs gap-2"
                                     >
                                       <div>

@@ -17,8 +17,11 @@ import ShiftFormModal from './ShiftFormModal';
 import toast from 'react-hot-toast';
 
 export default function ShiftListPage() {
-  const { hasRole } = useAuth();
-  const canManage = hasRole([ROLES.DIREKTUR, ROLES.HRD]);
+  const { hasPermission, hasRole } = useAuth();
+  const canManage =
+    hasRole([ROLES.DIREKTUR, ROLES.OPERASIONAL, ROLES.HRD]) ||
+    hasPermission(PERMISSIONS.SHIFT_EDIT) ||
+    hasPermission(PERMISSIONS.SHIFT_CREATE);
 
   const [shifts, setShifts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +57,8 @@ export default function ShiftListPage() {
   const handleSave = async (payload) => {
     try {
       if (editingShift) {
-        await shiftAdapter.updateShift(editingShift.id, payload);
+        const sId = editingShift.id || editingShift.code;
+        await shiftAdapter.updateShift(sId, payload);
         toast.success(`Shift ${payload.name} berhasil diperbarui.`);
       } else {
         await shiftAdapter.createShift(payload);

@@ -33,10 +33,10 @@ export const locationAdapter = {
         const q = search.toLowerCase();
         filtered = filtered.filter(
           (loc) =>
-            loc.name.toLowerCase().includes(q) ||
-            loc.code.toLowerCase().includes(q) ||
-            loc.city.toLowerCase().includes(q) ||
-            loc.contactPerson.toLowerCase().includes(q)
+            (loc.name && loc.name.toLowerCase().includes(q)) ||
+            (loc.code && loc.code.toLowerCase().includes(q)) ||
+            (loc.city && loc.city.toLowerCase().includes(q)) ||
+            (loc.contactPerson && loc.contactPerson.toLowerCase().includes(q))
         );
       }
 
@@ -92,10 +92,15 @@ export const locationAdapter = {
   async createLocation(payload) {
     if (isMock) {
       const store = getLocationsStore();
-      const newId = `LOC-${(store.length + 1).toString().padStart(3, '0')}`;
+      const maxNum = store.reduce((max, l) => {
+        const match = (l.id || l.code || '').match(/(\d+)$/);
+        return match ? Math.max(max, parseInt(match[1], 10)) : max;
+      }, 0);
+      const newId = `LOC-${(maxNum + 1).toString().padStart(3, '0')}`;
       const newLoc = {
         ...payload,
         id: newId,
+        code: payload.code || newId,
         activeManpower: payload.activeManpower || 0,
         createdAt: new Date().toISOString(),
       };
@@ -120,10 +125,17 @@ export const locationAdapter = {
   async updateLocation(id, payload) {
     if (isMock) {
       const store = getLocationsStore();
-      const idx = store.findIndex((l) => l.id === id);
+      const idx = store.findIndex((l) => l.id === id || l.code === id);
       if (idx === -1) return { data: null, error: { message: 'Lokasi tidak ditemukan.' } };
 
-      const updated = { ...store[idx], ...payload, updatedAt: new Date().toISOString() };
+      const oldLoc = store[idx];
+      const updated = {
+        ...oldLoc,
+        ...payload,
+        id: oldLoc.id,
+        code: oldLoc.code || oldLoc.id,
+        updatedAt: new Date().toISOString(),
+      };
       store[idx] = updated;
       saveLocationsStore(store);
 
@@ -139,6 +151,31 @@ export const locationAdapter = {
     }
 
     const { data } = await apiClient.patch(`/locations/${id}`, payload);
+    return data;
+  },
+
+  async deleteLocation(id) {
+    if (isMock) {
+      const store = getLocationsStore();
+      const idx = store.findIndex((l) => l.id === id || l.code === id);
+      if (idx === -1) return { data: null, error: { message: 'Lokasi tidak ditemukan.' } };
+
+      const removed = store[idx];
+      const updatedStore = store.filter((l) => l.id !== id && l.code !== id);
+      saveLocationsStore(updatedStore);
+
+      await emitAudit({
+        action: 'LOCATION_DELETE',
+        module: 'Master',
+        entity: 'Location',
+        entityId: id,
+        details: { name: removed.name },
+      });
+
+      return { data: { success: true }, error: null };
+    }
+
+    const { data } = await apiClient.delete(`/locations/${id}`);
     return data;
   },
 };

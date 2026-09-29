@@ -14,19 +14,50 @@ import {
 } from '@/services/mock/mockCMSData';
 import { marketingAdapter } from '@/services/adapters/marketingAdapter';
 import { emitAudit } from '@/utils/auditLogger';
+import { getStoredCollection, saveStoredCollection } from '@/utils/storage';
 
 const isMock = import.meta.env.VITE_API_MODE !== 'rest';
-let articlesStore = [...MOCK_ARTICLES];
-let careersStore = [...MOCK_CAREER_POSTINGS];
-let faqsStore = [...MOCK_FAQS];
-let pageSeoStore = [...MOCK_PAGE_SEO];
-let inquiriesStore = [...MOCK_INCOMING_INQUIRIES];
+
+function getArticlesStore() {
+  return getStoredCollection('cms_articles', () => [...MOCK_ARTICLES]);
+}
+function saveArticlesStore(items) {
+  saveStoredCollection('cms_articles', items);
+}
+
+function getCareersStore() {
+  return getStoredCollection('cms_careers', () => [...MOCK_CAREER_POSTINGS]);
+}
+function saveCareersStore(items) {
+  saveStoredCollection('cms_careers', items);
+}
+
+function getFaqsStore() {
+  return getStoredCollection('cms_faqs', () => [...MOCK_FAQS]);
+}
+function saveFaqsStore(items) {
+  saveStoredCollection('cms_faqs', items);
+}
+
+function getPageSeoStore() {
+  return getStoredCollection('cms_page_seo', () => [...MOCK_PAGE_SEO]);
+}
+function savePageSeoStore(items) {
+  saveStoredCollection('cms_page_seo', items);
+}
+
+function getInquiriesStore() {
+  return getStoredCollection('cms_inquiries', () => [...MOCK_INCOMING_INQUIRIES]);
+}
+function saveInquiriesStore(items) {
+  saveStoredCollection('cms_inquiries', items);
+}
 
 export const cmsAdapter = {
   // ── 1. ARTICLES (NEWS & BLOG) ──────────────────────────────────────────
   async getArticles({ search = '', category = '', status = '', page = 1, pageSize = 12 } = {}) {
     if (isMock) {
-      let filtered = [...articlesStore];
+      let filtered = [...getArticlesStore()];
 
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -60,7 +91,7 @@ export const cmsAdapter = {
 
   async getArticleBySlug(slug) {
     if (isMock) {
-      const art = articlesStore.find((a) => a.slug === slug);
+      const art = getArticlesStore().find((a) => a.slug === slug);
       return { data: art || null, error: art ? null : 'Artikel tidak ditemukan' };
     }
     const { data } = await apiClient.get(`/cms/articles/${slug}`);
@@ -69,6 +100,7 @@ export const cmsAdapter = {
 
   async createArticle(articleData) {
     if (isMock) {
+      const articlesStore = getArticlesStore();
       const newId = `ART-2026-${String(articlesStore.length + 1).padStart(3, '0')}`;
       const slug = articleData.slug || articleData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
@@ -92,7 +124,7 @@ export const cmsAdapter = {
         createdAt: new Date().toISOString(),
       };
 
-      articlesStore = [newArticle, ...articlesStore];
+      saveArticlesStore([newArticle, ...articlesStore]);
 
       emitAudit({
         action: 'CMS_ARTICLE_CREATE',
@@ -110,6 +142,7 @@ export const cmsAdapter = {
 
   async updateArticle(id, articleData) {
     if (isMock) {
+      const articlesStore = getArticlesStore();
       const index = articlesStore.findIndex((a) => a.id === id);
       if (index === -1) return { data: null, error: 'Artikel tidak ditemukan' };
 
@@ -125,6 +158,7 @@ export const cmsAdapter = {
       };
 
       articlesStore[index] = updated;
+      saveArticlesStore(articlesStore);
 
       emitAudit({
         action: 'CMS_ARTICLE_UPDATE',
@@ -142,10 +176,12 @@ export const cmsAdapter = {
 
   async deleteArticle(id) {
     if (isMock) {
+      const articlesStore = getArticlesStore();
       const art = articlesStore.find((a) => a.id === id);
       if (!art) return { data: null, error: 'Artikel tidak ditemukan' };
 
-      articlesStore = articlesStore.filter((a) => a.id !== id);
+      const updated = articlesStore.filter((a) => a.id !== id);
+      saveArticlesStore(updated);
 
       emitAudit({
         action: 'CMS_ARTICLE_DELETE',
@@ -164,7 +200,7 @@ export const cmsAdapter = {
   // ── 2. CAREER JOB POSTINGS ─────────────────────────────────────────────
   async getCareers({ search = '', department = '', status = '', page = 1, pageSize = 12 } = {}) {
     if (isMock) {
-      let filtered = [...careersStore];
+      let filtered = [...getCareersStore()];
 
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -198,6 +234,7 @@ export const cmsAdapter = {
 
   async createCareer(careerData) {
     if (isMock) {
+      const careersStore = getCareersStore();
       const newId = `JOB-2026-${String(careersStore.length + 1).padStart(3, '0')}`;
       const slug = careerData.slug || careerData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
@@ -218,7 +255,7 @@ export const cmsAdapter = {
         createdAt: new Date().toISOString(),
       };
 
-      careersStore = [newJob, ...careersStore];
+      saveCareersStore([newJob, ...careersStore]);
 
       emitAudit({
         action: 'CMS_CAREER_CREATE',
@@ -236,6 +273,7 @@ export const cmsAdapter = {
 
   async updateCareerStatus(id, newStatus) {
     if (isMock) {
+      const careersStore = getCareersStore();
       const index = careersStore.findIndex((c) => c.id === id);
       if (index === -1) return { data: null, error: 'Lowongan tidak ditemukan' };
 
@@ -244,6 +282,7 @@ export const cmsAdapter = {
         status: newStatus,
         updatedAt: new Date().toISOString(),
       };
+      saveCareersStore(careersStore);
 
       emitAudit({
         action: 'CMS_CAREER_STATUS_UPDATE',
@@ -262,7 +301,7 @@ export const cmsAdapter = {
   // ── 3. FAQS ────────────────────────────────────────────────────────────
   async getFaqs({ search = '', category = '' } = {}) {
     if (isMock) {
-      let filtered = [...faqsStore];
+      let filtered = [...getFaqsStore()];
       if (search.trim()) {
         const q = search.toLowerCase();
         filtered = filtered.filter(
@@ -278,6 +317,7 @@ export const cmsAdapter = {
 
   async createFaq(faqData) {
     if (isMock) {
+      const faqsStore = getFaqsStore();
       const newFaq = {
         id: `FAQ-${String(faqsStore.length + 1).padStart(3, '0')}`,
         category: faqData.category || 'LAYANAN',
@@ -287,7 +327,7 @@ export const cmsAdapter = {
         order: faqsStore.length + 1,
         status: 'PUBLISHED',
       };
-      faqsStore = [...faqsStore, newFaq];
+      saveFaqsStore([...faqsStore, newFaq]);
       return { data: newFaq, error: null };
     }
     const { data } = await apiClient.post('/cms/faqs', faqData);
@@ -297,7 +337,7 @@ export const cmsAdapter = {
   // ── 4. INCOMING INQUIRIES & LEAD CAPTURE (PRD Section 17 & 18) ────────
   async getInquiries({ search = '', page = 1, pageSize = 15 } = {}) {
     if (isMock) {
-      let filtered = [...inquiriesStore];
+      let filtered = [...getInquiriesStore()];
       if (search.trim()) {
         const q = search.toLowerCase();
         filtered = filtered.filter(
@@ -325,6 +365,7 @@ export const cmsAdapter = {
 
   async submitPublicInquiry(formData) {
     if (isMock) {
+      const inquiriesStore = getInquiriesStore();
       const newInqId = `INQ-2026-${String(inquiriesStore.length + 1).padStart(3, '0')}`;
       const nowIso = new Date().toISOString();
 
@@ -342,7 +383,7 @@ export const cmsAdapter = {
         submittedAt: nowIso,
       };
 
-      inquiriesStore = [newInquiry, ...inquiriesStore];
+      saveInquiriesStore([newInquiry, ...inquiriesStore]);
 
       // 2. Wire directly to Marketing Leads store (PRD Section 18)
       const leadRes = await marketingAdapter.createLead({
@@ -382,7 +423,7 @@ export const cmsAdapter = {
   // ── 5. PAGE SEO CONFIGURATION (PRD Section 17) ────────────────────────
   async getAllPagesSeo() {
     if (isMock) {
-      return { data: pageSeoStore, error: null };
+      return { data: getPageSeoStore(), error: null };
     }
     const { data } = await apiClient.get('/cms/seo');
     return data;
@@ -390,6 +431,7 @@ export const cmsAdapter = {
 
   async updatePageSeo(pageKey, seoData) {
     if (isMock) {
+      const pageSeoStore = getPageSeoStore();
       const index = pageSeoStore.findIndex((p) => p.pageKey === pageKey);
       if (index === -1) return { data: null, error: 'Halaman tidak ditemukan' };
 
@@ -398,6 +440,7 @@ export const cmsAdapter = {
         ...seoData,
         updatedAt: new Date().toISOString(),
       };
+      savePageSeoStore(pageSeoStore);
 
       emitAudit({
         action: 'CMS_SEO_UPDATE',
@@ -416,6 +459,12 @@ export const cmsAdapter = {
   // ── 6. CMS STATS & OVERVIEW ───────────────────────────────────────────
   async getCMSStats() {
     if (isMock) {
+      const articlesStore = getArticlesStore();
+      const careersStore = getCareersStore();
+      const faqsStore = getFaqsStore();
+      const inquiriesStore = getInquiriesStore();
+      const pageSeoStore = getPageSeoStore();
+
       const totalArticles = articlesStore.length;
       const publishedArticles = articlesStore.filter((a) => a.status === 'PUBLISHED').length;
       const draftArticles = articlesStore.filter((a) => a.status === 'DRAFT').length;

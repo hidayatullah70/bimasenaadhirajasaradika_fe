@@ -60,11 +60,16 @@ export const fieldReportAdapter = {
     if (isMock) {
       const store = getStore();
       const dateStr = new Date().toISOString().slice(0, 10);
-      const newId = `REP-FLD-${(store.length + 1).toString().padStart(3, '0')}`;
+      const maxNum = store.reduce((max, f) => {
+        const match = (f.id || f.reportCode || '').match(/(\d+)$/);
+        return match ? Math.max(max, parseInt(match[1], 10)) : max;
+      }, 0);
+      const newNum = (maxNum + 1).toString().padStart(3, '0');
+      const newId = `REP-FLD-${newNum}`;
       const newReport = {
         ...payload,
         id: newId,
-        reportCode: `JRN-${dateStr}-${(store.length + 1).toString().padStart(2, '0')}`,
+        reportCode: `JRN-${dateStr}-${newNum.slice(-2)}`,
         loggedAt: new Date().toISOString().replace('T', ' ').slice(0, 19),
       };
       const updatedStore = [newReport, ...store];
@@ -86,6 +91,63 @@ export const fieldReportAdapter = {
     }
 
     const { data } = await apiClient.post('/field-reports', payload);
+    return data;
+  },
+
+  async updateFieldReport(id, payload) {
+    if (isMock) {
+      const store = getStore();
+      const idx = store.findIndex((f) => f.id === id || f.reportCode === id);
+      if (idx === -1) return { data: null, error: { message: 'Laporan patroli tidak ditemukan.' } };
+
+      const oldReport = store[idx];
+      const updated = {
+        ...oldReport,
+        ...payload,
+        id: oldReport.id,
+        reportCode: oldReport.reportCode || oldReport.id,
+        updatedAt: new Date().toISOString(),
+      };
+      store[idx] = updated;
+      saveStore(store);
+
+      await emitAudit({
+        action: 'PATROL_REPORT_EDIT',
+        module: 'Operations',
+        entity: 'FieldReport',
+        entityId: id,
+        details: { changes: Object.keys(payload) },
+      });
+
+      return { data: updated, error: null };
+    }
+
+    const { data } = await apiClient.patch(`/field-reports/${id}`, payload);
+    return data;
+  },
+
+  async deleteFieldReport(id) {
+    if (isMock) {
+      const store = getStore();
+      const idx = store.findIndex((f) => f.id === id || f.reportCode === id);
+      if (idx === -1) return { data: null, error: { message: 'Laporan patroli tidak ditemukan.' } };
+
+      const removed = store[idx];
+      const updatedStore = store.filter((f) => f.id !== id && f.reportCode !== id);
+      saveStore(updatedStore);
+
+      await emitAudit({
+        action: 'PATROL_REPORT_DELETE',
+        module: 'Operations',
+        entity: 'FieldReport',
+        entityId: id,
+        details: { team: removed.patrolTeam },
+      });
+
+      return { data: { success: true }, error: null };
+    }
+
+    const { data } = await apiClient.delete(`/field-reports/${id}`);
     return data;
   },
 };

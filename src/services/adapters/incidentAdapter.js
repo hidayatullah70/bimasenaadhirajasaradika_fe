@@ -73,11 +73,16 @@ export const incidentAdapter = {
   async createIncident(payload) {
     if (isMock) {
       const store = getStore();
-      const newId = `INC-2026-09-${(store.length + 1).toString().padStart(3, '0')}`;
+      const maxNum = store.reduce((max, i) => {
+        const match = (i.id || i.incidentNumber || '').match(/(\d+)$/);
+        return match ? Math.max(max, parseInt(match[1], 10)) : max;
+      }, 0);
+      const newNum = (maxNum + 1).toString().padStart(3, '0');
+      const newId = `INC-2026-09-${newNum}`;
       const newIncident = {
         ...payload,
         id: newId,
-        incidentNumber: `INC/BARAK/2026/09/${(store.length + 1).toString().padStart(3, '0')}`,
+        incidentNumber: `INC/BARAK/2026/09/${newNum}`,
         status: STATUS.OPEN,
         createdAt: new Date().toISOString(),
       };
@@ -99,10 +104,42 @@ export const incidentAdapter = {
     return data;
   },
 
+  async updateIncident(id, payload) {
+    if (isMock) {
+      const store = getStore();
+      const idx = store.findIndex((i) => i.id === id || i.incidentNumber === id);
+      if (idx === -1) return { data: null, error: { message: 'Insiden tidak ditemukan.' } };
+
+      const oldInc = store[idx];
+      const updated = {
+        ...oldInc,
+        ...payload,
+        id: oldInc.id,
+        incidentNumber: oldInc.incidentNumber || oldInc.id,
+        updatedAt: new Date().toISOString(),
+      };
+      store[idx] = updated;
+      saveStore(store);
+
+      await emitAudit({
+        action: 'INCIDENT_EDIT',
+        module: 'Operations',
+        entity: 'Incident',
+        entityId: id,
+        details: { changes: Object.keys(payload) },
+      });
+
+      return { data: updated, error: null };
+    }
+
+    const { data } = await apiClient.patch(`/incidents/${id}`, payload);
+    return data;
+  },
+
   async resolveIncident(id, { resolutionNotes, actorName = 'Tim Operasional' }) {
     if (isMock) {
       const store = getStore();
-      const idx = store.findIndex((i) => i.id === id);
+      const idx = store.findIndex((i) => i.id === id || i.incidentNumber === id);
       if (idx === -1) return { data: null, error: { message: 'Insiden tidak ditemukan.' } };
 
       const updated = {
@@ -130,10 +167,17 @@ export const incidentAdapter = {
     return data;
   },
 
+  async updateIncidentStatus(id, status, notes = '') {
+    if (status === STATUS.RESOLVED || status === 'RESOLVED') {
+      return this.resolveIncident(id, { resolutionNotes: notes || 'Insiden diselesaikan' });
+    }
+    return this.updateIncident(id, { status, resolutionNotes: notes });
+  },
+
   async escalateIncident(id, { targetDept, reason, actorName = 'Operasional' }) {
     if (isMock) {
       const store = getStore();
-      const idx = store.findIndex((i) => i.id === id);
+      const idx = store.findIndex((i) => i.id === id || i.incidentNumber === id);
       if (idx === -1) return { data: null, error: { message: 'Insiden tidak ditemukan.' } };
 
       const updated = {
@@ -159,6 +203,31 @@ export const incidentAdapter = {
     }
 
     const { data } = await apiClient.post(`/incidents/${id}/escalate`, { targetDept, reason });
+    return data;
+  },
+
+  async deleteIncident(id) {
+    if (isMock) {
+      const store = getStore();
+      const idx = store.findIndex((i) => i.id === id || i.incidentNumber === id);
+      if (idx === -1) return { data: null, error: { message: 'Insiden tidak ditemukan.' } };
+
+      const removed = store[idx];
+      const updatedStore = store.filter((i) => i.id !== id && i.incidentNumber !== id);
+      saveStore(updatedStore);
+
+      await emitAudit({
+        action: 'INCIDENT_DELETE',
+        module: 'Operations',
+        entity: 'Incident',
+        entityId: id,
+        details: { title: removed.title },
+      });
+
+      return { data: { success: true }, error: null };
+    }
+
+    const { data } = await apiClient.delete(`/incidents/${id}`);
     return data;
   },
 };

@@ -7,15 +7,26 @@ import apiClient from '@/services/apiClient';
 import { MOCK_PAYROLL_PERIODS, MOCK_PAYROLL_ITEMS_SEP } from '@/services/mock/mockFinanceData';
 import { emitAudit } from '@/utils/auditLogger';
 import { STATUS } from '@/constants/status';
+import { getStoredCollection, saveStoredCollection } from '@/utils/storage';
 
 const isMock = import.meta.env.VITE_API_MODE !== 'rest';
-let periodsStore = [...MOCK_PAYROLL_PERIODS];
-let itemsStore = [...MOCK_PAYROLL_ITEMS_SEP];
+
+function getPeriodsStore() {
+  return getStoredCollection('payroll_periods', () => [...MOCK_PAYROLL_PERIODS]);
+}
+
+function savePeriodsStore(periods) {
+  saveStoredCollection('payroll_periods', periods);
+}
+
+function getItemsStore() {
+  return getStoredCollection('payroll_items', () => [...MOCK_PAYROLL_ITEMS_SEP]);
+}
 
 export const payrollAdapter = {
   async getPayrollPeriods() {
     if (isMock) {
-      return { data: [...periodsStore], error: null };
+      return { data: [...getPeriodsStore()], error: null };
     }
     const { data } = await apiClient.get('/payroll');
     return data;
@@ -23,7 +34,8 @@ export const payrollAdapter = {
 
   async getPayrollPeriodById(periodId) {
     if (isMock) {
-      const p = periodsStore.find((period) => period.id === periodId);
+      const periods = getPeriodsStore();
+      const p = periods.find((period) => period.id === periodId);
       if (!p) return { data: null, error: { message: 'Periode payroll tidak ditemukan.' } };
       return { data: { ...p }, error: null };
     }
@@ -33,7 +45,7 @@ export const payrollAdapter = {
 
   async getPayrollItems(periodId, { search = '', position = '' } = {}) {
     if (isMock) {
-      let filtered = [...itemsStore];
+      let filtered = [...getItemsStore()];
       if (search.trim()) {
         const q = search.toLowerCase();
         filtered = filtered.filter(
@@ -55,16 +67,18 @@ export const payrollAdapter = {
 
   async submitToDirector(periodId, actorName = 'Siti Rahma (Finance)') {
     if (isMock) {
-      const idx = periodsStore.findIndex((p) => p.id === periodId);
+      const periods = getPeriodsStore();
+      const idx = periods.findIndex((p) => p.id === periodId);
       if (idx === -1) return { data: null, error: { message: 'Periode tidak ditemukan.' } };
 
       const updated = {
-        ...periodsStore[idx],
+        ...periods[idx],
         status: STATUS.PENDING_APPROVAL,
         reviewedByFinance: actorName,
         reviewedByFinanceAt: new Date().toISOString(),
       };
-      periodsStore[idx] = updated;
+      periods[idx] = updated;
+      savePeriodsStore(periods);
 
       await emitAudit({
         action: 'PAYROLL_FINANCE_SUBMIT',
@@ -87,16 +101,18 @@ export const payrollAdapter = {
 
   async approvePayroll(periodId, actorName = 'Juli Priyanto (Direktur)') {
     if (isMock) {
-      const idx = periodsStore.findIndex((p) => p.id === periodId);
+      const periods = getPeriodsStore();
+      const idx = periods.findIndex((p) => p.id === periodId);
       if (idx === -1) return { data: null, error: { message: 'Periode tidak ditemukan.' } };
 
       const updated = {
-        ...periodsStore[idx],
+        ...periods[idx],
         status: STATUS.APPROVED,
         approvedByDirector: actorName,
         approvedByDirectorAt: new Date().toISOString(),
       };
-      periodsStore[idx] = updated;
+      periods[idx] = updated;
+      savePeriodsStore(periods);
 
       await emitAudit({
         action: 'PAYROLL_DIRECTOR_APPROVE',
@@ -118,15 +134,17 @@ export const payrollAdapter = {
 
   async processDisbursement(periodId, actorName = 'Siti Rahma (Finance)') {
     if (isMock) {
-      const idx = periodsStore.findIndex((p) => p.id === periodId);
+      const periods = getPeriodsStore();
+      const idx = periods.findIndex((p) => p.id === periodId);
       if (idx === -1) return { data: null, error: { message: 'Periode tidak ditemukan.' } };
 
       const updated = {
-        ...periodsStore[idx],
+        ...periods[idx],
         status: STATUS.PROCESSED,
         disbursedAt: new Date().toISOString(),
       };
-      periodsStore[idx] = updated;
+      periods[idx] = updated;
+      savePeriodsStore(periods);
 
       await emitAudit({
         action: 'PAYROLL_DISBURSE',

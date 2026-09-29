@@ -12,15 +12,30 @@ import {
 import { emitAudit } from '@/utils/auditLogger';
 import { STATUS } from '@/constants/status';
 
+import { getStoredCollection, saveStoredCollection } from '@/utils/storage';
+
 const isMock = import.meta.env.VITE_API_MODE !== 'rest';
-let casesStore = [...MOCK_LEGAL_CASES];
-let contractsStore = [...MOCK_LEGAL_CONTRACTS];
-let complianceStore = [...MOCK_COMPLIANCE_ITEMS];
+
+function getCasesStore() {
+  return getStoredCollection('legal_cases', () => [...MOCK_LEGAL_CASES]);
+}
+
+function saveCasesStore(cases) {
+  saveStoredCollection('legal_cases', cases);
+}
+
+function getContractsStore() {
+  return getStoredCollection('legal_contracts', () => [...MOCK_LEGAL_CONTRACTS]);
+}
+
+function getComplianceStore() {
+  return getStoredCollection('legal_compliance', () => [...MOCK_COMPLIANCE_ITEMS]);
+}
 
 export const legalAdapter = {
   async getLegalCases({ search = '', caseType = '', priority = '', status = '', page = 1, pageSize = 15 } = {}) {
     if (isMock) {
-      let filtered = [...casesStore];
+      let filtered = [...getCasesStore()];
 
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -57,6 +72,7 @@ export const legalAdapter = {
 
   async getLegalCaseById(id) {
     if (isMock) {
+      const casesStore = getCasesStore();
       const c = casesStore.find((item) => item.id === id);
       if (!c) return { data: null, error: { message: 'Kasus legal tidak ditemukan.' } };
       return { data: { ...c }, error: null };
@@ -67,6 +83,7 @@ export const legalAdapter = {
 
   async createLegalCase(payload) {
     if (isMock) {
+      const casesStore = getCasesStore();
       const nextNum = (casesStore.length + 1).toString().padStart(3, '0');
       const newCase = {
         ...payload,
@@ -76,7 +93,7 @@ export const legalAdapter = {
         actions: [],
         createdAt: new Date().toISOString(),
       };
-      casesStore = [newCase, ...casesStore];
+      saveCasesStore([newCase, ...casesStore]);
 
       await emitAudit({
         action: 'LEGAL_CASE_CREATE',
@@ -100,6 +117,7 @@ export const legalAdapter = {
 
   async addLegalAction(caseId, { actionType, title, description, recordedBy = 'Farhan Maulana (Legal)' }) {
     if (isMock) {
+      const casesStore = getCasesStore();
       const idx = casesStore.findIndex((c) => c.id === caseId);
       if (idx === -1) return { data: null, error: { message: 'Kasus tidak ditemukan.' } };
 
@@ -118,6 +136,7 @@ export const legalAdapter = {
         actions: [newAction, ...casesStore[idx].actions],
       };
       casesStore[idx] = updated;
+      saveCasesStore(casesStore);
 
       await emitAudit({
         action: 'LEGAL_ACTION_RECORD',
@@ -144,6 +163,7 @@ export const legalAdapter = {
 
   async closeLegalCase(caseId, { resolutionNotes, actorName = 'Farhan Maulana (Legal)' }) {
     if (isMock) {
+      const casesStore = getCasesStore();
       const idx = casesStore.findIndex((c) => c.id === caseId);
       if (idx === -1) return { data: null, error: { message: 'Kasus tidak ditemukan.' } };
 
@@ -155,6 +175,7 @@ export const legalAdapter = {
         closedBy: actorName,
       };
       casesStore[idx] = updated;
+      saveCasesStore(casesStore);
 
       await emitAudit({
         action: 'LEGAL_CASE_CLOSE',
@@ -176,7 +197,7 @@ export const legalAdapter = {
 
   async getContracts({ search = '', status = '', clientId = '' } = {}) {
     if (isMock) {
-      let filtered = [...contractsStore];
+      let filtered = [...getContractsStore()];
 
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -198,9 +219,79 @@ export const legalAdapter = {
     return data;
   },
 
+  async createContract(payload) {
+    if (isMock) {
+      const contractsStore = getContractsStore();
+      const nextNum = (contractsStore.length + 1).toString().padStart(3, '0');
+      const newContract = {
+        ...payload,
+        id: `CTR-2026-${nextNum}`,
+        contractNumber: `CTR/BRK/2026/09/${nextNum}`,
+        status: payload.status || 'LEGAL_REVIEW',
+        createdAt: new Date().toISOString(),
+      };
+      saveStoredCollection('legal_contracts', [newContract, ...contractsStore]);
+
+      await emitAudit({
+        action: 'CONTRACT_CREATE',
+        module: 'Legal',
+        entity: 'Contract',
+        entityId: newContract.id,
+        details: {
+          contractNumber: newContract.contractNumber,
+          client: newContract.clientName,
+          status: newContract.status,
+        },
+      });
+
+      return { data: newContract, error: null };
+    }
+
+    const { data } = await apiClient.post('/legal/contracts', payload);
+    return data;
+  },
+
+  async updateContractStatus(contractId, newStatus, { notes = '', actorName = 'Farhan Maulana (Legal)' } = {}) {
+    if (isMock) {
+      const contractsStore = getContractsStore();
+      const idx = contractsStore.findIndex((c) => c.id === contractId);
+      if (idx === -1) return { data: null, error: { message: 'Kontrak tidak ditemukan.' } };
+
+      const oldStatus = contractsStore[idx].status;
+      const updated = {
+        ...contractsStore[idx],
+        status: newStatus,
+        lastStatusUpdate: new Date().toISOString(),
+        statusUpdateNotes: notes,
+        updatedBy: actorName,
+      };
+
+      contractsStore[idx] = updated;
+      saveStoredCollection('legal_contracts', contractsStore);
+
+      await emitAudit({
+        action: 'CONTRACT_STATUS_CHANGE',
+        module: 'Legal',
+        entity: 'Contract',
+        entityId: contractId,
+        details: {
+          oldStatus,
+          newStatus,
+          notes,
+          actor: actorName,
+        },
+      });
+
+      return { data: updated, error: null };
+    }
+
+    const { data } = await apiClient.patch(`/legal/contracts/${contractId}/status`, { status: newStatus, notes });
+    return data;
+  },
+
   async getComplianceRegister() {
     if (isMock) {
-      return { data: [...complianceStore], error: null };
+      return { data: [...getComplianceStore()], error: null };
     }
     const { data } = await apiClient.get('/legal/compliance');
     return data;
@@ -208,3 +299,4 @@ export const legalAdapter = {
 };
 
 export default legalAdapter;
+

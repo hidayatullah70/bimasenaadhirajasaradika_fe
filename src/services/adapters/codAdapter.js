@@ -7,15 +7,26 @@
 import apiClient from '@/services/apiClient';
 import { MOCK_COD_TRANSACTIONS, MOCK_COD_CASES } from '@/services/mock/mockFinanceData';
 import { emitAudit } from '@/utils/auditLogger';
+import { getStoredCollection, saveStoredCollection } from '@/utils/storage';
 
 const isMock = import.meta.env.VITE_API_MODE !== 'rest';
-let codTransactionsStore = [...MOCK_COD_TRANSACTIONS];
-let codCasesStore = [...MOCK_COD_CASES];
+
+function getCodTransactionsStore() {
+  return getStoredCollection('cod_transactions', () => [...MOCK_COD_TRANSACTIONS]);
+}
+
+function getCodCasesStore() {
+  return getStoredCollection('cod_cases', () => [...MOCK_COD_CASES]);
+}
+
+function saveCodCasesStore(cases) {
+  saveStoredCollection('cod_cases', cases);
+}
 
 export const codAdapter = {
   async getCODTransactions({ search = '', clientId = '', status = '', page = 1, pageSize = 15 } = {}) {
     if (isMock) {
-      let filtered = [...codTransactionsStore];
+      let filtered = [...getCodTransactionsStore()];
 
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -50,7 +61,7 @@ export const codAdapter = {
 
   async getCODCases({ search = '', collectionStatus = '', legalStatus = '', page = 1, pageSize = 15 } = {}) {
     if (isMock) {
-      let filtered = [...codCasesStore];
+      let filtered = [...getCodCasesStore()];
 
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -85,7 +96,8 @@ export const codAdapter = {
 
   async getCODCaseById(id) {
     if (isMock) {
-      const c = codCasesStore.find((item) => item.id === id);
+      const cases = getCodCasesStore();
+      const c = cases.find((item) => item.id === id);
       if (!c) return { data: null, error: { message: 'Kasus COD tidak ditemukan.' } };
       return { data: { ...c }, error: null };
     }
@@ -95,10 +107,11 @@ export const codAdapter = {
 
   async recordCollectionAttempt(caseId, { contactMethod, result, promisedAmount, nextAction, pic = 'Fauzi (Staff Ops & Collection)' }) {
     if (isMock) {
-      const idx = codCasesStore.findIndex((c) => c.id === caseId);
+      const cases = getCodCasesStore();
+      const idx = cases.findIndex((c) => c.id === caseId);
       if (idx === -1) return { data: null, error: { message: 'Kasus tidak ditemukan.' } };
 
-      const c = codCasesStore[idx];
+      const c = cases[idx];
       const newAttempt = {
         attemptDate: new Date().toISOString().replace('T', ' ').slice(0, 19),
         contactMethod,
@@ -112,7 +125,8 @@ export const codAdapter = {
         ...c,
         contactAttempts: [newAttempt, ...(c.contactAttempts || [])],
       };
-      codCasesStore[idx] = updated;
+      cases[idx] = updated;
+      saveCodCasesStore(cases);
 
       await emitAudit({
         action: 'COD_COLLECTION_ATTEMPT',
@@ -141,10 +155,11 @@ export const codAdapter = {
 
   async recordCODSettlement(caseId, { settlementAmount, settlementReceipt, notes, actorName = 'Siti Rahma (Finance)' }) {
     if (isMock) {
-      const idx = codCasesStore.findIndex((c) => c.id === caseId);
+      const cases = getCodCasesStore();
+      const idx = cases.findIndex((c) => c.id === caseId);
       if (idx === -1) return { data: null, error: { message: 'Kasus tidak ditemukan.' } };
 
-      const c = codCasesStore[idx];
+      const c = cases[idx];
       const payAmount = Number(settlementAmount) || 0;
       const newOutstanding = Math.max(0, c.outstandingAmount - payAmount);
       const isSettled = newOutstanding === 0;
@@ -158,7 +173,8 @@ export const codAdapter = {
         settlementReceipt,
         notes: notes || c.notes,
       };
-      codCasesStore[idx] = updated;
+      cases[idx] = updated;
+      saveCodCasesStore(cases);
 
       await emitAudit({
         action: 'COD_SETTLEMENT',
@@ -187,10 +203,11 @@ export const codAdapter = {
 
   async escalateToLegal(caseId, { reason, actorName = 'Siti Rahma (Finance)' }) {
     if (isMock) {
-      const idx = codCasesStore.findIndex((c) => c.id === caseId);
+      const cases = getCodCasesStore();
+      const idx = cases.findIndex((c) => c.id === caseId);
       if (idx === -1) return { data: null, error: { message: 'Kasus tidak ditemukan.' } };
 
-      const c = codCasesStore[idx];
+      const c = cases[idx];
       const updated = {
         ...c,
         legalStatus: 'ESCALATED_TO_LEGAL',
@@ -199,7 +216,8 @@ export const codAdapter = {
         escalatedReason: reason,
         assignedLegal: 'Farhan Maulana (Legal Officer)',
       };
-      codCasesStore[idx] = updated;
+      cases[idx] = updated;
+      saveCodCasesStore(cases);
 
       await emitAudit({
         action: 'COD_ESCALATE_LEGAL',

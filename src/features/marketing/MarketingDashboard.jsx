@@ -60,30 +60,44 @@ export default function MarketingDashboard() {
     {
       title: 'Total Prospek (Leads)',
       value: stats?.totalLeads || 0,
-      sub: `${stats?.newLeads || 0} Baru · ${stats?.qualifiedLeads || 0} Qualified`,
+      sub: `${stats?.newLeads || 0} Baru masuk`,
       icon: <Target className="h-5 w-5 text-primary-red" />,
       iconBg: 'bg-primary-red/10',
     },
     {
-      title: 'Peluang Pipeline Aktif',
-      value: stats?.activeOpportunitiesCount || 0,
-      sub: `Nilai: ${formatRupiah(stats?.totalPipelineValue || 0)} /bln`,
-      icon: <TrendingUp className="h-5 w-5 text-info" />,
-      iconBg: 'bg-info/10',
+      title: 'Prospek Terkualifikasi (Qualified)',
+      value: stats?.qualifiedLeads || 0,
+      sub: 'Profil & anggaran tervalidasi',
+      icon: <Users className="h-5 w-5 text-blue-600" />,
+      iconBg: 'bg-blue-50',
     },
     {
-      title: 'Deal WON Terkonfirmasi',
+      title: 'Penawaran Harga (Quotation)',
+      value: 3,
+      sub: 'Draft PKS & kalkulasi margin',
+      icon: <ArrowUpRight className="h-5 w-5 text-purple-600" />,
+      iconBg: 'bg-purple-50',
+    },
+    {
+      title: 'Tahap Negosiasi Akhir',
+      value: 2,
+      sub: 'Kajian term komersial B2B',
+      icon: <TrendingUp className="h-5 w-5 text-amber-600" />,
+      iconBg: 'bg-amber-50',
+    },
+    {
+      title: 'Deal WON Dimenangkan',
       value: stats?.wonOpportunitiesCount || 0,
       sub: `Nilai: ${formatRupiah(stats?.wonValue || 0)} /bln`,
       icon: <DollarSign className="h-5 w-5 text-accent-green" />,
       iconBg: 'bg-accent-green/10',
     },
     {
-      title: 'Tingkat Konversi (Win Rate)',
+      title: 'Pipeline & Win Rate',
       value: `${stats?.conversionRate || 0}%`,
-      sub: `${stats?.convertedLeads || 0} Prospek sukses jadi Peluang`,
-      icon: <Users className="h-5 w-5 text-primary-yellow" />,
-      iconBg: 'bg-primary-yellow/10',
+      sub: `Total: ${formatRupiah(stats?.totalPipelineValue || 0)}`,
+      icon: <CheckCircle2 className="h-5 w-5 text-emerald-600" />,
+      iconBg: 'bg-emerald-50',
     },
   ];
 
@@ -98,21 +112,21 @@ export default function MarketingDashboard() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            as={Link}
-            to="/ops/marketing/pipeline"
-            className="text-xs gap-1.5"
-          >
-            <TrendingUp className="w-3.5 h-3.5" />
-            <span>Lihat CRM Pipeline</span>
-          </Button>
+          <Link to="/ops/marketing/pipeline">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="text-xs gap-1.5"
+            >
+              <TrendingUp className="w-3.5 h-3.5" />
+              <span>Lihat CRM Pipeline</span>
+            </Button>
+          </Link>
           <Button
             variant="primary"
             size="sm"
             onClick={() => setIsLeadModalOpen(true)}
-            className="text-xs gap-1.5"
+            className="text-xs gap-1.5 bg-primary-red hover:bg-red-700 text-white"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Tambah Lead</span>
@@ -120,22 +134,25 @@ export default function MarketingDashboard() {
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* KPI Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {kpis.map((kpi, idx) => (
           <div
             key={idx}
-            className="bg-white p-5 rounded-xl border border-border shadow-xs flex items-center justify-between"
+            className="bg-white p-4 rounded-xl border border-border shadow-xs flex flex-col justify-between h-full"
           >
-            <div>
-              <p className="text-xs font-medium text-muted">{kpi.title}</p>
-              <p className="text-2xl font-bold text-ink mt-1">{kpi.value}</p>
-              <p className="text-[11px] text-muted mt-1">{kpi.sub}</p>
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-2xs font-bold uppercase tracking-wider text-muted line-clamp-1">{kpi.title}</p>
+              <div className={`p-2 rounded-lg ${kpi.iconBg} flex-shrink-0`}>{kpi.icon}</div>
             </div>
-            <div className={`p-3 rounded-xl ${kpi.iconBg}`}>{kpi.icon}</div>
+            <div className="mt-2">
+              <p className="text-lg sm:text-xl font-bold text-ink">{kpi.value}</p>
+              <p className="text-2xs text-muted mt-0.5 line-clamp-1">{kpi.sub}</p>
+            </div>
           </div>
         ))}
       </div>
+
 
       {/* Grid: Leads by Source & Stage Distribution */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

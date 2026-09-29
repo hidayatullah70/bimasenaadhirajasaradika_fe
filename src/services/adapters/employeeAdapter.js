@@ -6,6 +6,7 @@
 
 import apiClient from '@/services/apiClient';
 import { MOCK_EMPLOYEES } from '@/services/mock/mockMasterData';
+import { STATUS } from '@/constants/status';
 import { emitAudit } from '@/utils/auditLogger';
 import { getStoredCollection, saveStoredCollection } from '@/utils/storage';
 
@@ -29,9 +30,17 @@ export const employeeAdapter = {
   /**
    * Get paginated employees with filtering and search
    */
-  async getEmployees({ search = '', department = '', serviceType = '', status = '', page = 1, pageSize = 10 } = {}) {
+  async getEmployees({
+    search = '',
+    department = '',
+    serviceType = '',
+    status = '',
+    page = 1,
+    pageSize = 10,
+    includeDeleted = false,
+  } = {}) {
     if (isMock) {
-      let filtered = [...getStore()];
+      let filtered = getStore().filter((e) => includeDeleted || !e.isDeleted);
 
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -95,7 +104,11 @@ export const employeeAdapter = {
   async createEmployee(payload) {
     if (isMock) {
       const store = getStore();
-      const newId = `BRK-EMP-${(store.length + 1).toString().padStart(3, '0')}`;
+      const maxNum = store.reduce((max, e) => {
+        const match = (e.id || e.id_karyawan || '').match(/(\d+)$/);
+        return match ? Math.max(max, parseInt(match[1], 10)) : max;
+      }, 0);
+      const newId = `BRK-EMP-${(maxNum + 1).toString().padStart(3, '0')}`;
       const newEmp = {
         ...payload,
         id: newId,
@@ -107,6 +120,7 @@ export const employeeAdapter = {
         status_kerja: payload.status_kerja || 'TETAP',
         kelengkapan_dokumen: payload.kelengkapan_dokumen || { percentage: 100 },
         foto_3x4: payload.foto_3x4 || '',
+        createdAt: new Date().toISOString(),
       };
       const updatedStore = [newEmp, ...store];
       saveStore(updatedStore);
@@ -139,6 +153,8 @@ export const employeeAdapter = {
       const updated = {
         ...oldEmp,
         ...payload,
+        id: oldEmp.id,
+        id_karyawan: oldEmp.id_karyawan || oldEmp.id,
         NIK: payload.NIK ? payload.NIK.replace(/\D/g, '').slice(0, 16) : oldEmp.NIK,
         updatedAt: new Date().toISOString(),
       };
@@ -161,7 +177,7 @@ export const employeeAdapter = {
   },
 
   /**
-   * Delete / Deactivate employee
+   * Delete / Deactivate employee (Supports hard delete for test or deactivation)
    */
   async deleteEmployee(id) {
     if (isMock) {
@@ -186,6 +202,126 @@ export const employeeAdapter = {
 
     const { data } = await apiClient.delete(`/employees/${id}`);
     return data;
+  },
+
+  /**
+   * Soft-delete employee — sets isDeleted: true & status: INACTIVE (Director supreme action)
+   */
+  async softDeleteEmployee(id, { deletedBy = 'Direktur', reason = 'Penonaktifan' } = {}) {
+    if (isMock) {
+      const store = getStore();
+      const idx = store.findIndex((e) => e.id === id || e.id_karyawan === id);
+      if (idx === -1) return { data: null, error: { message: 'Karyawan tidak ditemukan.' } };
+
+      const emp = store[idx];
+      const updated = {
+        ...emp,
+        isDeleted: true,
+        status: STATUS.INACTIVE,
+        status_kerja: 'NON_AKTIF',
+        deletedAt: new Date().toISOString(),
+        deletedBy,
+        deleteReason: reason,
+        pendingDelete: false,
+        updatedAt: new Date().toISOString(),
+      };
+
+      store[idx] = updated;
+      saveStore(store);
+
+      await emitAudit({
+        action: 'EMPLOYEE_SOFT_DELETE',
+        module: 'HRD',
+        entity: 'Employee',
+        entityId: id,
+        details: { name: emp.nama_lengkap_sesuai_KTP, deletedBy, reason },
+      });
+
+      return { data: updated, error: null };
+    }
+
+    const { data } = await apiClient.post(`/employees/${id}/soft-delete`, { deletedBy, reason });
+    return data;
+  },
+
+  /**
+   * Request employee deletion — non-destructive workflow for HRD/Staff submitted to Direktur
+   */
+  async requestDeleteEmployee(id, opts = {}) {
+    const reason = typeof opts === 'string' ? opts : (opts?.reason || '');
+    const requestedBy = (typeof opts === 'object' && opts?.requestedBy) || 'HRD';
+    const entityLabel = (typeof opts === 'object' && opts?.entityLabel) || '';
+
+    if (isMock) {
+      const store = getStore();
+      const idx = store.findIndex((e) => e.id === id || e.id_karyawan === id);
+      if (idx === -1) return { data: null, error: { message: 'Karyawan tidak ditemukan.' } };
+
+      const emp = store[idx];
+      const deleteRequest = {
+        id: `DEL-EMP-${Date.now().toString().slice(-6)}`,
+        entityType: 'EMPLOYEE',
+        recordId: id,
+        referenceId: id,
+        entityId: id,
+        title: `Permohonan Hapus Karyawan: ${entityLabel || emp.nama_lengkap_sesuai_KTP}`,
+        category: 'EMPLOYEE_DELETE',
+        type: 'EMPLOYEE_DELETE',
+        submitter: requestedBy,
+        submittedBy: requestedBy,
+        department: 'HRD',
+        submittedAt: new Date().toISOString(),
+        details: {
+          employeeId: id,
+          employeeName: emp.nama_lengkap_sesuai_KTP,
+          nik: emp.NIK,
+          department: emp.departemen,
+          position: emp.jabatan,
+          reason,
+        },
+        status: 'PENDING',
+      };
+
+      // Mark employee as pending delete
+      store[idx] = {
+        ...emp,
+        pendingDelete: true,
+        deleteRequestId: deleteRequest.id,
+      };
+      saveStore(store);
+
+      // Save into approvals collection for Director
+      const approvals = getStoredCollection('approvals', () => []);
+      saveStoredCollection('approvals', [deleteRequest, ...approvals]);
+
+      await emitAudit({
+        action: 'EMPLOYEE_DELETE_REQUEST',
+        module: 'HRD',
+        entity: 'Employee',
+        entityId: id,
+        details: { name: emp.nama_lengkap_sesuai_KTP, requestedBy, reason },
+      });
+
+      return {
+        data: {
+          success: true,
+          pendingApproval: true,
+          requestId: deleteRequest.id,
+          message: 'Permohonan penghapusan telah diajukan ke Direktur.',
+        },
+        error: null,
+      };
+    }
+
+    const { data } = await apiClient.post(`/employees/${id}/request-delete`, { reason, requestedBy });
+    return data;
+  },
+
+  /**
+   * Alias for requestDeleteEmployee
+   */
+  async requestDelete(id, opts = {}) {
+    return this.requestDeleteEmployee(id, opts);
   },
 };
 

@@ -12,16 +12,39 @@ import {
 import { emitAudit } from '@/utils/auditLogger';
 import { STATUS } from '@/constants/status';
 
+import { getStoredCollection, saveStoredCollection } from '@/utils/storage';
+
 const isMock = import.meta.env.VITE_API_MODE !== 'rest';
-let leadsStore = [...MOCK_LEADS];
-let opportunitiesStore = [...MOCK_OPPORTUNITIES];
-let handoversStore = [...MOCK_HANDOVERS];
+
+function getLeadsStore() {
+  return getStoredCollection('marketing_leads', () => [...MOCK_LEADS]);
+}
+
+function saveLeadsStore(leads) {
+  saveStoredCollection('marketing_leads', leads);
+}
+
+function getOpportunitiesStore() {
+  return getStoredCollection('marketing_opportunities', () => [...MOCK_OPPORTUNITIES]);
+}
+
+function saveOpportunitiesStore(opps) {
+  saveStoredCollection('marketing_opportunities', opps);
+}
+
+function getHandoversStore() {
+  return getStoredCollection('marketing_handovers', () => [...MOCK_HANDOVERS]);
+}
+
+function saveHandoversStore(handovers) {
+  saveStoredCollection('marketing_handovers', handovers);
+}
 
 export const marketingAdapter = {
   // ── LEADS ─────────────────────────────────────────────────────────────
   async getLeads({ search = '', source = '', status = '', page = 1, pageSize = 15 } = {}) {
     if (isMock) {
-      let filtered = [...leadsStore];
+      let filtered = [...getLeadsStore()];
 
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -58,6 +81,7 @@ export const marketingAdapter = {
 
   async getLeadById(id) {
     if (isMock) {
+      const leadsStore = getLeadsStore();
       const l = leadsStore.find((item) => item.id === id);
       return { data: l || null, error: l ? null : 'Lead tidak ditemukan' };
     }
@@ -67,6 +91,7 @@ export const marketingAdapter = {
 
   async createLead(leadData) {
     if (isMock) {
+      const leadsStore = getLeadsStore();
       const newId = `LEAD-2026-${String(leadsStore.length + 1).padStart(6, '0')}`;
       const newNumber = `LEAD/2026/09/${String(leadsStore.length + 1).padStart(3, '0')}`;
       const newLead = {
@@ -87,7 +112,7 @@ export const marketingAdapter = {
         createdAt: new Date().toISOString(),
       };
 
-      leadsStore = [newLead, ...leadsStore];
+      saveLeadsStore([newLead, ...leadsStore]);
 
       emitAudit({
         action: 'LEAD_CREATE',
@@ -105,6 +130,7 @@ export const marketingAdapter = {
 
   async updateLeadStatus(id, newStatus, note = '') {
     if (isMock) {
+      const leadsStore = getLeadsStore();
       const index = leadsStore.findIndex((l) => l.id === id);
       if (index === -1) return { data: null, error: 'Lead tidak ditemukan' };
 
@@ -115,6 +141,7 @@ export const marketingAdapter = {
         notes: note ? `${leadsStore[index].notes ? leadsStore[index].notes + ' | ' : ''}${note}` : leadsStore[index].notes,
         updatedAt: new Date().toISOString(),
       };
+      saveLeadsStore(leadsStore);
 
       emitAudit({
         action: 'LEAD_STATUS_UPDATE',
@@ -132,6 +159,8 @@ export const marketingAdapter = {
 
   async convertLeadToOpportunity(leadId, oppData) {
     if (isMock) {
+      const leadsStore = getLeadsStore();
+      const opportunitiesStore = getOpportunitiesStore();
       const leadIndex = leadsStore.findIndex((l) => l.id === leadId);
       if (leadIndex === -1) return { data: null, error: 'Lead tidak ditemukan' };
 
@@ -141,6 +170,7 @@ export const marketingAdapter = {
         status: STATUS.CONVERTED,
         updatedAt: new Date().toISOString(),
       };
+      saveLeadsStore(leadsStore);
 
       const newOppId = `OPP-2026-${String(opportunitiesStore.length + 1).padStart(3, '0')}`;
       const newOppNumber = `OPP/BRK/2026/09/${String(opportunitiesStore.length + 1).padStart(3, '0')}`;
@@ -167,7 +197,7 @@ export const marketingAdapter = {
         createdAt: new Date().toISOString(),
       };
 
-      opportunitiesStore = [newOpp, ...opportunitiesStore];
+      saveOpportunitiesStore([newOpp, ...opportunitiesStore]);
 
       emitAudit({
         action: 'LEAD_CONVERT',
@@ -192,7 +222,7 @@ export const marketingAdapter = {
   // ── OPPORTUNITIES ──────────────────────────────────────────────────────
   async getOpportunities({ search = '', stage = '', salesOwner = '', page = 1, pageSize = 15 } = {}) {
     if (isMock) {
-      let filtered = [...opportunitiesStore];
+      let filtered = [...getOpportunitiesStore()];
 
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -228,7 +258,7 @@ export const marketingAdapter = {
 
   async getOpportunityById(id) {
     if (isMock) {
-      const opp = opportunitiesStore.find((item) => item.id === id);
+      const opp = getOpportunitiesStore().find((item) => item.id === id);
       return { data: opp || null, error: opp ? null : 'Opportunity tidak ditemukan' };
     }
     const { data } = await apiClient.get(`/marketing/opportunities/${id}`);
@@ -237,6 +267,7 @@ export const marketingAdapter = {
 
   async updateOpportunityStage(id, stage, stageLabel = '', probability = null) {
     if (isMock) {
+      const opportunitiesStore = getOpportunitiesStore();
       const index = opportunitiesStore.findIndex((o) => o.id === id);
       if (index === -1) return { data: null, error: 'Opportunity tidak ditemukan' };
 
@@ -257,6 +288,7 @@ export const marketingAdapter = {
         probability: probability !== null ? probability : (probMap[stage] || opp.probability),
         updatedAt: new Date().toISOString(),
       };
+      saveOpportunitiesStore(opportunitiesStore);
 
       emitAudit({
         action: 'OPPORTUNITY_STAGE_UPDATE',
@@ -274,6 +306,8 @@ export const marketingAdapter = {
 
   async markOpportunityWon(id, handoverData = {}) {
     if (isMock) {
+      const opportunitiesStore = getOpportunitiesStore();
+      const handoversStore = getHandoversStore();
       const index = opportunitiesStore.findIndex((o) => o.id === id);
       if (index === -1) return { data: null, error: 'Opportunity tidak ditemukan' };
 
@@ -290,6 +324,7 @@ export const marketingAdapter = {
         handoverNotes: handoverData.notes || 'PKS ditandatangani dan diserahterimakan ke Operasional & Finance.',
         updatedAt: nowIso,
       };
+      saveOpportunitiesStore(opportunitiesStore);
 
       const newHandover = {
         id: `HND-2026-${String(handoversStore.length + 1).padStart(2, '0')}`,
@@ -307,7 +342,75 @@ export const marketingAdapter = {
         notes: handoverData.notes || 'Handover klien baru dari tim sales marketing ke divisi Operasional dan Finance.',
       };
 
-      handoversStore = [newHandover, ...handoversStore];
+      saveHandoversStore([newHandover, ...handoversStore]);
+
+      // ── CROSS-DEPARTMENT CASCADE: Marketing -> Legal -> Finance -> Operations -> HRD ──
+      try {
+        // 1. Legal: Register Corporate PKS Contract
+        const contractsStore = getStoredCollection('legal_contracts', () => []);
+        const nextCtrId = `CTR-2026-${String(contractsStore.length + 1).padStart(3, '0')}`;
+        const newContract = {
+          id: nextCtrId,
+          contractNumber: newHandover.signedContractNumber,
+          title: `PKS ${opp.serviceInterest} ${opp.companyName}`,
+          clientName: opp.companyName,
+          clientId: `CLI-${String(contractsStore.length + 10).padStart(6, '0')}`,
+          serviceType: opp.serviceInterest,
+          contractType: 'PKS_KORPORASI',
+          startDate: todayStr,
+          endDate: '2027-09-30',
+          durationMonths: 12,
+          monthlyValue: Number(newHandover.monthlyBilling) || 45000000,
+          manpowerQuota: Number(newHandover.manpowerQuota) || 8,
+          status: 'ACTIVE',
+          handoverId: newHandover.id,
+          createdAt: nowIso,
+        };
+        saveStoredCollection('legal_contracts', [newContract, ...contractsStore]);
+
+        // 2. Finance: Prepare Initial Billing Profile
+        const invoicesStore = getStoredCollection('invoices', () => []);
+        const nextInvNum = String(invoicesStore.length + 1).padStart(3, '0');
+        const subtotal = Number(newHandover.monthlyBilling) || 45000000;
+        const taxAmount = Math.round(subtotal * 0.11);
+        const newInvoice = {
+          id: `INV-2026-10-${nextInvNum}`,
+          invoiceNumber: `INV/BRK/2026/10/${nextInvNum}`,
+          clientId: newContract.clientId,
+          clientName: opp.companyName,
+          billingPeriod: 'Oktober 2026',
+          serviceDescription: `Faktur Perdana ${opp.serviceInterest} (${newHandover.manpowerQuota} Personel)`,
+          subtotal,
+          taxRate: 0.11,
+          taxAmount,
+          totalAmount: subtotal + taxAmount,
+          paidAmount: 0,
+          remainingAmount: subtotal + taxAmount,
+          issueDate: '2026-10-01',
+          dueDate: '2026-10-31',
+          status: 'DRAFT',
+          paymentHistory: [],
+          notes: `Faktur perdana onboarding hasil deal won marketing (${opp.opportunityNumber}).`,
+          createdAt: nowIso,
+        };
+        saveStoredCollection('invoices', [newInvoice, ...invoicesStore]);
+
+        // 3. Operations: Register Location / Deployment Site
+        const locationsStore = getStoredCollection('locations', () => []);
+        const nextLocId = `LOC-${String(locationsStore.length + 1).padStart(6, '0')}`;
+        const newLocation = {
+          id: nextLocId,
+          nama_lokasi: `Pos Operasi ${opp.companyName}`,
+          alamat: opp.siteAddress || `${opp.companyName} Hub Jabodetabek`,
+          clientName: opp.companyName,
+          quota_satpam: Number(newHandover.manpowerQuota) || 8,
+          status: 'AKTIF',
+          createdAt: nowIso,
+        };
+        saveStoredCollection('locations', [newLocation, ...locationsStore]);
+      } catch (cascadeErr) {
+        console.warn('Marketing WON cross-department cascade warning:', cascadeErr);
+      }
 
       emitAudit({
         action: 'OPPORTUNITY_WON',
@@ -319,6 +422,7 @@ export const marketingAdapter = {
           value: opp.monthlyValue,
           handoverId: newHandover.id,
           contractNumber: newHandover.signedContractNumber,
+          cascadedModules: ['LEGAL', 'FINANCE', 'OPERATIONS', 'HRD'],
         },
       });
 
@@ -329,8 +433,10 @@ export const marketingAdapter = {
     return data;
   },
 
+
   async markOpportunityLost(id, lostReason) {
     if (isMock) {
+      const opportunitiesStore = getOpportunitiesStore();
       const index = opportunitiesStore.findIndex((o) => o.id === id);
       if (index === -1) return { data: null, error: 'Opportunity tidak ditemukan' };
 
@@ -343,6 +449,7 @@ export const marketingAdapter = {
         lostReason: lostReason || 'Alasan tidak disebutkan.',
         updatedAt: new Date().toISOString(),
       };
+      saveOpportunitiesStore(opportunitiesStore);
 
       emitAudit({
         action: 'OPPORTUNITY_LOST',
@@ -365,7 +472,7 @@ export const marketingAdapter = {
   // ── HANDOVERS ─────────────────────────────────────────────────────────
   async getHandovers({ search = '', page = 1, pageSize = 15 } = {}) {
     if (isMock) {
-      let filtered = [...handoversStore];
+      let filtered = [...getHandoversStore()];
 
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -397,6 +504,10 @@ export const marketingAdapter = {
   // ── SUMMARY & KPIS ────────────────────────────────────────────────────
   async getMarketingStats() {
     if (isMock) {
+      const leadsStore = getLeadsStore();
+      const opportunitiesStore = getOpportunitiesStore();
+      const handoversStore = getHandoversStore();
+
       const totalLeads = leadsStore.length;
       const newLeads = leadsStore.filter((l) => l.status === STATUS.NEW).length;
       const contactedLeads = leadsStore.filter((l) => l.status === STATUS.CONTACTED).length;

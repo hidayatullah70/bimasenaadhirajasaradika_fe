@@ -74,6 +74,13 @@ export default function AuditLogPage() {
           <CardContent className="py-3">
             <div className="flex flex-wrap items-center gap-3">
               <Filter className="h-4 w-4 text-muted flex-none" aria-hidden />
+              <input
+                type="text"
+                placeholder="Cari aktor, aksi, record..."
+                value={filters.search || ''}
+                onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
+                className="text-sm border border-border rounded-lg px-3 py-1.5 bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary-red/30 w-full sm:w-48"
+              />
               <select
                 id="audit-filter-module"
                 value={filters.module}
@@ -99,7 +106,7 @@ export default function AuditLogPage() {
                 ))}
               </select>
               {meta.total !== undefined && (
-                <span className="text-xs text-muted ml-auto">{meta.total} entri</span>
+                <span className="text-xs text-muted ml-auto font-medium">{meta.total} entri audit</span>
               )}
             </div>
           </CardContent>
@@ -122,7 +129,7 @@ export default function AuditLogPage() {
               <table className="w-full text-sm" role="table" aria-label="Audit log">
                 <thead>
                   <tr className="border-b border-border bg-canvas">
-                    {['Waktu', 'Aktor', 'Aksi', 'Modul', 'Entitas', 'ID Record'].map((h) => (
+                    {['Waktu', 'Pengguna / Aktor', 'Aksi', 'Modul', 'ID Record', 'Deskripsi'].map((h) => (
                       <th key={h} scope="col" className="px-4 py-3 text-left text-xs font-semibold text-muted uppercase tracking-wide whitespace-nowrap">
                         {h}
                       </th>
@@ -136,20 +143,21 @@ export default function AuditLogPage() {
                         {format(new Date(log.timestamp), 'dd MMM yyyy HH:mm', { locale: idLocale })}
                       </td>
                       <td className="px-4 py-3">
-                        <p className="font-medium text-ink truncate max-w-[140px]">{log.actor}</p>
+                        <p className="font-medium text-ink truncate max-w-[160px]">{log.actor || log.user || 'Sistem'}</p>
+                        {log.role && <p className="text-[10px] text-muted">{log.role}</p>}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <span className="text-xs font-semibold text-slate">
                           {ACTION_LABELS[log.action] || log.action}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
-                        <span className="text-xs px-2 py-0.5 rounded bg-canvas border border-border text-muted">
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="text-xs px-2 py-0.5 rounded bg-canvas border border-border text-muted uppercase font-semibold">
                           {log.module}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-xs text-muted">{log.entity}</td>
-                      <td className="px-4 py-3 text-xs font-mono text-ink">{log.record_id}</td>
+                      <td className="px-4 py-3 text-xs font-mono text-ink whitespace-nowrap">{log.record_id || log.targetId || '-'}</td>
+                      <td className="px-4 py-3 text-xs text-muted max-w-xs truncate">{log.description || (log.details?.title) || '-'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -157,6 +165,7 @@ export default function AuditLogPage() {
             </div>
           </Card>
         )}
+
       </div>
     </RequirePermission>
   );

@@ -61,11 +61,16 @@ export const replacementAdapter = {
   async createReplacementRequest(payload) {
     if (isMock) {
       const store = getStore();
-      const newId = `REP-2026-09-${(store.length + 1).toString().padStart(3, '0')}`;
+      const maxNum = store.reduce((max, r) => {
+        const match = (r.id || r.requestNumber || '').match(/(\d+)$/);
+        return match ? Math.max(max, parseInt(match[1], 10)) : max;
+      }, 0);
+      const newNum = (maxNum + 1).toString().padStart(3, '0');
+      const newId = `REP-2026-09-${newNum}`;
       const newRep = {
         ...payload,
         id: newId,
-        requestNumber: `REP/BARAK/2026/09/${(store.length + 1).toString().padStart(3, '0')}`,
+        requestNumber: `REP/BARAK/2026/09/${newNum}`,
         status: STATUS.PENDING_APPROVAL,
         createdAt: new Date().toISOString(),
       };
@@ -91,10 +96,42 @@ export const replacementAdapter = {
     return data;
   },
 
+  async updateReplacement(id, payload) {
+    if (isMock) {
+      const store = getStore();
+      const idx = store.findIndex((r) => r.id === id || r.requestNumber === id);
+      if (idx === -1) return { data: null, error: { message: 'Pengajuan tidak ditemukan.' } };
+
+      const oldRep = store[idx];
+      const updated = {
+        ...oldRep,
+        ...payload,
+        id: oldRep.id,
+        requestNumber: oldRep.requestNumber || oldRep.id,
+        updatedAt: new Date().toISOString(),
+      };
+      store[idx] = updated;
+      saveStore(store);
+
+      await emitAudit({
+        action: 'REPLACEMENT_EDIT',
+        module: 'Operations',
+        entity: 'ReplacementRequest',
+        entityId: id,
+        details: { changes: Object.keys(payload) },
+      });
+
+      return { data: updated, error: null };
+    }
+
+    const { data } = await apiClient.patch(`/replacement-requests/${id}`, payload);
+    return data;
+  },
+
   async approveReplacement(id, actorName = 'Juli Priyanto (Direktur Ops)') {
     if (isMock) {
       const store = getStore();
-      const idx = store.findIndex((r) => r.id === id);
+      const idx = store.findIndex((r) => r.id === id || r.requestNumber === id);
       if (idx === -1) return { data: null, error: { message: 'Pengajuan tidak ditemukan.' } };
 
       const updated = {
@@ -124,7 +161,7 @@ export const replacementAdapter = {
   async rejectReplacement(id, { reason, actorName = 'Juli Priyanto' }) {
     if (isMock) {
       const store = getStore();
-      const idx = store.findIndex((r) => r.id === id);
+      const idx = store.findIndex((r) => r.id === id || r.requestNumber === id);
       if (idx === -1) return { data: null, error: { message: 'Pengajuan tidak ditemukan.' } };
 
       const updated = {
@@ -149,6 +186,31 @@ export const replacementAdapter = {
     }
 
     const { data } = await apiClient.post(`/replacement-requests/${id}/reject`, { reason });
+    return data;
+  },
+
+  async deleteReplacement(id) {
+    if (isMock) {
+      const store = getStore();
+      const idx = store.findIndex((r) => r.id === id || r.requestNumber === id);
+      if (idx === -1) return { data: null, error: { message: 'Pengajuan tidak ditemukan.' } };
+
+      const removed = store[idx];
+      const updatedStore = store.filter((r) => r.id !== id && r.requestNumber !== id);
+      saveStore(updatedStore);
+
+      await emitAudit({
+        action: 'REPLACEMENT_DELETE',
+        module: 'Operations',
+        entity: 'ReplacementRequest',
+        entityId: id,
+        details: { employee: removed.currentEmployeeName },
+      });
+
+      return { data: { success: true }, error: null };
+    }
+
+    const { data } = await apiClient.delete(`/replacement-requests/${id}`);
     return data;
   },
 };

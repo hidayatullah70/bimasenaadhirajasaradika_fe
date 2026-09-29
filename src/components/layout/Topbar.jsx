@@ -12,10 +12,13 @@ import { useAuth } from '@/app/providers/AuthProvider';
 import { ROLE_LABELS } from '@/constants/roles';
 import toast from 'react-hot-toast';
 
+import DevIndicatorModal from './DevIndicatorModal';
+
 export default function Topbar({ onMobileMenuOpen, unreadCount = 0, onSearchOpen }) {
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [devModalOpen, setDevModalOpen] = useState(false);
   const profileRef = useRef(null);
 
   // Close profile dropdown on outside click
@@ -37,6 +40,7 @@ export default function Topbar({ onMobileMenuOpen, unreadCount = 0, onSearchOpen
   };
 
   return (
+    <>
     <header className="h-14 flex-none bg-surface border-b border-border flex items-center px-4 gap-3 sticky top-0 z-30">
       {/* Mobile menu trigger */}
       <button
@@ -49,6 +53,22 @@ export default function Topbar({ onMobileMenuOpen, unreadCount = 0, onSearchOpen
 
       {/* Spacer */}
       <div className="flex-1" />
+
+      {/* Development Environment Indicator Pill (PRD Step 3) */}
+      <button
+        type="button"
+        onClick={() => setDevModalOpen(true)}
+        id="dev-environment-indicator"
+        title="Status Lingkungan Pengembangan: Klien REAL | Karyawan/Ops DEMO"
+        className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-surface border border-warning/30 text-[11px] font-medium text-warning hover:bg-warning/5 transition-all shadow-2xs"
+      >
+        <span className="h-2 w-2 rounded-full bg-accent-green animate-pulse" aria-hidden />
+        <span className="font-mono text-[10px] font-bold text-ink">DEV ENV</span>
+        <span className="text-muted/40 text-[10px]">|</span>
+        <span className="text-accent-green font-semibold">Klien: REAL</span>
+        <span className="text-muted/40 text-[10px]">|</span>
+        <span className="text-muted">Ops: DEMO</span>
+      </button>
 
       {/* Global Search trigger */}
       <button
@@ -134,5 +154,11 @@ export default function Topbar({ onMobileMenuOpen, unreadCount = 0, onSearchOpen
         )}
       </div>
     </header>
+
+    <DevIndicatorModal
+      isOpen={devModalOpen}
+      onClose={() => setDevModalOpen(false)}
+    />
+    </>
   );
 }

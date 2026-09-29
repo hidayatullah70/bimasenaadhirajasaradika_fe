@@ -1165,120 +1165,93 @@ Semua department dapat membuat IT ticket sesuai permission.
 
 ---
 
-## 19. RBAC
+## 19. RBAC (ROLE-BASED ACCESS CONTROL)
 
-Permission minimum:
+### 19.1 Peran Resmi & Kode Pengenal
+Sistem mengakui tepat 8 peran internal resmi:
+1. `DIREKTUR`: Otoritas eksekutif tertinggi (Super Admin operasional).
+2. `HRD`: Pengelola master personil, presensi posko, kontrak PKWT, dan rekrutmen.
+3. `OPERASIONAL`: Pengelola penugasan lapangan, posko klien, insiden, pergantian personil, dan patroli.
+4. `FINANCE`: Pengelola draf payroll (Maker), faktur tagihan klien, pengeluaran, dan kas titipan kurir COD.
+5. `LEGAL`: Pengelola Perjanjian Kerja Sama (PKS), dokumen kepatuhan SIO Mabes Polri, dan sengketa hukum.
+6. `MARKETING`: Pengelola prospek web/sales (Leads), pipeline tender (Opportunities), dan pendelegasian klien menang.
+7. `IT_SUPPORT`: Pengelola tiket helpdesk, SLA respon teknis, dan inventarisasi aset IT posko.
+8. `ADMIN_WEBSITE`: Pengelola konten CMS publik (berita, FAQ, lowongan karir).
 
-- VIEW
-- CREATE
-- EDIT
-- DELETE
-- APPROVE
-- EXPORT
-- ASSIGN
-- ESCALATE
-- CLOSE
+### 19.2 Pengenal Izin Granular (Permission String Identifiers)
+Format standar: `<module>.<resource>.<action>`
+- **Employee:** `employee.read`, `employee.create`, `employee.update`, `employee.export`, `employee.sensitive.read`, `employee.delete.request`, `employee.delete.approve`
+- **Placement:** `placement.read`, `placement.create`, `placement.update`, `placement.transfer`, `placement.end`
+- **Attendance:** `attendance.read`, `attendance.record`, `attendance.edit`, `attendance.finalize`, `attendance.reopen`, `attendance.export`
+- **Client & Site:** `client.read`, `client.create`, `client.update`, `site.read`, `site.create`, `site.update`
+- **Finance & Payroll:** `invoice.read`, `invoice.create`, `invoice.update`, `invoice.payment`, `payroll.read`, `payroll.create`, `payroll.approve`, `cod.read`, `cod.reconcile`, `cod.escalate`
+- **Legal:** `contract.read`, `contract.create`, `contract.update`, `legal.case.read`, `legal.case.create`, `compliance.read`
+- **Marketing:** `lead.read`, `lead.create`, `opportunity.read`, `opportunity.update`, `opportunity.win`
+- **Operations:** `incident.read`, `incident.create`, `incident.resolve`, `replacement.read`, `replacement.create`, `patrol.read`
+- **IT Support:** `ticket.read`, `ticket.create`, `ticket.update`, `ticket.resolve`, `asset.read`, `asset.create`
+- **Governance:** `approval.read`, `approval.act`, `audit.read`
 
-Backend wajib memvalidasi permission. Hiding menu di frontend bukan security.
-
-Permission contoh:
-
-```text
-employee.view
-employee.create
-employee.edit
-employee.export
-
-attendance.view
-attendance.edit
-attendance.finalize
-attendance.reopen
-attendance.export
-
-cod.view
-cod.collect
-cod.escalate
-cod.settle
-
-legal.case.view
-legal.case.create
-legal.case.edit
-legal.case.approve
-legal.case.close
-```
+### 19.3 Penegakan Batasan Maker-Checker (Segregation of Duties)
+Untuk mencegah *fraud* dan tindakan sepihak, batas kewenangan berikut **wajib ditegakkan di backend**:
+1. **Penggajian (Payroll):**
+   - *Maker:* Staf Finance menyusun perhitungan gaji (`payroll.create`).
+   - *Checker:* Direktur memeriksa dan mengesahkan pencairan (`payroll.approve`). Finance dilarang menyetujui payroll buatannya sendiri.
+2. **Kunci Presensi (Attendance Lock):**
+   - *Finalisasi:* HRD mengunci lembar absensi bulanan (`attendance.finalize`).
+   - *Pembukaan Kembali (Reopen):* Hanya Direktur yang berwenang membuka kunci lembar absensi (`attendance.reopen`).
+3. **Penghapusan Personil (Employee Deletion):**
+   - *Pemohon:* HRD / Staf Operasional mengajukan permohonan hapus/nonaktif (`employee.delete.request`).
+   - *Pemberi Otorisasi:* Direktur menyetujui soft-delete (`employee.delete.approve`).
 
 ---
 
-## 20. DATA MODEL
+## 20. DATA MODEL (28 AUTHORITATIVE RELATIONAL ENTITIES)
 
-Core entities:
+### 20.1 Prinsip Relasi Mobilitas Tenaga Kerja (Workforce Mobility)
+> **ATURAN UTAMA:** Entitas `employees` **TIDAK BOLEH** terikat langsung ke satu `clients`.  
+> Hubungan antara Karyawan dan Klien **wajib dijembatani oleh entitas `placements`**. Hal ini memungkinkan satu karyawan memiliki rekam jejak rotasi penugasan di berbagai klien/posko tanpa merusak data historis presensi maupun penggajian sebelumnya.
 
 ```text
-User
-Role
-Permission
-Employee
-EmployeeDocument
-EmploymentContract
-AttendanceSheet
-AttendanceRow
-Assignment
-Shift
-Leave
-Violation
-Evaluation
+Client (1) ───< Sites (N)
+Client (1) ───< Contracts (N)
+Client (1) ───< Invoices (N)
 
-Client
-ClientContract
-Project
-Location
-Post
-ManpowerRequirement
-Incident
-ReplacementRequest
-
-Invoice
-InvoiceItem
-Payment
-Receivable
-Payroll
-PayrollItem
-CODTransaction
-CODCase
-CODCollectionAttempt
-CODSettlement
-
-LegalCase
-LegalAction
-LegalDocument
-ComplianceItem
-
-Lead
-Opportunity
-MarketingActivity
-Proposal
-Quotation
-Campaign
-
-ITTicket
-ITAsset
-Maintenance
-
-WebsitePage
-Service
-News
-Blog
-Career
-FAQ
-Media
-WebsiteSetting
-
-Notification
-Approval
-AuditLog
+Employee (1) ───< Placements (N)
+Placement (N) >─── Client (1)
+Placement (N) >─── Site (1)
+Placement (N) >─── Shift (1)
+Placement (1) ───< Attendance Records (N)
 ```
 
-Tidak ada Employee duplicate di modul lain. Gunakan foreign key.
+### 20.2 Daftar 28 Entitas Database Relasional
+1. **`users`:** Akun pengguna internal (id, username, email, password_hash, role_id, is_active).
+2. **`roles`:** 8 Peran sistem (id, name, code, description).
+3. **`permissions`:** Hak akses granular (id, permission_key, module, description).
+4. **`role_permissions`:** Tabel junction peran $\leftrightarrow$ izin (role_id, permission_id).
+5. **`employees`:** Master tenaga kerja (id, id_karyawan, nik, nama_lengkap, jenis_kelamin, status_kerja, tanggal_masuk, status_pajak, npwp, bpjs_kesehatan, bpjs_ketenagakerjaan, is_deleted).
+6. **`employee_documents`:** Berkas digital KTP, KK, SKCK, Ijazah, Foto (id, employee_id, document_type, file_url).
+7. **`clients`:** 18 Mitra korporat resmi PT. BARAK (id, code, name, industry, city, address, contact_person, phone, email, status).
+8. **`sites`:** Posko pengamanan & lokasi tugas lapangan (id, code, client_id, name, address, city, manpower_quota, lat, lng, status).
+9. **`services`:** 6 Unit layanan inti PT. BARAK (id, code, name, description).
+10. **`positions`:** Master jabatan fungsional personil (id, code, service_id, title).
+11. **`placements`:** Riwayat & formasi penugasan aktif (id, code, employee_id, client_id, site_id, position_id, shift_id, start_date, end_date, status: ACTIVE|ROTATED|ENDED).
+12. **`shifts`:** Master jadwal jaga posko (id, code, name, start_time, end_time, description).
+13. **`rosters`:** Formasi jadwal kerja bulanan per posko (id, site_id, period_year, period_month, status).
+14. **`attendance`:** Log presensi harian personil (id, sheet_id, employee_id, placement_id, shift_id, attendance_date, check_in, check_out, status, total_hours, late_minutes, is_locked).
+15. **`recruitment`:** Lamaran kerja masuk dari publik (id, candidate_name, nik, phone, email, service_applied, status).
+16. **`payroll`:** Periode & kalkulasi gaji bulanan (id, period_month, period_year, total_gross, total_deductions, total_net, status: DRAFT|FINANCE_REVIEW|APPROVED|PROCESSED).
+17. **`payroll_items`:** Rincian take-home pay per karyawan (id, payroll_id, employee_id, base_salary, overtime_pay, allowances, bpjs_deduction, net_salary).
+18. **`invoices`:** Faktur tagihan jasa outsourcing (id, invoice_number, client_id, period, subtotal, tax_ppn, total_amount, due_date, status: DRAFT|ISSUED|PARTIALLY_PAID|PAID|OVERDUE|VOID).
+19. **`payments`:** Histori penerimaan pembayaran faktur (id, invoice_id, payment_date, amount, payment_method, reference_number).
+20. **`expenses`:** Rekam pengeluaran operasional perusahaan (id, category, amount, description, expense_date, approved_by).
+21. **`contracts`:** Perjanjian Kerja Sama (PKS) korporat (id, contract_number, client_id, title, start_date, end_date, contract_value, status: DRAFT|LEGAL_REVIEW|APPROVED|SIGNED|ACTIVE|EXPIRING|RENEWED|EXPIRED).
+22. **`leads`:** Calon klien masuk dari publik/sales (id, company_name, pic_name, phone, email, service_interest, status: NEW|CONTACTED|QUALIFIED|LOST|WON).
+23. **`quotations`:** Dokumen penawaran harga & proposal tender (id, lead_id, quotation_number, proposal_value, stage, created_by).
+24. **`incidents`:** Kejadian luar biasa / gangguan posko (id, incident_number, site_id, client_id, title, severity: LOW|MEDIUM|HIGH|CRITICAL, status: OPEN|INVESTIGATING|RESOLVED|ESCALATED).
+25. **`replacements`:** Tiket permohonan personil cadangan pengganti (id, ticket_number, site_id, absent_employee_id, replacement_employee_id, reason, status: REQUESTED|APPROVED|REPLACED).
+26. **`approvals`:** Antrean persetujuan eksekutif Direktur (id, request_type, entity_id, requested_by, status: PENDING|APPROVED|REJECTED, notes, acted_at).
+27. **`audit_logs`:** Jejak audit permanen seluruh mutasi sistem (id, actor_id, actor_name, actor_role, action, module, record_id, description, ip_address, created_at).
+28. **`it_tickets` & `it_assets`:** Helpdesk gangguan teknis & inventaris radio HT posko (id, ticket_number, title, category, priority, status: OPEN|ASSIGNED|IN_PROGRESS|RESOLVED|CLOSED).
 
 ---
 
@@ -1821,70 +1794,68 @@ Jangan membuat angka KPI statis kecuali memang berasal dari seed data.
 
 ---
 
-## 39. APPROVAL
+## 39. APPROVAL (PUSAT PERSETUJUAN DIREKTUR & WORKFLOW)
 
-### Payroll
+### 39.1 Delapan Kategori Persetujuan Eksekutif (`approvals.request_type`)
+Direktur memegang kendali tunggal di `/ops/director/approvals` untuk:
+1. `EMPLOYEE_DELETE`: Otorisasi penghapusan personil (Maker: HRD $\rightarrow$ Checker: Direktur).
+2. `EMPLOYEE_STATUS_CHANGE`: Pengangkatan status kerja (PKWT ke Karyawan Tetap).
+3. `CONTRACT_APPROVAL`: Pengesahan draf Perjanjian Kerja Sama (PKS) bernilai strategis.
+4. `EXPENSE_APPROVAL`: Otorisasi pengeluaran kas operasional / belanja modal posko (CAPEX).
+5. `PAYROLL`: Otorisasi pencairan dana gaji bulanan seluruh personil.
+6. `QUOTATION_APPROVAL`: Otorisasi diskon penawaran harga tender besar.
+7. `OPERATIONAL_REQUEST`: Dispensasi formasi posko atau pergantian mendesak.
+8. `ATTENDANCE_REOPEN`: Pembukaan kembali lembar presensi yang telah terkunci permanen.
 
+### 39.2 Alur Penghapusan Personil (Delete Workflow)
 ```text
-DRAFT
-→ HRD_REVIEW
-→ FINANCE_REVIEW
-→ DIRECTOR_APPROVAL
-→ APPROVED
-→ PROCESSED
+Staf / HRD Mengajukan Hapus (Input Alasan)
+  └── Backend menerbitkan approval_request (category: EMPLOYEE_DELETE, status: PENDING)
+        ├── Karyawan ditandai: pendingDelete = true (Data tetap aktif di sistem)
+        ├── DIREKTUR APPROVE:
+        │     └── Soft-delete dieksekusi (is_deleted = true, status_kerja = 'NON_AKTIF')
+        │     └── Penugasan posko aktif diakhiri (status = 'ENDED')
+        │     └── Log Audit permanen dicatat
+        └── DIREKTUR REJECT:
+              └── Alasan penolakan diinput
+              └── Status pendingDelete dibatalkan (Karyawan tetap aktif normal)
+              └── Log Audit penolakan dicatat
 ```
-
-### Contract
-
-```text
-DRAFT
-→ LEGAL_REVIEW
-→ AUTHORIZED_APPROVAL
-→ ACTIVE
-```
-
-### Legal Case
-
-```text
-OPEN
-→ INVESTIGATION
-→ LEGAL_REVIEW
-→ ACTION
-→ RESOLUTION
-→ CLOSED
-```
-
-Approval menyimpan:
-
-- approver
-- timestamp
-- decision
-- comment
 
 ---
 
-## 40. STATUS ENUM
+## 40. STATUS ENUM (KAMUS STATUS ENUM OTORITATIF)
 
-Centralize:
+Semua status dalam sistem menggunakan huruf kapital (*uppercase*) terpusat:
 
-```text
-ACTIVE
-INACTIVE
-PENDING
-DRAFT
-APPROVED
-REJECTED
-EXPIRED
-OPEN
-ASSIGNED
-IN_PROGRESS
-WAITING
-RESOLVED
-CLOSED
-ESCALATED
-FINALIZED
-REOPENED
-```
+### 40.1 Karyawan (`employees.status_kerja`)
+`APPLICANT` $\rightarrow$ `ONBOARDING` $\rightarrow$ `ACTIVE` $\rightarrow$ `PLACED` $\rightarrow$ `TRANSFERRED` $\rightarrow$ `ON_LEAVE` $\rightarrow$ `TERMINATED` $\rightarrow$ `INACTIVE`
+
+### 40.2 Penugasan Posko (`placements.status`)
+`REQUESTED` $\rightarrow$ `APPROVED` $\rightarrow$ `SCHEDULED` $\rightarrow$ `ACTIVE` $\rightarrow$ `TRANSFERRED` / `ROTATED` $\rightarrow$ `ENDED`
+
+### 40.3 Kontrak PKS Klien (`contracts.status`)
+`DRAFT` $\rightarrow$ `LEGAL_REVIEW` $\rightarrow$ `APPROVED` $\rightarrow$ `SIGNED` $\rightarrow$ `ACTIVE` $\rightarrow$ `EXPIRING` $\rightarrow$ `RENEWED` $\rightarrow$ `EXPIRED`
+
+### 40.4 Prospek Penjualan (`leads.status`)
+`NEW` $\rightarrow$ `CONTACTED` $\rightarrow$ `QUALIFIED` $\rightarrow$ `SURVEY` $\rightarrow$ `QUOTED` $\rightarrow$ `NEGOTIATION` $\rightarrow$ `WON` / `LOST`
+
+### 40.5 Faktur Tagihan (`invoices.status`)
+`DRAFT` $\rightarrow$ `ISSUED` $\rightarrow$ `PARTIALLY_PAID` $\rightarrow$ `PAID` $\rightarrow$ `OVERDUE` $\rightarrow$ `VOID`
+
+### 40.6 Penggajian (`payroll.status`)
+`DRAFT` $\rightarrow$ `FINANCE_REVIEW` $\rightarrow$ `APPROVED` $\rightarrow$ `PROCESSED`
+
+### 40.7 Insiden Posko (`incidents.status` & `severity`)
+- Status: `OPEN` $\rightarrow$ `INVESTIGATING` $\rightarrow$ `RESOLVED` $\rightarrow$ `ESCALATED`
+- Severity: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
+
+### 40.8 Tiket IT Support (`it_tickets.status` & `priority`)
+- Status: `OPEN` $\rightarrow$ `ASSIGNED` $\rightarrow$ `IN_PROGRESS` $\rightarrow$ `WAITING` $\rightarrow$ `RESOLVED` $\rightarrow$ `CLOSED`
+- Priority: `LOW`, `MEDIUM`, `HIGH`, `CRITICAL`
+
+### 40.9 Persetujuan (`approvals.status`)
+`PENDING` $\rightarrow$ `APPROVED` / `REJECTED`
 
 ---
 

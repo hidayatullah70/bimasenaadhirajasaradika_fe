@@ -17,6 +17,9 @@ const VARIANTS = {
     'bg-primary-red text-white hover:bg-red-800 active:bg-red-900 focus-visible:ring-primary-red shadow-sm',
   secondary:
     'bg-white text-ink border border-border hover:bg-canvas active:bg-slate/10 focus-visible:ring-slate shadow-sm',
+  outline:
+    'bg-white text-ink border border-border hover:bg-canvas active:bg-slate/10 focus-visible:ring-slate shadow-sm',
+
   danger:
     'bg-danger text-white hover:bg-red-700 active:bg-red-800 focus-visible:ring-danger shadow-sm',
   ghost:

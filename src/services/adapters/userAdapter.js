@@ -75,7 +75,11 @@ export const userAdapter = {
   async createUser(payload) {
     if (isMock) {
       const store = getStore();
-      const newId = `USR-${(store.length + 1).toString().padStart(3, '0')}`;
+      const maxNum = store.reduce((max, u) => {
+        const match = (u.id || '').match(/(\d+)$/);
+        return match ? Math.max(max, parseInt(match[1], 10)) : max;
+      }, 0);
+      const newId = `USR-${(maxNum + 1).toString().padStart(3, '0')}`;
       const newUser = {
         ...payload,
         id: newId,
@@ -103,10 +107,16 @@ export const userAdapter = {
   async updateUser(id, payload) {
     if (isMock) {
       const store = getStore();
-      const idx = store.findIndex((u) => u.id === id);
+      const idx = store.findIndex((u) => u.id === id || u.username === id);
       if (idx === -1) return { data: null, error: { message: 'Pengguna tidak ditemukan.' } };
 
-      const updated = { ...store[idx], ...payload, updatedAt: new Date().toISOString() };
+      const oldUser = store[idx];
+      const updated = {
+        ...oldUser,
+        ...payload,
+        id: oldUser.id,
+        updatedAt: new Date().toISOString(),
+      };
       store[idx] = updated;
       saveStore(store);
 
@@ -128,7 +138,7 @@ export const userAdapter = {
   async toggleUserStatus(id) {
     if (isMock) {
       const store = getStore();
-      const idx = store.findIndex((u) => u.id === id);
+      const idx = store.findIndex((u) => u.id === id || u.username === id);
       if (idx === -1) return { data: null, error: { message: 'Pengguna tidak ditemukan.' } };
 
       const current = store[idx];
@@ -149,6 +159,31 @@ export const userAdapter = {
     }
 
     const { data } = await apiClient.post(`/users/${id}/toggle-status`);
+    return data;
+  },
+
+  async deleteUser(id) {
+    if (isMock) {
+      const store = getStore();
+      const idx = store.findIndex((u) => u.id === id || u.username === id);
+      if (idx === -1) return { data: null, error: { message: 'Pengguna tidak ditemukan.' } };
+
+      const removed = store[idx];
+      const updatedStore = store.filter((u) => u.id !== id && u.username !== id);
+      saveStore(updatedStore);
+
+      await emitAudit({
+        action: 'USER_DELETE',
+        module: 'IT',
+        entity: 'User',
+        entityId: id,
+        details: { username: removed.username },
+      });
+
+      return { data: { success: true }, error: null };
+    }
+
+    const { data } = await apiClient.delete(`/users/${id}`);
     return data;
   },
 };

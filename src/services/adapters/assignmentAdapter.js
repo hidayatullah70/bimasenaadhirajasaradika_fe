@@ -91,14 +91,17 @@ export const assignmentAdapter = {
       );
       if (existing) {
         // Warning: overlapping active assignment
-        // If necessary, mark previous as TRANSFERRED/COMPLETED
       }
 
-      const newId = `BRK-ASN-${(store.length + 1).toString().padStart(3, '0')}`;
+      const maxNum = store.reduce((max, a) => {
+        const match = (a.id || a.assignmentCode || '').match(/(\d+)$/);
+        return match ? Math.max(max, parseInt(match[1], 10)) : max;
+      }, 0);
+      const newId = `BRK-ASN-${(maxNum + 1).toString().padStart(3, '0')}`;
       const newAsn = {
         ...payload,
         id: newId,
-        assignmentCode: `ASN-${(store.length + 1).toString().padStart(3, '0')}`,
+        assignmentCode: `ASN-${(maxNum + 1).toString().padStart(3, '0')}`,
         status: payload.status || STATUS.ACTIVE,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -131,7 +134,14 @@ export const assignmentAdapter = {
       const idx = store.findIndex((a) => a.id === id || a.assignmentCode === id);
       if (idx === -1) return { data: null, error: { message: 'Penugasan tidak ditemukan.' } };
 
-      const updated = { ...store[idx], ...payload, updatedAt: new Date().toISOString() };
+      const oldAsn = store[idx];
+      const updated = {
+        ...oldAsn,
+        ...payload,
+        id: oldAsn.id,
+        assignmentCode: oldAsn.assignmentCode || oldAsn.id,
+        updatedAt: new Date().toISOString(),
+      };
       store[idx] = updated;
       saveStore(store);
 
@@ -178,6 +188,95 @@ export const assignmentAdapter = {
     }
 
     const { data } = await apiClient.post(`/assignments/${id}/end`, { reason });
+    return data;
+  },
+
+  async deleteAssignment(id) {
+    if (isMock) {
+      const store = getStore();
+      const idx = store.findIndex((a) => a.id === id || a.assignmentCode === id);
+      if (idx === -1) return { data: null, error: { message: 'Penugasan tidak ditemukan.' } };
+
+      const removed = store[idx];
+      const updatedStore = store.filter((a) => a.id !== id && a.assignmentCode !== id);
+      saveStore(updatedStore);
+
+      await emitAudit({
+        action: 'ASSIGNMENT_DELETE',
+        module: 'Operations',
+        entity: 'Assignment',
+        entityId: id,
+        details: { employee: removed.employeeName, location: removed.locationName },
+      });
+
+      return { data: { success: true }, error: null };
+    }
+
+    const { data } = await apiClient.delete(`/assignments/${id}`);
+    return data;
+  },
+
+  async transferAssignment(id, { newClientId, newLocationId, newShiftId, notes = '' }) {
+    if (isMock) {
+      const store = getStore();
+      const idx = store.findIndex((a) => a.id === id || a.assignmentCode === id);
+      if (idx === -1) return { data: null, error: { message: 'Penugasan tidak ditemukan.' } };
+
+      const oldAsn = store[idx];
+      // Mark old assignment as ROTATED
+      store[idx] = {
+        ...oldAsn,
+        status: 'ROTATED',
+        endDate: new Date().toISOString().split('T')[0],
+        notes: `${oldAsn.notes || ''} [Rotasi: ${notes}]`.trim(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      // Create new assignment
+      const maxNum = store.reduce((max, a) => {
+        const match = (a.id || a.assignmentCode || '').match(/(\d+)$/);
+        return match ? Math.max(max, parseInt(match[1], 10)) : max;
+      }, 0);
+      const newId = `BRK-ASN-${(maxNum + 1).toString().padStart(3, '0')}`;
+      const newAsn = {
+        ...oldAsn,
+        id: newId,
+        assignmentCode: `ASN-${(maxNum + 1).toString().padStart(3, '0')}`,
+        clientId: newClientId,
+        locationId: newLocationId,
+        shiftId: newShiftId,
+        status: STATUS.ACTIVE || 'ACTIVE',
+        startDate: new Date().toISOString().split('T')[0],
+        notes,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      const updatedStore = [newAsn, ...store];
+      saveStore(updatedStore);
+
+      await emitAudit({
+        action: 'ASSIGNMENT_TRANSFER',
+        module: 'Operations',
+        entity: 'Assignment',
+        entityId: newId,
+        details: { previousId: id, newClientId, newLocationId, notes },
+      });
+
+      return {
+        data: {
+          previousPlacement: store[idx],
+          newPlacement: newAsn,
+        },
+        error: null,
+      };
+    }
+
+    const { data } = await apiClient.post(`/assignments/${id}/transfer`, {
+      newClientId,
+      newLocationId,
+      newShiftId,
+      notes,
+    });
     return data;
   },
 };

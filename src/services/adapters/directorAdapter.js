@@ -21,11 +21,20 @@ import { MOCK_IT_TICKETS, MOCK_IT_ASSETS } from '@/services/mock/mockITData';
 import { MOCK_ARTICLES, MOCK_CAREER_POSTINGS, MOCK_INCOMING_INQUIRIES } from '@/services/mock/mockCMSData';
 import { MOCK_PENDING_APPROVALS } from '@/services/mock/mockDirectorData';
 import { payrollAdapter } from '@/services/adapters/payrollAdapter';
+import { employeeAdapter } from '@/services/adapters/employeeAdapter';
 import { auditAdapter } from '@/services/adapters/auditAdapter';
 import { emitAudit } from '@/utils/auditLogger';
+import { getStoredCollection, saveStoredCollection } from '@/utils/storage';
 
 const isMock = import.meta.env.VITE_API_MODE !== 'rest';
-let approvalsStore = [...MOCK_PENDING_APPROVALS];
+
+function getApprovalsStore() {
+  return getStoredCollection('approvals', () => [...MOCK_PENDING_APPROVALS]);
+}
+
+function saveApprovalsStore(items) {
+  saveStoredCollection('approvals', items);
+}
 
 export const directorAdapter = {
   /**
@@ -34,10 +43,31 @@ export const directorAdapter = {
    */
   async getExecutiveDashboardStats() {
     if (isMock) {
+      // Load live persistent stores across all departments
+
+      const employeesStore = getStoredCollection('master_employees', () => [...MOCK_EMPLOYEES]);
+      const clientsStore = getStoredCollection('clients', () => [...REAL_CLIENTS]);
+      const locationsStore = getStoredCollection('locations', () => [...MOCK_LOCATIONS]);
+      const assignmentsStore = getStoredCollection('assignments', () => [...MOCK_ASSIGNMENTS]);
+      const invoicesStore = getStoredCollection('invoices', () => [...MOCK_INVOICES]);
+      const legalCasesStore = getStoredCollection('legal_cases', () => [...MOCK_LEGAL_CASES]);
+      const contractsStore = getStoredCollection('legal_contracts', () => [...MOCK_LEGAL_CONTRACTS]);
+      const incidentsStore = getStoredCollection('incidents', () => [...MOCK_INCIDENTS]);
+      const replacementsStore = getStoredCollection('replacements', () => [...MOCK_REPLACEMENTS]);
+      const leadsStore = getStoredCollection('marketing_leads', () => [...MOCK_LEADS]);
+      const opportunitiesStore = getStoredCollection('marketing_opportunities', () => [...MOCK_OPPORTUNITIES]);
+      const ticketsStore = getStoredCollection('it_tickets', () => [...MOCK_IT_TICKETS]);
+      const itAssetsStore = getStoredCollection('it_assets', () => [...MOCK_IT_ASSETS]);
+      const articlesStore = getStoredCollection('cms_articles', () => [...MOCK_ARTICLES]);
+      const careersStore = getStoredCollection('cms_careers', () => [...MOCK_CAREER_POSTINGS]);
+      const inquiriesStore = getStoredCollection('cms_inquiries', () => [...MOCK_INCOMING_INQUIRIES]);
+      const approvalsStore = getApprovalsStore();
+
       // 1. Workforce metrics
-      const totalEmployees = MOCK_EMPLOYEES.length;
-      const activeEmployees = MOCK_EMPLOYEES.filter((e) => e.status === STATUS.ACTIVE || e.status_kerja === 'AKTIF').length;
-      const expiringContracts = MOCK_EMPLOYEES.filter((e) => e.status_kontrak === 'MENDEKATI_HABIS').length;
+      const nonDeletedEmployees = employeesStore.filter((e) => !e.isDeleted);
+      const totalEmployees = nonDeletedEmployees.length;
+      const activeEmployees = nonDeletedEmployees.filter((e) => e.status === STATUS.ACTIVE || e.status_kerja === 'AKTIF' || e.status === 'AKTIF').length;
+      const expiringContracts = nonDeletedEmployees.filter((e) => e.status_kontrak === 'MENDEKATI_HABIS').length;
 
       // Service distribution
       const serviceCounts = {
@@ -49,7 +79,7 @@ export const directorAdapter = {
         LOSS_PREVENTION: 0,
       };
 
-      MOCK_EMPLOYEES.forEach((emp) => {
+      nonDeletedEmployees.forEach((emp) => {
         const s = (emp.jenis_layanan || '').toUpperCase();
         if (s.includes('SECURITY') || s.includes('PENGAMANAN')) serviceCounts.SECURITY++;
         else if (s.includes('KURIR') || s.includes('EKSPEDISI')) serviceCounts.KURIR++;
@@ -60,18 +90,18 @@ export const directorAdapter = {
       });
 
       // 2. Client & Operations metrics
-      const activeClients = REAL_CLIENTS.length;
-      const activeLocations = MOCK_LOCATIONS.length;
-      const activeAssignments = MOCK_ASSIGNMENTS.filter((a) => a.status === STATUS.ACTIVE).length;
-      const openIncidents = MOCK_INCIDENTS.filter((i) => i.status !== STATUS.RESOLVED && i.status !== STATUS.CLOSED).length;
-      const criticalIncidents = MOCK_INCIDENTS.filter((i) => (i.severity === 'HIGH' || i.severity === 'CRITICAL') && i.status !== STATUS.RESOLVED).length;
-      const pendingReplacements = MOCK_REPLACEMENTS.filter((r) => r.status === STATUS.PENDING).length;
+      const activeClients = clientsStore.filter((c) => c.status === STATUS.ACTIVE || c.status === 'AKTIF' || !c.status).length;
+      const activeLocations = locationsStore.length;
+      const activeAssignments = assignmentsStore.filter((a) => a.status === STATUS.ACTIVE || a.status === 'ACTIVE').length;
+      const openIncidents = incidentsStore.filter((i) => i.status !== STATUS.RESOLVED && i.status !== STATUS.CLOSED).length;
+      const criticalIncidents = incidentsStore.filter((i) => (i.severity === 'HIGH' || i.severity === 'CRITICAL') && i.status !== STATUS.RESOLVED).length;
+      const pendingReplacements = replacementsStore.filter((r) => r.status === STATUS.PENDING || r.status === STATUS.PENDING_APPROVAL).length;
 
       // 3. Finance metrics
-      const currentPeriodInvoices = MOCK_INVOICES.filter((inv) => (inv.billingPeriod || '').includes('September 2026'));
+      const currentPeriodInvoices = invoicesStore.filter((inv) => (inv.billingPeriod || '').includes('September 2026'));
       const monthlyRevenue = currentPeriodInvoices.reduce((sum, inv) => sum + (inv.totalAmount || 0), 0);
-      const outstandingReceivables = MOCK_INVOICES.reduce((sum, inv) => sum + (inv.remainingAmount || 0), 0);
-      const overdueInvoices = MOCK_INVOICES.filter((inv) => inv.status === STATUS.OVERDUE);
+      const outstandingReceivables = invoicesStore.reduce((sum, inv) => sum + (inv.remainingAmount || 0), 0);
+      const overdueInvoices = invoicesStore.filter((inv) => inv.status === STATUS.OVERDUE);
       const overdueReceivables = overdueInvoices.reduce((sum, inv) => sum + (inv.remainingAmount || 0), 0);
 
       // Current payroll period (September 2026)
@@ -85,29 +115,30 @@ export const directorAdapter = {
       const unresolvedCODAmount = unresolvedCODTransactions.reduce((sum, cod) => sum + (cod.difference || 0), 0);
 
       // 4. Legal metrics
-      const activeLegalCases = MOCK_LEGAL_CASES.filter((c) => c.status !== STATUS.CLOSED && c.status !== STATUS.RESOLVED).length;
-      const expiringContractsCount = MOCK_LEGAL_CONTRACTS.filter((c) => c.status === STATUS.EXPIRING).length;
+      const activeLegalCases = legalCasesStore.filter((c) => c.status !== STATUS.CLOSED && c.status !== STATUS.RESOLVED).length;
+      const expiringContractsCount = contractsStore.filter((c) => c.status === STATUS.EXPIRING).length;
       const compliantLicenses = MOCK_COMPLIANCE_ITEMS.filter((c) => c.status === 'COMPLIANT').length;
       const totalLicenses = MOCK_COMPLIANCE_ITEMS.length;
 
       // 5. Marketing metrics
-      const totalLeads = MOCK_LEADS.length;
-      const activeOpportunities = MOCK_OPPORTUNITIES.filter((o) => o.stage !== 'WON' && o.stage !== 'LOST').length;
-      const pipelineValue = MOCK_OPPORTUNITIES.reduce((sum, o) => (o.stage !== 'LOST' ? sum + (o.estimatedValue || 0) : sum), 0);
-      const wonDealsCount = MOCK_OPPORTUNITIES.filter((o) => o.stage === 'WON').length;
+      const totalLeads = leadsStore.length;
+      const activeOpportunities = opportunitiesStore.filter((o) => o.stage !== 'WON' && o.stage !== 'LOST').length;
+      const pipelineValue = opportunitiesStore.reduce((sum, o) => (o.stage !== 'LOST' ? sum + (o.estimatedValue || 0) : sum), 0);
+      const wonDealsCount = opportunitiesStore.filter((o) => o.stage === 'WON').length;
 
       // 6. IT metrics
-      const openTickets = MOCK_IT_TICKETS.filter((t) => t.status !== STATUS.RESOLVED && t.status !== STATUS.CLOSED).length;
-      const slaBreachedTickets = MOCK_IT_TICKETS.filter((t) => t.isSlaBreached).length;
-      const activeAssets = MOCK_IT_ASSETS.filter((a) => a.status === 'IN_USE').length;
+      const openTickets = ticketsStore.filter((t) => t.status !== STATUS.RESOLVED && t.status !== STATUS.CLOSED).length;
+      const slaBreachedTickets = ticketsStore.filter((t) => t.isSlaBreached).length;
+      const activeAssets = itAssetsStore.filter((a) => a.status === 'IN_USE').length;
 
       // 7. CMS metrics
-      const publishedArticles = MOCK_ARTICLES.filter((a) => a.status === 'PUBLISHED').length;
-      const activeCareers = MOCK_CAREER_POSTINGS.filter((c) => c.status === 'PUBLISHED').length;
-      const pendingInquiries = MOCK_INCOMING_INQUIRIES.filter((i) => i.status === 'NEW').length;
+      const publishedArticles = articlesStore.filter((a) => a.status === 'PUBLISHED').length;
+      const activeCareers = careersStore.filter((c) => c.status === 'PUBLISHED' || c.status === 'AKTIF').length;
+      const pendingInquiries = inquiriesStore.filter((i) => i.status === 'NEW' || i.status === 'BARU').length;
 
       // 8. Pending Director Approvals count
       const pendingApprovalsCount = approvalsStore.filter((a) => a.status === STATUS.PENDING).length;
+
 
       return {
         data: {
@@ -178,7 +209,7 @@ export const directorAdapter = {
             slaBreachedTickets,
             activeAssets,
           },
-          approvals: approvalsStore.filter((a) => a.status === STATUS.PENDING).slice(0, 5),
+          approvals: getApprovalsStore().filter((a) => a.status === STATUS.PENDING).slice(0, 5),
         },
         error: null,
       };
@@ -193,7 +224,7 @@ export const directorAdapter = {
    */
   async getPendingApprovals({ search = '', department = '', priority = '', status = '' } = {}) {
     if (isMock) {
-      let filtered = [...approvalsStore];
+      let filtered = [...getApprovalsStore()];
 
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -228,6 +259,7 @@ export const directorAdapter = {
    */
   async approveItem(approvalId, { notes = '', actorName = 'Juli Priyanto (Direktur)' } = {}) {
     if (isMock) {
+      const approvalsStore = getApprovalsStore();
       const idx = approvalsStore.findIndex((a) => a.id === approvalId);
       if (idx === -1) {
         return { data: null, error: { message: 'Item persetujuan tidak ditemukan.' } };
@@ -242,18 +274,68 @@ export const directorAdapter = {
         directorNotes: notes,
       };
       approvalsStore[idx] = updated;
+      saveApprovalsStore(approvalsStore);
 
       // Cross-department hook: If approving payroll, update payrollAdapter
       if (item.type === 'PAYROLL') {
         await payrollAdapter.approvePayroll(item.referenceId, actorName);
       }
 
+      // Cross-department hook: If approving employee deletion, trigger soft delete
+      if ((item.type === 'EMPLOYEE_DELETE' || item.category === 'EMPLOYEE_DELETE') && (item.referenceId || item.recordId)) {
+        const empId = item.referenceId || item.recordId;
+        await employeeAdapter.softDeleteEmployee(empId, {
+          deletedBy: actorName,
+          reason: notes || item.details?.reason || 'Disetujui oleh Direktur',
+        });
+      }
+
+      // Cross-department hook: If approving employee status change
+      if (item.type === 'EMPLOYEE_STATUS_CHANGE') {
+        const empId = item.referenceId || item.recordId;
+        const targetStatus = item.details?.targetStatus || 'TETAP';
+        await employeeAdapter.updateEmployee(empId, {
+          status_kerja: targetStatus,
+          status: 'AKTIF',
+        });
+      }
+
+      // Cross-department hook: If approving expense / CapEx
+      if (item.type === 'EXPENSE_APPROVAL' || item.type === 'CAPEX') {
+        const expenseStore = getStoredCollection('finance_expenses', () => []);
+        const expIdx = expenseStore.findIndex((e) => e.id === item.referenceId);
+        if (expIdx !== -1) {
+          expenseStore[expIdx] = {
+            ...expenseStore[expIdx],
+            status: 'APPROVED',
+            approvedBy: actorName,
+            approvedAt: new Date().toISOString(),
+          };
+          saveStoredCollection('finance_expenses', expenseStore);
+        }
+      }
+
+      // Cross-department hook: If approving contract
+      if (item.type === 'CONTRACT' || item.type === 'CONTRACT_APPROVAL') {
+        const contractsStore = getStoredCollection('legal_contracts', () => []);
+        const ctrIdx = contractsStore.findIndex((c) => c.id === item.referenceId);
+        if (ctrIdx !== -1) {
+          contractsStore[ctrIdx] = {
+            ...contractsStore[ctrIdx],
+            status: 'ACTIVE',
+            approvedBy: actorName,
+            approvalDate: new Date().toISOString().slice(0, 10),
+          };
+          saveStoredCollection('legal_contracts', contractsStore);
+        }
+      }
+
       // Log to central audit trail
       await emitAudit({
         action: 'DIRECTOR_APPROVAL',
         module: 'Director',
-        entity: item.type,
-        entityId: item.referenceId || approvalId,
+        entity: item.type || item.category || 'APPROVAL',
+        entityId: item.referenceId || item.recordId || approvalId,
         details: {
           approvalId: item.id,
           title: item.title,
@@ -263,6 +345,7 @@ export const directorAdapter = {
           approvedBy: actorName,
         },
       });
+
 
       return { data: updated, error: null };
     }
@@ -277,6 +360,7 @@ export const directorAdapter = {
    */
   async rejectItem(approvalId, { reason = '', actorName = 'Juli Priyanto (Direktur)' } = {}) {
     if (isMock) {
+      const approvalsStore = getApprovalsStore();
       const idx = approvalsStore.findIndex((a) => a.id === approvalId);
       if (idx === -1) {
         return { data: null, error: { message: 'Item persetujuan tidak ditemukan.' } };
@@ -291,13 +375,23 @@ export const directorAdapter = {
         rejectionReason: reason,
       };
       approvalsStore[idx] = updated;
+      saveApprovalsStore(approvalsStore);
+
+      // Cross-department hook: If rejecting employee deletion, clear pendingDelete flag
+      if ((item.type === 'EMPLOYEE_DELETE' || item.category === 'EMPLOYEE_DELETE') && (item.referenceId || item.recordId)) {
+        const empId = item.referenceId || item.recordId;
+        await employeeAdapter.updateEmployee(empId, {
+          pendingDelete: false,
+          deleteRequestId: null,
+        });
+      }
 
       // Log to central audit trail
       await emitAudit({
         action: 'DIRECTOR_REJECT',
         module: 'Director',
-        entity: item.type,
-        entityId: item.referenceId || approvalId,
+        entity: item.type || item.category || 'APPROVAL',
+        entityId: item.referenceId || item.recordId || approvalId,
         details: {
           approvalId: item.id,
           title: item.title,
@@ -489,6 +583,24 @@ export const directorAdapter = {
       return { data: filtered, error: null };
     }
     return res;
+  },
+
+  /**
+   * Convenience aliases for approvals
+   */
+  async getApprovals(status) {
+    const res = await this.getPendingApprovals(typeof status === 'string' ? { status } : (status || {}));
+    return res.data || res;
+  },
+
+  async approveRequest(approvalId, notes = '') {
+    const res = await this.approveItem(approvalId, { notes: typeof notes === 'string' ? notes : (notes?.notes || '') });
+    return res.data || res;
+  },
+
+  async rejectRequest(approvalId, reason = '') {
+    const res = await this.rejectItem(approvalId, { reason: typeof reason === 'string' ? reason : (reason?.reason || '') });
+    return res.data || res;
   },
 };
 

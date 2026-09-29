@@ -6,44 +6,54 @@
 import apiClient from '@/services/apiClient';
 import { MOCK_EMPLOYEES } from '@/services/mock/mockMasterData';
 import { emitAudit } from '@/utils/auditLogger';
+import { getStoredCollection, saveStoredCollection } from '@/utils/storage';
 
 const isMock = import.meta.env.VITE_API_MODE !== 'rest';
 
-// Derive contracts from MOCK_EMPLOYEES
-let contractsStore = MOCK_EMPLOYEES.map((emp, idx) => {
-  const isExpiring = idx === 38;
-  const isProbation = idx === 39;
-  const isPermanent = idx < 30;
+function defaultContractsFactory() {
+  return MOCK_EMPLOYEES.map((emp, idx) => {
+    const isExpiring = idx === 38;
+    const isProbation = idx === 39;
+    const isPermanent = idx < 30;
 
-  return {
-    id: `CTR-${(idx + 1).toString().padStart(4, '0')}`,
-    contractNumber: `PKWT/BARAK/2024/${(idx + 1).toString().padStart(3, '0')}`,
-    employeeId: emp.id,
-    employeeName: emp.nama_lengkap_sesuai_KTP,
-    employeeNik: emp.NIK,
-    department: emp.departemen,
-    position: emp.jabatan,
-    clientName: emp.clientName,
-    contractType: isPermanent ? 'PKWTT' : isProbation ? 'PROBATION' : 'PKWT',
-    startDate: emp.tanggal_masuk,
-    endDate: isPermanent ? '2030-12-31' : isExpiring ? '2026-10-15' : '2026-12-31',
-    status: isExpiring ? 'EXPIRING_SOON' : 'ACTIVE',
-    daysRemaining: isExpiring ? 22 : isPermanent ? 1500 : 98,
-    documentCompleteness: emp.kelengkapan_dokumen?.percentage || 100,
-    documents: [
-      { type: 'KTP', status: 'VERIFIED', uploadedAt: '2024-01-05' },
-      { type: 'Kartu Keluarga', status: 'VERIFIED', uploadedAt: '2024-01-05' },
-      { type: 'SKCK', status: isExpiring ? 'RENEWAL_NEEDED' : 'VERIFIED', uploadedAt: '2024-01-05' },
-      { type: 'Ijazah Terakhir', status: 'VERIFIED', uploadedAt: '2024-01-05' },
-      { type: 'Sertifikat Keahlian', status: 'VERIFIED', uploadedAt: '2024-01-05' },
-    ],
-  };
-});
+    return {
+      id: `CTR-${(idx + 1).toString().padStart(4, '0')}`,
+      contractNumber: `PKWT/BARAK/2024/${(idx + 1).toString().padStart(3, '0')}`,
+      employeeId: emp.id,
+      employeeName: emp.nama_lengkap_sesuai_KTP,
+      employeeNik: emp.NIK,
+      department: emp.departemen,
+      position: emp.jabatan,
+      clientName: emp.clientName,
+      contractType: isPermanent ? 'PKWTT' : isProbation ? 'PROBATION' : 'PKWT',
+      startDate: emp.tanggal_masuk,
+      endDate: isPermanent ? '2030-12-31' : isExpiring ? '2026-10-15' : '2026-12-31',
+      status: isExpiring ? 'EXPIRING_SOON' : 'ACTIVE',
+      daysRemaining: isExpiring ? 22 : isPermanent ? 1500 : 98,
+      documentCompleteness: emp.kelengkapan_dokumen?.percentage || 100,
+      documents: [
+        { type: 'KTP', status: 'VERIFIED', uploadedAt: '2024-01-05' },
+        { type: 'Kartu Keluarga', status: 'VERIFIED', uploadedAt: '2024-01-05' },
+        { type: 'SKCK', status: isExpiring ? 'RENEWAL_NEEDED' : 'VERIFIED', uploadedAt: '2024-01-05' },
+        { type: 'Ijazah Terakhir', status: 'VERIFIED', uploadedAt: '2024-01-05' },
+        { type: 'Sertifikat Keahlian', status: 'VERIFIED', uploadedAt: '2024-01-05' },
+      ],
+    };
+  });
+}
+
+function getContractsStore() {
+  return getStoredCollection('contracts', defaultContractsFactory);
+}
+
+function saveContractsStore(contracts) {
+  saveStoredCollection('contracts', contracts);
+}
 
 export const contractAdapter = {
   async getContracts({ search = '', type = '', status = '', page = 1, pageSize = 15 } = {}) {
     if (isMock) {
-      let filtered = [...contractsStore];
+      let filtered = [...getContractsStore()];
 
       if (search.trim()) {
         const q = search.toLowerCase();
@@ -78,18 +88,20 @@ export const contractAdapter = {
 
   async extendContract(contractId, { newEndDate, notes }) {
     if (isMock) {
-      const idx = contractsStore.findIndex((c) => c.id === contractId);
+      const contracts = getContractsStore();
+      const idx = contracts.findIndex((c) => c.id === contractId);
       if (idx === -1) return { data: null, error: { message: 'Kontrak tidak ditemukan.' } };
 
       const updated = {
-        ...contractsStore[idx],
+        ...contracts[idx],
         endDate: newEndDate,
         status: 'ACTIVE',
         daysRemaining: 365,
         notes,
         extendedAt: new Date().toISOString(),
       };
-      contractsStore[idx] = updated;
+      contracts[idx] = updated;
+      saveContractsStore(contracts);
 
       await emitAudit({
         action: 'CONTRACT_EXTEND',

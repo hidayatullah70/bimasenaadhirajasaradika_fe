@@ -4,17 +4,31 @@
  * Source of Truth: PRD Section 11.2, 20 & 21.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { X, Save } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { MOCK_EMPLOYEES, MOCK_CLIENTS, MOCK_LOCATIONS, MOCK_SHIFTS } from '@/services/mock/mockMasterData';
 
-export default function AssignmentFormModal({ isOpen, assignment, onClose, onSave }) {
+export default function AssignmentFormModal({
+  isOpen,
+  assignment,
+  onClose,
+  onSave,
+  employees = [],
+  clients = [],
+  locations = [],
+  shifts = [],
+}) {
+  const allEmployees = useMemo(() => (employees && employees.length > 0 ? employees : MOCK_EMPLOYEES), [employees]);
+  const allClients = useMemo(() => (clients && clients.length > 0 ? clients : MOCK_CLIENTS), [clients]);
+  const allLocations = useMemo(() => (locations && locations.length > 0 ? locations : MOCK_LOCATIONS), [locations]);
+  const allShifts = useMemo(() => (shifts && shifts.length > 0 ? shifts : MOCK_SHIFTS), [shifts]);
+
   const [formData, setFormData] = useState({
-    employeeId: MOCK_EMPLOYEES[0]?.id || '',
-    clientId: MOCK_CLIENTS[0]?.id || '',
-    locationId: MOCK_LOCATIONS[0]?.id || '',
-    shiftId: MOCK_SHIFTS[0]?.id || '',
+    employeeId: allEmployees[0]?.id || '',
+    clientId: allClients[0]?.id || '',
+    locationId: allLocations[0]?.id || '',
+    shiftId: allShifts[0]?.id || '',
     roleInUnit: 'Anggota',
     startDate: new Date().toISOString().split('T')[0],
     endDate: '2026-12-31',
@@ -24,10 +38,10 @@ export default function AssignmentFormModal({ isOpen, assignment, onClose, onSav
   useEffect(() => {
     if (assignment) {
       setFormData({
-        employeeId: assignment.employeeId || MOCK_EMPLOYEES[0]?.id || '',
-        clientId: assignment.clientId || MOCK_CLIENTS[0]?.id || '',
-        locationId: assignment.locationId || MOCK_LOCATIONS[0]?.id || '',
-        shiftId: assignment.shiftId || MOCK_SHIFTS[0]?.id || '',
+        employeeId: assignment.employeeId || allEmployees[0]?.id || '',
+        clientId: assignment.clientId || allClients[0]?.id || '',
+        locationId: assignment.locationId || allLocations[0]?.id || '',
+        shiftId: assignment.shiftId || allShifts[0]?.id || '',
         roleInUnit: assignment.roleInUnit || 'Anggota',
         startDate: assignment.startDate || new Date().toISOString().split('T')[0],
         endDate: assignment.endDate || '2026-12-31',
@@ -35,27 +49,29 @@ export default function AssignmentFormModal({ isOpen, assignment, onClose, onSav
       });
     } else {
       setFormData({
-        employeeId: MOCK_EMPLOYEES[0]?.id || '',
-        clientId: MOCK_CLIENTS[0]?.id || '',
-        locationId: MOCK_LOCATIONS[0]?.id || '',
-        shiftId: MOCK_SHIFTS[0]?.id || '',
+        employeeId: allEmployees[0]?.id || '',
+        clientId: allClients[0]?.id || '',
+        locationId: allLocations[0]?.id || '',
+        shiftId: allShifts[0]?.id || '',
         roleInUnit: 'Anggota',
         startDate: new Date().toISOString().split('T')[0],
         endDate: '2026-12-31',
         notes: '',
       });
     }
-  }, [assignment, isOpen]);
+  }, [assignment, isOpen, allEmployees, allClients, allLocations, allShifts]);
 
   if (!isOpen) return null;
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const empObj = MOCK_EMPLOYEES.find((e) => e.id === formData.employeeId);
-    const clientObj = MOCK_CLIENTS.find((c) => c.id === formData.clientId);
-    const locObj = MOCK_LOCATIONS.find((l) => l.id === formData.locationId);
-    const shiftObj = MOCK_SHIFTS.find((s) => s.id === formData.shiftId);
+    const empObj = allEmployees.find(
+      (e) => e.id === formData.employeeId || e.id_karyawan === formData.employeeId
+    );
+    const clientObj = allClients.find((c) => c.id === formData.clientId || c.code === formData.clientId);
+    const locObj = allLocations.find((l) => l.id === formData.locationId || l.code === formData.locationId);
+    const shiftObj = allShifts.find((s) => s.id === formData.shiftId || s.code === formData.shiftId);
 
     const payload = {
       ...formData,
@@ -71,8 +87,8 @@ export default function AssignmentFormModal({ isOpen, assignment, onClose, onSav
   };
 
   // Filter locations by chosen client if available
-  const availableLocations = MOCK_LOCATIONS.filter((l) => l.clientId === formData.clientId);
-  const locationsToDisplay = availableLocations.length > 0 ? availableLocations : MOCK_LOCATIONS;
+  const availableLocations = allLocations.filter((l) => l.clientId === formData.clientId);
+  const locationsToDisplay = availableLocations.length > 0 ? availableLocations : allLocations;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
@@ -101,7 +117,7 @@ export default function AssignmentFormModal({ isOpen, assignment, onClose, onSav
               onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
               className="w-full px-3 py-2 border rounded-lg bg-white"
             >
-              {MOCK_EMPLOYEES.map((emp) => (
+              {allEmployees.map((emp) => (
                 <option key={emp.id} value={emp.id}>
                   {emp.nama_lengkap_sesuai_KTP} — {emp.id_karyawan} ({emp.jenis_pekerjaan})
                 </option>
@@ -116,7 +132,7 @@ export default function AssignmentFormModal({ isOpen, assignment, onClose, onSav
                 value={formData.clientId}
                 onChange={(e) => {
                   const newClientId = e.target.value;
-                  const matchingLoc = MOCK_LOCATIONS.find((l) => l.clientId === newClientId);
+                  const matchingLoc = allLocations.find((l) => l.clientId === newClientId);
                   setFormData({
                     ...formData,
                     clientId: newClientId,
@@ -125,7 +141,7 @@ export default function AssignmentFormModal({ isOpen, assignment, onClose, onSav
                 }}
                 className="w-full px-3 py-2 border rounded-lg bg-white"
               >
-                {MOCK_CLIENTS.map((c) => (
+                {allClients.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
@@ -153,7 +169,7 @@ export default function AssignmentFormModal({ isOpen, assignment, onClose, onSav
                 onChange={(e) => setFormData({ ...formData, shiftId: e.target.value })}
                 className="w-full px-3 py-2 border rounded-lg bg-white"
               >
-                {MOCK_SHIFTS.map((s) => (
+                {allShifts.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name} ({s.startTime} - {s.endTime})
                   </option>

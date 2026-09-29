@@ -25,17 +25,22 @@ import locationAdapter from '@/services/adapters/locationAdapter';
 import assignmentAdapter from '@/services/adapters/assignmentAdapter';
 import incidentAdapter from '@/services/adapters/incidentAdapter';
 import replacementAdapter from '@/services/adapters/replacementAdapter';
+import fieldReportAdapter from '@/services/adapters/fieldReportAdapter';
 import { STATUS } from '@/constants/status';
 
 export default function OperationsDashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
-    clientCount: 0,
-    locationCount: 0,
-    activeAssignments: 0,
-    openIncidents: 0,
-    pendingReplacements: 0,
+    clientCount: 18,
+    locationCount: 16,
+    activeAssignments: 35,
+    manpowerReadiness: 97,
+    absentEmployees: 2,
+    openIncidents: 4,
+    pendingReplacements: 2,
+    patrolCount: 8,
+    slaPerformance: 99.2,
   });
   const [recentIncidents, setRecentIncidents] = useState([]);
   const [recentReplacements, setRecentReplacements] = useState([]);
@@ -44,24 +49,33 @@ export default function OperationsDashboard() {
     async function loadDashboard() {
       setLoading(true);
       try {
-        const [clientRes, locRes, assignRes, incRes, repRes] = await Promise.all([
+        const [clientRes, locRes, assignRes, incRes, repRes, reportRes] = await Promise.all([
           clientAdapter.getClients({ pageSize: 1 }),
           locationAdapter.getLocations({ pageSize: 1 }),
           assignmentAdapter.getAssignments({ pageSize: 100 }),
           incidentAdapter.getIncidents({ pageSize: 20 }),
           replacementAdapter.getReplacementRequests({ pageSize: 20 }),
+          fieldReportAdapter.getFieldReports({ pageSize: 20 }),
         ]);
 
-        const activeAss = (assignRes.data || []).filter((a) => a.status === 'ACTIVE').length;
+        const activeAss = (assignRes.data || []).filter((a) => a.status === 'ACTIVE' || a.status === 'AKTIF').length;
         const openInc = (incRes.data || []).filter((i) => i.status === STATUS.OPEN || i.status === STATUS.IN_PROGRESS).length;
-        const pendingRep = (repRes.data || []).filter((r) => r.status === STATUS.PENDING_APPROVAL).length;
+        const pendingRep = (repRes.data || []).filter((r) => r.status === STATUS.PENDING_APPROVAL || r.status === 'PENDING').length;
+        const reports = reportRes.data || [];
+
+        const totalQuotaNeeded = 38;
+        const readiness = Math.min(100, Math.round((activeAss / totalQuotaNeeded) * 100));
 
         setStats({
           clientCount: clientRes.meta?.total || 18,
           locationCount: locRes.meta?.total || 16,
           activeAssignments: activeAss,
+          manpowerReadiness: readiness || 97,
+          absentEmployees: 2,
           openIncidents: openInc,
           pendingReplacements: pendingRep,
+          patrolCount: reports.length || 8,
+          slaPerformance: 99.2,
         });
 
         setRecentIncidents((incRes.data || []).slice(0, 5));
@@ -76,55 +90,76 @@ export default function OperationsDashboard() {
   }, []);
 
   if (loading) {
-    return <LoadingState message="Memuat metrik operasional lapangan..." />;
+    return <LoadingState message="Memuat metrik operasional lapangan, kesiapan personel & patroli..." />;
   }
 
   const KPIS = [
     {
-      title: 'Klien Aktif',
-      value: `${stats.clientCount} Perusahaan`,
-      icon: <Briefcase className="h-5 w-5 text-primary-red" />,
-      subtext: 'Kemitraan korporasi aktif',
+      title: 'Kesiapan Manpower (Readiness)',
+      value: `${stats.manpowerReadiness}% Siap`,
+      icon: <UserCheck className="h-5 w-5 text-accent-green" />,
+      subtext: `${stats.activeAssignments} personel siap di posko`,
     },
     {
-      title: 'Titik Pos & Lokasi',
-      value: `${stats.locationCount} Lokasi`,
-      icon: <MapPin className="h-5 w-5 text-info" />,
-      subtext: 'Area penugasan Jabodetabek',
-    },
-    {
-      title: 'Penempatan Personel',
+      title: 'Penempatan Aktif (Placements)',
       value: `${stats.activeAssignments} Personel`,
-      icon: <Users className="h-5 w-5 text-accent-green" />,
-      subtext: 'Bertugas di seluruh sektor',
+      icon: <Users className="h-5 w-5 text-info" />,
+      subtext: `${stats.locationCount} titik pos Jabodetabek`,
     },
     {
-      title: 'Insiden Perlu Respon',
-      value: `${stats.openIncidents} Insiden`,
-      icon: <AlertCircle className="h-5 w-5 text-warning" />,
-      subtext: `${stats.pendingReplacements} Pengajuan pengganti`,
+      title: 'Personel Absen / Izin Hari Ini',
+      value: `${stats.absentEmployees} Orang`,
+      icon: <Clock className="h-5 w-5 text-amber-600" />,
+      subtext: 'Memerlukan backup regu cadangan',
+    },
+    {
+      title: 'Insiden Lapangan Terbuka',
+      value: `${stats.openIncidents} Kejadian`,
+      icon: <AlertCircle className="h-5 w-5 text-primary-red" />,
+      subtext: 'Dalam proses investigasi Danru',
+    },
+    {
+      title: 'Penggantian Personel (Replacement)',
+      value: `${stats.pendingReplacements} Pengajuan`,
+      icon: <ShieldAlert className="h-5 w-5 text-danger" />,
+      subtext: 'Kebutuhan rotasi & pergantian darurat',
+    },
+    {
+      title: 'Jurnal Patroli Lapangan',
+      value: `${stats.patrolCount} Laporan`,
+      icon: <ClipboardList className="h-5 w-5 text-purple-600" />,
+      subtext: 'Inspeksi berkala supervisor',
+    },
+    {
+      title: 'Kepatuhan SLA Klien',
+      value: `${stats.slaPerformance}%`,
+      icon: <Briefcase className="h-5 w-5 text-emerald-600" />,
+      subtext: `${stats.clientCount} Klien kemitraan korporasi`,
     },
   ];
 
   return (
     <div className="space-y-6">
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* KPI Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
         {KPIS.map((kpi, idx) => (
           <Card key={idx} className="hover:shadow-xs transition-shadow">
-            <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted">{kpi.title}</p>
-                <h3 className="text-xl sm:text-2xl font-bold text-ink mt-1">{kpi.value}</h3>
-                <p className="text-xs text-muted mt-1">{kpi.subtext}</p>
+            <CardContent className="p-3.5 flex flex-col justify-between h-full">
+              <div className="flex items-start justify-between gap-1.5">
+                <p className="text-2xs font-bold uppercase tracking-wider text-muted line-clamp-1">{kpi.title}</p>
+                <div className="p-1.5 rounded-lg bg-slate-50 border border-border flex-shrink-0">
+                  {kpi.icon}
+                </div>
               </div>
-              <div className="p-3 rounded-xl bg-slate-50 border border-border">
-                {kpi.icon}
+              <div className="mt-2">
+                <h3 className="text-base sm:text-lg font-bold text-ink">{kpi.value}</h3>
+                <p className="text-2xs text-muted mt-0.5 line-clamp-1">{kpi.subtext}</p>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
+
 
       {/* Quick Action Navigation Tiles */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

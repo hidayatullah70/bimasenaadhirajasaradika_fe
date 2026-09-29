@@ -7,6 +7,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { UserCheck, Search, Plus, MapPin, Building2, Clock, Calendar, ChevronLeft, ChevronRight, XCircle } from 'lucide-react';
 import assignmentAdapter from '@/services/adapters/assignmentAdapter';
+import clientAdapter from '@/services/adapters/clientAdapter';
+import locationAdapter from '@/services/adapters/locationAdapter';
+import shiftAdapter from '@/services/adapters/shiftAdapter';
+import employeeAdapter from '@/services/adapters/employeeAdapter';
 import { MOCK_CLIENTS, MOCK_LOCATIONS, MOCK_SHIFTS } from '@/services/mock/mockMasterData';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ROLES } from '@/constants/roles';
@@ -15,12 +19,19 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { StateLoading, StateEmpty } from '@/components/ui/StateViews';
 import AssignmentFormModal from './AssignmentFormModal';
+import AssignmentDetailModal from './AssignmentDetailModal';
+import AssignmentTransferModal from './AssignmentTransferModal';
 import toast from 'react-hot-toast';
 
 export default function AssignmentListPage() {
   const { hasPermission, hasRole } = useAuth();
-  const canEdit = hasRole([ROLES.DIREKTUR, ROLES.HRD]);
-  const canCreate = canEdit && hasPermission(PERMISSIONS.ASSIGNMENT_CREATE);
+  const canEdit =
+    hasRole([ROLES.DIREKTUR, ROLES.OPERASIONAL, ROLES.HRD]) ||
+    hasPermission(PERMISSIONS.ASSIGNMENT_EDIT);
+  const canCreate =
+    (hasRole([ROLES.DIREKTUR, ROLES.OPERASIONAL, ROLES.HRD]) &&
+      hasPermission(PERMISSIONS.ASSIGNMENT_CREATE)) ||
+    hasPermission(PERMISSIONS.ASSIGNMENT_CREATE);
 
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,8 +42,49 @@ export default function AssignmentListPage() {
   const [page, setPage] = useState(1);
   const [meta, setMeta] = useState({ total: 0, totalPages: 1 });
 
+  // Dynamic relational options
+  const [clients, setClients] = useState(MOCK_CLIENTS);
+  const [locations, setLocations] = useState(MOCK_LOCATIONS);
+  const [shifts, setShifts] = useState(MOCK_SHIFTS);
+  const [employees, setEmployees] = useState([]);
+
+  useEffect(() => {
+    async function loadOptions() {
+      try {
+        const [cRes, lRes, sRes, eRes] = await Promise.all([
+          clientAdapter.getClients({ pageSize: 100 }),
+          locationAdapter.getLocations({ pageSize: 100 }),
+          shiftAdapter.getShifts(),
+          employeeAdapter.getEmployees({ pageSize: 100 }),
+        ]);
+        if (cRes.data && cRes.data.length > 0) setClients(cRes.data);
+        if (lRes.data && lRes.data.length > 0) setLocations(lRes.data);
+        if (sRes.data && sRes.data.length > 0) setShifts(sRes.data);
+        if (eRes.data && eRes.data.length > 0) setEmployees(eRes.data);
+      } catch (err) {
+        console.warn('Failed to load dynamic options for assignments:', err);
+      }
+    }
+    loadOptions();
+  }, []);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState(null);
+  const [selectedAssignment, setSelectedAssignment] = useState(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [transferringAssignment, setTransferringAssignment] = useState(null);
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+
+  const handleOpenDetail = (asn) => {
+    setSelectedAssignment(asn);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleOpenTransfer = (asn) => {
+    setTransferringAssignment(asn);
+    setIsTransferModalOpen(true);
+  };
+
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -125,7 +177,7 @@ export default function AssignmentListPage() {
             className="px-2.5 py-2 text-xs border border-border rounded-lg bg-white text-ink"
           >
             <option value="">Semua Klien</option>
-            {MOCK_CLIENTS.map((c) => (
+            {clients.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
@@ -139,7 +191,7 @@ export default function AssignmentListPage() {
             className="px-2.5 py-2 text-xs border border-border rounded-lg bg-white text-ink"
           >
             <option value="">Semua Lokasi</option>
-            {MOCK_LOCATIONS.map((l) => (
+            {locations.map((l) => (
               <option key={l.id} value={l.id}>{l.name}</option>
             ))}
           </select>
@@ -153,7 +205,7 @@ export default function AssignmentListPage() {
             className="px-2.5 py-2 text-xs border border-border rounded-lg bg-white text-ink"
           >
             <option value="">Semua Shift</option>
-            {MOCK_SHIFTS.map((s) => (
+            {shifts.map((s) => (
               <option key={s.id} value={s.id}>{s.name}</option>
             ))}
           </select>
@@ -240,30 +292,47 @@ export default function AssignmentListPage() {
                     </td>
 
                     {/* Aksi */}
-                    <td className="px-4 py-3 text-right">
-                      {canEdit ? (
-                        <div className="flex items-center justify-end gap-1.5">
+                    <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenDetail(asn)}
+                          className="px-2 py-1 text-xs rounded border border-border bg-white text-muted hover:text-ink font-medium"
+                          title="Lihat Detail Penempatan"
+                        >
+                          Detail
+                        </button>
+                        {canEdit && (
                           <button
                             type="button"
                             onClick={() => handleOpenEdit(asn)}
-                            className="px-2.5 py-1 text-xs rounded border border-border bg-white text-muted hover:text-ink font-medium"
+                            className="px-2 py-1 text-xs rounded border border-border bg-white text-muted hover:text-ink font-medium"
+                            title="Ubah Data Penempatan"
                           >
                             Ubah
                           </button>
-                          {asn.status === 'ACTIVE' && (
-                            <button
-                              type="button"
-                              onClick={() => handleEndAssignment(asn)}
-                              className="px-2 py-1 text-xs rounded border border-red-200 bg-white text-error hover:bg-error/10 font-medium"
-                              title="Rotasi / Selesai Penugasan"
-                            >
-                              Akhiri
-                            </button>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-muted text-xs font-mono">-</span>
-                      )}
+                        )}
+                        {canEdit && asn.status === 'ACTIVE' && (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenTransfer(asn)}
+                            className="px-2 py-1 text-xs rounded border border-warning/40 bg-white text-warning hover:bg-warning/10 font-medium"
+                            title="Rotasi / Pindahkan Personel ke Klien/Lokasi Lain"
+                          >
+                            Rotasi
+                          </button>
+                        )}
+                        {canEdit && asn.status === 'ACTIVE' && (
+                          <button
+                            type="button"
+                            onClick={() => handleEndAssignment(asn)}
+                            className="px-2 py-1 text-xs rounded border border-red-200 bg-white text-error hover:bg-error/10 font-medium"
+                            title="Akhiri Penugasan Personel Ini"
+                          >
+                            Akhiri
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -312,6 +381,28 @@ export default function AssignmentListPage() {
         assignment={editingAssignment}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSave}
+        employees={employees}
+        clients={clients}
+        locations={locations}
+        shifts={shifts}
+      />
+
+      <AssignmentDetailModal
+        isOpen={isDetailModalOpen}
+        assignment={selectedAssignment}
+        onClose={() => setIsDetailModalOpen(false)}
+        onEdit={canEdit ? handleOpenEdit : undefined}
+        onTransfer={canEdit ? handleOpenTransfer : undefined}
+      />
+
+      <AssignmentTransferModal
+        isOpen={isTransferModalOpen}
+        assignment={transferringAssignment}
+        onClose={() => setIsTransferModalOpen(false)}
+        onSuccess={loadData}
+        clients={clients}
+        locations={locations}
+        shifts={shifts}
       />
     </div>
   );

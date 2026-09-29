@@ -28,10 +28,11 @@ export const clientAdapter = {
         const q = search.toLowerCase();
         filtered = filtered.filter(
           (c) =>
-            c.name.toLowerCase().includes(q) ||
-            c.id.toLowerCase().includes(q) ||
-            c.city.toLowerCase().includes(q) ||
-            c.picName.toLowerCase().includes(q)
+            (c.name && c.name.toLowerCase().includes(q)) ||
+            (c.id && c.id.toLowerCase().includes(q)) ||
+            (c.city && c.city.toLowerCase().includes(q)) ||
+            (c.picName && c.picName.toLowerCase().includes(q)) ||
+            (c.contactPerson && c.contactPerson.toLowerCase().includes(q))
         );
       }
 
@@ -75,7 +76,11 @@ export const clientAdapter = {
   async createClient(payload) {
     if (isMock) {
       const store = getStore();
-      const newId = `CLI-${(store.length + 1).toString().padStart(6, '0')}`;
+      const maxNum = store.reduce((max, c) => {
+        const match = (c.id || c.code || '').match(/(\d+)$/);
+        return match ? Math.max(max, parseInt(match[1], 10)) : max;
+      }, 0);
+      const newId = `CLI-${(maxNum + 1).toString().padStart(6, '0')}`;
       const newClient = {
         ...payload,
         id: newId,
@@ -105,10 +110,17 @@ export const clientAdapter = {
   async updateClient(id, payload) {
     if (isMock) {
       const store = getStore();
-      const idx = store.findIndex((c) => c.id === id);
+      const idx = store.findIndex((c) => c.id === id || c.code === id);
       if (idx === -1) return { data: null, error: { message: 'Klien tidak ditemukan.' } };
 
-      const updated = { ...store[idx], ...payload, updatedAt: new Date().toISOString() };
+      const oldClient = store[idx];
+      const updated = {
+        ...oldClient,
+        ...payload,
+        id: oldClient.id,
+        code: oldClient.code || oldClient.id,
+        updatedAt: new Date().toISOString(),
+      };
       store[idx] = updated;
       saveStore(store);
 
@@ -124,6 +136,31 @@ export const clientAdapter = {
     }
 
     const { data } = await apiClient.patch(`/clients/${id}`, payload);
+    return data;
+  },
+
+  async deleteClient(id) {
+    if (isMock) {
+      const store = getStore();
+      const idx = store.findIndex((c) => c.id === id || c.code === id);
+      if (idx === -1) return { data: null, error: { message: 'Klien tidak ditemukan.' } };
+
+      const removed = store[idx];
+      const updatedStore = store.filter((c) => c.id !== id && c.code !== id);
+      saveStore(updatedStore);
+
+      await emitAudit({
+        action: 'CLIENT_DELETE',
+        module: 'Master',
+        entity: 'Client',
+        entityId: id,
+        details: { name: removed.name },
+      });
+
+      return { data: { success: true }, error: null };
+    }
+
+    const { data } = await apiClient.delete(`/clients/${id}`);
     return data;
   },
 };

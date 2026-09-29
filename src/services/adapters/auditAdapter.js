@@ -8,20 +8,21 @@
 import { isMockMode, apiSuccess } from '@/services/apiClient';
 import { AUDIT_ACTIONS } from '@/constants/business';
 import restClient from '@/services/apiClient';
+import { getStoredCollection, saveStoredCollection } from '@/utils/storage';
 
-// In-memory audit log store (mock only)
-let mockAuditStore = [
+const INITIAL_AUDIT_LOGS = [
   {
     id: 'audit-001',
     actor: 'Zaenal Arifin (HRD)',
     actor_id: 'usr-002',
     timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-    action: AUDIT_ACTIONS.ATTENDANCE_FINALIZE,
+    action: AUDIT_ACTIONS.ATTENDANCE_FINALIZE || 'ATTENDANCE_FINALIZE',
     module: 'attendance',
     entity: 'AttendanceSheet',
     record_id: 'SHEET-2026-09-001',
     old_value: { status: 'OPEN' },
     new_value: { status: 'FINALIZED' },
+    description: 'Finalisasi lembar absensi bulanan periode September 2026',
     ip: '192.168.1.10',
   },
   {
@@ -29,12 +30,13 @@ let mockAuditStore = [
     actor: 'Nazi Rinaldi (Finance)',
     actor_id: 'usr-005',
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
-    action: AUDIT_ACTIONS.COD_SETTLEMENT,
+    action: AUDIT_ACTIONS.COD_SETTLEMENT || 'COD_SETTLEMENT',
     module: 'cod',
     entity: 'CODCase',
     record_id: 'COD-2026-000002',
     old_value: { status: 'OPEN', outstanding_amount: 1500000 },
     new_value: { status: 'SETTLED', outstanding_amount: 0 },
+    description: 'Penyelesaian selisih titipan kas COD kurir via kasir',
     ip: '192.168.1.15',
   },
   {
@@ -42,21 +44,42 @@ let mockAuditStore = [
     actor: 'Juli Priyanto (Direktur)',
     actor_id: 'usr-001',
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-    action: AUDIT_ACTIONS.PAYROLL_APPROVE,
+    action: AUDIT_ACTIONS.PAYROLL_APPROVE || 'PAYROLL_APPROVE',
     module: 'finance',
     entity: 'Payroll',
     record_id: 'PAY-2026-000001',
     old_value: { status: 'FINANCE_REVIEW' },
     new_value: { status: 'APPROVED' },
+    description: 'Otorisasi eksekutif penggajian 40 karyawan PT. BARAK',
     ip: '192.168.1.5',
   },
 ];
 
-const mockAudit = {
-  async getLogs({ module, action, dateFrom, dateTo, page = 1, limit = 20 } = {}) {
-    await new Promise((r) => setTimeout(r, 300));
+function getAuditStore() {
+  return getStoredCollection('barak_audit_logs', () => [...INITIAL_AUDIT_LOGS]);
+}
 
-    let data = [...mockAuditStore];
+function saveAuditStore(logs) {
+  saveStoredCollection('barak_audit_logs', logs);
+}
+
+const mockAudit = {
+  async getLogs({ module, action, dateFrom, dateTo, search = '', page = 1, limit = 20 } = {}) {
+    await new Promise((r) => setTimeout(r, 100));
+
+    let data = [...getAuditStore()];
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      data = data.filter(
+        (l) =>
+          (l.actor && l.actor.toLowerCase().includes(q)) ||
+          (l.action && l.action.toLowerCase().includes(q)) ||
+          (l.module && l.module.toLowerCase().includes(q)) ||
+          (l.record_id && l.record_id.toLowerCase().includes(q)) ||
+          (l.description && l.description.toLowerCase().includes(q))
+      );
+    }
 
     if (module) data = data.filter((l) => l.module === module);
     if (action) data = data.filter((l) => l.action === action);
@@ -71,16 +94,20 @@ const mockAudit = {
   },
 
   async createLog(entry) {
-    // Client-side audit record — sent to backend in REST mode
+    const store = getAuditStore();
     const log = {
-      id: `audit-${Date.now()}`,
+      id: `audit-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       timestamp: new Date().toISOString(),
+      user: entry.actor || entry.user || 'Sistem PT. BARAK',
+      role: entry.role || 'OPERASIONAL',
+      description: entry.description || entry.details?.title || `${entry.action} pada ${entry.entity || entry.module}`,
       ...entry,
     };
-    mockAuditStore.unshift(log);
+    saveAuditStore([log, ...store]);
     return apiSuccess(log);
   },
 };
+
 
 const restAudit = {
   async getLogs(filters = {}) {

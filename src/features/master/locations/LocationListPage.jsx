@@ -7,6 +7,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { MapPin, Search, Plus, Building2, Users, Compass, ChevronLeft, ChevronRight } from 'lucide-react';
 import locationAdapter from '@/services/adapters/locationAdapter';
+import clientAdapter from '@/services/adapters/clientAdapter';
 import { MOCK_CLIENTS } from '@/services/mock/mockMasterData';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ROLES } from '@/constants/roles';
@@ -19,8 +20,13 @@ import toast from 'react-hot-toast';
 
 export default function LocationListPage() {
   const { hasPermission, hasRole } = useAuth();
-  const canEdit = hasRole([ROLES.DIREKTUR, ROLES.HRD]);
-  const canCreate = canEdit && hasPermission(PERMISSIONS.LOCATION_CREATE);
+  const canEdit =
+    hasRole([ROLES.DIREKTUR, ROLES.OPERASIONAL, ROLES.HRD]) ||
+    hasPermission(PERMISSIONS.LOCATION_EDIT);
+  const canCreate =
+    (hasRole([ROLES.DIREKTUR, ROLES.OPERASIONAL, ROLES.HRD]) &&
+      hasPermission(PERMISSIONS.LOCATION_CREATE)) ||
+    hasPermission(PERMISSIONS.LOCATION_CREATE);
 
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,6 +37,19 @@ export default function LocationListPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLocation, setEditingLocation] = useState(null);
+  const [clients, setClients] = useState(MOCK_CLIENTS);
+
+  useEffect(() => {
+    async function loadClients() {
+      try {
+        const res = await clientAdapter.getClients({ pageSize: 100 });
+        if (res.data && res.data.length > 0) setClients(res.data);
+      } catch (err) {
+        console.warn('Failed to load clients in LocationListPage:', err);
+      }
+    }
+    loadClients();
+  }, []);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -64,7 +83,8 @@ export default function LocationListPage() {
   const handleSave = async (payload) => {
     try {
       if (editingLocation) {
-        await locationAdapter.updateLocation(editingLocation.id, payload);
+        const locId = editingLocation.id || editingLocation.code;
+        await locationAdapter.updateLocation(locId, payload);
         toast.success(`Data lokasi ${payload.name} berhasil diperbarui.`);
       } else {
         await locationAdapter.createLocation(payload);
@@ -105,7 +125,7 @@ export default function LocationListPage() {
             className="px-3 py-2 text-xs border border-border rounded-lg bg-white text-ink"
           >
             <option value="">Semua Klien</option>
-            {MOCK_CLIENTS.map((c) => (
+            {clients.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
@@ -145,7 +165,7 @@ export default function LocationListPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {locations.map((loc) => {
-                  const client = MOCK_CLIENTS.find((c) => c.id === loc.clientId);
+                  const client = clients.find((c) => c.id === loc.clientId || c.code === loc.clientId);
                   const isFull = loc.activeManpower >= loc.manpowerQuota;
                   return (
                     <tr key={loc.id} className="hover:bg-primary-red/5 transition-colors">
@@ -243,6 +263,7 @@ export default function LocationListPage() {
         location={editingLocation}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSave}
+        clients={clients}
       />
     </div>
   );

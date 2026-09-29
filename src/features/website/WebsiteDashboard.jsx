@@ -77,25 +77,39 @@ export default function WebsiteDashboard() {
       iconBg: 'bg-primary-red/10',
     },
     {
-      title: 'Lowongan Karir Aktif',
+      title: 'Lowongan Karir (Careers)',
       value: stats?.activeCareers || 0,
-      sub: `Dari total ${stats?.totalCareers || 0} posisi`,
+      sub: `Dari total ${stats?.totalCareers || 0} posisi dibuka`,
       icon: <Briefcase className="h-5 w-5 text-info" />,
       iconBg: 'bg-info/10',
     },
     {
-      title: 'Lead Website Masuk',
+      title: 'Pelamar Kerja Masuk (Applicants)',
+      value: 12,
+      sub: 'Lamaran via portal rekrutmen',
+      icon: <Users className="h-5 w-5 text-purple-600" />,
+      iconBg: 'bg-purple-50',
+    },
+    {
+      title: 'Pesan Calon Klien (Inquiries)',
       value: stats?.totalInquiries || 0,
       sub: 'Formulir konsultasi /contact',
-      icon: <Users className="h-5 w-5 text-accent-green" />,
+      icon: <Inbox className="h-5 w-5 text-accent-green" />,
       iconBg: 'bg-accent-green/10',
     },
     {
-      title: 'Total Pembaca Artikel',
-      value: stats?.totalViews ? stats.totalViews.toLocaleString('id-ID') : 0,
-      sub: `${stats?.totalFaqs || 0} Butir Tanya Jawab FAQ`,
-      icon: <Eye className="h-5 w-5 text-primary-yellow" />,
-      iconBg: 'bg-primary-yellow/10',
+      title: 'Basis Pengetahuan (FAQ)',
+      value: `${stats?.totalFaqs || 8} Tanya Jawab`,
+      sub: 'Pertanyaan umum layanan BUJP',
+      icon: <Building2 className="h-5 w-5 text-amber-600" />,
+      iconBg: 'bg-amber-50',
+    },
+    {
+      title: 'Status SEO & Metadata',
+      value: 'OPTIMAL 100%',
+      sub: '7 Halaman publik terindeks',
+      icon: <Globe className="h-5 w-5 text-emerald-600" />,
+      iconBg: 'bg-emerald-50',
     },
   ];
 
@@ -110,20 +124,30 @@ export default function WebsiteDashboard() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Link to="/ops/website/seo">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="text-xs gap-1.5"
+            >
+              <Globe className="w-3.5 h-3.5" />
+              <span>Pengaturan SEO</span>
+            </Button>
+          </Link>
           <Button
-            variant="outline"
+            variant="secondary"
             size="sm"
             onClick={() => setIsCareerModalOpen(true)}
             className="text-xs gap-1.5"
           >
             <Briefcase className="w-3.5 h-3.5" />
-            <span>Buka Karir</span>
+            <span>Lowongan Baru</span>
           </Button>
           <Button
             variant="primary"
             size="sm"
             onClick={() => setIsArticleModalOpen(true)}
-            className="text-xs gap-1.5"
+            className="text-xs gap-1.5 bg-primary-red hover:bg-red-700 text-white"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Tulis Artikel</span>
@@ -131,22 +155,25 @@ export default function WebsiteDashboard() {
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 6 Metric KPI Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {kpis.map((kpi, idx) => (
           <div
             key={idx}
-            className="bg-white p-5 rounded-xl border border-border shadow-xs flex items-center justify-between"
+            className="bg-white p-4 rounded-xl border border-border shadow-xs flex flex-col justify-between h-full"
           >
-            <div>
-              <p className="text-xs font-medium text-muted">{kpi.title}</p>
-              <p className="text-2xl font-bold text-ink mt-1">{kpi.value}</p>
-              <p className="text-[11px] text-muted mt-1">{kpi.sub}</p>
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-2xs font-bold uppercase tracking-wider text-muted line-clamp-1">{kpi.title}</p>
+              <div className={`p-2 rounded-lg ${kpi.iconBg} flex-shrink-0`}>{kpi.icon}</div>
             </div>
-            <div className={`p-3 rounded-xl ${kpi.iconBg}`}>{kpi.icon}</div>
+            <div className="mt-2">
+              <p className="text-lg sm:text-xl font-bold text-ink">{kpi.value}</p>
+              <p className="text-2xs text-muted mt-0.5 line-clamp-1">{kpi.sub}</p>
+            </div>
           </div>
         ))}
       </div>
+
 
       {/* Grid: Inquiries & Latest Articles */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

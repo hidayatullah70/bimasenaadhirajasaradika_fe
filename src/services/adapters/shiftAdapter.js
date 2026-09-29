@@ -42,8 +42,9 @@ export const shiftAdapter = {
   async createShift(payload) {
     if (isMock) {
       const store = getStore();
-      const newId = `SH-${payload.code?.toUpperCase() || (store.length + 1).toString()}`;
-      const newShift = { ...payload, id: newId };
+      const baseCode = (payload.code || `CUSTOM-${store.length + 1}`).toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+      const newId = `SH-${baseCode}`;
+      const newShift = { ...payload, id: newId, code: baseCode };
       const updatedStore = [...store, newShift];
       saveStore(updatedStore);
 
@@ -65,10 +66,11 @@ export const shiftAdapter = {
   async updateShift(id, payload) {
     if (isMock) {
       const store = getStore();
-      const idx = store.findIndex((s) => s.id === id);
+      const idx = store.findIndex((s) => s.id === id || s.code === id);
       if (idx === -1) return { data: null, error: { message: 'Shift tidak ditemukan.' } };
 
-      const updated = { ...store[idx], ...payload };
+      const oldShift = store[idx];
+      const updated = { ...oldShift, ...payload, id: oldShift.id };
       store[idx] = updated;
       saveStore(store);
 
@@ -84,6 +86,31 @@ export const shiftAdapter = {
     }
 
     const { data } = await apiClient.patch(`/shifts/${id}`, payload);
+    return data;
+  },
+
+  async deleteShift(id) {
+    if (isMock) {
+      const store = getStore();
+      const idx = store.findIndex((s) => s.id === id || s.code === id);
+      if (idx === -1) return { data: null, error: { message: 'Shift tidak ditemukan.' } };
+
+      const removed = store[idx];
+      const updatedStore = store.filter((s) => s.id !== id && s.code !== id);
+      saveStore(updatedStore);
+
+      await emitAudit({
+        action: 'SHIFT_DELETE',
+        module: 'Master',
+        entity: 'Shift',
+        entityId: id,
+        details: { name: removed.name },
+      });
+
+      return { data: { success: true }, error: null };
+    }
+
+    const { data } = await apiClient.delete(`/shifts/${id}`);
     return data;
   },
 };
