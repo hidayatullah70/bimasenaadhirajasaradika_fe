@@ -3,13 +3,26 @@
  * Source of Truth: PRD Section 11.1 (Mandatory Employee Master fields).
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { X, Save, Camera, Upload, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { MOCK_CLIENTS, MOCK_LOCATIONS } from '@/services/mock/mockMasterData';
 import { SERVICE_TYPES, PTKP_OPTIONS } from '@/constants/business';
 import { resizeImageTo3x4 } from '@/utils/imageResize';
 import toast from 'react-hot-toast';
+
+const DEFAULT_JABATAN_OPTIONS = [
+  'Staff',
+  'Danru (Komandan Regu)',
+  'Koordinator Lapangan',
+  'Supervisor',
+  'Chief Security',
+  'Team Leader',
+  'Admin Operasional',
+  'Operator Forklift / Logistik',
+  'Driver / Pengemudi',
+  'Petugas Kebersihan',
+];
 
 export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, clients = [], locations = [] }) {
   const allClients = clients && clients.length > 0 ? clients : MOCK_CLIENTS;
@@ -48,6 +61,26 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, c
   const [errors, setErrors] = useState({});
   const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
 
+  // Dynamic custom job roles / jabatan state
+  const [customJabatanList, setCustomJabatanList] = useState(() => {
+    try {
+      const stored = localStorage.getItem('barak_custom_jabatans');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [isInputtingNewJabatan, setIsInputtingNewJabatan] = useState(false);
+  const [newJabatanInput, setNewJabatanInput] = useState('');
+
+  const allJabatanOptions = useMemo(() => {
+    const combined = [...DEFAULT_JABATAN_OPTIONS, ...customJabatanList];
+    if (employee?.jabatan && !combined.includes(employee.jabatan)) {
+      combined.push(employee.jabatan);
+    }
+    return Array.from(new Set(combined.filter(Boolean)));
+  }, [customJabatanList, employee]);
+
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const videoRef = useRef(null);
@@ -55,6 +88,8 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, c
   const formRef = useRef(null);
 
   useEffect(() => {
+    setIsInputtingNewJabatan(false);
+    setNewJabatanInput('');
     if (employee) {
       setFormData({
         nama_lengkap_sesuai_KTP: employee.nama_lengkap_sesuai_KTP || '',
@@ -231,6 +266,9 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, c
     if (!formData.tanggal_masuk) {
       errs.tanggal_masuk = 'Tanggal bergabung wajib diisi.';
     }
+    if (isInputtingNewJabatan && !formData.jabatan?.trim()) {
+      errs.jabatan = 'Nama jabatan/role baru wajib diisi.';
+    }
     setErrors(errs);
     return errs;
   };
@@ -245,11 +283,23 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, c
       return;
     }
 
+    const finalJabatan = (formData.jabatan || 'Staff').trim();
+    if (finalJabatan && !allJabatanOptions.includes(finalJabatan)) {
+      const updatedCustom = Array.from(new Set([...customJabatanList, finalJabatan]));
+      setCustomJabatanList(updatedCustom);
+      try {
+        localStorage.setItem('barak_custom_jabatans', JSON.stringify(updatedCustom));
+      } catch {
+        // ignore
+      }
+    }
+
     const clientObj = allClients.find((c) => c.id === formData.penugasan_klien || c.code === formData.penugasan_klien);
     const locObj = allLocations.find((l) => l.id === formData.lokasi_penugasan || l.code === formData.lokasi_penugasan);
 
     const payload = {
       ...formData,
+      jabatan: finalJabatan,
       clientName: clientObj ? clientObj.name : '',
       locationName: locObj ? locObj.name : '',
       kontak_darurat: {
@@ -501,17 +551,75 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, c
                 </select>
               </div>
               <div>
-                <label className="block font-medium text-ink mb-1">Jabatan / Role</label>
-                <select
-                  value={formData.jabatan}
-                  onChange={(e) => setFormData({ ...formData, jabatan: e.target.value })}
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
-                >
-                  <option value="Staff">Staff</option>
-                  <option value="Danru">Danru (Komandan Regu)</option>
-                  <option value="Koordinator Lapangan">Koordinator Lapangan</option>
-                  <option value="Supervisor">Supervisor</option>
-                </select>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block font-medium text-ink">Jabatan / Role *</label>
+                  {isInputtingNewJabatan ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsInputtingNewJabatan(false);
+                        setFormData((prev) => ({ ...prev, jabatan: allJabatanOptions[0] || 'Staff' }));
+                      }}
+                      className="text-[11px] text-primary-red hover:underline font-semibold"
+                    >
+                      ← Pilih List
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsInputtingNewJabatan(true);
+                        setNewJabatanInput('');
+                        setFormData((prev) => ({ ...prev, jabatan: '' }));
+                      }}
+                      className="text-[11px] text-primary-red hover:underline font-semibold"
+                    >
+                      + Ketik Baru
+                    </button>
+                  )}
+                </div>
+
+                {isInputtingNewJabatan ? (
+                  <div>
+                    <input
+                      type="text"
+                      autoFocus
+                      value={newJabatanInput}
+                      onChange={(e) => {
+                        setNewJabatanInput(e.target.value);
+                        setFormData((prev) => ({ ...prev, jabatan: e.target.value }));
+                      }}
+                      placeholder="Ketik jabatan baru..."
+                      className={`w-full px-3 py-2 border rounded-lg bg-white text-ink focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red ${
+                        errors.jabatan ? 'border-error ring-1 ring-error/30' : 'border-primary-red/60'
+                      }`}
+                    />
+                    {errors.jabatan && (
+                      <p className="text-error text-[10px] mt-1">{errors.jabatan}</p>
+                    )}
+                  </div>
+                ) : (
+                  <select
+                    value={formData.jabatan}
+                    onChange={(e) => {
+                      if (e.target.value === '__NEW__') {
+                        setIsInputtingNewJabatan(true);
+                        setNewJabatanInput('');
+                        setFormData((prev) => ({ ...prev, jabatan: '' }));
+                      } else {
+                        setFormData((prev) => ({ ...prev, jabatan: e.target.value }));
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red"
+                  >
+                    {allJabatanOptions.map((j) => (
+                      <option key={j} value={j}>{j}</option>
+                    ))}
+                    <option value="__NEW__" className="text-primary-red font-semibold">
+                      + Tambah Jabatan Baru (Ketik Manual)...
+                    </option>
+                  </select>
+                )}
               </div>
               <div>
                 <label className="block font-medium text-ink mb-1">Status Ikatan Kerja</label>

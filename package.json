@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "PT. Bhimasena Adhirajasa Radhika — Integrated Outsourcing Management System",
+  "description": "PT. Bimasena Adhirajasa Radhika — Integrated Outsourcing Management System",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

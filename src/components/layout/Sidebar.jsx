@@ -153,7 +153,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
         <div className="flex items-center gap-2.5 min-w-0">
           <img
             src="/assets/img/logo/logoAja.png"
-            alt="PT. Bhimasena Adhirajasa Radhika"
+            alt="PT. Bimasena Adhirajasa Radhika"
             className="h-8 w-8 object-contain flex-none"
           />
           {!collapsed && (

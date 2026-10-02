@@ -1,6 +1,6 @@
 # RENCANA ARSITEKTUR FRONTEND — PT. BARAK IOMS
 **Repositori Target:** `bimasenaadhirajasaradika_fe`  
-**Aplikasi:** PT. Bhimasena Adhirajasa Radhika — Integrated Outsourcing Management System (IOMS)  
+**Aplikasi:** PT. Bimasena Adhirajasa Radhika — Integrated Outsourcing Management System (IOMS)  
 **Versi Dokumen:** 1.0 (Arsitektur Dasar untuk Tahapan Step 2–6)  
 **Tanggal Pembuatan:** 2026-09-29  
 

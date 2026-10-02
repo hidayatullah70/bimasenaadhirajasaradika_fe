@@ -1,6 +1,6 @@
 # PRD — PT. BARAK Integrated Outsourcing Management System (IOMS)
 
-**Project:** PT. Bhimasena Adhirajasa Radhika (PT. BARAK)  
+**Project:** PT. Bimasena Adhirajasa Radhika (PT. BARAK)  
 **System:** Integrated Outsourcing Management System (IOMS)  
 **Version:** 1.1 — SOT Baseline (Refined)  
 **Language:** Bahasa Indonesia  

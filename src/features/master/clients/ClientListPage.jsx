@@ -9,7 +9,6 @@ import { Building2, Search, Plus, MapPin, Phone, Mail, Users, FileText, ChevronL
 import clientAdapter from '@/services/adapters/clientAdapter';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ROLES } from '@/constants/roles';
-import { PERMISSIONS } from '@/constants/permissions';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { StateLoading, StateEmpty } from '@/components/ui/StateViews';
@@ -17,14 +16,10 @@ import ClientFormModal from './ClientFormModal';
 import toast from 'react-hot-toast';
 
 export default function ClientListPage() {
-  const { hasPermission, hasRole } = useAuth();
-  const canEdit =
-    hasRole([ROLES.DIREKTUR, ROLES.MARKETING, ROLES.HRD]) ||
-    hasPermission(PERMISSIONS.CLIENT_EDIT);
-  const canCreate =
-    (hasRole([ROLES.DIREKTUR, ROLES.MARKETING, ROLES.HRD]) &&
-      hasPermission(PERMISSIONS.CLIENT_CREATE)) ||
-    hasPermission(PERMISSIONS.CLIENT_CREATE);
+  const { hasRole } = useAuth();
+  // Hak akses pengelolaan klien khusus kepada HRD, Marketing, dan Direktur saja
+  const canEdit = hasRole([ROLES.DIREKTUR, ROLES.MARKETING, ROLES.HRD]);
+  const canCreate = hasRole([ROLES.DIREKTUR, ROLES.MARKETING, ROLES.HRD]);
 
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);

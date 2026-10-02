@@ -172,8 +172,8 @@ export default function EmployeeDetailDrawer({ employee, isOpen, onClose, onEdit
                 <p className="font-medium text-ink mt-0.5">{employee.jenis_layanan} ({employee.departemen})</p>
               </div>
               <div className="p-3 rounded-lg bg-canvas border border-border">
-                <p className="text-muted">Atasan Langsung</p>
-                <p className="font-medium text-ink mt-0.5">{employee.atasan || '-'}</p>
+                <p className="text-muted">Posisi Kerja</p>
+                <p className="font-semibold text-ink mt-0.5">{employee.jabatan || 'Staff'}</p>
               </div>
               <div className="p-3 rounded-lg bg-canvas border border-border">
                 <p className="text-muted">Tanggal Bergabung</p>

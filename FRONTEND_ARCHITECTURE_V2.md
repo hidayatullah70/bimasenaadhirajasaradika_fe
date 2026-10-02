@@ -1,6 +1,6 @@
 # SPESIFIKASI ARSITEKTUR FRONTEND V2 — PT. BARAK IOMS
 **Repositori Target:** `bimasenaadhirajasaradika_fe`  
-**Aplikasi:** PT. Bhimasena Adhirajasa Radhika — Integrated Outsourcing Management System (IOMS)  
+**Aplikasi:** PT. Bimasena Adhirajasa Radhika — Integrated Outsourcing Management System (IOMS)  
 **Fase Refaktorisasi:** STEP 2 (Refaktorisasi Arsitektur Frontend)  
 **Status:** DIIMPLEMENTASIKAN & DIVERIFIKASI  
 

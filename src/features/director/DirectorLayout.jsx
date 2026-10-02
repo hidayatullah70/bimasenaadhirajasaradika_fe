@@ -90,7 +90,7 @@ export default function DirectorLayout() {
               </h1>
             </div>
             <p className="text-xs sm:text-sm text-muted mt-1">
-              PT. Bhimasena Adhirajasa Radhika — Monitoring Lintas Divisi, Approval Center & Manajemen Risiko Terpadu
+              PT. Bimasena Adhirajasa Radhika — Monitoring Lintas Divisi, Approval Center & Manajemen Risiko Terpadu
             </p>
           </div>
           <div className="flex items-center gap-2">

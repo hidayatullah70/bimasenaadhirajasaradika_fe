@@ -548,7 +548,7 @@ async function runStep5QA() {
   });
 
   await testAsync('Adapters handle query filters and pagination gracefully without backend', async () => {
-    const clientsResult = await clientAdapter.getClients({ search: 'Bhimasena', limit: 5 });
+    const clientsResult = await clientAdapter.getClients({ search: 'Bimasena', limit: 5 });
     const list = clientsResult.data || clientsResult;
     assert.ok(Array.isArray(list), 'getClients must return array even with search filters');
   });

@@ -207,7 +207,7 @@ export default function InvoiceFormModal({ isOpen, onClose, clients, onSubmit })
               name="notes"
               value={formData.notes}
               onChange={handleChange}
-              placeholder="Rekening BCA PT Bhimasena Adhirajasa Radhika..."
+              placeholder="Rekening BCA PT Bimasena Adhirajasa Radhika..."
               className="w-full text-sm border border-border rounded-lg px-3 py-2 bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary-red/20"
             />
           </div>

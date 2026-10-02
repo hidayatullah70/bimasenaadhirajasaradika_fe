@@ -32,7 +32,7 @@ export default function DashboardShell({ kpis = [], widgets, actions, descriptio
     <div>
       <PageHeader
         title={`${greeting}, ${currentUser?.name?.split(' ')[0] ?? ''}!`}
-        description={description || `Dashboard ${roleLabel} — PT. Bhimasena Adhirajasa Radhika`}
+        description={description || `Dashboard ${roleLabel} — PT. Bimasena Adhirajasa Radhika`}
         actions={actions}
       />
 

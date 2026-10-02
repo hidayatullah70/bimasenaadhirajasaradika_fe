@@ -17,7 +17,7 @@ export const MOCK_ARTICLES = [
     categoryLabel: 'Keamanan & Sekuriti',
     excerpt: 'Bagaimana PT. BARAK menerapkan protokol kepatuhan Polri dan manajemen risiko modern untuk melindungi fasilitas industri dan kawasan komersial.',
     content: `
-Penerapan standar operasional prosedur (SOP) pengamanan yang ketat merupakan fondasi utama reputasi PT. Bhimasena Adhirajasa Radhika (PT. BARAK) sebagai Badan Usaha Jasa Pengamanan (BUJP) resmi terdaftar di Mabes Polri.
+Penerapan standar operasional prosedur (SOP) pengamanan yang ketat merupakan fondasi utama reputasi PT. Bimasena Adhirajasa Radhika (PT. BARAK) sebagai Badan Usaha Jasa Pengamanan (BUJP) resmi terdaftar di Mabes Polri.
 
 Setiap personel satpam yang ditempatkan pada lokasi mitra wajib mengantongi kualifikasi legalitas Gada Pratama dan menjalani pelatihan berkala terkait:
 1. Tindakan Pertama di Tempat Kejadian Perkara (TPTKP).
@@ -278,7 +278,7 @@ export const MOCK_FAQS = [
     category: 'LEGALITAS',
     categoryLabel: 'Perizinan & Legalitas BUJP',
     question: 'Apakah PT. BARAK memiliki legalitas resmi sebagai Badan Usaha Jasa Pengamanan (BUJP)?',
-    answer: 'Ya, PT. Bhimasena Adhirajasa Radhika (PT. BARAK) beroperasi secara sah berdasarkan Surat Izin Operasional (SIO BUJP) resmi dari Markas Besar Kepolisian Negara Republik Indonesia (Mabes Polri) dan rekomendasi wilayah Ditbinmas Polda Metro Jaya, serta tersertifikasi SMK3 PP 50/2012 dan ISO 9001:2015.',
+    answer: 'Ya, PT. Bimasena Adhirajasa Radhika (PT. BARAK) beroperasi secara sah berdasarkan Surat Izin Operasional (SIO BUJP) resmi dari Markas Besar Kepolisian Negara Republik Indonesia (Mabes Polri) dan rekomendasi wilayah Ditbinmas Polda Metro Jaya, serta tersertifikasi SMK3 PP 50/2012 dan ISO 9001:2015.',
     order: 1,
     status: 'PUBLISHED',
   },
@@ -353,7 +353,7 @@ export const MOCK_PAGE_SEO = [
     pageKey: 'home',
     pageName: 'Beranda / Home',
     slug: '/',
-    metaTitle: 'PT. Bhimasena Adhirajasa Radhika (BARAK) — Jasa Pengamanan & Outsourcing Terpercaya',
+    metaTitle: 'PT. Bimasena Adhirajasa Radhika (BARAK) — Jasa Pengamanan & Outsourcing Terpercaya',
     metaDescription: 'Penyedia jasa keamanan resmi BUJP Mabes Polri, kurir ekspedisi logistik, pengelolaan parkir barrier gate, dan tenaga kerja profesional di Indonesia.',
     ogTitle: 'PT. BARAK — Integrated Outsourcing Management System',
     ogDescription: 'Solusi terintegrasi tenaga pengamanan, kurir, dan manajemen fasilitas terpercaya.',
@@ -366,7 +366,7 @@ export const MOCK_PAGE_SEO = [
     pageName: 'Tentang Perusahaan',
     slug: '/about',
     metaTitle: 'Tentang Kami — Profil Perusahaan PT. BARAK BUJP',
-    metaDescription: 'Mengenal visi, misi, legalitas SIO Mabes Polri, dan jajaran kepemimpinan PT. Bhimasena Adhirajasa Radhika.',
+    metaDescription: 'Mengenal visi, misi, legalitas SIO Mabes Polri, dan jajaran kepemimpinan PT. Bimasena Adhirajasa Radhika.',
     ogTitle: 'Profil PT. BARAK — Mitra Keamanan & Outsourcing',
     ogDescription: 'Profil resmi badan usaha jasa pengamanan dan ketenagakerjaan terpadu.',
     ogImage: '/images/og/og-about.jpg',

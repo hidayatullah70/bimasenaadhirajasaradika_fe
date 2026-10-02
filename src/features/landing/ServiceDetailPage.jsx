@@ -172,7 +172,7 @@ export default function ServiceDetailPage() {
             </h1>
             <div className="w-16 h-1 bg-primary-red rounded-full mb-3" />
             <p className="text-white/70 text-sm sm:text-base max-w-3xl leading-relaxed">
-              Solusi tenaga kerja dan pengelolaan fasilitas terintegrasi dari PT. Bhimasena Adhirajasa Radhika untuk mendukung efisiensi bisnis Anda.
+              Solusi tenaga kerja dan pengelolaan fasilitas terintegrasi dari PT. Bimasena Adhirajasa Radhika untuk mendukung efisiensi bisnis Anda.
             </p>
           </div>
         </section>

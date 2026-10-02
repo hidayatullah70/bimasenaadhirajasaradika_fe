@@ -29,8 +29,7 @@ export default function AssignmentListPage() {
     hasRole([ROLES.DIREKTUR, ROLES.OPERASIONAL, ROLES.HRD]) ||
     hasPermission(PERMISSIONS.ASSIGNMENT_EDIT);
   const canCreate =
-    (hasRole([ROLES.DIREKTUR, ROLES.OPERASIONAL, ROLES.HRD]) &&
-      hasPermission(PERMISSIONS.ASSIGNMENT_CREATE)) ||
+    hasRole([ROLES.DIREKTUR, ROLES.OPERASIONAL, ROLES.HRD]) ||
     hasPermission(PERMISSIONS.ASSIGNMENT_CREATE);
 
   const [assignments, setAssignments] = useState([]);

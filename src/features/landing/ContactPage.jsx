@@ -36,7 +36,7 @@ export default function ContactPage() {
   const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
-    document.title = 'Hubungi Kami - PT. Bhimasena Adhirajasa Radhika';
+    document.title = 'Hubungi Kami - PT. Bimasena Adhirajasa Radhika';
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
@@ -297,7 +297,7 @@ export default function ContactPage() {
               {/* Header Title */}
               <div>
                 <h2 className="text-xl font-extrabold text-slate-900 mb-1.5">
-                  PT. Bhimasena Adhirajasa Radhika
+                  PT. Bimasena Adhirajasa Radhika
                 </h2>
               </div>
 

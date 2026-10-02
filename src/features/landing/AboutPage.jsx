@@ -142,7 +142,7 @@ export default function AboutPage() {
             </h1>
             <div className="w-16 h-1 bg-primary-red rounded-full mb-3" />
             <p className="text-white/70 text-sm sm:text-base max-w-3xl leading-relaxed">
-              Mengenal lebih dekat PT. Bhimasena Adhirajasa Radhika (BARAK) — dedikasi terpercaya dalam solusi pengelolaan alih daya & pengembangan SDM profesional.
+              Mengenal lebih dekat PT. Bimasena Adhirajasa Radhika (BARAK) — dedikasi terpercaya dalam solusi pengelolaan alih daya & pengembangan SDM profesional.
             </p>
           </div>
         </section>
@@ -469,7 +469,7 @@ export default function AboutPage() {
                         </div>
                       </div>
                       <p className="text-sm text-slate-500">
-                        Pimpinan eksekutif strategis PT. Bhimasena Adhirajasa Radhika.
+                        Pimpinan eksekutif strategis PT. Bimasena Adhirajasa Radhika.
                       </p>
                     </div>
 
@@ -489,7 +489,7 @@ export default function AboutPage() {
                             <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-2 mb-1">
                               Juli Priyanto
                             </h3>
-                            <p className="text-xs text-slate-500 mb-3">PT. Bhimasena Adhirajasa Radhika</p>
+                            <p className="text-xs text-slate-500 mb-3">PT. Bimasena Adhirajasa Radhika</p>
                             <p className="text-slate-600 text-sm leading-relaxed mb-4">
                               Memiliki pengalaman lebih dari 15 tahun di industri jasa keamanan dan manajemen. Sebelum mendirikan BARAK, beliau menjabat sebagai Operations Director di perusahaan security multinasional. Spesialisasi dalam risk management dan strategic planning.
                             </p>
@@ -535,7 +535,7 @@ export default function AboutPage() {
                             <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-2 mb-1">
                               Hendri Nopamin
                             </h3>
-                            <p className="text-xs text-slate-500 mb-3">PT. Bhimasena Adhirajasa Radhika</p>
+                            <p className="text-xs text-slate-500 mb-3">PT. Bimasena Adhirajasa Radhika</p>
                             <p className="text-slate-600 text-sm leading-relaxed mb-4">
                               Profesional berpengalaman dalam manajemen operasional dan implementasi sistem keamanan terintegrasi. Memiliki rekam jejak dalam meningkatkan kualitas layanan, mengembangkan sumber daya manusia, serta memastikan efisiensi operasional perusahaan.
                             </p>
@@ -579,7 +579,7 @@ export default function AboutPage() {
                             <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-2 mb-1">
                               Zaenal Arifin
                             </h3>
-                            <p className="text-xs text-slate-500 mb-3">PT. Bhimasena Adhirajasa Radhika</p>
+                            <p className="text-xs text-slate-500 mb-3">PT. Bimasena Adhirajasa Radhika</p>
                             <p className="text-slate-600 text-sm leading-relaxed mb-4">
                               Bertanggung jawab atas pengelolaan Human Capital secara strategis, termasuk pengembangan organisasi, manajemen talenta, serta peningkatan kinerja karyawan. Berpengalaman dalam membangun budaya kerja yang produktif dan sistem HR yang efektif.
                             </p>
@@ -910,7 +910,7 @@ export default function AboutPage() {
             <div className="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-900/90 text-white">
               <div className="flex items-center gap-2">
                 <Play className="w-4 h-4 text-primary-red fill-primary-red" />
-                <h4 className="text-sm font-bold">Video Profil PT. Bhimasena Adhirajasa Radhika</h4>
+                <h4 className="text-sm font-bold">Video Profil PT. Bimasena Adhirajasa Radhika</h4>
               </div>
               <button
                 type="button"

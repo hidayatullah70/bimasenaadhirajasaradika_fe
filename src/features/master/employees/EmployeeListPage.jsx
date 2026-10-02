@@ -27,7 +27,7 @@ import toast from 'react-hot-toast';
 export default function EmployeeListPage() {
   const { hasPermission, hasRole } = useAuth();
   const canEdit = hasRole([ROLES.DIREKTUR, ROLES.HRD]) || hasPermission(PERMISSIONS.EMPLOYEE_EDIT);
-  const canCreate = (hasRole([ROLES.DIREKTUR, ROLES.HRD]) && hasPermission(PERMISSIONS.EMPLOYEE_CREATE)) || hasPermission(PERMISSIONS.EMPLOYEE_CREATE);
+  const canCreate = hasRole([ROLES.DIREKTUR, ROLES.HRD]) || hasPermission(PERMISSIONS.EMPLOYEE_CREATE);
   const canExport = hasPermission(PERMISSIONS.EMPLOYEE_EXPORT);
   const canViewSensitive = hasPermission(PERMISSIONS.EMPLOYEE_VIEW_SENSITIVE);
 
@@ -55,21 +55,22 @@ export default function EmployeeListPage() {
   const [clients, setClients] = useState([]);
   const [locations, setLocations] = useState([]);
 
-  useEffect(() => {
-    async function loadFormOptions() {
-      try {
-        const [cRes, lRes] = await Promise.all([
-          clientAdapter.getClients({ pageSize: 100 }),
-          locationAdapter.getLocations({ pageSize: 100 }),
-        ]);
-        if (cRes.data) setClients(cRes.data);
-        if (lRes.data) setLocations(lRes.data);
-      } catch (err) {
-        console.warn('Failed to load dynamic form options in EmployeeListPage:', err);
-      }
+  const loadFormOptions = useCallback(async () => {
+    try {
+      const [cRes, lRes] = await Promise.all([
+        clientAdapter.getClients({ pageSize: 100 }),
+        locationAdapter.getLocations({ pageSize: 100 }),
+      ]);
+      if (cRes.data) setClients(cRes.data);
+      if (lRes.data) setLocations(lRes.data);
+    } catch (err) {
+      console.warn('Failed to load dynamic form options in EmployeeListPage:', err);
     }
-    loadFormOptions();
   }, []);
+
+  useEffect(() => {
+    loadFormOptions();
+  }, [loadFormOptions]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -104,11 +105,13 @@ export default function EmployeeListPage() {
 
   const handleOpenCreate = () => {
     setEditingEmployee(null);
+    loadFormOptions();
     setIsModalOpen(true);
   };
 
   const handleOpenEdit = (emp) => {
     setEditingEmployee(emp);
+    loadFormOptions();
     setIsModalOpen(true);
   };
 

@@ -139,11 +139,11 @@ export default function PublicNavbar() {
         <Link
           to="/"
           className="flex items-center flex-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-red rounded-lg py-1"
-          aria-label="PT. Bhimasena Adhirajasa Radhika — Beranda"
+          aria-label="PT. Bimasena Adhirajasa Radhika — Beranda"
         >
           <img
             src="/assets/img/logo/logoNavbar.png"
-            alt="PT. Bhimasena Adhirajasa Radhika"
+            alt="PT. Bimasena Adhirajasa Radhika"
             className="h-8 sm:h-9 md:h-10 lg:h-9 xl:h-11 w-auto max-w-[150px] sm:max-w-[180px] md:max-w-[210px] lg:max-w-[170px] xl:max-w-[240px] object-contain transition-all"
           />
         </Link>

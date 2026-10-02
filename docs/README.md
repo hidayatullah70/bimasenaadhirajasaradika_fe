@@ -17,9 +17,11 @@ Jika Anda adalah pengembang backend yang akan mengimplementasikan REST API (Expr
    Roadmap 20 tahap implementasi backend dari migrasi tabel database hingga pelaporan eksekutif, serta panduan konfigurasi CORS, JWT, dan integrasi dengan frontend.
 4. **[docs/USER-FLOW.md](file:///c:/laragon/www/bimasenaadhirajasaradika/frontend/docs/USER-FLOW.md):**
    Alur bisnis multi-divisi yang harus didukung oleh transaksi database: Delete Request personil, Kunci & Pembukaan Presensi, Marketing WON Cascade lintas 4 divisi, Rekonsiliasi kas titipan COD, dan alur Penggajian Maker-Checker.
-5. **[docs/UI-GUIDELINE.md](file:///c:/laragon/www/bimasenaadhirajasaradika/frontend/docs/UI-GUIDELINE.md):**
+5. **[docs/DEPARTMENT-INPUT-REPORTING-MATRIX.md](file:///c:/laragon/www/bimasenaadhirajasaradika/frontend/docs/DEPARTMENT-INPUT-REPORTING-MATRIX.md):**
+   Matriks pemetaan formulir/menu input awal di setiap bagian, tampilan output operasional di menu bagian tersebut, serta aliran agregasi laporannya ke Cockpit & Approval Center Direktur.
+6. **[docs/UI-GUIDELINE.md](file:///c:/laragon/www/bimasenaadhirajasaradika/frontend/docs/UI-GUIDELINE.md):**
    Standar desain visual antarmuka, 12 pustaka komponen UI, token warna resmi, serta tata cara penanganan kendala runtime melalui Route Error Boundary.
-6. **[AGENTS.md](file:///c:/laragon/www/bimasenaadhirajasaradika/frontend/AGENTS.md):**
+7. **[AGENTS.md](file:///c:/laragon/www/bimasenaadhirajasaradika/frontend/AGENTS.md):**
    Aturan rekayasa non-negosiasi, batasan landing page yang terbekukan (*frozen*), tata kelola kode, dan protokol verifikasi pengujian.
 
 ---

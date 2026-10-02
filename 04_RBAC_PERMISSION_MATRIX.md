@@ -106,6 +106,7 @@ audit.log.view               - Mengakses rekam jejak audit sistem permanen
 | **Karyawan: Create & Edit** | **YA** | **YA** | - | - | - | - | - | - |
 | **Karyawan: Delete Request** | **YA** | **YA** | - | - | - | - | - | - |
 | **Karyawan: Soft Delete Approve**| **YA** | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir |
+| **Klien Mitra: Create & Edit** | **YA** | **YA** | ❌ Blokir | ❌ Blokir | ❌ Blokir | **YA** | ❌ Blokir | ❌ Blokir |
 | **Absensi: Record & Edit** | **YA** | **YA** | **YA** | - | - | - | - | - |
 | **Absensi: Finalize Bulanan** | **YA** | **YA** | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir |
 | **Absensi: Reopen Lembar Terkunci**| **YA** | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir |

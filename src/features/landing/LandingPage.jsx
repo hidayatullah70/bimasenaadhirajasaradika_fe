@@ -85,7 +85,7 @@ export default function LandingPage() {
         <div className="relative z-10 w-full px-4 sm:px-6 lg:px-8 py-20 pb-32">
           <div className="max-w-2xl">
             <span className="inline-block px-3 py-1 rounded-full bg-primary-yellow/20 text-primary-yellow text-xs font-semibold uppercase tracking-wide mb-6">
-              Mitra Outsourcing Terpercaya
+              Mitra Alih Daya Terpercaya
             </span>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight">
               Solusi Outsourcing{' '}
@@ -93,7 +93,7 @@ export default function LandingPage() {
               <span className="text-primary-yellow">Bisnis Anda</span>
             </h1>
             <p className="mt-6 text-lg text-white/75 leading-relaxed max-w-xl">
-              PT. Bhimasena Adhirajasa Radhika hadir sebagai mitra strategis dari perspektif dan pengalaman tenaga kerja outsourcing yang profesional, kompeten dan berintegritas.
+              PT. Bimasena Adhirajasa Radhika hadir sebagai mitra strategis dari perspektif dan pengalaman tenaga kerja outsourcing yang profesional, kompeten dan berintegritas.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <Link

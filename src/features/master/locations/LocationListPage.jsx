@@ -24,8 +24,7 @@ export default function LocationListPage() {
     hasRole([ROLES.DIREKTUR, ROLES.OPERASIONAL, ROLES.HRD]) ||
     hasPermission(PERMISSIONS.LOCATION_EDIT);
   const canCreate =
-    (hasRole([ROLES.DIREKTUR, ROLES.OPERASIONAL, ROLES.HRD]) &&
-      hasPermission(PERMISSIONS.LOCATION_CREATE)) ||
+    hasRole([ROLES.DIREKTUR, ROLES.OPERASIONAL, ROLES.HRD]) ||
     hasPermission(PERMISSIONS.LOCATION_CREATE);
 
   const [locations, setLocations] = useState([]);

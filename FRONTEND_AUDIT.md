@@ -1,6 +1,6 @@
 # LAPORAN AUDIT FRONTEND — PT. BARAK IOMS
 **Repositori Target:** `bimasenaadhirajasaradika_fe`  
-**Aplikasi:** PT. Bhimasena Adhirajasa Radhika — Integrated Outsourcing Management System (IOMS)  
+**Aplikasi:** PT. Bimasena Adhirajasa Radhika — Integrated Outsourcing Management System (IOMS)  
 **Tanggal Audit:** 2026-09-29  
 **Status Audit:** STEP 1 SELESAI (Hanya-Baca / Tanpa Modifikasi Kode)  
 
