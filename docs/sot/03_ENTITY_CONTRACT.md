@@ -71,8 +71,9 @@
    - `npwp`: `VARCHAR(30)`
    - `bpjs_kesehatan`: `VARCHAR(30)`
    - `bpjs_ketenagakerjaan`: `VARCHAR(30)`
-   - `bank_name`: `VARCHAR(40)` (DEFAULT: `'Bank Mandiri'`)
-   - `bank_account_number`: `VARCHAR(30)`
+   - `bank_name`: `VARCHAR(40)` (DEFAULT: `'BCA'`, Bank Penggajian Tunggal Resmi)
+   - `bank_account_number`: `VARCHAR(30)` (Nomor Rekening BCA)
+   - `bank_account_holder`: `VARCHAR(120)` (Rekening atas nama)
    - `emergency_name`: `VARCHAR(100)`
    - `emergency_relation`: `VARCHAR(30)`
    - `emergency_phone`: `VARCHAR(25)`

@@ -12,12 +12,14 @@ Bangun dan pelihara PT. BARAK IOMS (*Integrated Outsourcing Management System*) 
 
 ## 2. Sumber Kebenaran Tunggal (Source of Truth / SOT)
 - **Sumber Fungsional Primer:** `docs/PRD.md` (Spesifikasi produk, 28 entitas database, RBAC, dan status enum).
-- **Spesifikasi REST & Endpoint:** `docs/API-SPEC.md` & `02_API_CONTRACT.md`.
-- **Alur Bisnis Lintas Divisi:** `docs/USER-FLOW.md` & `05_WORKFLOW_CONTRACT.md`.
-- **Standar Desain & Komponen UI:** `docs/UI-GUIDELINE.md` & `DASHBOARD_UX_V2.md`.
-- **Roadmap Pengembangan Backend:** `docs/IMPLEMENTATION-PLAN.md` & `07_BACKEND_IMPLEMENTATION_ORDER.md`.
-- **Panduan Integrasi Backend:** `08_FRONTEND_BACKEND_INTEGRATION_GUIDE.md`.
-- **Laporan Handoff Eksekutif:** `FINAL_FRONTEND_HANDOFF.md`.
+- **Arsitektur Final Terpadu:** `docs/sot/01_FRONTEND_FINAL_ARCHITECTURE.md`.
+- **Spesifikasi REST & Endpoint:** `docs/API-SPEC.md` & `docs/sot/02_API_CONTRACT.md`.
+- **Alur Bisnis Lintas Divisi:** `docs/USER-FLOW.md` & `docs/sot/05_WORKFLOW_CONTRACT.md`.
+- **Standar Desain & Komponen UI:** `docs/UI-GUIDELINE.md` & `docs/sot/DASHBOARD_UX_V2.md`.
+- **Roadmap Pengembangan Backend:** `docs/IMPLEMENTATION-PLAN.md` & `docs/sot/07_BACKEND_IMPLEMENTATION_ORDER.md`.
+- **Panduan Integrasi Backend:** `docs/sot/08_FRONTEND_BACKEND_INTEGRATION_GUIDE.md`.
+- **Matriks Input Bagian & Laporan:** `docs/DEPARTMENT-INPUT-REPORTING-MATRIX.md`.
+- **Laporan Handoff Eksekutif:** `docs/sot/FINAL_FRONTEND_HANDOFF.md`.
 
 *Jika terjadi ketidaksesuaian antara kode dan dokumen SOT di atas, stop dan konsultasikan sebelum mengubah perilaku bisnis sistem.*
 

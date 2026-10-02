@@ -228,20 +228,24 @@ export default function EmployeeDetailDrawer({ employee, isOpen, onClose, onEdit
             </div>
           </div>
 
-          {/* Section 3: Data Keuangan & BPJS */}
+          {/* Section 3: Data Rekening BCA & Perpajakan */}
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-muted mb-3 flex items-center gap-1.5">
               <CreditCard className="h-4 w-4 text-primary-red" />
-              Rekening Penggajian & Jaminan Sosial
+              Rekening BCA & Perpajakan
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               <div className="p-3 rounded-lg bg-canvas border border-border">
                 <p className="text-muted">Bank Rekening</p>
-                <p className="font-medium text-ink mt-0.5">{employee.nama_bank}</p>
+                <p className="font-semibold text-primary-red mt-0.5">BCA</p>
               </div>
               <div className="p-3 rounded-lg bg-canvas border border-border">
                 <p className="text-muted">Nomor Rekening</p>
                 <p className="font-mono font-semibold text-ink mt-0.5">{mask(employee.nomor_rekening_bank)}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-canvas border border-border">
+                <p className="text-muted">Rekening atas nama</p>
+                <p className="font-semibold text-ink mt-0.5">{employee.rekening_atas_nama || employee.nama_pemilik_rekening || employee.nama_lengkap_sesuai_KTP || '-'}</p>
               </div>
               <div className="p-3 rounded-lg bg-canvas border border-border">
                 <p className="text-muted">NPWP</p>

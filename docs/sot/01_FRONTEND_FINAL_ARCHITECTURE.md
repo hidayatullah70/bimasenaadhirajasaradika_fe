@@ -1,14 +1,16 @@
 # 01_FRONTEND_FINAL_ARCHITECTURE.md — PT. BARAK IOMS
-**Versi:** 2.0 (Final Backend-Ready Contract)  
-**Tanggal:** 29 September 2026  
+**Versi:** 3.0 (Authoritative Consolidated Architecture)  
+**Tanggal:** 2 Oktober 2026  
+**Perusahaan:** PT. Bimasena Adhirajasa Radhika (PT. BARAK)  
+**Sistem:** Integrated Outsourcing Management System (IOMS)  
 **Status:** COMPLETE & AUTHORITATIVE  
-**Ruang Lingkup:** Arsitektur Berlapis Frontend & Kesiapan Integrasi Backend
+**Ruang Lingkup:** Arsitektur Berlapis Frontend, Model Domain, Pola Adapter & Kesiapan Integrasi Backend
 
 ---
 
 ## 1. Prinsip Desain & Batasan Lapisan (Architectural Layering)
 
-Aplikasi frontend PT. BARAK IOMS telah distrukturkan secara tegas dengan **Pemisahan Tanggung Jawab (*Separation of Concerns*)** multi-lapis. Komponen Presentasi UI **dilarang keras** berinteraksi langsung dengan `localStorage`, memanipulasi *mock arrays* mentah, atau menyematkan logika bisnis hardcoded.
+Aplikasi frontend PT. BARAK IOMS distrukturkan secara tegas dengan prinsip **Pemisahan Tanggung Jawab (*Separation of Concerns*)** multi-lapis. Komponen Presentasi UI **dilarang keras** berinteraksi langsung dengan `localStorage`, memanipulasi *mock arrays* mentah, atau menyematkan logika bisnis hardcoded.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -37,14 +39,79 @@ Aplikasi frontend PT. BARAK IOMS telah distrukturkan secara tegas dengan **Pemis
 └──────────────────────────────┬──────────────────────────────┘
                                │ HTTP REST Requests
 ┌──────────────────────────────▼──────────────────────────────┐
-│               BACKEND REST API (FUTURE EXPRESS)             │
-│                 Base URL: /api/v1/* (MySQL DB)              │
+│               BACKEND REST API (EXPRESS / MYSQL)            │
+│                 Base URL: /api/v1/* (MySQL 8.0)             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. Struktur Direktori Final (Final Directory Structure)
+## 2. Model Domain Utama & Pemisahan Keterikatan (Decoupling)
+
+Domain bisnis aplikasi mencerminkan tata kelola perusahaan alih daya tenaga kerja terpadu di Indonesia dengan 3 domain data utama, 6 lini layanan outsourcing kanonikal, serta rantai relasi data yang terpisah secara tegas:
+
+```mermaid
+erDiagram
+    CLIENT ||--o{ CONTRACT : menandatangani
+    CONTRACT ||--o{ SITE_LOCATION : mencakup
+    SITE_LOCATION ||--o{ SITE_SERVICE : menawarkan
+    SITE_SERVICE ||--o{ PLACEMENT : membutuhkan
+    EMPLOYEE ||--o{ PLACEMENT : memenuhi
+    PLACEMENT ||--o{ ATTENDANCE_RECORD : mencatat
+    PLACEMENT ||--o{ REPLACEMENT_REQUEST : menghasilkan
+
+    EMPLOYEE {
+        string id PK
+        string nik UK
+        string employeeType "INTERNAL | OUTSOURCING"
+        string fullName
+        string phone
+        string email
+        string status "ACTIVE | INACTIVE | PROBATION | RESIGNED"
+        string nama_bank "BCA"
+        string nomor_rekening_bank
+        string rekening_atas_nama
+        string npwp
+        string status_pajak "TK0..K3"
+        string bpjs_kesehatan
+        string bpjs_ketenagakerjaan
+        boolean isDeleted
+    }
+
+    PLACEMENT {
+        string id PK
+        string placementCode UK
+        string employeeId FK
+        string clientId FK
+        string siteLocationId FK
+        string serviceType "SECURITY | COURIER_EXPEDITION | CLEANING_SERVICE | PARKING | MAN_POWER | LOSS_PREVENTION"
+        string roleInUnit "Danru | Staff | Korlap | Supervisor"
+        string shiftId FK
+        date startDate
+        date endDate
+        string status "ACTIVE | ROTATED | COMPLETED | TERMINATED"
+        string assignedBy
+        boolean isCurrent
+    }
+
+    CLIENT {
+        string id PK
+        string clientCode UK
+        string name
+        string industry
+        string status "LEAD | ACTIVE | TERMINATED"
+        boolean isDeleted
+    }
+```
+
+### Aturan Workforce Mobility (Non-Negotiable)
+1. Entitas `employees` **tidak terikat langsung secara permanen** ke tabel `clients`.
+2. Hubungan Karyawan $\leftrightarrow$ Klien **wajib** dijembatani oleh `placements` dengan histori status (`ACTIVE`, `ROTATED`, `ENDED`).
+3. Seluruh riwayat perpindahan posko / rotasi personel tersimpan utuh di tabel histori penempatan.
+
+---
+
+## 3. Struktur Direktori Final (Directory Structure)
 
 ```text
 src/
@@ -108,7 +175,7 @@ src/
 │   ├── legal/                       # PKS Korporat, sengketa perkara, SIO BUJP Polri
 │   ├── marketing/                   # Manajemen leads, pipeline tender, deal handover
 │   ├── master/                      # Master karyawan, klien, lokasi, shift, user
-│   ├── notifications/               # Pusat notifikasi internal
+│   ├── notifications/               # Pusat notifikasi internal dengan RBAC detail
 │   ├── operations/                  # Formasi posko, insiden lapangan, rotasi personel
 │   ├── profile/                     # Pengaturan profil pengguna
 │   ├── search/                      # Pencarian global multi-entitas
@@ -146,12 +213,13 @@ src/
 └── utils/
     ├── auditLogger.js               # Generator & emitter rekaman audit
     ├── demoDataReset.js             # Reset pabrik demo dengan proteksi klien riil
+    ├── imageResize.js               # Utilitas crop & auto-resize pas foto 3x4
     └── storage.js                   # Wrapper localStorage dengan event reactive
 ```
 
 ---
 
-## 3. Sakelar Dual-Mode API (Mock Mode vs REST Mode)
+## 4. Sakelar Dual-Mode API (Mock Mode vs REST Mode)
 
 Sistem dikonfigurasikan agar dapat beralih dari lingkungan simulasi lokal (*Mock Local Storage*) ke backend server resmi (*Node.js Express / MySQL*) **hanya dengan mengubah variabel lingkungan**:
 
@@ -182,9 +250,10 @@ Dengan arsitektur ini, tim backend dapat mengimplementasikan endpoint satu per s
 
 ---
 
-## 4. Pola Akses Data (Repository Pattern)
+## 5. Pola Akses Data (Repository Pattern)
 
 Repository bertindak sebagai jembatan antara kebutuhan bisnis komponen dan sumber data aktual:
 1. **Deduplikasi Otomatis:** Menjamin tidak ada rekaman dengan ID primer ganda.
 2. **Soft-Delete Enforcement:** Data yang dihapus tidak langsung hilang secara fisik, melainkan ditandai `isDeleted: true` dan dikecualikan dari query aktif secara transparan.
 3. **Reactive Event Dispatching:** Setiap mutasi data memicu event `barak_storage_mutation` untuk menyinkronkan komponen secara instan.
+4. **Data Healing & Fallback:** Menjamin konsistensi data riil mitra klien dan struktur akun pengguna saat runtime.

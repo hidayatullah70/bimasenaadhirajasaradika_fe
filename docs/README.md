@@ -30,19 +30,20 @@ Jika Anda adalah pengembang backend yang akan mengimplementasikan REST API (Expr
 
 Seluruh dokumen di dalam `docs/` telah **menggabungkan dan menyinkronkan** intisari berkas kontrak refaktorisasi:
 
-| Dokumen Master di `docs/` | Berkas Kontrak Asal yang Diserap & Disinkronkan |
+| Dokumen Master di `docs/` | Berkas Kontrak di `docs/sot/` yang Diserap & Disinkronkan |
 |---|---|
-| **`docs/PRD.md`** | `03_ENTITY_CONTRACT.md` (28 entitas DDL & mobilitas personil)<br>`04_RBAC_PERMISSION_MATRIX.md` (Izin & Maker-Checker)<br>`06_STATUS_ENUMS.md` (Kamus status enum terpusat) |
-| **`docs/API-SPEC.md`** | `02_API_CONTRACT.md` (Format amplop JSON, REST endpoints, upload berkas) |
-| **`docs/IMPLEMENTATION-PLAN.md`** | `07_BACKEND_IMPLEMENTATION_ORDER.md` (Urutan 20 tahap backend)<br>`08_FRONTEND_BACKEND_INTEGRATION_GUIDE.md` (CORS, JWT interceptor, deployment) |
-| **`docs/USER-FLOW.md`** | `05_WORKFLOW_CONTRACT.md` (Alur Hapus Karyawan, Presensi, Marketing WON, COD, Payroll) |
-| **`docs/UI-GUIDELINE.md`** | `DASHBOARD_UX_V2.md` (Pustaka 12 komponen UI terstandarisasi, Route Error Boundary) |
-| **`AGENTS.md`** | `01_FRONTEND_FINAL_ARCHITECTURE.md` & `FINAL_FRONTEND_HANDOFF.md` |
+| **`docs/PRD.md`** | `docs/sot/03_ENTITY_CONTRACT.md` (28 entitas DDL & mobilitas personil)<br>`docs/sot/04_RBAC_PERMISSION_MATRIX.md` (Izin & Maker-Checker)<br>`docs/sot/06_STATUS_ENUMS.md` (Kamus status enum terpusat) |
+| **`docs/API-SPEC.md`** | `docs/sot/02_API_CONTRACT.md` (Format amplop JSON, REST endpoints, upload berkas) |
+| **`docs/IMPLEMENTATION-PLAN.md`** | `docs/sot/07_BACKEND_IMPLEMENTATION_ORDER.md` (Urutan 20 tahap backend)<br>`docs/sot/08_FRONTEND_BACKEND_INTEGRATION_GUIDE.md` (CORS, JWT interceptor, deployment) |
+| **`docs/USER-FLOW.md`** | `docs/sot/05_WORKFLOW_CONTRACT.md` (Alur Hapus Karyawan, Presensi, Marketing WON, COD, Payroll) |
+| **`docs/UI-GUIDELINE.md`** | `docs/sot/DASHBOARD_UX_V2.md` (Pustaka 12 komponen UI terstandarisasi, Route Error Boundary) |
+| **`AGENTS.md`** | `docs/sot/01_FRONTEND_FINAL_ARCHITECTURE.md` & `docs/sot/FINAL_FRONTEND_HANDOFF.md` |
 
 ---
 
-## 3. Berkas Referensi Khusus & Riwayat Audit
-- **[FINAL_FRONTEND_HANDOFF.md](file:///c:/laragon/www/bimasenaadhirajasaradika/frontend/FINAL_FRONTEND_HANDOFF.md):** Laporan eksekutif penyerahan hasil frontend lengkap (14 bagian).
-- **[FRONTEND_QA_REPORT.md](file:///c:/laragon/www/bimasenaadhirajasaradika/frontend/FRONTEND_QA_REPORT.md):** Laporan jaminan kualitas menyeluruh (166 tes otomatis lolos).
-- **[CRUD_PERSISTENCE_V2.md](file:///c:/laragon/www/bimasenaadhirajasaradika/frontend/CRUD_PERSISTENCE_V2.md):** Dokumentasi engine penyimpanan mandiri dan seeding 18 klien resmi.
-- **[FRONTEND_AUDIT.md](file:///c:/laragon/www/bimasenaadhirajasaradika/frontend/FRONTEND_AUDIT.md):** Hasil audit komparasi awal dengan baseline Vercel.
+## 3. Berkas Referensi Khusus & Riwayat Audit di `docs/sot/`
+- **[docs/sot/01_FRONTEND_FINAL_ARCHITECTURE.md](file:///c:/laragon/www/bimasenaadhirajasaradika/frontend/docs/sot/01_FRONTEND_FINAL_ARCHITECTURE.md):** Arsitektur konsolidasi frontend final, model domain, dan dual-mode switch.
+- **[docs/sot/FINAL_FRONTEND_HANDOFF.md](file:///c:/laragon/www/bimasenaadhirajasaradika/frontend/docs/sot/FINAL_FRONTEND_HANDOFF.md):** Laporan eksekutif penyerahan hasil frontend lengkap (14 bagian).
+- **[docs/sot/FRONTEND_QA_REPORT.md](file:///c:/laragon/www/bimasenaadhirajasaradika/frontend/docs/sot/FRONTEND_QA_REPORT.md):** Laporan jaminan kualitas menyeluruh (166 tes otomatis lolos).
+- **[docs/sot/CRUD_PERSISTENCE_V2.md](file:///c:/laragon/www/bimasenaadhirajasaradika/frontend/docs/sot/CRUD_PERSISTENCE_V2.md):** Dokumentasi engine penyimpanan mandiri dan seeding 18 klien resmi.
+- **[docs/sot/FRONTEND_AUDIT.md](file:///c:/laragon/www/bimasenaadhirajasaradika/frontend/docs/sot/FRONTEND_AUDIT.md):** Hasil audit komparasi awal dengan baseline Vercel.

@@ -46,8 +46,9 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, c
     penugasan_klien: allClients[0]?.id || '',
     lokasi_penugasan: allLocations[0]?.id || '',
     sertifikasi: 'Gada Pratama',
-    nama_bank: 'Bank Mandiri',
+    nama_bank: 'BCA',
     nomor_rekening_bank: '',
+    rekening_atas_nama: '',
     NPWP: '',
     status_pajak: 'TK0',
     BPJS_kesehatan: '',
@@ -109,8 +110,9 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, c
         penugasan_klien: employee.penugasan_klien || MOCK_CLIENTS[0]?.id || '',
         lokasi_penugasan: employee.lokasi_penugasan || MOCK_LOCATIONS[0]?.id || '',
         sertifikasi: employee.sertifikasi || 'Gada Pratama',
-        nama_bank: employee.nama_bank || 'Bank Mandiri',
+        nama_bank: 'BCA',
         nomor_rekening_bank: employee.nomor_rekening_bank || '',
+        rekening_atas_nama: employee.rekening_atas_nama || employee.nama_pemilik_rekening || employee.nama_lengkap_sesuai_KTP || '',
         NPWP: employee.NPWP || '',
         status_pajak: employee.status_pajak || employee.ptkp || 'TK0',
         BPJS_kesehatan: employee.BPJS_kesehatan || '',
@@ -139,8 +141,9 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, c
         penugasan_klien: MOCK_CLIENTS[0]?.id || '',
         lokasi_penugasan: MOCK_LOCATIONS[0]?.id || '',
         sertifikasi: 'Gada Pratama',
-        nama_bank: 'Bank Mandiri',
+        nama_bank: 'BCA',
         nomor_rekening_bank: '',
+        rekening_atas_nama: '',
         NPWP: '',
         status_pajak: 'TK0',
         BPJS_kesehatan: '',
@@ -675,23 +678,10 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, c
             </div>
           </div>
 
-          {/* Baris 5: Data Rekening Bank, NPWP, Status Pajak (PTKP), & BPJS */}
+          {/* Baris 5: Data Rekening BCA, NPWP, Status Pajak (PTKP), & BPJS */}
           <div className="border-t border-border pt-3">
-            <h4 className="font-bold text-ink mb-2">Rekening & Perpajakan</h4>
+            <h4 className="font-bold text-ink mb-2">Rekening BCA & Perpajakan</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              <div>
-                <label className="block font-medium text-ink mb-1">Bank Penggajian</label>
-                <select
-                  value={formData.nama_bank}
-                  onChange={(e) => setFormData({ ...formData, nama_bank: e.target.value })}
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
-                >
-                  <option value="Bank Mandiri">Bank Mandiri</option>
-                  <option value="BCA">BCA</option>
-                  <option value="BRI">BRI</option>
-                  <option value="BNI">BNI</option>
-                </select>
-              </div>
               <div>
                 <label className="block font-medium text-ink mb-1">Nomor Rekening</label>
                 <input
@@ -703,7 +693,17 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, c
                 />
               </div>
               <div>
-                <label className="block font-medium text-ink mb-1">NPWP (Nomor Pokok Wajib Pajak)</label>
+                <label className="block font-medium text-ink mb-1">Rekening atas nama</label>
+                <input
+                  type="text"
+                  value={formData.rekening_atas_nama}
+                  onChange={(e) => setFormData({ ...formData, rekening_atas_nama: e.target.value })}
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
+                  placeholder="Nama pemilik rekening BCA..."
+                />
+              </div>
+              <div>
+                <label className="block font-medium text-ink mb-1">NPWP</label>
                 <input
                   type="text"
                   value={formData.NPWP}
