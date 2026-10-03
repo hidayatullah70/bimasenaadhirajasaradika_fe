@@ -55,6 +55,17 @@ export const SERVICE_TYPES = Object.freeze([
 ]);
 
 /**
+ * Helper to get user-friendly service label from key or slug
+ */
+export function getServiceLabel(key) {
+  if (!key) return '-';
+  const found = SERVICE_TYPES.find(
+    (s) => s.key === key || s.slug === key || s.label?.toLowerCase() === key?.toLowerCase()
+  );
+  return found ? found.label : key;
+}
+
+/**
  * 6 Canonical Outsourcing Service Types (Requirement 8)
  */
 export const OUTSOURCING_SERVICES = Object.freeze({

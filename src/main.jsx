@@ -4,6 +4,10 @@ import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from '@/app/providers/AuthProvider'
 import AppRouter from '@/app/router/index'
 import '@/index.css'
+import { applicantAdapter } from '@/services/adapters/applicantAdapter'
+
+// Initialize listener for landing page job applications
+applicantAdapter.initLandingApplicationListener();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

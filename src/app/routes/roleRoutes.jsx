@@ -24,6 +24,7 @@ const HRDDashboard = lazy(() => import('@/features/hrd/HRDDashboard'));
 const AttendanceSpreadsheetPage = lazy(() => import('@/features/hrd/attendance/AttendanceSpreadsheetPage'));
 const AttendancePayrollSummaryPage = lazy(() => import('@/features/hrd/attendance/AttendancePayrollSummaryPage'));
 const ContractMonitoringPage = lazy(() => import('@/features/hrd/contracts/ContractMonitoringPage'));
+const ApplicantListPage = lazy(() => import('@/features/hrd/applicants/ApplicantListPage'));
 
 // Legal Module
 const LegalLayout = lazy(() => import('@/features/legal/LegalLayout'));
@@ -39,6 +40,7 @@ const ManpowerMonitoringPage = lazy(() => import('@/features/operations/manpower
 const IncidentListPage = lazy(() => import('@/features/operations/incidents/IncidentListPage'));
 const ReplacementListPage = lazy(() => import('@/features/operations/replacement/ReplacementListPage'));
 const FieldReportListPage = lazy(() => import('@/features/operations/fieldReports/FieldReportListPage'));
+const PicActivityReportPage = lazy(() => import('@/features/operations/activityReports/PicActivityReportPage'));
 
 // Finance Module
 const FinanceLayout = lazy(() => import('@/features/finance/FinanceLayout'));
@@ -120,6 +122,7 @@ export const roleRoutes = [
       { path: 'attendance', element: <Suspense fallback={<PageLoader />}><AttendanceSpreadsheetPage /></Suspense> },
       { path: 'payroll-summary', element: <Suspense fallback={<PageLoader />}><AttendancePayrollSummaryPage /></Suspense> },
       { path: 'contracts', element: <Suspense fallback={<PageLoader />}><ContractMonitoringPage /></Suspense> },
+      { path: 'applicants', element: <Suspense fallback={<PageLoader />}><ApplicantListPage /></Suspense> },
     ],
   },
 
@@ -157,6 +160,7 @@ export const roleRoutes = [
       { path: 'incidents', element: <Suspense fallback={<PageLoader />}><IncidentListPage /></Suspense> },
       { path: 'replacement', element: <Suspense fallback={<PageLoader />}><ReplacementListPage /></Suspense> },
       { path: 'field-reports', element: <Suspense fallback={<PageLoader />}><FieldReportListPage /></Suspense> },
+      { path: 'activity-reports', element: <Suspense fallback={<PageLoader />}><PicActivityReportPage /></Suspense> },
     ],
   },
 

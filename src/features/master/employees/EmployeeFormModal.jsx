@@ -7,7 +7,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { X, Save, Camera, Upload, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { MOCK_CLIENTS, MOCK_LOCATIONS } from '@/services/mock/mockMasterData';
-import { SERVICE_TYPES, PTKP_OPTIONS } from '@/constants/business';
+import { SERVICE_TYPES, PTKP_OPTIONS, getServiceLabel } from '@/constants/business';
 import { resizeImageTo3x4 } from '@/utils/imageResize';
 import toast from 'react-hot-toast';
 
@@ -39,7 +39,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, c
     nomor_telepon: '',
     email: '',
     status_kerja: 'TETAP',
-    jenis_pekerjaan: 'Security',
+    jenis_pekerjaan: 'Jasa Pengamanan / Security',
     jabatan: 'Staff',
     departemen: 'Operasional',
     jenis_layanan: 'security',
@@ -103,10 +103,10 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, c
         nomor_telepon: employee.nomor_telepon || '',
         email: employee.email || '',
         status_kerja: employee.status_kerja || 'TETAP',
-        jenis_pekerjaan: employee.jenis_pekerjaan || 'Security',
+        jenis_layanan: employee.jenis_layanan || 'security',
+        jenis_pekerjaan: employee.jenis_pekerjaan || getServiceLabel(employee.jenis_layanan || 'security'),
         jabatan: employee.jabatan || 'Staff',
         departemen: employee.departemen || 'Operasional',
-        jenis_layanan: employee.jenis_layanan || 'security',
         penugasan_klien: employee.penugasan_klien || MOCK_CLIENTS[0]?.id || '',
         lokasi_penugasan: employee.lokasi_penugasan || MOCK_LOCATIONS[0]?.id || '',
         sertifikasi: employee.sertifikasi || 'Gada Pratama',
@@ -134,10 +134,10 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, c
         nomor_telepon: '',
         email: '',
         status_kerja: 'TETAP',
-        jenis_pekerjaan: 'Security',
+        jenis_layanan: 'security',
+        jenis_pekerjaan: 'Jasa Pengamanan / Security',
         jabatan: 'Staff',
         departemen: 'Operasional',
-        jenis_layanan: 'security',
         penugasan_klien: MOCK_CLIENTS[0]?.id || '',
         lokasi_penugasan: MOCK_LOCATIONS[0]?.id || '',
         sertifikasi: 'Gada Pratama',
@@ -300,8 +300,13 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, c
     const clientObj = allClients.find((c) => c.id === formData.penugasan_klien || c.code === formData.penugasan_klien);
     const locObj = allLocations.find((l) => l.id === formData.lokasi_penugasan || l.code === formData.lokasi_penugasan);
 
+    const sObj = SERVICE_TYPES.find((s) => s.key === formData.jenis_layanan);
+    const serviceLabel = sObj ? sObj.label : (formData.jenis_pekerjaan || formData.jenis_layanan);
+
     const payload = {
       ...formData,
+      jenis_layanan: formData.jenis_layanan,
+      jenis_pekerjaan: serviceLabel,
       jabatan: finalJabatan,
       clientName: clientObj ? clientObj.name : '',
       locationName: locObj ? locObj.name : '',
@@ -545,7 +550,16 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, c
                 <label className="block font-medium text-ink mb-1">Layanan Outsourcing</label>
                 <select
                   value={formData.jenis_layanan}
-                  onChange={(e) => setFormData({ ...formData, jenis_layanan: e.target.value })}
+                  onChange={(e) => {
+                    const selectedKey = e.target.value;
+                    const sObj = SERVICE_TYPES.find((s) => s.key === selectedKey);
+                    const serviceLabel = sObj ? sObj.label : selectedKey;
+                    setFormData((prev) => ({
+                      ...prev,
+                      jenis_layanan: selectedKey,
+                      jenis_pekerjaan: serviceLabel,
+                    }));
+                  }}
                   className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
                 >
                   {SERVICE_TYPES.map((s) => (
@@ -634,6 +648,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, c
                   <option value="TETAP">TETAP (PKWTT)</option>
                   <option value="KONTRAK">KONTRAK (PKWT)</option>
                   <option value="PROBATION">PROBATION (Percobaan)</option>
+                  <option value="KEMITRAAN">KEMITRAAN</option>
                 </select>
               </div>
               <div>

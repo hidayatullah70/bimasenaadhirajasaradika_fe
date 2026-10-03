@@ -164,7 +164,7 @@ export default function LoginPage() {
                   className="flex flex-col items-start px-3 py-2 bg-white border border-border rounded-lg text-left hover:border-primary-red/30 hover:bg-primary-red/5 transition-all text-xs disabled:opacity-50"
                 >
                   <span className="font-semibold text-ink">{u.name}</span>
-                  <span className="text-muted">{ROLE_LABELS[u.role]}</span>
+                  <span className="text-muted text-[11px]">{u.roleLabel || ROLE_LABELS[u.role]}</span>
                 </button>
               ))}
             </div>

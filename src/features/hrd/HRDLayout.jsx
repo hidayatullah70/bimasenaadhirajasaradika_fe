@@ -5,10 +5,11 @@
  * Source of Truth: PRD Section 11 / IMPLEMENTATION-PLAN Phase 3.
  */
 
-import React from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import clsx from 'clsx';
-import { LayoutDashboard, FileSpreadsheet, Calculator, FileCheck2 } from 'lucide-react';
+import { LayoutDashboard, FileSpreadsheet, Calculator, FileCheck2, UserPlus, ShieldAlert } from 'lucide-react';
+import { useAuth } from '@/app/providers/AuthProvider';
 
 const TABS = [
   {
@@ -16,6 +17,12 @@ const TABS = [
     label: 'Overview & Metrik',
     icon: LayoutDashboard,
     end: true,
+  },
+  {
+    to: '/ops/hrd/applicants',
+    label: 'Data Pelamar Masuk',
+    icon: UserPlus,
+    end: false,
   },
   {
     to: '/ops/hrd/attendance',
@@ -38,27 +45,54 @@ const TABS = [
 ];
 
 export default function HRDLayout() {
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isAttendanceOnly = Boolean(currentUser?.isAttendanceOnly);
+
+  // Jika user bertugas khusus absensi, kunci navigasi hanya di /ops/hrd/attendance
+  useEffect(() => {
+    if (isAttendanceOnly && location.pathname !== '/ops/hrd/attendance') {
+      navigate('/ops/hrd/attendance', { replace: true });
+    }
+  }, [isAttendanceOnly, location.pathname, navigate]);
+
+  const visibleTabs = isAttendanceOnly
+    ? TABS.filter((tab) => tab.to === '/ops/hrd/attendance')
+    : TABS;
+
   return (
     <div className="space-y-6">
       {/* Top Header & Navigation Tabs */}
       <div className="border-b border-border bg-white rounded-xl shadow-xs p-4 sm:p-6 pb-0">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-ink">Divisi HRD & Personalia</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-ink">
+              {isAttendanceOnly ? `Input Absensi Lapangan — ${currentUser?.name}` : 'Divisi HRD & Personalia'}
+            </h1>
             <p className="text-xs sm:text-sm text-muted mt-1">
-              Pengelolaan roster absensi bulanan, verifikasi kehadiran personel, dan rekap input penggajian.
+              {isAttendanceOnly
+                ? `Penginputan jam datang dan jam pulang personel lapangan (${currentUser?.roleLabel || 'Admin HRD'}).`
+                : 'Pengelolaan roster absensi bulanan, verifikasi kehadiran personel, dan rekap input penggajian.'}
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-primary-red/10 text-primary-red border border-primary-red/20">
-              Attendance Roster Engine
-            </span>
+            {isAttendanceOnly ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary-red/10 text-primary-red border border-primary-red/20">
+                <ShieldAlert className="h-3.5 w-3.5" />
+                Akses Terbatas: Input Jam Hadir / Pulang
+              </span>
+            ) : (
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-primary-red/10 text-primary-red border border-primary-red/20">
+                Attendance Roster Engine
+              </span>
+            )}
           </div>
         </div>
 
         {/* Tabs */}
         <nav className="flex space-x-1 sm:space-x-2 overflow-x-auto scrollbar-none" aria-label="Tabs HRD">
-          {TABS.map((tab) => {
+          {visibleTabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <NavLink

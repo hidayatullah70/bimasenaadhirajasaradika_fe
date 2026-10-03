@@ -17,6 +17,7 @@ import {
   Building,
   Clock,
   Sparkles,
+  UserPlus,
 } from 'lucide-react';
 import DashboardShell from '@/components/layout/DashboardShell';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
@@ -203,6 +204,13 @@ export default function HRDDashboard() {
                     path: '/ops/master/employees',
                     icon: Users,
                     color: 'text-success',
+                  },
+                  {
+                    title: 'Data Pelamar Masuk',
+                    desc: 'Lamaran online website, seleksi & terima karyawan',
+                    path: '/ops/hrd/applicants',
+                    icon: UserPlus,
+                    color: 'text-purple-600',
                   },
                   {
                     title: 'Penempatan & Roster',

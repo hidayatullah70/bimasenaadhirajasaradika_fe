@@ -48,8 +48,9 @@ export const employeeAdapter = {
           (e) =>
             e.nama_lengkap_sesuai_KTP.toLowerCase().includes(q) ||
             e.id_karyawan.toLowerCase().includes(q) ||
-            e.NIK.includes(q) ||
-            e.jenis_pekerjaan.toLowerCase().includes(q) ||
+            (e.NIK && e.NIK.includes(q)) ||
+            (e.jenis_pekerjaan && e.jenis_pekerjaan.toLowerCase().includes(q)) ||
+            (e.jenis_layanan && e.jenis_layanan.toLowerCase().includes(q)) ||
             (e.clientName && e.clientName.toLowerCase().includes(q))
         );
       }

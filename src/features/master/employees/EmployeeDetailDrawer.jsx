@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { PERMISSIONS } from '@/constants/permissions';
+import { getServiceLabel } from '@/constants/business';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import placementRepository from '@/data/repositories/placementRepository';
@@ -77,7 +78,7 @@ export default function EmployeeDetailDrawer({ employee, isOpen, onClose, onEdit
                   {employee.status_kerja}
                 </Badge>
               </div>
-              <p className="text-xs text-muted font-mono">{employee.id_karyawan} • {employee.jenis_pekerjaan} ({employee.jabatan})</p>
+              <p className="text-xs text-muted font-mono">{employee.id_karyawan} • {getServiceLabel(employee.jenis_layanan) || employee.jenis_pekerjaan} ({employee.jabatan || 'Personel'})</p>
             </div>
           </div>
           <button
@@ -169,7 +170,7 @@ export default function EmployeeDetailDrawer({ employee, isOpen, onClose, onEdit
               </div>
               <div className="p-3 rounded-lg bg-canvas border border-border">
                 <p className="text-muted">Layanan / Divisi</p>
-                <p className="font-medium text-ink mt-0.5">{employee.jenis_layanan} ({employee.departemen})</p>
+                <p className="font-medium text-ink mt-0.5">{getServiceLabel(employee.jenis_layanan) || employee.jenis_layanan} ({employee.departemen || 'Operasional'})</p>
               </div>
               <div className="p-3 rounded-lg bg-canvas border border-border">
                 <p className="text-muted">Posisi Kerja</p>

@@ -15,7 +15,7 @@ import locationAdapter from '@/services/adapters/locationAdapter';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ROLES } from '@/constants/roles';
 import { PERMISSIONS } from '@/constants/permissions';
-import { SERVICE_TYPES } from '@/constants/business';
+import { SERVICE_TYPES, getServiceLabel } from '@/constants/business';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { StateLoading, StateEmpty } from '@/components/ui/StateViews';
@@ -145,7 +145,7 @@ export default function EmployeeListPage() {
       `"${e.nama_lengkap_sesuai_KTP}"`,
       showSensitive ? e.NIK : `"${e.NIK.slice(0, 4)}************"`,
       e.jenis_kelamin,
-      e.jenis_layanan,
+      `"${getServiceLabel(e.jenis_layanan) || e.jenis_pekerjaan || e.jenis_layanan || '-'}"`,
       e.jabatan,
       e.status_kerja,
       e.tanggal_masuk || '-',
@@ -204,6 +204,7 @@ export default function EmployeeListPage() {
             <option value="TETAP">Tetap (PKWTT)</option>
             <option value="KONTRAK">Kontrak (PKWT)</option>
             <option value="PROBATION">Probation</option>
+            <option value="KEMITRAAN">Kemitraan</option>
           </select>
 
           {/* Filter Departemen */}
@@ -331,7 +332,9 @@ export default function EmployeeListPage() {
 
                     {/* Layanan & Jabatan */}
                     <td className="px-4 py-3">
-                      <p className="font-medium text-ink capitalize">{emp.jenis_pekerjaan}</p>
+                      <p className="font-medium text-ink">
+                        {getServiceLabel(emp.jenis_layanan) || emp.jenis_pekerjaan}
+                      </p>
                       <p className="text-[11px] text-muted">{emp.jabatan} • {emp.sertifikasi || 'Standard'}</p>
                     </td>
 
@@ -343,7 +346,7 @@ export default function EmployeeListPage() {
 
                     {/* Status */}
                     <td className="px-4 py-3">
-                      <Badge variant={emp.status_kerja === 'TETAP' ? 'success' : emp.status_kerja === 'KONTRAK' ? 'info' : 'warning'}>
+                      <Badge variant={emp.status_kerja === 'TETAP' ? 'success' : emp.status_kerja === 'KONTRAK' ? 'info' : emp.status_kerja === 'KEMITRAAN' ? 'info' : 'warning'}>
                         {emp.status_kerja}
                       </Badge>
                     </td>

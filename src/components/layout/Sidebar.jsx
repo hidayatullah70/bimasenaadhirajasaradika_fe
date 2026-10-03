@@ -11,7 +11,7 @@ import clsx from 'clsx';
 import {
   LayoutDashboard, Users, Shield, Briefcase, DollarSign,
   TrendingUp, MonitorSmartphone, Globe, Database, X, ChevronLeft,
-  ChevronRight, Building2, LogOut,
+  ChevronRight, Building2, LogOut, FileSpreadsheet, ClipboardCheck,
 } from 'lucide-react';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ROLES, ROLE_LABELS } from '@/constants/roles';
@@ -97,11 +97,27 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
   const { currentUser, hasPermission, logout } = useAuth();
   const navigate = useNavigate();
 
-  const visibleItems = NAV_ITEMS.filter((item) => {
-    const roleAllowed = !item.roles || item.roles.includes(currentUser?.role);
-    const permAllowed = !item.permission || hasPermission(item.permission);
-    return roleAllowed && permAllowed;
-  });
+  const visibleItems = currentUser?.isAttendanceOnly
+    ? [
+        {
+          label: 'Attendance Spreadsheet',
+          to: '/ops/hrd/attendance',
+          icon: FileSpreadsheet,
+        },
+      ]
+    : currentUser?.isPicKorlap
+    ? [
+        {
+          label: 'Laporan Kegiatan PIC',
+          to: '/ops/operations/activity-reports',
+          icon: ClipboardCheck,
+        },
+      ]
+    : NAV_ITEMS.filter((item) => {
+        const roleAllowed = !item.roles || item.roles.includes(currentUser?.role);
+        const permAllowed = !item.permission || hasPermission(item.permission);
+        return roleAllowed && permAllowed;
+      });
 
   const handleLogout = async () => {
     await logout();

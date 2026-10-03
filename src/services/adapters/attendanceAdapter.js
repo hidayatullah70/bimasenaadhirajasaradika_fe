@@ -249,6 +249,87 @@ export const attendanceAdapter = {
   },
 
   /**
+   * Import attendance rows from Excel / Spreadsheet upload.
+   * Updates matching rows by employeeId / NIK / Nama and date with checkIn and checkOut.
+   */
+  async importAttendanceRows(sheetId, importedItems = []) {
+    if (isMock) {
+      const sheets = getSheetsStore();
+      const sheet = sheets.find((s) => s.id === sheetId);
+      if (!sheet || sheet.status === STATUS.FINALIZED) {
+        return { data: null, error: { message: 'Tidak dapat mengimpor data ke lembar absensi yang berstatus FINAL / terkunci.' } };
+      }
+
+      const allRows = getRowsStore();
+      const currentRows = allRows[sheetId] || [];
+      let updatedCount = 0;
+
+      const updatedRows = currentRows.map((r) => {
+        const match = importedItems.find((item) => {
+          const dateMatch = !item.attendanceDate || item.attendanceDate === r.attendanceDate;
+          const idMatch = item.employeeId && item.employeeId.toUpperCase() === r.employeeId.toUpperCase();
+          const nikMatch = item.employeeNik && String(item.employeeNik).trim() === String(r.employeeNik).trim();
+          const nameMatch = item.employeeName && String(item.employeeName).trim().toLowerCase() === String(r.employeeName).trim().toLowerCase();
+
+          return dateMatch && (idMatch || nikMatch || nameMatch);
+        });
+
+        if (match && (match.checkIn || match.checkOut)) {
+          updatedCount++;
+          const checkIn = match.checkIn || r.checkIn;
+          const checkOut = match.checkOut || r.checkOut;
+          const metrics = calculateAttendanceMetrics(
+            r.scheduledIn,
+            r.scheduledOut,
+            checkIn,
+            checkOut,
+            15
+          );
+
+          return {
+            ...r,
+            checkIn,
+            checkOut,
+            status: metrics.status,
+            totalMinutes: metrics.totalMinutes,
+            lateMinutes: metrics.lateMinutes,
+            earlyLeaveMinutes: metrics.earlyLeaveMinutes,
+            notes: match.notes || metrics.notes,
+            updatedAt: new Date().toISOString(),
+          };
+        }
+
+        return r;
+      });
+
+      allRows[sheetId] = updatedRows;
+      saveRowsStore(allRows);
+
+      emitAudit({
+        action: 'ATTENDANCE_IMPORT_EXCEL',
+        module: 'attendance',
+        targetId: sheetId,
+        details: `Imported ${updatedCount} attendance records from Excel file for ${sheet.sheetCode}.`,
+      });
+
+      return {
+        data: {
+          success: true,
+          updatedCount,
+          totalRows: currentRows.length,
+          sheet,
+        },
+        error: null,
+      };
+    }
+
+    const { data } = await apiClient.post(`/attendance/sheets/${sheetId}/import-excel`, {
+      rows: importedItems,
+    });
+    return data;
+  },
+
+  /**
    * Validate sheet for completeness before finalization
    */
   async validateSheet(sheetId) {

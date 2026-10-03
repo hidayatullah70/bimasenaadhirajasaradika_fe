@@ -10,10 +10,10 @@
  * - Finalize locks sheet into snapshot; Reopen requires privileged authorization.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   FileSpreadsheet, CheckCircle2, Lock, Unlock, Download,
-  RefreshCw, Zap, ShieldCheck, Clock, UserCheck
+  RefreshCw, Zap, ShieldCheck, Clock, UserCheck, Upload, MapPin
 } from 'lucide-react';
 import attendanceAdapter from '@/services/adapters/attendanceAdapter';
 import { MOCK_CLIENTS, MOCK_LOCATIONS } from '@/services/mock/mockMasterData';
@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { StateLoading, StateEmpty } from '@/components/ui/StateViews';
 import ReopenModal from './ReopenModal';
+import AttendanceImportModal from './AttendanceImportModal';
 import toast from 'react-hot-toast';
 
 export default function AttendanceSpreadsheetPage() {
@@ -32,11 +33,27 @@ export default function AttendanceSpreadsheetPage() {
   const canReopen = hasPermission(PERMISSIONS.ATTENDANCE_REOPEN) || currentUser?.role === 'DIREKTUR';
   const canExport = hasPermission(PERMISSIONS.ATTENDANCE_EXPORT);
 
+  // Scoping wilayah penugasan untuk Admin HRD (User 1, User 2, dst)
+  const assignedLocationIds = currentUser?.assignedLocationIds;
+  const isScopedUser = Boolean(assignedLocationIds && assignedLocationIds.length > 0);
+
+  const availableLocations = useMemo(() => {
+    return isScopedUser
+      ? MOCK_LOCATIONS.filter((l) => assignedLocationIds.includes(l.id))
+      : MOCK_LOCATIONS;
+  }, [isScopedUser, assignedLocationIds]);
+
+  const availableClients = useMemo(() => {
+    return isScopedUser
+      ? MOCK_CLIENTS.filter((c) => availableLocations.some((l) => l.clientId === c.id))
+      : MOCK_CLIENTS;
+  }, [isScopedUser, availableLocations]);
+
   // Selector state
   const [year, setYear] = useState('2026');
   const [month, setMonth] = useState('9');
-  const [clientId, setClientId] = useState(MOCK_CLIENTS[0]?.id || '');
-  const [locationId, setLocationId] = useState(MOCK_LOCATIONS[0]?.id || '');
+  const [clientId, setClientId] = useState(availableClients[0]?.id || MOCK_CLIENTS[0]?.id || '');
+  const [locationId, setLocationId] = useState(availableLocations[0]?.id || MOCK_LOCATIONS[0]?.id || '');
 
   // Active Sheet & Rows
   const [sheets, setSheets] = useState([]);
@@ -48,6 +65,17 @@ export default function AttendanceSpreadsheetPage() {
   // Validation report modal/alert state
   const [validationReport, setValidationReport] = useState(null);
   const [isReopenModalOpen, setIsReopenModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+
+  // Synchronize initial clientId & locationId with available ones for scoped user
+  useEffect(() => {
+    if (isScopedUser && availableLocations.length > 0) {
+      if (!assignedLocationIds.includes(locationId)) {
+        setLocationId(availableLocations[0].id);
+        setClientId(availableLocations[0].clientId);
+      }
+    }
+  }, [isScopedUser, assignedLocationIds, locationId, availableLocations]);
 
   // Load sheets matching current year and month
   const loadSheets = useCallback(async () => {
@@ -55,13 +83,16 @@ export default function AttendanceSpreadsheetPage() {
     try {
       const res = await attendanceAdapter.getSheets({ year, month });
       if (res.data) {
-        setSheets(res.data);
+        const scopedSheets = isScopedUser
+          ? res.data.filter((s) => assignedLocationIds.includes(s.locationId))
+          : res.data;
+        setSheets(scopedSheets);
         // Find matching sheet for client/location or pick first
-        const match = res.data.find((s) => s.clientId === clientId && s.locationId === locationId);
+        const match = scopedSheets.find((s) => s.clientId === clientId && s.locationId === locationId);
         if (match) {
           setSelectedSheetId(match.id);
-        } else if (res.data.length > 0) {
-          setSelectedSheetId(res.data[0].id);
+        } else if (scopedSheets.length > 0) {
+          setSelectedSheetId(scopedSheets[0].id);
         } else {
           setSelectedSheetId(null);
           setSheetData(null);
@@ -72,7 +103,7 @@ export default function AttendanceSpreadsheetPage() {
     } finally {
       setLoading(false);
     }
-  }, [year, month, clientId, locationId]);
+  }, [year, month, clientId, locationId, isScopedUser, assignedLocationIds]);
 
   // Load active sheet rows
   const loadSheetRows = useCallback(async (id) => {
@@ -302,12 +333,12 @@ export default function AttendanceSpreadsheetPage() {
               onChange={(e) => {
                 const newClientId = e.target.value;
                 setClientId(newClientId);
-                const matchingLoc = MOCK_LOCATIONS.find((l) => l.clientId === newClientId);
+                const matchingLoc = availableLocations.find((l) => l.clientId === newClientId);
                 if (matchingLoc) setLocationId(matchingLoc.id);
               }}
               className="px-3 py-1.5 text-xs border border-border rounded-lg bg-white text-ink max-w-[220px]"
             >
-              {MOCK_CLIENTS.map((c) => (
+              {availableClients.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
@@ -318,10 +349,18 @@ export default function AttendanceSpreadsheetPage() {
               onChange={(e) => setLocationId(e.target.value)}
               className="px-3 py-1.5 text-xs border border-border rounded-lg bg-white text-ink max-w-[220px]"
             >
-              {MOCK_LOCATIONS.filter((l) => !clientId || l.clientId === clientId).map((l) => (
+              {availableLocations.filter((l) => !clientId || l.clientId === clientId).map((l) => (
                 <option key={l.id} value={l.id}>{l.name}</option>
               ))}
             </select>
+
+            {/* Scoped Area Indicator */}
+            {isScopedUser && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-primary-red/10 text-primary-red border border-primary-red/20 flex-none">
+                <MapPin className="h-3.5 w-3.5" />
+                <span>Area Tugas: {currentUser.roleLabel || currentUser.name}</span>
+              </span>
+            )}
           </div>
 
           {/* Quick Roster Action */}
@@ -434,6 +473,19 @@ export default function AttendanceSpreadsheetPage() {
                 >
                   <Unlock className="h-3.5 w-3.5 text-warning" />
                   <span>Buka Kunci (Reopen)</span>
+                </Button>
+              )}
+
+              {!isFinalized && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsImportModalOpen(true)}
+                  className="gap-1.5 text-xs text-primary-red border-primary-red/40 hover:bg-primary-red/5 font-semibold"
+                  title="Import jam datang & pulang dari file Excel (.xlsx / .csv)"
+                >
+                  <Upload className="h-3.5 w-3.5 text-primary-red" />
+                  <span>Import Excel</span>
                 </Button>
               )}
 
@@ -620,6 +672,19 @@ export default function AttendanceSpreadsheetPage() {
         sheet={sheetData?.sheet}
         onClose={() => setIsReopenModalOpen(false)}
         onConfirm={handleReopenConfirm}
+      />
+
+      {/* Import Excel Modal */}
+      <AttendanceImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        sheetData={sheetData}
+        onImportSuccess={() => {
+          if (sheetData?.sheet?.id) {
+            loadSheetRows(sheetData.sheet.id);
+            loadSheets();
+          }
+        }}
       />
     </div>
   );

@@ -25,9 +25,19 @@ export default function AppShell() {
 
   // Redirect /ops index to the user's role default route
   useEffect(() => {
-    if (currentUser && window.location.pathname === '/ops') {
-      const route = ROLE_DEFAULT_ROUTE[currentUser.role] || '/ops/director';
-      navigate(route, { replace: true });
+    if (currentUser) {
+      const isOpsRoot = window.location.pathname === '/ops';
+      const isHrdRedirect = currentUser.isAttendanceOnly && window.location.pathname === '/ops/hrd';
+      const isOpsRedirect = currentUser.isPicKorlap && window.location.pathname === '/ops/operations';
+
+      if (isOpsRoot || isHrdRedirect || isOpsRedirect) {
+        const route = currentUser.isAttendanceOnly
+          ? '/ops/hrd/attendance'
+          : currentUser.isPicKorlap
+          ? '/ops/operations/activity-reports'
+          : (ROLE_DEFAULT_ROUTE[currentUser.role] || '/ops/director');
+        navigate(route, { replace: true });
+      }
     }
   }, [currentUser, navigate]);
 
