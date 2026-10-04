@@ -1,8 +1,8 @@
 # 04_RBAC_PERMISSION_MATRIX.md — PT. BARAK IOMS
-**Versi:** 2.0 (Authoritative Role-Based Access Control)  
-**Tanggal:** 29 September 2026  
+**Versi:** 2.1 (Authoritative Role-Based Access Control)  
+**Tanggal:** 4 Oktober 2026  
 **Status:** COMPLETE & AUTHORITATIVE  
-**Ruang Lingkup:** Matriks Izin Granular 8 Peran & Penegakan Maker-Checker
+**Ruang Lingkup:** Matriks Izin Granular Peran, Petugas Inputer, PIC Klien & Penegakan Maker-Checker
 
 ---
 
@@ -23,17 +23,19 @@ Berikut adalah daftar string identifier izin sistem yang digunakan di Frontend (
 employee.view                - Melihat daftar dan detail publik karyawan
 employee.view_sensitive      - Melihat NIK lengkap, gaji, info perbankan
 employee.create              - Mendaftarkan personil baru
+employee.import              - Mengimpor berkas Excel (.xlsx) karyawan massal dengan auto-placement
 employee.edit                - Memperbarui data personil
 employee.delete.request      - Mengajukan permohonan hapus/nonaktif personil ke Direktur
 employee.delete.approve      - Otorisasi final dan eksekusi soft delete personil (Direktur only)
 employee.export              - Mengunduh rekapitulasi data personil (.CSV / .Excel)
 
 // Attendance
-attendance.view              - Melihat spreadsheet absensi posko
+attendance.view              - Melihat spreadsheet absensi posko & daftar lembar kerja
+attendance.record            - Menginput kehadiran/jam kerja manual harian posko
 attendance.edit              - Melakukan koreksi jam kehadiran personil
 attendance.finalize          - Mengunci lembar absensi bulanan (HRD)
 attendance.reopen            - Membuka lembar absensi yang terkunci (Hak istimewa Direktur)
-attendance.export            - Ekspor lembar kehadiran posko
+attendance.export            - Ekspor lembar kehadiran posko dengan corporate header formal
 
 // Clients & Sites
 client.view                  - Melihat daftar klien mitra bisnis
@@ -44,7 +46,7 @@ location.create              - Mendaftarkan posko operasional baru
 location.edit                - Menyesuaikan kuota dan pos jaga
 
 // Operations & Placements
-placement.view               - Melihat plotting penugasan aktif
+placement.view               - Melihat plotting penugasan aktif (filter klien & lokasi)
 placement.create             - Plotting personil ke posko klien
 placement.transfer           - Melakukan rotasi personil antar posko
 incident.view                - Melihat register insiden keamanan posko
@@ -80,7 +82,9 @@ lead.create                  - Mendaftarkan prospek baru
 opportunity.view             - Melihat pipeline tender
 opportunity.win              - Menandai kesepakatan menang (memicu cascade lintas divisi)
 
-// IT Support
+// IT Support & User Management
+user.view                    - Melihat daftar akun pengguna & hak akses
+user.manage                  - Menambah, mengubah status, atau merestriksi akun pengguna
 it.ticket.view               - Melihat tiket helpdesk & status SLA
 it.ticket.resolve            - Menyelesaikan tiket gangguan teknis
 it.asset.view                - Memonitor perangkat IT posko
@@ -95,34 +99,37 @@ audit.log.view               - Mengakses rekam jejak audit sistem permanen
 
 ---
 
-## 3. Matriks Hak Akses 8 Peran Resmi (Role Permission Matrix)
+## 3. Matriks Hak Akses Peran Resmi (Role Permission Matrix)
 
-| Modul & Tindakan Kunci | DIREKTUR | HRD | OPERASIONAL | FINANCE | LEGAL | MARKETING | IT SUPPORT | ADMIN WEB |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Cockpit Eksekutif** | **YA** | - | - | - | - | - | - | - |
-| **Approval Center (Otorisasi)** | **YA** | - | - | - | - | - | - | - |
-| **Audit Log (Jejak Mutasi)** | **YA** | - | - | - | - | - | **YA** | - |
-| **Karyawan: Read** | **YA** | **YA** | **YA** | **YA** | **YA** | **YA** | **YA** | - |
-| **Karyawan: Create & Edit** | **YA** | **YA** | - | - | - | - | - | - |
-| **Karyawan: Delete Request** | **YA** | **YA** | - | - | - | - | - | - |
-| **Karyawan: Soft Delete Approve**| **YA** | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir |
-| **Klien Mitra: Create & Edit** | **YA** | **YA** | ❌ Blokir | ❌ Blokir | ❌ Blokir | **YA** | ❌ Blokir | ❌ Blokir |
-| **Absensi: Record & Edit** | **YA** | **YA** | **YA** | - | - | - | - | - |
-| **Absensi: Finalize Bulanan** | **YA** | **YA** | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir |
-| **Absensi: Reopen Lembar Terkunci**| **YA** | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir |
-| **Penugasan / Rotasi Posko** | **YA** | **YA** | **YA** | - | - | - | - | - |
-| **Insiden Posko & Patroli** | **YA** | - | **YA** | - | - | - | - | - |
-| **Faktur: Read & Create** | **YA** | - | - | **YA** | - | - | - | - |
-| **Payroll: Create (Maker)** | **YA** | - | - | **YA** | - | - | - | - |
-| **Payroll: Approve (Checker)** | **YA** | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir |
-| **COD: Rekonsiliasi** | **YA** | - | **YA** | **YA** | - | - | - | - |
-| **COD: Eskalasi & Settle** | **YA** | - | - | **YA** | **YA** | - | - | - |
-| **Kontrak PKS: Kelola** | **YA** | - | - | - | **YA** | - | - | - |
-| **Perkara Hukum: Kelola** | **YA** | - | - | - | **YA** | - | - | - |
-| **Leads & Pipeline Tender** | **YA** | - | - | - | - | **YA** | - | - |
-| **Tender Won Cascade** | **YA** | - | - | - | - | **YA** | - | - |
-| **IT Helpdesk & Aset Posko** | **YA** | - | - | - | - | - | **YA** | - |
-| **Website Berita, Karir & FAQ**| **YA** | - | - | - | - | - | - | **YA** |
+| Modul & Tindakan Kunci | DIREKTUR | HRD | OPERASIONAL | FINANCE | LEGAL | MARKETING | IT SUPPORT | ADMIN WEB | INPUTER (Lap) | PIC KLIEN |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| **Cockpit Eksekutif** | **YA** | - | - | - | - | - | - | - | - | - |
+| **Approval Center (Otorisasi)** | **YA** | - | - | - | - | - | - | - | - | - |
+| **Audit Log (Jejak Mutasi)** | **YA** | - | - | - | - | - | **YA** | - | - | - |
+| **Karyawan: Read** | **YA** | **YA** | **YA** | **YA** | **YA** | **YA** | **YA** | - | Terbatas | Terbatas |
+| **Karyawan: Create & Edit** | **YA** | **YA** | - | - | - | - | - | - | - | - |
+| **Karyawan: Import Excel** | **YA** | **YA** | - | - | - | - | - | - | - | - |
+| **Karyawan: Delete Request** | **YA** | **YA** | - | - | - | - | - | - | - | - |
+| **Karyawan: Soft Delete Approve**| **YA** | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir |
+| **Klien Mitra: Read** | **YA** | **YA** | **YA** | **YA** | **YA** | **YA** | - | - | Terbatas | Akun Sendiri |
+| **Klien Mitra: Create & Edit** | **YA** | **YA** | ❌ Blokir | ❌ Blokir | ❌ Blokir | **YA** | ❌ Blokir | ❌ Blokir | - | - |
+| **Absensi: Input Jam & Lembar** | **YA** | **YA** | **YA** | - | - | - | - | - | **YA** | - |
+| **Absensi: Finalize Bulanan** | **YA** | **YA** | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir |
+| **Absensi: Reopen Lembar** | **YA** | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir |
+| **Penugasan / Rotasi Posko** | **YA** | **YA** | **YA** | - | - | - | - | - | - | - |
+| **Insiden Posko & Patroli** | **YA** | - | **YA** | - | - | - | - | - | - | - |
+| **Faktur: Read & Create** | **YA** | - | - | **YA** | - | - | - | - | - | Read Akun |
+| **Payroll: Create (Maker)** | **YA** | - | - | **YA** | - | - | - | - | - | - |
+| **Payroll: Approve (Checker)** | **YA** | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir | ❌ Blokir |
+| **COD: Rekonsiliasi** | **YA** | - | **YA** | **YA** | - | - | - | - | - | - |
+| **COD: Eskalasi & Settle** | **YA** | - | - | **YA** | **YA** | - | - | - | - | - |
+| **Kontrak PKS: Kelola** | **YA** | - | - | - | **YA** | - | - | - | - | Read Akun |
+| **Perkara Hukum: Kelola** | **YA** | - | - | - | **YA** | - | - | - | - | - |
+| **Leads & Pipeline Tender** | **YA** | - | - | - | - | **YA** | - | - | - | - |
+| **Tender Won Cascade** | **YA** | - | - | - | - | **YA** | - | - | - | - |
+| **Manajemen Pengguna & PIC** | **YA** | - | - | - | - | - | **YA** | - | - | - |
+| **IT Helpdesk & Aset Posko** | **YA** | - | - | - | - | - | **YA** | - | - | - |
+| **Website Berita, Karir & FAQ**| **YA** | - | - | - | - | - | - | **YA** | - | - |
 
 ---
 
@@ -135,3 +142,6 @@ audit.log.view               - Mengakses rekam jejak audit sistem permanen
    - Staf HRD atau Operasional **tidak dapat menghapus personil secara sepihak**. Staf hanya berhak membuat draf permohonan (`employee.delete.request`). Penghapusan logis hanya terjadi saat Direktur mengeksekusi `employee.delete.approve`.
 3. **Pengesahan Kontrak Bernilai Besar:**
    - Bagian Legal menyusun draf klausul PKS (`LEGAL_REVIEW`), namun status `ACTIVE` hanya sah setelah otorisasi Direktur tercatat di sistem.
+4. **Isolasi Sesi Petugas Inputer Lapangan:**
+   - Petugas Inputer (`user1`, `user2`) berfokus pada penginputan lembar presensi di lapangan. Draf lembar kerja yang belum difinalisasi terikat pada sesi aktif mereka dan otomatis dibersihkan saat mereka keluar (*logout*) agar sesi berikutnya bersih dari riwayat draf terdahulu.
+

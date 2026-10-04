@@ -1,8 +1,8 @@
 # 05_WORKFLOW_CONTRACT.md — PT. BARAK IOMS
-**Versi:** 2.0 (Interconnected Cross-Department Workflows)  
-**Tanggal:** 29 September 2026  
+**Versi:** 2.1 (Interconnected Cross-Department Workflows)  
+**Tanggal:** 4 Oktober 2026  
 **Status:** COMPLETE & AUTHORITATIVE  
-**Ruang Lingkup:** Standar Alur Bisnis Operasional Lintas Departemen
+**Ruang Lingkup:** Standar Alur Bisnis Operasional Lintas Departemen, Presensi Posko & Impor Massal
 
 ---
 
@@ -42,19 +42,32 @@ Mencegah penghapusan sepihak atau kehilangan data historis personil pengamanan:
 
 ---
 
-## 2. Alur Presensi Posko & Finalisasi Bulanan (Attendance Workflow)
+## 2. Alur Presensi Posko, Sinkronisasi Lokasi & Siklus Sesi Inputer (Attendance Workflow)
+
+Alur terintegrasi antara penugasan personil, pencatatan jam kerja lapangan, format ekspor formal, serta pembersihan sesi kerja petugas:
 
 ```
-[Penugasan Aktif (Placements)]
-     │ Membentuk formasi roster harian di setiap site klien
+[Petugas Memilih Dropdown "Klien" & "Lokasi Penempatan"]
+     │
      ▼
-[Presensi Harian Pos Jaga]
-     │ Rekam jam masuk/pulang personil (PRESENT, LATE, ABSENT, ALPHA)
+[Query Penugasan Aktif: GET /placements?clientId=X&location=Y&status=ACTIVE]
+     │
+     ├───> KONDISI A: Ada Data Karyawan Aktif
+     │       │
+     │       ├──> Otomatis tampilkan daftar nama personil pada kolom "Nama Karyawan"
+     │       ├──> Siapkan kolom "Datang", "Pulang", dan "Lembur" dalam keadaan kosong
+     │       ├──> Petugas Lapangan / Inputer menginput jam kerja secara manual
+     │       └──> Opsi Ekspor Excel: Menerbitkan .xlsx dengan Kop Resmi Perusahaan
+     │            (Nama Klien, Lokasi, Periode, Tanggal Cetak, Petugas Inputer)
+     │
+     └───> KONDISI B: Belum Ada Data Karyawan pada Lokasi Tersebut
+             │
+             └──> Sistem menampilkan notifikasi:
+                  "Data Karyawan pada lokasi klien ini masih kosong"
+                  (Petugas diarahkan untuk melakukan plotting / impor data karyawan)
+     │
      ▼
-[HRD Verifikasi & Koreksi]
-     │ HRD hanya berwenang mengoreksi jam/alasan (tidak dapat mengubah formasi posko)
-     ▼
-[Finalisasi Akhir Bulan (HRD)]
+[HRD Verifikasi & Finalisasi Bulanan]
      │ HRD mengeksekusi: [POST /attendance/finalize]
      ▼
 [Lembar Absensi Terkunci (is_locked = true)]
@@ -65,6 +78,11 @@ Mencegah penghapusan sepihak atau kehilangan data historis personil pengamanan:
      │ Harus mengajukan dispensasi khusus ke Direktur
      │ Direktur mengeksekusi: [POST /attendance/reopen]
      └──> Log Audit mencatat alasan pembukaan kembali & aktor Direktur
+
+[Siklus Sesi Petugas Inputer (user1 / user2 Logout)]
+     │ Saat petugas inputer menekan tombol Logout:
+     ├──> Riwayat draf kerja aktif ("Lembar Tersedia") dibersihkan dari penyimpanan sesi
+     └──> Login berikutnya dimulai dengan lembar kerja bersih dan siap untuk tugas baru
 ```
 
 ---
@@ -144,3 +162,45 @@ kontrak PKS baru        penagihan klien baru    jaga/lokasi baru        kuota fo
      │ Bagian Keuangan menginstruksikan transfer bank payroll
      └──> Status Akhir: 'PROCESSED'
 ```
+
+---
+
+## 6. Alur Impor Karyawan Massal Excel & Penugasan Atomik (Bulk Employee Import Workflow)
+
+Menjamin personil yang diimpor langsung tersinkronisasi ke penugasan posko klien tanpa perlu entri penempatan satu per satu:
+
+```
+[HRD Membuka Modal "Import Excel (.xlsx)"]
+     │
+     ├──> HRD mengunduh template resmi: Template_Import_Karyawan_BARAK.xlsx
+     │    (Kolom: NIK, Nama Lengkap, Jabatan, Divisi, Telepon, Email, Join Date, Gaji, Status, Bank, Rekening)
+     │
+     ├──> HRD memilih "Nama Klien" (dari 18 Mitra Riil) dan "Lokasi Penempatan"
+     │
+     ▼
+[Unggah Berkas .xlsx & Validasi Frontend]
+     │ Sistem membaca baris data:
+     │ - Validasi NIK unik 16 digit
+     │ - Validasi kelengkapan nama dan jabatan
+     │
+     ▼
+[Eksekusi Impor: POST /employees/import]
+     │
+     ├──> 1. Simpan Data Personil ke Tabel `employees`
+     │
+     ├──> 2. TERBITKAN PENUGASAN AKTIF OTOMATIS ke Tabel `placements`:
+     │       - client_id = Klien Terpilih
+     │       - site_id / location = Lokasi Penempatan Terpilih
+     │       - status = 'ACTIVE'
+     │       - is_current = true
+     │       - start_date = join_date personil
+     │
+     └──> 3. Catat Riwayat Mutasi ke Tabel `audit_logs`
+     │
+     ▼
+[Sinkronisasi Instan Lintas Modul]
+     ├──> Jumlah karyawan pada kartu analitik & daftar master bertambah
+     └──> Saat membuka menu "Attendance Spreadsheet" dengan Klien & Lokasi tersebut,
+          seluruh nama karyawan yang diimpor langsung otomatis muncul di lembar presensi.
+```
+

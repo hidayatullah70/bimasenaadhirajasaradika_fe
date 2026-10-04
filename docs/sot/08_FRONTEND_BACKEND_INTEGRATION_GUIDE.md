@@ -1,6 +1,6 @@
 # 08_FRONTEND_BACKEND_INTEGRATION_GUIDE.md — PT. BARAK IOMS
-**Versi:** 2.0 (Step-by-Step Developer Integration Manual)  
-**Tanggal:** 29 September 2026  
+**Versi:** 2.1 (Step-by-Step Developer Integration Manual)  
+**Tanggal:** 4 Oktober 2026  
 **Status:** COMPLETE & AUTHORITATIVE  
 **Ruang Lingkup:** Panduan Praktis Tim Backend Menghubungkan API ke Frontend
 
@@ -99,6 +99,8 @@ app.use(cors({
    ```
 4. **Penanganan Token Kedaluwarsa (401 Unauthorized):**
    Jika server merespons status HTTP `401`, klien frontend di `src/services/apiClient.js` secara otomatis memicu event `barak_unauthorized`, menghapus token kadaluarsa, dan mengarahkan pengguna kembali ke halaman `/ops/login`.
+5. **Pembersihan Sesi Inputer Lapangan Saat Logout:**
+   Saat pengguna dengan peran inputer (`user1`, `user2`) keluar (*logout*), frontend memicu pembersihan draf lembar presensi sementara (`DELETE /api/v1/attendance/sheets/drafts`) agar sesi berikutnya bersih dari riwayat draf terdahulu.
 
 ---
 
@@ -122,18 +124,17 @@ Frontend akan otomatis membaca objek `errors` dan menampilkan garis merah serta 
 
 ## 5. Strategi Pengujian Bertahap per Modul (Incremental Testing)
 
-Backend developer dapat menguji integrasi modul per modul secara terisolasi tanpa harus menyelesaikan seluruh 28 modul sekaligus.
+Backend developer dapat menguji integrasi modul per modul secara terisolasi tanpa harus menyelesaikan seluruh modul sekaligus.
 
 Di setiap berkas adapter (`src/services/adapters/*.js`), terdapat pengecekan:
 ```javascript
 const isMock = import.meta.env.VITE_API_MODE !== 'rest';
 ```
-Untuk menguji modul Karyawan terlebih dahulu:
-1. Pastikan endpoint `/api/v1/employees` di Express telah aktif.
-2. Buka halaman `/ops/master/employees` di browser.
-3. Buka tab **Network** di Developer Tools browser.
-4. Lakukan aksi Buat Karyawan, Edit, dan Filter.
-5. Verifikasi bahwa request HTTP aktual terkirim ke `http://localhost:3001/api/v1/employees`.
+Untuk menguji modul Karyawan & Presensi:
+1. Pastikan endpoint `/api/v1/employees` dan `/api/v1/employees/import` di Express telah aktif.
+2. Buka halaman `/ops/master/employees` di browser. Lakukan pengujian Impor Excel Karyawan (`EmployeeImportModal.jsx`) dengan memilih Klien dan Lokasi Penempatan.
+3. Buka halaman `/ops/hrd/attendance/spreadsheet` di browser. Pilih Klien dan Lokasi Penempatan yang sama, dan pastikan daftar karyawan yang diimpor otomatis muncul pada lembar kerja.
+4. Buka tab **Network** di Developer Tools browser untuk memverifikasi payload HTTP dan response JSON.
 
 ---
 

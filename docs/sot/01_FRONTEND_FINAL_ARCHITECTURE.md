@@ -1,6 +1,6 @@
 # 01_FRONTEND_FINAL_ARCHITECTURE.md — PT. BARAK IOMS
-**Versi:** 3.0 (Authoritative Consolidated Architecture)  
-**Tanggal:** 2 Oktober 2026  
+**Versi:** 3.1 (Authoritative Consolidated Architecture)  
+**Tanggal:** 4 Oktober 2026  
 **Perusahaan:** PT. Bimasena Adhirajasa Radhika (PT. BARAK)  
 **Sistem:** Integrated Outsourcing Management System (IOMS)  
 **Status:** COMPLETE & AUTHORITATIVE  
@@ -53,16 +53,17 @@ Domain bisnis aplikasi mencerminkan tata kelola perusahaan alih daya tenaga kerj
 ```mermaid
 erDiagram
     CLIENT ||--o{ CONTRACT : menandatangani
-    CONTRACT ||--o{ SITE_LOCATION : mencakup
-    SITE_LOCATION ||--o{ SITE_SERVICE : menawarkan
-    SITE_SERVICE ||--o{ PLACEMENT : membutuhkan
-    EMPLOYEE ||--o{ PLACEMENT : memenuhi
-    PLACEMENT ||--o{ ATTENDANCE_RECORD : mencatat
-    PLACEMENT ||--o{ REPLACEMENT_REQUEST : menghasilkan
+    CLIENT ||--o{ SITE_LOCATION : memiliki
+    CLIENT ||--o{ PLACEMENT : menerima_penempatan
+    SITE_LOCATION ||--o{ PLACEMENT : posko_fisik
+    EMPLOYEE ||--o{ PLACEMENT : memenuhi_posko
+    PLACEMENT ||--o{ ATTENDANCE_RECORD : mencatat_kehadiran
+    PLACEMENT ||--o{ REPLACEMENT_REQUEST : menghasilkan_pergantian
+    USER ||--o{ ATTENDANCE_SHEET : menginput_rekapitulasi
 
     EMPLOYEE {
         string id PK
-        string nik UK
+        string nik UK "16 Digit KTP"
         string employeeType "INTERNAL | OUTSOURCING"
         string fullName
         string phone
@@ -104,14 +105,12 @@ erDiagram
     }
 ```
 
-### Aturan Workforce Mobility (Non-Negotiable)
+### Aturan Workforce Mobility & Penugasan (Non-Negotiable)
 1. Entitas `employees` **tidak terikat langsung secara permanen** ke tabel `clients`.
 2. Hubungan Karyawan $\leftrightarrow$ Klien **wajib** dijembatani oleh `placements` dengan histori status (`ACTIVE`, `ROTATED`, `ENDED`).
-3. Seluruh riwayat perpindahan posko / rotasi personel tersimpan utuh di tabel histori penempatan.
-
----
-
-## 3. Struktur Direktori Final (Directory Structure)
+3. **Penerbitan Penugasan Massal Atomik (Bulk Import Sync):** Ketika HRD mengimpor data karyawan via Excel (`EmployeeImportModal.jsx`), sistem secara atomik membuat entitas Karyawan sekaligus menerbitkan entitas `placements` aktif yang mengikat karyawan tersebut ke Klien dan Lokasi Penempatan terpilih.
+4. **Presensi Otomatis Berbasis Penugasan:** Spreadsheet presensi (`AttendanceSpreadsheetPage.jsx`) menarik nama-nama karyawan secara dinamis berdasarkan penugasan aktif (`placements.status === 'ACTIVE'`) untuk pasangan `client_id` dan `siteLocationId` yang dipilih. Jika belum ada penugasan pada lokasi tersebut, sistem menampilkan notifikasi `"Data Karyawan pada lokasi klien ini masih kosong"`.
+5. **Isolasi Sesi Inputer Lapangan:** Petugas inputer (`user1`, `user2`) memiliki siklus kerja terisolasi; riwayat lembar kerja draf ("Lembar Tersedia") dibersihkan secara otomatis saat logout dari sistem.
 
 ```text
 src/
@@ -169,12 +168,12 @@ src/
 │   ├── auth/                        # Halaman login operasional
 │   ├── director/                    # Cockpit eksekutif Direktur & Approval Center
 │   ├── finance/                     # Faktur, Payroll, Kas Masuk, COD Kurir
-│   ├── hrd/                         # Presensi posko, monitoring kontrak PKWT
+│   ├── hrd/                         # Presensi posko, monitoring kontrak PKWT (AttendanceSpreadsheetPage.jsx, AttendanceImportModal.jsx)
 │   ├── it/                          # Helpdesk, SLA, Aset IT Posko, Maintenance
 │   ├── landing/                     # Halaman publik (DIBEKUKAN / FROZEN 100%)
 │   ├── legal/                       # PKS Korporat, sengketa perkara, SIO BUJP Polri
 │   ├── marketing/                   # Manajemen leads, pipeline tender, deal handover
-│   ├── master/                      # Master karyawan, klien, lokasi, shift, user
+│   ├── master/                      # Master karyawan (EmployeeImportModal.jsx, EmployeeListPage.jsx), klien, lokasi, shift, user (UserListPage.jsx)
 │   ├── notifications/               # Pusat notifikasi internal dengan RBAC detail
 │   ├── operations/                  # Formasi posko, insiden lapangan, rotasi personel
 │   ├── profile/                     # Pengaturan profil pengguna

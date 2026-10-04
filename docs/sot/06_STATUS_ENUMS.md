@@ -1,6 +1,6 @@
 # 06_STATUS_ENUMS.md — PT. BARAK IOMS
-**Versi:** 2.0 (Authoritative Lifecycle State Enums)  
-**Tanggal:** 29 September 2026  
+**Versi:** 2.1 (Authoritative Lifecycle State Enums)  
+**Tanggal:** 4 Oktober 2026  
 **Status:** COMPLETE & AUTHORITATIVE  
 **Ruang Lingkup:** Enum Status Seragam & Diagram Transisi Siklus Hidup Entitas
 
@@ -127,3 +127,22 @@ Siklus penagihan dan piutang klien:
 - `IN_PROGRESS`: Staf IT sedang melakukan penanganan / perbaikan remote.
 - `RESOLVED`: Perangkat kembali berfungsi normal.
 - `CLOSED`: Tiket ditutup setelah konfirmasi pengguna posko.
+
+---
+
+### 1.9 Lembar Rekapitulasi Presensi (`AttendanceSheetStatus`)
+- `DRAFT`: Lembar sedang diisi secara manual oleh petugas inputer lapangan di posko.
+- `SUBMITTED`: Lembar telah diajukan ke HRD untuk proses rekapitulasi penggajian.
+- `FINALIZED`: Lembar telah diverifikasi dan dikunci secara permanen (`is_locked = true`).
+
+```
+[DRAFT] ──> [SUBMITTED] ──> [FINALIZED]
+```
+
+---
+
+### 1.10 Status Akun Pengguna (`UserStatus`)
+- `ACTIVE`: Akun aktif dan berhak login sesuai peran.
+- `SUSPENDED`: Akun ditangguhkan sementara karena investigasi atau pelanggaran keamanan.
+- `INACTIVE`: Akun dinonaktifkan permanen / di-soft delete oleh administrator.
+

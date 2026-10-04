@@ -1,6 +1,6 @@
 # 03_ENTITY_CONTRACT.md — PT. BARAK IOMS
-**Versi:** 2.0 (Relational Schema & Field Specifications)  
-**Tanggal:** 29 September 2026  
+**Versi:** 2.1 (Relational Schema & Field Specifications)  
+**Tanggal:** 4 Oktober 2026  
 **Status:** COMPLETE & AUTHORITATIVE  
 **Ruang Lingkup:** Kontrak Entitas Data Relasional Backend (MySQL Engine)
 
@@ -11,6 +11,7 @@
 > [!IMPORTANT]
 > **Prinsip Mobilitas Personel (Workforce Mobility):**
 > Entitas `employees` **TIDAK BOLEH** memiliki relasi permanen *foreign key* `client_id` secara langsung. Personel PT. BARAK dipekerjakan oleh PT. BARAK dan dialokasikan ke Klien melalui entitas perantara `placements`. Satu karyawan dapat memiliki banyak riwayat penugasan (`placements`) di berbagai klien sepanjang masa kerjanya.
+> Pada saat **Impor Excel Massal** (`EmployeeImportModal.jsx`), sistem secara atomik membuat rekaman `employees` sekaligus menerbitkan rekaman `placements` aktif (`status = 'ACTIVE'`) yang terhubung langsung ke Klien dan Lokasi Penempatan terpilih.
 
 ### Diagram Relasi Utama (Entity-Relationship Flow)
 ```
@@ -18,18 +19,20 @@
    │
    ├──< [Contracts] (PKS Korporat)
    ├──< [Invoices] ──< [Payments]
-   └──< [Placements] >── [Employee] ──< [Employee_Documents]
-            │
-            ├──> [Site]
-            ├──> [Service]
-            ├──> [Position]
-            ├──> [Shift]
-            └──< [Attendance]
+   ├──< [Placements] >── [Employee] ──< [Employee_Documents]
+   │        │
+   │        ├──> [Site]
+   │        ├──> [Service]
+   │        ├──> [Position]
+   │        ├──> [Shift]
+   │        └──< [Attendance] >── [Attendance_Sheets]
+   │                                     │
+   └──< [Users] (PIC Klien: client_id) ──┘ (Inputer Lapangan: inputer_user_id)
 ```
 
 ---
 
-## 2. Rincian 28 Entitas Sistem (28 System Entities)
+## 2. Rincian 29 Entitas Sistem (29 System Entities)
 
 ### 2.1 Autentikasi, Pengguna & Otorisasi
 1. **`users`**:
@@ -39,11 +42,12 @@
    - `password_hash`: `VARCHAR(255)` (NOT NULL, Argon2 / Bcrypt)
    - `full_name`: `VARCHAR(100)` (NOT NULL)
    - `role_id`: `VARCHAR(30)` (FK $\rightarrow$ `roles.id`)
+   - `client_id`: `VARCHAR(36)` (NULLABLE, FK $\rightarrow$ `clients.id`, Khusus untuk peran `'PIC_CLIENT'`)
    - `status`: `ENUM('ACTIVE', 'SUSPENDED', 'INACTIVE')` (DEFAULT: `'ACTIVE'`)
    - `created_at`, `updated_at`: `TIMESTAMP`
 
 2. **`roles`**:
-   - `id`: `VARCHAR(30)` (PK, e.g. `'DIREKTUR'`, `'HRD'`, `'OPERASIONAL'`, `'FINANCE'`, `'LEGAL'`, `'MARKETING'`, `'IT_SUPPORT'`, `'ADMIN_WEBSITE'`)
+   - `id`: `VARCHAR(30)` (PK, e.g. `'DIREKTUR'`, `'HRD'`, `'OPERASIONAL'`, `'FINANCE'`, `'LEGAL'`, `'MARKETING'`, `'IT_SUPPORT'`, `'ADMIN_WEBSITE'`, `'SUPERADMIN'`, `'INPUTER_1'`, `'INPUTER_2'`, `'PIC_CLIENT'`)
    - `name`: `VARCHAR(50)` (NOT NULL)
    - `description`: `TEXT`
 
@@ -153,11 +157,32 @@
     - `scheduled_date`: `DATE` (NOT NULL)
     - `shift_id`: `VARCHAR(36)` (FK $\rightarrow$ `shifts.id`)
 
-13. **`attendance`**:
+13. **`attendance_sheets` (Lembar Rekapitulasi Presensi & Jam Kerja Posko)**:
     - `id`: `VARCHAR(36)` (PK, UUID)
-    - `employee_id`: `VARCHAR(36)` (FK $\rightarrow$ `employees.id`)
+    - `sheet_name`: `VARCHAR(150)` (NOT NULL, format: `'REKAP_[KLIEN]_[LOKASI]_[BLN]_[THN]'`)
+    - `client_id`: `VARCHAR(36)` (FK $\rightarrow$ `clients.id`, NOT NULL)
+    - `client_name`: `VARCHAR(120)` (NOT NULL)
+    - `location`: `VARCHAR(120)` (NOT NULL, Lokasi Penempatan Posko)
+    - `site_id`: `VARCHAR(36)` (FK $\rightarrow$ `sites.id`, NULLABLE)
+    - `period_month`: `INT` (1-12, NOT NULL)
+    - `period_year`: `INT` (NOT NULL)
+    - `print_date`: `DATE` (Tanggal cetak lembar / ekspor)
+    - `inputer_user_id`: `VARCHAR(36)` (FK $\rightarrow$ `users.id`, Petugas inputer, e.g. `'user1'`, `'user2'`)
+    - `inputer_name`: `VARCHAR(100)` (Nama petugas lapangan)
+    - `status`: `ENUM('DRAFT', 'SUBMITTED', 'FINALIZED')` (DEFAULT: `'DRAFT'`)
+    - `total_personnel`: `INT` (Jumlah personil dalam lembar rekap)
+    - `is_locked`: `BOOLEAN` (DEFAULT: `FALSE`, Dikunci saat finalisasi bulanan)
+    - `created_at`, `updated_at`: `TIMESTAMP`
+
+14. **`attendance` (Rincian Kehadiran & Jam Kerja Personel)**:
+    - `id`: `VARCHAR(36)` (PK, UUID)
+    - `sheet_id`: `VARCHAR(36)` (FK $\rightarrow$ `attendance_sheets.id`, NULLABLE)
+    - `employee_id`: `VARCHAR(36)` (FK $\rightarrow$ `employees.id`, NOT NULL)
     - `placement_id`: `VARCHAR(36)` (FK $\rightarrow$ `placements.id`)
     - `date`: `DATE` (NOT NULL)
+    - `check_in_time`: `TIME` (Jam Datang manual, format: `HH:mm`)
+    - `check_out_time`: `TIME` (Jam Pulang manual, format: `HH:mm`)
+    - `overtime_hours`: `DECIMAL(4, 2)` (DEFAULT: 0.00, Jam Lembur manual)
     - `check_in`: `TIMESTAMP` (NULLABLE)
     - `check_out`: `TIMESTAMP` (NULLABLE)
     - `status`: `ENUM('PRESENT', 'LATE', 'ABSENT', 'SICK', 'LEAVE', 'ALPHA')`
@@ -165,7 +190,7 @@
     - `notes`: `VARCHAR(255)`
 
 ### 2.5 Rekrutmen & Karir
-14. **`recruitment` (Applicants & Career Postings)**:
+15. **`recruitment` (Applicants & Career Postings)**:
     - `id`: `VARCHAR(36)` (PK, UUID)
     - `job_posting_id`: `VARCHAR(36)`
     - `candidate_name`: `VARCHAR(100)` (NOT NULL)
@@ -176,7 +201,7 @@
     - `status`: `ENUM('APPLICANT', 'SCREENING', 'INTERVIEW', 'ACCEPTED', 'REJECTED')`
 
 ### 2.6 Keuangan, Faktur & COD
-15. **`payroll`**:
+16. **`payroll`**:
     - `id`: `VARCHAR(36)` (PK, UUID)
     - `period_month`: `INT` (1-12)
     - `period_year`: `INT`
@@ -186,7 +211,7 @@
     - `approver_user_id`: `VARCHAR(36)` (FK $\rightarrow$ `users.id`, Direktur penyetuju)
     - `status`: `ENUM('DRAFT', 'HRD_VERIFIED', 'FINANCE_REVIEW', 'APPROVED', 'PROCESSED')`
 
-16. **`invoices`**:
+17. **`invoices`**:
     - `id`: `VARCHAR(36)` (PK, UUID)
     - `invoice_number`: `VARCHAR(40)` (UNIQUE, e.g. `'INV-2026-09-001'`)
     - `client_id`: `VARCHAR(36)` (FK $\rightarrow$ `clients.id`, NOT NULL)
@@ -199,7 +224,7 @@
     - `due_date`: `DATE` (NOT NULL)
     - `status`: `ENUM('DRAFT', 'ISSUED', 'PARTIALLY_PAID', 'PAID', 'OVERDUE', 'VOID')`
 
-17. **`payments`**:
+18. **`payments`**:
     - `id`: `VARCHAR(36)` (PK, UUID)
     - `invoice_id`: `VARCHAR(36)` (FK $\rightarrow$ `invoices.id`, ON DELETE CASCADE)
     - `amount`: `DECIMAL(15, 2)` (NOT NULL)
@@ -207,7 +232,7 @@
     - `reference_number`: `VARCHAR(50)` (NOT NULL)
     - `payment_date`: `DATE` (NOT NULL)
 
-18. **`expenses`**:
+19. **`expenses`**:
     - `id`: `VARCHAR(36)` (PK, UUID)
     - `category`: `ENUM('OPERASIONAL', 'BBM_PATROLI', 'LOGISTIK', 'SERAGAM', 'CAPEX')`
     - `amount`: `DECIMAL(15, 2)` (NOT NULL)
@@ -216,7 +241,7 @@
     - `approved_by`: `VARCHAR(36)`
 
 ### 2.7 Legal, Kontrak & Sengketa
-19. **`contracts`**:
+20. **`contracts`**:
     - `id`: `VARCHAR(36)` (PK, UUID)
     - `contract_number`: `VARCHAR(50)` (UNIQUE, format: `'PKS/BARAK/CLI/001/2026'`)
     - `client_id`: `VARCHAR(36)` (FK $\rightarrow$ `clients.id`, NOT NULL)
@@ -227,7 +252,7 @@
     - `status`: `ENUM('DRAFT', 'LEGAL_REVIEW', 'APPROVED', 'SIGNED', 'ACTIVE', 'EXPIRING', 'RENEWED', 'EXPIRED')`
 
 ### 2.8 Marketing, Leads & Peluang
-20. **`leads`**:
+21. **`leads`**:
     - `id`: `VARCHAR(36)` (PK, UUID)
     - `lead_number`: `VARCHAR(30)` (UNIQUE, format: `'LED-2026-XXXX'`)
     - `company_name`: `VARCHAR(120)` (NOT NULL)
@@ -237,7 +262,7 @@
     - `source`: `ENUM('WEBSITE_FORM', 'DIRECT_CALL', 'TENDER_B2B', 'REFERRAL')`
     - `status`: `ENUM('NEW', 'CONTACTED', 'QUALIFIED', 'SURVEY', 'QUOTED', 'NEGOTIATION', 'WON', 'LOST')`
 
-21. **`quotations` (Opportunities)**:
+22. **`quotations` (Opportunities)**:
     - `id`: `VARCHAR(36)` (PK, UUID)
     - `lead_id`: `VARCHAR(36)` (FK $\rightarrow$ `leads.id`)
     - `quotation_number`: `VARCHAR(40)` (UNIQUE)
@@ -246,7 +271,7 @@
     - `is_won`: `BOOLEAN` (DEFAULT: `FALSE`)
 
 ### 2.9 Operasional, Insiden & Pergantian
-22. **`incidents`**:
+23. **`incidents`**:
     - `id`: `VARCHAR(36)` (PK, UUID)
     - `incident_number`: `VARCHAR(30)` (UNIQUE, format: `'INC-2026-XXXX'`)
     - `site_id`: `VARCHAR(36)` (FK $\rightarrow$ `sites.id`, NOT NULL)
@@ -258,7 +283,7 @@
     - `reported_by`: `VARCHAR(100)`
     - `resolution_notes`: `TEXT`
 
-23. **`replacements`**:
+24. **`replacements`**:
     - `id`: `VARCHAR(36)` (PK, UUID)
     - `request_number`: `VARCHAR(30)` (UNIQUE, format: `'REP-2026-XXXX'`)
     - `current_employee_id`: `VARCHAR(36)` (FK $\rightarrow$ `employees.id`, Personil berhalangan)
@@ -268,7 +293,7 @@
     - `status`: `ENUM('PENDING', 'ASSIGNED', 'COMPLETED', 'CANCELLED')`
 
 ### 2.10 Pusat Persetujuan & Jejak Audit
-24. **`approvals`**:
+25. **`approvals`**:
     - `id`: `VARCHAR(36)` (PK, UUID)
     - `request_type`: `ENUM('EMPLOYEE_DELETE', 'EMPLOYEE_STATUS_CHANGE', 'PLACEMENT_APPROVAL', 'QUOTATION_APPROVAL', 'CONTRACT_APPROVAL', 'EXPENSE_APPROVAL', 'OPERATIONAL_REQUEST', 'PAYROLL')`
     - `reference_id`: `VARCHAR(36)` (ID entitas terkait, e.g. `employee_id`, `contract_id`)
@@ -282,7 +307,7 @@
     - `approver_user_id`: `VARCHAR(36)` (FK $\rightarrow$ `users.id`)
     - `director_notes`: `TEXT`
 
-25. **`audit_logs`**:
+26. **`audit_logs`**:
     - `id`: `VARCHAR(36)` (PK, UUID)
     - `user_id`: `VARCHAR(36)` (FK $\rightarrow$ `users.id`, NULLABLE jika aksi sistem)
     - `actor_name`: `VARCHAR(100)` (NOT NULL)
@@ -295,7 +320,7 @@
     - `timestamp`: `TIMESTAMP` (DEFAULT: CURRENT_TIMESTAMP)
 
 ### 2.11 IT Infrastructure & Aset
-26. **`it_tickets`**:
+27. **`it_tickets`**:
     - `id`: `VARCHAR(36)` (PK, UUID)
     - `ticket_number`: `VARCHAR(30)` (UNIQUE, format: `'TKT-2026-XXXX'`)
     - `subject`: `VARCHAR(120)` (NOT NULL)
@@ -305,7 +330,7 @@
     - `sla_deadline`: `TIMESTAMP`
     - `status`: `ENUM('OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED')`
 
-27. **`it_assets` & `maintenance`**:
+28. **`it_assets` & `maintenance`**:
     - `id`: `VARCHAR(36)` (PK, UUID)
     - `asset_tag`: `VARCHAR(40)` (UNIQUE, format: `'AST-POS-XXXX'`)
     - `name`: `VARCHAR(100)` (e.g. `'Radio HT Digital Motorola XiR P6620i'`)
@@ -314,7 +339,7 @@
     - `condition`: `ENUM('GOOD', 'MAINTENANCE_REQUIRED', 'DAMAGED')`
 
 ### 2.12 Website CMS
-28. **`website_content` (Articles, Careers, FAQs, Inquiries)**:
+29. **`website_content` (Articles, Careers, FAQs, Inquiries)**:
     - `id`: `VARCHAR(36)` (PK, UUID)
     - `content_type`: `ENUM('ARTICLE', 'CAREER_POSTING', 'FAQ', 'CLIENT_INQUIRY')`
     - `title`: `VARCHAR(200)`

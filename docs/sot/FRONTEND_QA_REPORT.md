@@ -1,7 +1,7 @@
 # FRONTEND_QA_REPORT.md — PT. BARAK IOMS
-**Versi:** 2.0  
-**Tanggal:** 29 September 2026  
-**Status QA:** COMPLETED (Semua Kategori Major: PASS)  
+**Versi:** 2.1  
+**Tanggal:** 4 Oktober 2026  
+**Status QA:** COMPLETED (Semua Kategori Major: PASS, 105/105 Tests Pass, 0 Lint Errors)  
 **Landing Page Guard:** FROZEN (15 Berkas di `src/features/landing/*` 100% Utuh & Terverifikasi Bersih)
 
 ---
@@ -255,6 +255,8 @@ $$\text{Employee} \longrightarrow \text{Placement} \longrightarrow \text{Client}
 | 5 | `employeeAdapter.js` | Struktur payload `requestDeleteEmployee` belum memetakan atribut `type: 'EMPLOYEE_DELETE'` dan `referenceId` untuk terbaca langsung di queue Approval Center. | Memperkaya atribut objek `deleteRequest` agar teridentifikasi secara sempurna di Approval Center. | **FIXED** |
 | 6 | `EmployeeListPage.jsx` | Penggunaan `key={emp.id}` berpotensi duplikasi jika ada rekaman menggunakan `id_karyawan`. | Diperbarui menjadi `key={emp.id || emp.id_karyawan}`. | **FIXED** |
 | 7 | `InvoiceListPage.jsx` | Penggunaan `key={pIdx}` pada daftar histori pembayaran. | Diperbarui menjadi `key={pay.referenceNumber || pIdx}`. | **FIXED** |
+| 8 | `EmployeeImportModal.jsx` | Kebutuhan penginputan personil massal berdasarkan Klien dan Lokasi Penempatan tanpa input satu per satu. | Implementasi parsing berkas Excel `.xlsx`, template resmi dapat diunduh, validasi NIK unik, dan penerbitan penugasan aktif atomik. | **VERIFIED** |
+| 9 | `AttendanceSpreadsheetPage.jsx` | Kebutuhan otomatisasi pemuatan nama personil berdasarkan Klien & Lokasi, penyiapan jam kosong manual, dan banner data kosong. | Integrasi query penugasan aktif, formatting field kosong manual, banner informatif "Data Karyawan masih kosong", kop resmi ekspor, dan session cleanup saat logout. | **VERIFIED** |
 
 ---
 

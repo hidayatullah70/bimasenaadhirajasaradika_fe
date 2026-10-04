@@ -1,6 +1,6 @@
 # DASHBOARD_UX_V2.md — PT. BARAK IOMS
-**Versi:** 2.0  
-**Tanggal:** 29 September 2026  
+**Versi:** 2.1  
+**Tanggal:** 4 Oktober 2026  
 **Status:** STEP 4 COMPLETED (Authenticated Operational Platform Upgrade)  
 **Landing Page Guard:** FROZEN (Semua 15 file di `src/features/landing/*` utuh tanpa modifikasi)
 
@@ -166,6 +166,20 @@ Saat status berubah menjadi `WON`, sistem secara otomatis:
 2. Membentuk akun profil penagihan dan draf faktur uang muka di modul **Finance**.
 3. Mendaftarkan lokasi pos pengamanan baru di modul **Operasional**.
 4. Mengirimkan notifikasi kebutuhan formasi personil ke modul **HRD**.
+
+### 5.5 Alur UX Impor Karyawan Massal & Presensi Terpadu
+1. **Modal Impor Excel Karyawan (`EmployeeImportModal.jsx`):**
+   - Modal interaktif yang menyediakan tombol unduh template resmi satu-klik (`Template_Import_Karyawan_BARAK.xlsx`).
+   - Selektor terpadu Klien dan Lokasi Penempatan dengan indikator kuota.
+   - Kotak unggah file drag-and-drop dengan validasi tipe berkas `.xlsx`.
+   - Parsing cepat dengan indikator jumlah baris valid dan penanganan error validasi NIK/kolom secara inline.
+2. **Spreadsheet Presensi Terhubung Penugasan (`AttendanceSpreadsheetPage.jsx`):**
+   - Integrasi pemilihan Klien dan Lokasi Penempatan yang secara reaktif memuat seluruh personil aktif di posko tersebut.
+   - Kolom "Datang", "Pulang", dan "Lembur" disiapkan kosong dengan placeholder jelas untuk input manual yang cepat dan fleksibel bagi petugas lapangan.
+   - Banner Empty State ramah pengguna: `"Data Karyawan pada lokasi klien ini masih kosong"` apabila posko belum memiliki plotting personil aktif.
+   - Ekspor Excel formal lengkap dengan kop resmi PT. BIMASENA ADHIRAJA SARADIKA, judul dokumen, dan metadata administratif.
+3. **Pembersihan Riwayat Kerja Sesi Petugas Inputer:**
+   - Fitur logout cerdas pada `AuthProvider.jsx` yang secara otomatis membersihkan draf lembar kerja sementara milik `user1` dan `user2` agar antarmuka login berikutnya selalu dalam kondisi segar dan siap pakai.
 
 ---
 

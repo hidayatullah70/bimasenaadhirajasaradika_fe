@@ -1,6 +1,6 @@
 # 07_BACKEND_IMPLEMENTATION_ORDER.md — PT. BARAK IOMS
-**Versi:** 2.0 (Step-by-Step Implementation Roadmap)  
-**Tanggal:** 29 September 2026  
+**Versi:** 2.1 (Step-by-Step Implementation Roadmap)  
+**Tanggal:** 4 Oktober 2026  
 **Status:** COMPLETE & AUTHORITATIVE  
 **Ruang Lingkup:** Urutan Eksekusi Pengembangan Backend Node.js / Express / MySQL
 
@@ -24,22 +24,25 @@ Frontend telah siap 100% dan dapat diuji secara bertahap dengan mengalihkan endp
 
 ### Tahap 1: Skema Database & Migrasi (Database Schema & DDL)
 - Buat database `barak_ioms` pada MySQL (Laragon / Railway).
-- Eksekusi DDL 28 tabel sesuai spesifikasi `03_ENTITY_CONTRACT.md`.
+- Eksekusi DDL 29 tabel sesuai spesifikasi `03_ENTITY_CONTRACT.md` (termasuk `attendance_sheets` dan kolom `client_id` pada tabel `users`).
 - Pasang indeks pada kolom foreign key, NIK, kode klien, kode penugasan, dan nomor faktur.
 
 ### Tahap 2: Autentikasi & Sesi (JWT Authentication)
 - Endpoint `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `GET /api/v1/auth/me`.
 - Penerapan hashing kata sandi aman (Bcrypt / Argon2).
-- Pembuatan token akses JWT berdurasi 15–60 menit dan refresh token rotasi (7 hari).
+- Endpoint `POST /api/v1/auth/logout` yang mencakup pembersihan sesi kerja draf inputer.
 
 ### Tahap 3: Pengguna, Peran & Hak Akses (Users, Roles & RBAC Middleware)
 - Buat middleware Express `requireAuth` dan `requireRole(allowedRoles)`.
 - Buat middleware validasi izin granular `requirePermission(permissionId)`.
-- Seeding 8 pengguna default internal (Direktur, HRD, Operasional, Finance, Legal, Marketing, IT Support, Admin Website).
+- Endpoint CRUD `/api/v1/users` dengan dukungan relasi `client_id` untuk akun perwakilan PIC Klien.
+- Seeding pengguna default internal (Direktur, HRD, Operasional, Finance, Legal, Marketing, IT Support, Admin Website, `user1`, `user2`, dan PIC Klien).
 
 ### Tahap 4: Manajemen Karyawan (Employees Module)
 - Endpoint `GET /employees`, `GET /employees/:id`, `POST /employees`, `PATCH /employees/:id`.
 - Validasi ketat NIK 16 digit angka unik.
+- Endpoint `GET /employees/template`: Melayani unduhan berkas template Excel resmi (`.xlsx`).
+- Endpoint `POST /employees/import`: Memproses impor massal Excel (.xlsx), menyimpan data ke tabel `employees` DAN secara atomik menerbitkan rekaman `placements` aktif untuk klien dan lokasi terpilih.
 - Mekanisme soft-delete (`is_deleted = TRUE`).
 
 ### Tahap 5: Mitra Bisnis & Klien (Clients Module)
@@ -55,10 +58,13 @@ Frontend telah siap 100% dan dapat diuji secara bertahap dengan mengalihkan endp
 
 ### Tahap 8: Penugasan & Plotting Personil (Placements Module)
 - Endpoint `GET /placements`, `POST /placements`, `POST /placements/:id/transfer`, `POST /placements/:id/end`.
+- Dukungan query `GET /placements?clientId=X&location=Y&status=ACTIVE` untuk mengembalikan daftar personil aktif pada posko klien secara instan untuk kebutuhan sinkronisasi presensi.
 - Logika transaksi rotasi: penugasan lama otomatis menjadi `ROTATED` dan penugasan baru diterbitkan sebagai `ACTIVE`.
 
 ### Tahap 9: Presensi & Roster Shift (Attendance & Roster Module)
 - Endpoint `GET /shifts`, `POST /shifts`, `GET /attendance`, `POST /attendance/check-in`.
+- Endpoint `GET /attendance/sheets` dan `POST /attendance/sheets`: Menyimpan lembar rekapitulasi presensi posko lengkap dengan metadata korporat (klien, lokasi, periode, tanggal cetak, petugas inputer) serta entri jam datang, pulang, dan lembur.
+- Endpoint `DELETE /attendance/sheets/drafts`: Membersihkan draf kerja sementara milik petugas inputer.
 - Endpoint finalisasi bulanan `POST /attendance/finalize` (mengunci lembar absensi).
 - Endpoint pembukaan kembali `POST /attendance/reopen` (khusus peran `DIREKTUR`).
 

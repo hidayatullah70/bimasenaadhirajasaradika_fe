@@ -1,7 +1,8 @@
 # CRUD_PERSISTENCE_V2.md — PT. BARAK IOMS
 **Arsitektur Frontend CRUD, Mesin Persistensi & Model Data Otoritatif**  
-**Versi:** 2.0.0  
-**Fase:** STEP 3 (Khusus Frontend — Penyimpanan Terpisah, Persistensi & Siklus Hidup Data)  
+**Versi:** 2.1.0  
+**Tanggal:** 4 Oktober 2026  
+**Fase:** STEP 3 (Penyimpanan Terpisah, Persistensi, Impor Massal & Presensi Klien)  
 **Status:** Selesai & Otoritatif  
 
 ---
@@ -107,6 +108,27 @@ Enam jenis layanan alih daya (*outsourcing*) kanonikal telah dibakukan di dalam 
   2. Catatan penugasan baru dibuat dengan `status: 'ACTIVE'`, `isCurrent: true`, dengan mewarisi nilai `employee_id` terkait.
   3. Pemanggilan `placementRepository.getHistoryByEmployeeId(empId)` mengembalikan riwayat mutasi lengkap secara kronologis.
   4. Laci (*drawer*) profil rincian karyawan merender linimasa riwayat perpindahan tugas secara dinamis.
+
+### 3.4 Mekanisme Impor Massal Excel Karyawan & Penugasan Atomik (`EmployeeImportModal.jsx`)
+- **Pemrosesan Berkas .xlsx:** Melalui pustaka `xlsx` (SheetJS), sistem membaca lembar kerja Excel personil berdasarkan pemetaan kolom:
+  - Wajib: `nik` (16 digit), `nama_lengkap` / `name`, `jabatan` / `position`.
+  - Opsional: `divisi` / `department`, `no_telepon` / `phone`, `email`, `tanggal_bergabung` / `join_date`, `gaji_pokok` / `salary`, `status`, `nama_bank`, `nomor_rekening`.
+- **Pembuatan Penugasan Atomik:** Saat pengguna memilih Klien (`client_id`) dan Lokasi Penempatan (`placement_location`), sistem secara otomatis mengeksekusi dua operasi persistensi secara serentak:
+  1. Menyimpan data personil ke koleksi `barak_employees` dengan ID terstandarisasi `BRK-EMP-XXX`.
+  2. Menerbitkan penugasan aktif baru di koleksi `barak_assignments` (`placements`) dengan status `ACTIVE`, `is_current: true`, terikat langsung ke `client_id` dan `siteLocationId` / lokasi terpilih.
+- **Unduhan Berkas Template:** Menyediakan fungsi generasi otomatis template resmi `Template_Import_Karyawan_BARAK.xlsx` yang dapat langsung diunduh pengguna untuk panduan format data.
+
+### 3.5 Sinkronisasi Presensi Posko & Pembersihan Sesi Lembar Tersedia
+- **Sinkronisasi Presensi Berdasarkan Klien & Lokasi (`AttendanceSpreadsheetPage.jsx`):**
+  - Dropdown Klien dan Lokasi Penempatan terhubung langsung ke query penugasan aktif (`barak_assignments`).
+  - Ketika pasangan Klien dan Lokasi dipilih, seluruh personil dengan penugasan aktif pada lokasi tersebut otomatis mengisi kolom "Nama Karyawan".
+  - Kolom jam "Datang", "Pulang", dan "Lembur" disiapkan kosong agar petugas lapangan dapat mengisinya secara manual.
+  - Jika belum ada penugasan aktif pada lokasi tersebut, antarmuka menampilkan spanduk notifikasi: `"Data Karyawan pada lokasi klien ini masih kosong"`.
+- **Ekspor Formal Kop Perusahaan:**
+  - Fungsi ekspor menghasilkan file Excel dengan kop resmi korporat PT. BIMASENA ADHIRAJA SARADIKA, judul dokumen formal, metadata klien, lokasi, periode, tanggal cetak, dan identitas petugas inputer.
+- **Pembersihan Sesi Petugas Inputer (`AuthProvider.jsx`):**
+  - Khusus pengguna peran inputer (`user1`, `user2`), riwayat lembar kerja sementara pada sesi tersebut ("Lembar Tersedia" di `barak_attendance_sheets`) dibersihkan dari penyimpanan lokal saat aksi Logout dieksekusi.
+  - Hal ini menjamin bahwa setiap sesi kerja baru dimulai dalam keadaan bersih tanpa kontaminasi draf pekerjaan sesi terdahulu.
 
 ---
 

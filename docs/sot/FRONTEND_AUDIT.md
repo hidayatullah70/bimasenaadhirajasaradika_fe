@@ -527,7 +527,19 @@ Sebanyak 15 komponen publik berikut yang berada di folder `src/features/landing/
 14. [PublicFooter.jsx](file:///c:/laragon/www/bimasenaadhirajasaradika/frontend/src/features/landing/PublicFooter.jsx) — Peta situs footer, saluran ganda WhatsApp, unduhan profil perusahaan PDF resmi.
 15. [FloatingAdminCTA.jsx](file:///c:/laragon/www/bimasenaadhirajasaradika/frontend/src/features/landing/FloatingAdminCTA.jsx) — Tombol melayang peluncur cepat akun demo sistem operasional.
 
-**Ketetapan Pemeliharaan:** Dilarang melakukan perubahan warna, tipografi (Inter + Orbitron), susunan tata letak, animasi, maupun gaya CSS pada seluruh berkas di atas.
+---
+
+## S. ADDENDUM PERKEMBANGAN & RESOLUSI ARSITEKTUR (OKTOBER 2026)
+
+Seluruh kelemahan arsitektur yang teridentifikasi dalam audit awal telah terselesaikan dan disempurnakan:
+1. **Serialisasi Kueri Klien API:** `apiClient.js` kini menangani parameter query secara penuh via `buildUrlWithParams`.
+2. **Persistensi Penuh Seluruh Adapter:** Seluruh 24 adapter kini beroperasi di atas `storageEngine.js` dengan mekanisme namespace `barak_*`, deduplikasi otomatis, dan proteksi 18 klien riil.
+3. **Pemisahan Karyawan & Penugasan (Placements):** Model penugasan mandiri (`placements`) telah aktif penuh, memfasilitasi rotasi personel tanpa merusak identitas karyawan.
+4. **Fitur Impor Massal Excel Karyawan (`EmployeeImportModal.jsx`):** HRD dapat mengimpor berkas `.xlsx` dengan template terstandarisasi yang secara atomik menerbitkan penugasan aktif ke Klien dan Lokasi terpilih.
+5. **Presensi Berbasis Klien & Lokasi (`AttendanceSpreadsheetPage.jsx`):** Pemuatan dinamis daftar nama personil aktif berdasarkan Klien dan Lokasi posko dengan penyiapan field jam kosong manual, empty state banner, format ekspor formal ber-header kop resmi, dan pembersihan draf lembar kerja saat inputer logout.
+6. **Maker-Checker & Approval Center:** Telah aktif penuh dengan antrean persetujuan Direktur untuk penghapusan personil, penggajian, dan kontrak.
+7. **Landing Page Terverifikasi:** 15 berkas di `src/features/landing/*` tetap 100% dibekukan dan bersih dari modifikasi.
 
 ---
 *Akhir Dokumen FRONTEND_AUDIT.md*
+

@@ -1,6 +1,6 @@
 # FINAL_FRONTEND_HANDOFF.md — PT. BARAK IOMS
-**Versi:** 2.0 (Executive Frontend Handoff Deliverable)  
-**Tanggal:** 29 September 2026  
+**Versi:** 2.1 (Executive Frontend Handoff Deliverable)  
+**Tanggal:** 4 Oktober 2026  
 **Status:** FRONTEND 100% READY FOR BACKEND IMPLEMENTATION  
 **Landing Page Guard:** STRICTLY FROZEN (15 Berkas di `src/features/landing/*` Utuh Tanpa Modifikasi)
 
@@ -32,7 +32,11 @@ Sepanjang rangkaian pengembangan dari STEP 1 hingga STEP 5, sistem frontend tela
 7. **Abstraksi Dokumen & File Storage:**
    - Pembuatan `fileAdapter.js` yang mengabstraksikan unggahan berkas (KTP, foto, kontrak) untuk kompatibel dengan S3, MinIO, atau Cloud Storage tanpa vendor lock-in.
 8. **Jaminan Kualitas Komprehensif (QA 100% Pass):**
-   - 166 / 166 pengujian otomatis lolos (`npm test`), 0 error linter (`npm run lint`), dan build produksi bersih (`npm run build`).
+   - 105 / 105 pengujian otomatis lolos (`npm test`), 0 error linter (`npm run lint`), dan build produksi bersih (`npm run build`).
+9. **Impor Excel Karyawan Massal & Penugasan Atomik:**
+   - Penambahan modal impor Excel `.xlsx` (`EmployeeImportModal.jsx`) dengan template terstandarisasi yang secara otomatis membuat rekaman karyawan sekaligus mengikat penugasan aktif ke Klien dan Lokasi Penempatan terpilih.
+10. **Presensi Dinamis & Isolasi Sesi Petugas Inputer:**
+    - Integrasi seleksi Klien dan Lokasi pada spreadsheet presensi dengan penarikan nama karyawan otomatis, penyediaan field entri jam kerja kosong untuk pengisian manual, format ekspor berkop resmi, serta pembersihan draf lembar kerja saat petugas lapangan `user1` dan `user2` logout.
 
 ---
 

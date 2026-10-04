@@ -1,6 +1,6 @@
 # 02_API_CONTRACT.md — PT. BARAK IOMS
-**Versi:** 2.0 (REST Specification & Payload Envelope)  
-**Tanggal:** 29 September 2026  
+**Versi:** 2.1 (REST Specification & Payload Envelope)  
+**Tanggal:** 4 Oktober 2026  
 **Status:** COMPLETE & AUTHORITATIVE  
 **Ruang Lingkup:** Kontrak Komunikasi HTTP REST Frontend $\leftrightarrow$ Backend
 
@@ -18,7 +18,7 @@ Semua endpoint API backend **wajib** mengembalikan respons JSON dalam struktur a
     "id": "BRK-EMP-001",
     "nama_lengkap_sesuai_KTP": "Budi Santoso",
     "status_kerja": "TETAP",
-    "updatedAt": "2026-09-29T10:30:00.000Z"
+    "updatedAt": "2026-10-04T10:30:00.000Z"
   },
   "message": "Data karyawan berhasil diperbarui.",
   "meta": {}
@@ -77,22 +77,24 @@ Setiap permintaan dari Frontend ke Backend menyertakan header:
 | `POST` | `/auth/login` | Otentikasi pengguna & terbitkan JWT | `{ username, password }` | Publik |
 | `POST` | `/auth/refresh` | Perpanjang token akses via refresh token | `{ refreshToken }` | Publik |
 | `GET` | `/auth/me` | Ambil profil pengguna login & daftar izin | - | Terautentikasi |
-| `POST` | `/auth/logout` | Revokasi sesi & blacklist token | - | Terautentikasi |
+| `POST` | `/auth/logout` | Revokasi sesi, pembersihan draf inputer, & blacklist token | - | Terautentikasi |
 
 ### 3.2 Master Karyawan (`/employees`)
 | Metode | Endpoint | Deskripsi | Query / Body Payload | Izin Diperlukan |
 |---|---|---|---|---|
 | `GET` | `/employees` | Daftar karyawan (filter & paginasi) | `?search=&status=&serviceType=&page=&limit=` | `employee.read` |
 | `GET` | `/employees/:id` | Detail lengkap profil satu karyawan | - | `employee.read` |
-| `POST` | `/employees` | Daftarkan personil baru | `{ nama_lengkap_sesuai_KTP, NIK, ... }` | `employee.create` |
+| `POST` | `/employees` | Daftarkan personil baru secara manual | `{ nama_lengkap_sesuai_KTP, NIK, ... }` | `employee.create` |
 | `PATCH` | `/employees/:id` | Perbarui informasi profil karyawan | `{ jabatan, alamat, telepon, ... }` | `employee.update` |
+| `POST` | `/employees/import` | Impor data karyawan massal via Excel (.xlsx) dengan auto-placement atomik | `{ clientId, siteLocationId, location, employees: [{ nik, name, position, department, phone, email, joinDate, salary, status, bankName, bankAccount }] }` | `employee.create` |
+| `GET` | `/employees/template` | Unduh file template Excel (.xlsx) resmi untuk impor karyawan | - | `employee.read` |
 | `POST` | `/employees/:id/delete-request` | Ajukan permohonan nonaktif/hapus ke Direktur | `{ reason, requestedBy }` | `employee.delete.request` |
 | `POST` | `/employees/:id/soft-delete` | Eksekusi penghapusan logis pasca-persetujuan | `{ deletedBy, reason }` | `employee.delete.approve` |
 
 ### 3.3 Penugasan & Rotasi Posko (`/placements`)
 | Metode | Endpoint | Deskripsi | Query / Body Payload | Izin Diperlukan |
 |---|---|---|---|---|
-| `GET` | `/placements` | Daftar penugasan personil aktif/riwayat | `?employeeId=&clientId=&locationId=&status=&page=` | `placement.read` |
+| `GET` | `/placements` | Daftar penugasan personil aktif/riwayat (mendukung filter pencarian karyawan aktif per klien & lokasi) | `?employeeId=&clientId=&locationId=&location=&status=ACTIVE&page=` | `placement.read` |
 | `GET` | `/placements/:id` | Detail penugasan dan formasi posko | - | `placement.read` |
 | `POST` | `/placements` | Plotting personil ke posko & jadwal | `{ employeeId, clientId, locationId, shiftId, role }` | `placement.create` |
 | `PATCH` | `/placements/:id` | Penyesuaian data penugasan berjalan | `{ shiftId, role, notes }` | `placement.update` |
@@ -123,6 +125,9 @@ Setiap permintaan dari Frontend ke Backend menyertakan header:
 | `GET` | `/attendance` | Spreadsheet log presensi posko | `?date=&locationId=&clientId=&status=` | `attendance.read` |
 | `POST` | `/attendance/check-in` | Rekam absensi (in/out/alpha/izin) | `{ employeeId, locationId, shiftId, status, time }` | `attendance.record` |
 | `PATCH` | `/attendance/:id` | Koreksi jam masuk/keluar oleh HRD | `{ checkInTime, checkOutTime, notes }` | `attendance.edit` |
+| `GET` | `/attendance/sheets` | Ambil daftar lembar rekapitulasi presensi posko yang tersimpan | `?inputerId=&clientId=&location=&month=&year=` | `attendance.read` |
+| `POST` | `/attendance/sheets` | Simpan lembar rekapitulasi presensi dengan metadata korporat formal | `{ clientId, clientName, location, month, year, printDate, inputerId, inputerName, status, records: [{ employeeId, name, position, datang, pulang, lembur, status, notes }] }` | `attendance.record` |
+| `DELETE` | `/attendance/sheets/drafts` | Bersihkan lembar draf kerja sementara milik inputer saat logout | `?inputerId=` | `attendance.record` |
 | `POST` | `/attendance/finalize` | Finalisasi & kunci lembar absensi bulanan | `{ month, year, finalizedBy }` | `attendance.finalize` |
 | `POST` | `/attendance/reopen` | Buka kembali lembar terkunci (Direktur) | `{ periodId, reason, authorizedBy }` | `attendance.reopen` |
 
@@ -191,3 +196,13 @@ Setiap permintaan dari Frontend ke Backend menyertakan header:
 | `POST` | `/storage/upload` | Unggah file via multipart form data | `FormData: { file, category, entityId, description }` | Terautentikasi |
 | `POST` | `/storage/presigned-url` | Ambil URL presigned untuk direct upload S3 | `{ filename, mimeType, category }` | Terautentikasi |
 | `DELETE` | `/storage/files/:id` | Hapus file dari penyimpanan | - | Terautentikasi |
+
+### 3.14 Master Pengguna & Hak Akses (`/users`)
+| Metode | Endpoint | Deskripsi | Query / Body Payload | Izin Diperlukan |
+|---|---|---|---|---|
+| `GET` | `/users` | Daftar akun pengguna internal, inputer, dan PIC | `?search=&role=&status=&page=&limit=` | `user.read` |
+| `GET` | `/users/:id` | Rincian profil akun pengguna dan relasi PIC klien | - | `user.read` |
+| `POST` | `/users` | Buat akun pengguna baru (menautkan clientId jika PIC) | `{ username, email, password, fullName, role, clientId }` | `user.create` |
+| `PATCH` | `/users/:id` | Perbarui peran, status aktif, atau ganti sandi | `{ fullName, role, status, clientId, password }` | `user.update` |
+| `DELETE` | `/users/:id` | Nonaktifkan atau soft-delete akun pengguna | - | `user.delete` |
+
