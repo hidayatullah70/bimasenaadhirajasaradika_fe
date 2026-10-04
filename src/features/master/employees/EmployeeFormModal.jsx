@@ -4,11 +4,12 @@
  */
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { X, Save, Camera, Upload, Trash2 } from 'lucide-react';
+import { X, Save, Camera, Upload, Trash2, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { MOCK_CLIENTS, MOCK_LOCATIONS } from '@/services/mock/mockMasterData';
 import { SERVICE_TYPES, PTKP_OPTIONS, getServiceLabel } from '@/constants/business';
 import { resizeImageTo3x4 } from '@/utils/imageResize';
+import EmployeeImportModal from './EmployeeImportModal';
 import toast from 'react-hot-toast';
 
 const DEFAULT_JABATAN_OPTIONS = [
@@ -24,7 +25,7 @@ const DEFAULT_JABATAN_OPTIONS = [
   'Petugas Kebersihan',
 ];
 
-export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, clients = [], locations = [] }) {
+export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, onImportSuccess, clients = [], locations = [] }) {
   const allClients = clients && clients.length > 0 ? clients : MOCK_CLIENTS;
   const allLocations = locations && locations.length > 0 ? locations : MOCK_LOCATIONS;
 
@@ -61,6 +62,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, c
 
   const [errors, setErrors] = useState({});
   const [isCameraModalOpen, setIsCameraModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   // Dynamic custom job roles / jabatan state
   const [customJabatanList, setCustomJabatanList] = useState(() => {
@@ -326,9 +328,24 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, c
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-border flex items-center justify-between bg-canvas/40">
           <div>
-            <h2 className="text-lg font-bold text-ink">
-              {employee ? 'Ubah Data Karyawan' : 'Tambah Karyawan Baru'}
-            </h2>
+            <div className="flex items-center gap-2.5">
+              <h2 className="text-lg font-bold text-ink">
+                {employee ? 'Ubah Data Karyawan' : 'Tambah Karyawan Baru'}
+              </h2>
+              {!employee && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsImportModalOpen(true)}
+                  className="gap-1.5 text-xs text-primary-red border-primary-red/40 hover:bg-red-50 bg-white shadow-xs"
+                  title="Import data karyawan sekaligus dari file Excel (.xlsx)"
+                >
+                  <FileSpreadsheet className="h-3.5 w-3.5 text-primary-red" />
+                  <span>Import Excel (.xlsx)</span>
+                </Button>
+              )}
+            </div>
             <p className="text-xs text-muted">
               Pencatatan Master Karyawan terpusat per standar regulasi ketenagakerjaan dan SOP BARAK.
             </p>
@@ -670,7 +687,15 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, c
                 <label className="block font-medium text-ink mb-1">Klien Penempatan</label>
                 <select
                   value={formData.penugasan_klien}
-                  onChange={(e) => setFormData({ ...formData, penugasan_klien: e.target.value })}
+                  onChange={(e) => {
+                    const newCId = e.target.value;
+                    const matches = allLocations.filter((l) => l.clientId === newCId);
+                    setFormData((prev) => ({
+                      ...prev,
+                      penugasan_klien: newCId,
+                      lokasi_penugasan: matches.length > 0 ? matches[0].id : prev.lokasi_penugasan,
+                    }));
+                  }}
                   className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
                 >
                   {allClients.map((c) => (
@@ -685,12 +710,34 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, c
                   onChange={(e) => setFormData({ ...formData, lokasi_penugasan: e.target.value })}
                   className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
                 >
-                  {allLocations.map((l) => (
+                  {(allLocations.filter((l) => l.clientId === formData.penugasan_klien).length > 0
+                    ? allLocations.filter((l) => l.clientId === formData.penugasan_klien)
+                    : allLocations
+                  ).map((l) => (
                     <option key={l.id} value={l.id}>{l.name} - {l.city}</option>
                   ))}
                 </select>
               </div>
             </div>
+
+            {!employee && (
+              <div className="mt-3 p-3 bg-primary-red/5 border border-primary-red/20 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2 text-xs text-ink">
+                  <FileSpreadsheet className="h-4 w-4 text-primary-red flex-none" />
+                  <span>Ingin menginput banyak data personel sekaligus untuk lokasi klien ini?</span>
+                </div>
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setIsImportModalOpen(true)}
+                  className="gap-1.5 text-xs bg-primary-red hover:bg-red-700 flex-none"
+                >
+                  <Upload className="h-3.5 w-3.5" />
+                  <span>Import Excel (.xlsx)</span>
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Baris 5: Data Rekening BCA, NPWP, Status Pajak (PTKP), & BPJS */}
@@ -833,6 +880,21 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, c
             </div>
           </div>
         )}
+
+        {/* Modal Import Excel Karyawan */}
+        <EmployeeImportModal
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+          onSuccess={() => {
+            setIsImportModalOpen(false);
+            if (onImportSuccess) onImportSuccess();
+            else if (onClose) onClose();
+          }}
+          clients={allClients}
+          locations={allLocations}
+          initialClientId={formData.penugasan_klien}
+          initialLocationId={formData.lokasi_penugasan}
+        />
       </div>
     </div>
   );

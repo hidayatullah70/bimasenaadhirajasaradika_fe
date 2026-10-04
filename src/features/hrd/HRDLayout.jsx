@@ -72,7 +72,7 @@ export default function HRDLayout() {
             </h1>
             <p className="text-xs sm:text-sm text-muted mt-1">
               {isAttendanceOnly
-                ? `Penginputan jam datang dan jam pulang personel lapangan (${currentUser?.roleLabel || 'Admin HRD'}).`
+                ? `Penginputan jam datang dan jam pulang personel lapangan seluruh lokasi penempatan (${currentUser?.roleLabel || 'Admin HRD'}).`
                 : 'Pengelolaan roster absensi bulanan, verifikasi kehadiran personel, dan rekap input penggajian.'}
             </p>
           </div>

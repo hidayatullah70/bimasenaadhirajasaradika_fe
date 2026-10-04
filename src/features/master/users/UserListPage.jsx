@@ -37,7 +37,7 @@ export default function UserListPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await userAdapter.getUsers({ search, role, page, pageSize: 10 });
+      const res = await userAdapter.getUsers({ search, role, page, pageSize: 25 });
       if (res.data) {
         setUsers(res.data);
         setMeta(res.meta);
@@ -185,9 +185,16 @@ export default function UserListPage() {
                     </td>
                     <td className="px-4 py-3 text-muted">{u.email}</td>
                     <td className="px-4 py-3">
-                      <Badge variant="info">
-                        {ROLE_LABELS[u.role] || u.role}
-                      </Badge>
+                      <div>
+                        <Badge variant="info">
+                          {u.roleLabel || ROLE_LABELS[u.role] || u.role}
+                        </Badge>
+                        {u.subRole && (
+                          <span className="block text-[10px] font-mono text-muted mt-0.5">
+                            Sub-Role: {u.subRole}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-ink font-medium">{u.department}</td>
                     <td className="px-4 py-3">

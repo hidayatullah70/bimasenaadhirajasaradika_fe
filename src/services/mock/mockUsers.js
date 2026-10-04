@@ -336,8 +336,7 @@ export const MOCK_USERS = Object.freeze([
     email: 'user1@bimasenaadhirajasaradika.com',
     role: ROLES.HRD,
     subRole: 'ADMIN_HRD',
-    roleLabel: 'Admin HRD (Area 1)',
-    assignedLocationIds: ['LOC-001', 'LOC-002', 'LOC-003', 'LOC-004'],
+    roleLabel: 'Admin HRD (Inputer Absensi)',
     permissions: [
       PERMISSIONS.ATTENDANCE_VIEW,
       PERMISSIONS.ATTENDANCE_EDIT,
@@ -355,8 +354,7 @@ export const MOCK_USERS = Object.freeze([
     email: 'user2@bimasenaadhirajasaradika.com',
     role: ROLES.HRD,
     subRole: 'ADMIN_HRD',
-    roleLabel: 'Admin HRD (Area 2)',
-    assignedLocationIds: ['LOC-005', 'LOC-006', 'LOC-007', 'LOC-008'],
+    roleLabel: 'Admin HRD (Inputer Absensi)',
     permissions: [
       PERMISSIONS.ATTENDANCE_VIEW,
       PERMISSIONS.ATTENDANCE_EDIT,

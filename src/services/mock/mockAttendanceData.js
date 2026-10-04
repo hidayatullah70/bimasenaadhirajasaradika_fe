@@ -4,7 +4,7 @@
  * and Section 21 (Attendance Data Model & Unique Constraint).
  */
 
-import { MOCK_ASSIGNMENTS, MOCK_CLIENTS, MOCK_LOCATIONS, MOCK_SHIFTS } from '@/services/mock/mockMasterData';
+import { MOCK_ASSIGNMENTS, MOCK_CLIENTS, MOCK_LOCATIONS, MOCK_SHIFTS, MOCK_EMPLOYEES } from '@/services/mock/mockMasterData';
 import { STATUS } from '@/constants/status';
 
 /**
@@ -85,7 +85,7 @@ export const INITIAL_ATTENDANCE_SHEETS = [
     generatedAt: '2026-09-01T08:00:00Z',
     finalizedAt: null,
     finalizedBy: null,
-    totalPersonnel: 8,
+    totalPersonnel: 24,
   },
   // 2. September 2026 — Surya Dunia Express (OPEN)
   {
@@ -104,7 +104,7 @@ export const INITIAL_ATTENDANCE_SHEETS = [
     generatedAt: '2026-09-01T08:30:00Z',
     finalizedAt: null,
     finalizedBy: null,
-    totalPersonnel: 6,
+    totalPersonnel: 20,
   },
   // 3. Agustus 2026 — JNT Central Hub (FINALIZED / Locked)
   {
@@ -123,7 +123,7 @@ export const INITIAL_ATTENDANCE_SHEETS = [
     generatedAt: '2026-08-01T08:00:00Z',
     finalizedAt: '2026-08-31T17:00:00Z',
     finalizedBy: 'Siti Rahmawati (HRD)',
-    totalPersonnel: 8,
+    totalPersonnel: 24,
   },
   // 4. Juli 2026 — JNT Central Hub (FINALIZED / Locked)
   {
@@ -142,7 +142,7 @@ export const INITIAL_ATTENDANCE_SHEETS = [
     generatedAt: '2026-07-01T08:00:00Z',
     finalizedAt: '2026-07-31T17:00:00Z',
     finalizedBy: 'Siti Rahmawati (HRD)',
-    totalPersonnel: 8,
+    totalPersonnel: 24,
   },
 ];
 
@@ -152,24 +152,51 @@ export const INITIAL_ATTENDANCE_SHEETS = [
  * Master fields are locked; checkIn and checkOut are editable by HRD.
  */
 export function generateRowsForSheet(sheet) {
-  // Filter active assignments for this client and location
+  // Filter active assignments for this location
   const matchingAssignments = MOCK_ASSIGNMENTS.filter(
-    (a) => a.clientId === sheet.clientId && a.locationId === sheet.locationId && a.status === STATUS.ACTIVE
+    (a) => a.locationId === sheet.locationId && a.status === STATUS.ACTIVE
   );
 
-  // If fewer than 6, take the first 8 assignments as representation
-  const targetAssignments = matchingAssignments.length > 0 ? matchingAssignments : MOCK_ASSIGNMENTS.slice(0, 8);
+  // If fewer than 20 personnel assigned to this location in mock seed,
+  // supplement with employees from MOCK_EMPLOYEES so that the user sees all personnel (up to 30 personnel)
+  const existingEmpIds = new Set(matchingAssignments.map((a) => a.employeeId));
+  const targetPersonnel = [...matchingAssignments];
+  const maxToSeed = Math.min(MOCK_EMPLOYEES.length, 25);
 
-  const daysInPeriod = [
-    '2026-09-01', '2026-09-02', '2026-09-03', '2026-09-04', '2026-09-05',
-    '2026-09-06', '2026-09-07', '2026-09-08', '2026-09-09', '2026-09-10',
-    '2026-09-11', '2026-09-12', '2026-09-13', '2026-09-14', '2026-09-15',
-  ];
+  MOCK_EMPLOYEES.forEach((emp, idx) => {
+    if (targetPersonnel.length < maxToSeed && !existingEmpIds.has(emp.id)) {
+      const shift = MOCK_SHIFTS[idx % MOCK_SHIFTS.length];
+      targetPersonnel.push({
+        id: `BRK-ASN-LOC-${sheet.locationId}-${emp.id}`,
+        employeeId: emp.id,
+        employeeName: emp.nama_lengkap_sesuai_KTP,
+        employeeNik: emp.NIK,
+        clientId: sheet.clientId,
+        clientName: sheet.clientName,
+        locationId: sheet.locationId,
+        locationName: sheet.locationName,
+        shiftId: shift.id,
+        shiftName: shift.name,
+        roleInUnit: emp.jabatan || 'Anggota',
+        serviceType: emp.jenis_layanan || 'security',
+        status: STATUS.ACTIVE,
+      });
+      existingEmpIds.add(emp.id);
+    }
+  });
+
+  // Days 1 through 31 in period
+  const yStr = sheet.periodYear || 2026;
+  const mStr = String(sheet.periodMonth || 9).padStart(2, '0');
+  const daysInPeriod = Array.from({ length: 31 }, (_, i) => {
+    const dStr = String(i + 1).padStart(2, '0');
+    return `${yStr}-${mStr}-${dStr}`;
+  });
 
   const rows = [];
   let rowCounter = 1;
 
-  targetAssignments.forEach((asn, empIdx) => {
+  targetPersonnel.forEach((asn, empIdx) => {
     const shift = MOCK_SHIFTS.find((s) => s.id === asn.shiftId) || MOCK_SHIFTS[0];
 
     daysInPeriod.forEach((dateStr, dayIdx) => {
@@ -177,16 +204,19 @@ export function generateRowsForSheet(sheet) {
       let checkIn = shift.startTime;
       let checkOut = shift.endTime;
 
-      if (dayIdx === 3 && empIdx === 1) {
-        // Late employee on day 4
+      if (dayIdx % 7 === 6) {
+        // Off day
+        checkIn = '';
+        checkOut = '';
+      } else if (dayIdx === 3 && empIdx === 1) {
         checkIn = '07:35';
+        checkOut = '17:00';
       } else if (dayIdx === 5 && empIdx === 2) {
-        // Absent / Unfilled on day 6
         checkIn = '';
         checkOut = '';
       } else if (dayIdx === 8 && empIdx === 0) {
-        // Early leave on day 9
-        checkOut = '14:20';
+        checkIn = '07:00';
+        checkOut = '18:00';
       }
 
       const metrics = calculateAttendanceMetrics(
@@ -198,7 +228,7 @@ export function generateRowsForSheet(sheet) {
       );
 
       rows.push({
-        id: `ROW-${sheet.id}-${rowCounter.toString().padStart(4, '0')}`,
+        id: `ROW-${sheet.id}-${rowCounter.toString().padStart(5, '0')}`,
         sheetId: sheet.id,
         // Master Locked Fields (PRD §11.2)
         employeeId: asn.employeeId,

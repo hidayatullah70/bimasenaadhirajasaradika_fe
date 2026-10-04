@@ -13,7 +13,37 @@ const isMock = import.meta.env.VITE_API_MODE !== 'rest';
 const STORAGE_KEY = 'barak_users';
 
 function getStore() {
-  return getStoredCollection(STORAGE_KEY, () => [...MOCK_SYSTEM_USERS]);
+  const store = getStoredCollection(STORAGE_KEY, () => [...MOCK_SYSTEM_USERS]);
+
+  // Self-healing & auto-sync: pastikan seluruh user default (termasuk user1, user2, pic) selalu ada di store
+  let hasMissing = false;
+  MOCK_SYSTEM_USERS.forEach((defaultUser) => {
+    const idKey = (defaultUser.id || '').toUpperCase();
+    const userKey = (defaultUser.username || '').toLowerCase();
+    const existingIndex = store.findIndex(
+      (u) => (u.id || '').toUpperCase() === idKey || (u.username || '').toLowerCase() === userKey
+    );
+    if (existingIndex === -1) {
+      store.push({ ...defaultUser });
+      hasMissing = true;
+    } else {
+      // Sinkronkan atribut roleLabel & subRole jika belum ada
+      if (defaultUser.roleLabel && !store[existingIndex].roleLabel) {
+        store[existingIndex].roleLabel = defaultUser.roleLabel;
+        hasMissing = true;
+      }
+      if (defaultUser.subRole && !store[existingIndex].subRole) {
+        store[existingIndex].subRole = defaultUser.subRole;
+        hasMissing = true;
+      }
+    }
+  });
+
+  if (hasMissing) {
+    saveStore(store);
+  }
+
+  return store;
 }
 
 function saveStore(store) {
@@ -29,10 +59,12 @@ export const userAdapter = {
         const q = search.toLowerCase();
         filtered = filtered.filter(
           (u) =>
-            u.name.toLowerCase().includes(q) ||
-            u.username.toLowerCase().includes(q) ||
-            u.email.toLowerCase().includes(q) ||
-            u.department.toLowerCase().includes(q)
+            (u.name && u.name.toLowerCase().includes(q)) ||
+            (u.username && u.username.toLowerCase().includes(q)) ||
+            (u.email && u.email.toLowerCase().includes(q)) ||
+            (u.department && u.department.toLowerCase().includes(q)) ||
+            (u.roleLabel && u.roleLabel.toLowerCase().includes(q)) ||
+            (u.subRole && u.subRole.toLowerCase().includes(q))
         );
       }
 

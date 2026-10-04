@@ -7,7 +7,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Users, Search, Filter, Plus, Download, Eye, EyeOff,
-  MoreVertical, Shield, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle
+  MoreVertical, Shield, ChevronLeft, ChevronRight, CheckCircle2, AlertCircle, FileSpreadsheet
 } from 'lucide-react';
 import employeeAdapter from '@/services/adapters/employeeAdapter';
 import clientAdapter from '@/services/adapters/clientAdapter';
@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/Button';
 import { StateLoading, StateEmpty } from '@/components/ui/StateViews';
 import EmployeeDetailDrawer from './EmployeeDetailDrawer';
 import EmployeeFormModal from './EmployeeFormModal';
+import EmployeeImportModal from './EmployeeImportModal';
 import DeleteRequestModal from './DeleteRequestModal';
 import toast from 'react-hot-toast';
 
@@ -47,6 +48,7 @@ export default function EmployeeListPage() {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [deletingEmployee, setDeletingEmployee] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -260,9 +262,26 @@ export default function EmployeeListPage() {
             </Button>
           )}
 
+          {/* Import Excel */}
+          {canCreate && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                loadFormOptions();
+                setIsImportModalOpen(true);
+              }}
+              className="gap-1.5 text-primary-red border-primary-red/40 hover:bg-red-50 bg-white"
+              title="Import massal data karyawan dari file Excel (.xlsx)"
+            >
+              <FileSpreadsheet className="h-3.5 w-3.5 text-primary-red" />
+              <span>Import Excel</span>
+            </Button>
+          )}
+
           {/* Tambah Karyawan */}
           {canCreate && (
-            <Button variant="primary" size="sm" onClick={handleOpenCreate} className="gap-1.5">
+            <Button variant="primary" size="sm" onClick={handleOpenCreate} className="gap-1.5 bg-primary-red hover:bg-red-700">
               <Plus className="h-3.5 w-3.5" />
               <span>Tambah Karyawan</span>
             </Button>
@@ -455,6 +474,21 @@ export default function EmployeeListPage() {
         employee={editingEmployee}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSave}
+        onImportSuccess={() => {
+          setIsModalOpen(false);
+          loadData();
+        }}
+        clients={clients}
+        locations={locations}
+      />
+
+      <EmployeeImportModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onSuccess={() => {
+          setIsImportModalOpen(false);
+          loadData();
+        }}
         clients={clients}
         locations={locations}
       />

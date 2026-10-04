@@ -52,10 +52,10 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(async () => {
-    await authAdapter.logout();
+    await authAdapter.logout(currentUser);
     setCurrentUser(null);
     setError(null);
-  }, []);
+  }, [currentUser]);
 
   /**
    * Check if the current user has a given permission.
