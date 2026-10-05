@@ -75,8 +75,8 @@ export default function InvoiceFormModal({ isOpen, onClose, clients, onSubmit })
   const feeRateNum = Number(managementFeeRate) || 0;
   const managementFeeAmount = Math.round(subtotalServices * (feeRateNum / 100));
 
-  // PPH 23 = Sub Total Nilai Jasa * 2%
-  const pph23Amount = Math.round(subtotalServices * 0.02);
+  // PPH 23 = Nilai Manajemen Fee (n%) * 2%
+  const pph23Amount = Math.round(managementFeeAmount * 0.02);
 
   // PPN 11% = 0
   const ppnAmount = 0;
@@ -554,7 +554,7 @@ export default function InvoiceFormModal({ isOpen, onClose, clients, onSubmit })
               <div>
                 <span className="font-semibold text-ink block">PPH 23 (2%)</span>
                 <span className="text-[11px] text-muted">
-                  Rumus: Sub Total Nilai Jasa × 2%
+                  Rumus: Nilai Manajemen Fee ({feeRateNum}%) × 2%
                 </span>
               </div>
               <span className="font-bold text-ink">
