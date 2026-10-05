@@ -80,9 +80,9 @@ export const invoiceAdapter = {
       const invoices = getInvoicesStore();
       const nextNum = (invoices.length + 1).toString().padStart(3, '0');
       const subtotal = Number(payload.subtotal) || 0;
-      const taxRate = 0.11;
-      const taxAmount = Math.round(subtotal * taxRate);
-      const totalAmount = subtotal + taxAmount;
+      const taxRate = payload.taxRate !== undefined ? payload.taxRate : 0;
+      const taxAmount = payload.taxAmount !== undefined ? payload.taxAmount : 0;
+      const totalAmount = payload.totalAmount !== undefined ? payload.totalAmount : subtotal + taxAmount;
 
       const newInvoice = {
         ...payload,

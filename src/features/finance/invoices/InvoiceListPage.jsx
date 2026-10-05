@@ -275,7 +275,9 @@ export default function InvoiceListPage() {
                         </td>
                         <td className="py-3 px-4 font-bold text-ink">
                           Rp {inv.totalAmount.toLocaleString('id-ID')}
-                          <span className="text-[10px] text-muted block font-normal">(Inc. PPN 11%)</span>
+                          <span className="text-[10px] text-muted block font-normal">
+                            {inv.taxAmount > 0 ? '(Inc. PPN 11%)' : '(PPN 0%)'}
+                          </span>
                         </td>
                         <td className="py-3 px-4 font-semibold text-accent-green">
                           Rp {inv.paidAmount.toLocaleString('id-ID')}

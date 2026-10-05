@@ -63,8 +63,8 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
     year: 'numeric',
   });
 
-  const subtotal = invoice.subtotal || Math.round(invoice.totalAmount / 1.11);
-  const taxAmount = invoice.taxAmount || (invoice.totalAmount - subtotal);
+  const subtotal = invoice.subtotalServices || invoice.subtotal || Math.round(invoice.totalAmount / 1.11);
+  const taxAmount = invoice.taxAmount !== undefined ? invoice.taxAmount : (invoice.totalAmount - subtotal);
   const remaining = invoice.remainingAmount !== undefined ? invoice.remainingAmount : (invoice.totalAmount - (invoice.paidAmount || 0));
 
   return (
@@ -250,33 +250,83 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
               </div>
             </div>
 
-            {/* 4. Table of Billed Services */}
+            {/* 4. Table of Billed Services & Adjustments */}
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse border border-slate-200">
                 <thead>
                   <tr className="bg-slate-100 text-ink uppercase text-[11px] font-bold tracking-wider border-b border-slate-200">
                     <th className="py-2.5 px-3 border-r border-slate-200 w-10 text-center">No</th>
-                    <th className="py-2.5 px-4 border-r border-slate-200">Deskripsi Rincian Layanan Outsourcing</th>
+                    <th className="py-2.5 px-4 border-r border-slate-200">Deskripsi Rincian Layanan & Penyesuaian</th>
                     <th className="py-2.5 px-4 border-r border-slate-200 w-32 text-center">Periode</th>
                     <th className="py-2.5 px-4 text-right w-40">Jumlah (IDR)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 text-xs">
-                  <tr>
-                    <td className="py-3 px-3 border-r border-slate-200 text-center font-medium">1</td>
-                    <td className="py-3 px-4 border-r border-slate-200">
-                      <p className="font-bold text-ink">{invoice.serviceDescription}</p>
-                      {invoice.notes && (
-                        <p className="text-[11px] text-muted mt-0.5">{invoice.notes}</p>
-                      )}
-                    </td>
-                    <td className="py-3 px-4 border-r border-slate-200 text-center text-muted">
-                      {invoice.billingPeriod}
-                    </td>
-                    <td className="py-3 px-4 text-right font-semibold text-ink">
-                      Rp {subtotal.toLocaleString('id-ID')}
-                    </td>
-                  </tr>
+                  {invoice.serviceItems && invoice.serviceItems.length > 0 ? (
+                    invoice.serviceItems.map((item, idx) => (
+                      <tr key={item.id || idx}>
+                        <td className="py-2.5 px-3 border-r border-slate-200 text-center font-medium">{idx + 1}</td>
+                        <td className="py-2.5 px-4 border-r border-slate-200">
+                          <p className="font-semibold text-ink whitespace-pre-line">{item.description}</p>
+                        </td>
+                        <td className="py-2.5 px-4 border-r border-slate-200 text-center text-muted">
+                          {invoice.billingPeriod}
+                        </td>
+                        <td className="py-2.5 px-4 text-right font-semibold text-ink">
+                          Rp {(Number(item.amount) || 0).toLocaleString('id-ID')}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td className="py-3 px-3 border-r border-slate-200 text-center font-medium">1</td>
+                      <td className="py-3 px-4 border-r border-slate-200">
+                        <p className="font-bold text-ink">{invoice.serviceDescription}</p>
+                        {invoice.notes && (
+                          <p className="text-[11px] text-muted mt-0.5">{invoice.notes}</p>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 border-r border-slate-200 text-center text-muted">
+                        {invoice.billingPeriod}
+                      </td>
+                      <td className="py-3 px-4 text-right font-semibold text-ink">
+                        Rp {subtotal.toLocaleString('id-ID')}
+                      </td>
+                    </tr>
+                  )}
+
+                  {/* Render Adjustments (Reward / Potongan) in table if present */}
+                  {invoice.adjustments && invoice.adjustments.map((adj, idx) => (
+                    <tr key={adj.id || `adj-${idx}`} className={adj.type === 'REWARD' ? 'bg-emerald-50/30' : 'bg-amber-50/30'}>
+                      <td className="py-2 px-3 border-r border-slate-200 text-center font-medium text-slate-500">
+                        {(invoice.serviceItems?.length || 1) + idx + 1}
+                      </td>
+                      <td className="py-2 px-4 border-r border-slate-200">
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                              adj.type === 'REWARD'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : 'bg-amber-100 text-amber-800'
+                            }`}
+                          >
+                            {adj.type === 'REWARD' ? 'REWARD (+)' : 'POTONGAN (-)'}
+                          </span>
+                          <span className="font-medium text-ink">{adj.description}</span>
+                        </div>
+                      </td>
+                      <td className="py-2 px-4 border-r border-slate-200 text-center text-muted">
+                        {invoice.billingPeriod}
+                      </td>
+                      <td
+                        className={`py-2 px-4 text-right font-bold ${
+                          adj.type === 'REWARD' ? 'text-emerald-700' : 'text-red-600'
+                        }`}
+                      >
+                        {adj.type === 'REWARD' ? '+' : '-'} Rp {(Number(adj.amount) || 0).toLocaleString('id-ID')}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -294,17 +344,47 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
               </div>
 
               {/* Numerical Calculation Summary */}
-              <div className="w-full sm:w-72 space-y-2 text-xs">
+              <div className="w-full sm:w-80 space-y-1.5 text-xs">
                 <div className="flex justify-between text-muted">
-                  <span>Subtotal Biaya Jasa:</span>
+                  <span>Subtotal Nilai Jasa:</span>
                   <span className="font-semibold text-ink">Rp {subtotal.toLocaleString('id-ID')}</span>
                 </div>
+
+                {invoice.subtotalReward > 0 && (
+                  <div className="flex justify-between text-accent-green">
+                    <span>Sub Total Reward (+):</span>
+                    <span className="font-semibold">+ Rp {invoice.subtotalReward.toLocaleString('id-ID')}</span>
+                  </div>
+                )}
+
+                {invoice.subtotalPotongan > 0 && (
+                  <div className="flex justify-between text-red-600">
+                    <span>Sub Total Potongan (-):</span>
+                    <span className="font-semibold">- Rp {invoice.subtotalPotongan.toLocaleString('id-ID')}</span>
+                  </div>
+                )}
+
+                {(invoice.managementFeeAmount > 0 || (invoice.managementFeeRate !== undefined && invoice.managementFeeRate > 0)) && (
+                  <div className="flex justify-between text-slate-600">
+                    <span>Manajemen Fee ({invoice.managementFeeRate || 0}%):</span>
+                    <span className="font-semibold text-ink">- Rp {(invoice.managementFeeAmount || 0).toLocaleString('id-ID')}</span>
+                  </div>
+                )}
+
+                {invoice.pph23Amount > 0 && (
+                  <div className="flex justify-between text-slate-600">
+                    <span>PPH 23 (2%):</span>
+                    <span className="font-semibold text-ink">- Rp {invoice.pph23Amount.toLocaleString('id-ID')}</span>
+                  </div>
+                )}
+
                 <div className="flex justify-between text-muted">
-                  <span>PPN 11% (Pajak Pertambahan Nilai):</span>
+                  <span>PPN 11%:</span>
                   <span className="font-semibold text-ink">Rp {taxAmount.toLocaleString('id-ID')}</span>
                 </div>
+
                 <div className="border-t-2 border-slate-200 pt-2 flex justify-between text-sm font-bold text-ink">
-                  <span>Total Tagihan:</span>
+                  <span>Total Tagihan Bersih:</span>
                   <span className="text-primary-red">Rp {invoice.totalAmount.toLocaleString('id-ID')}</span>
                 </div>
 
