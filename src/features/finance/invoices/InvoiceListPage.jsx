@@ -17,6 +17,7 @@ import {
   CreditCard,
   Building2,
   Calendar,
+  Printer,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -27,6 +28,7 @@ import invoiceAdapter from '@/services/adapters/invoiceAdapter';
 import clientAdapter from '@/services/adapters/clientAdapter';
 import InvoiceFormModal from './InvoiceFormModal';
 import PaymentRecordModal from './PaymentRecordModal';
+import InvoicePrintModal from './InvoicePrintModal';
 import { STATUS } from '@/constants/status';
 
 export default function InvoiceListPage() {
@@ -43,6 +45,7 @@ export default function InvoiceListPage() {
   // Modals & Expand
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [paymentInvoice, setPaymentInvoice] = useState(null);
+  const [printInvoice, setPrintInvoice] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
 
   const loadData = useCallback(async () => {
@@ -290,6 +293,17 @@ export default function InvoiceListPage() {
                         </td>
                         <td className="py-3 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
+                            {/* Tombol Cetak Faktur Resmi */}
+                            <button
+                              type="button"
+                              onClick={() => setPrintInvoice(inv)}
+                              className="p-1.5 text-primary-red hover:bg-primary-red/10 rounded-lg font-medium text-xs flex items-center gap-1 transition-colors"
+                              title="Cetak Faktur Penagihan Klien (Print / PDF)"
+                            >
+                              <Printer className="h-3.5 w-3.5" />
+                              <span>Cetak</span>
+                            </button>
+
                             <button
                               type="button"
                               onClick={() => setExpandedId(isExpanded ? null : inv.id)}
@@ -353,13 +367,24 @@ export default function InvoiceListPage() {
                         <tr className="bg-slate-50/50">
                           <td colSpan={8} className="p-4 border-b border-border">
                             <div className="bg-white p-4 rounded-xl border border-border shadow-2xs space-y-3">
-                              <div className="flex items-center justify-between">
+                              <div className="flex items-center justify-between flex-wrap gap-2">
                                 <h5 className="text-xs font-bold text-ink uppercase tracking-wider">
                                   Riwayat Setoran Pembayaran ({inv.paymentHistory?.length || 0})
                                 </h5>
-                                <span className="text-xs text-muted">
-                                  Sisa Tagihan: <strong className="text-primary-red">Rp {inv.remainingAmount.toLocaleString('id-ID')}</strong>
-                                </span>
+                                <div className="flex items-center gap-3">
+                                  <span className="text-xs text-muted">
+                                    Sisa Tagihan: <strong className="text-primary-red">Rp {inv.remainingAmount.toLocaleString('id-ID')}</strong>
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setPrintInvoice(inv)}
+                                    className="px-2.5 py-1 text-xs bg-white hover:bg-slate-50 text-ink rounded-lg font-medium flex items-center gap-1.5 transition-colors border border-border shadow-2xs"
+                                    title="Cetak Faktur Penagihan Lengkap"
+                                  >
+                                    <Printer className="h-3.5 w-3.5 text-primary-red" />
+                                    <span>Cetak Faktur</span>
+                                  </button>
+                                </div>
                               </div>
 
                               {(!inv.paymentHistory || inv.paymentHistory.length === 0) ? (
@@ -421,6 +446,13 @@ export default function InvoiceListPage() {
         onClose={() => setPaymentInvoice(null)}
         invoice={paymentInvoice}
         onSubmit={handleRecordPayment}
+      />
+
+      <InvoicePrintModal
+        isOpen={!!printInvoice}
+        onClose={() => setPrintInvoice(null)}
+        invoice={printInvoice}
+        client={clients.find((c) => c.id === printInvoice?.clientId) || null}
       />
     </div>
   );
