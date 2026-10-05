@@ -1,12 +1,12 @@
 /**
  * Invoice Print Modal — PT. BARAK IOMS
  * Modal pratinjau dan pencetakan faktur penagihan resmi (Invoice) untuk klien.
- * Dilengkapi kop surat korporat, rincian PPN 11%, terbilang bahasa Indonesia,
- * instruksi rekening bank BCA, stempel pengesahan, dan print stylesheet A4 siap cetak / simpan PDF.
+ * Didesain efisien, ringkas, dan proporsional untuk kertas A4 Portrait (Single Page).
+ * Kolom 'Periode' dan badge 'Reward(+)' / 'Potongan(-)' dihapus agar simpel dan bersih sesuai standar faktur.
  */
 
 import React, { useRef } from 'react';
-import { Printer, X, Download, Building2, CheckCircle2, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Printer, X, Building2, ShieldCheck } from 'lucide-react';
 import Button from '@/components/ui/Button';
 
 /**
@@ -69,7 +69,7 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-ink/70 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 print:p-0 print:bg-white print:static print:inset-auto">
-      {/* Stylesheet khusus untuk print agar hanya faktur yang tercetak dengan rasio A4 */}
+      {/* Stylesheet khusus untuk print agar pas di A4 portrait */}
       <style>{`
         @media print {
           body * {
@@ -85,10 +85,11 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
             width: 100% !important;
             max-width: 100% !important;
             margin: 0 !important;
-            padding: 20mm !important;
+            padding: 8mm 12mm !important;
             background: white !important;
             border: none !important;
             box-shadow: none !important;
+            font-size: 10.5px !important;
           }
           @page {
             size: A4 portrait;
@@ -97,11 +98,11 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
         }
       `}</style>
 
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full border border-border overflow-hidden max-h-[95vh] flex flex-col print:max-h-none print:shadow-none print:border-none print:w-full">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full border border-border overflow-hidden max-h-[96vh] flex flex-col print:max-h-none print:shadow-none print:border-none print:w-full">
         {/* Top Control Bar (Hidden on Print) */}
-        <div className="p-4 sm:px-6 border-b border-border bg-slate-50 flex items-center justify-between flex-none print:hidden">
+        <div className="p-3.5 sm:px-6 border-b border-border bg-slate-50 flex items-center justify-between flex-none print:hidden">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-primary-red/10 text-primary-red">
+            <div className="p-1.5 rounded-lg bg-primary-red/10 text-primary-red">
               <Printer className="h-5 w-5" />
             </div>
             <div>
@@ -120,7 +121,7 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
               variant="primary"
               size="sm"
               onClick={handlePrint}
-              className="gap-1.5 shadow-sm"
+              className="gap-1.5 shadow-sm text-xs py-1.5 px-3"
             >
               <Printer className="h-4 w-4" />
               <span>Cetak / Simpan PDF</span>
@@ -136,59 +137,59 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
           </div>
         </div>
 
-        {/* Printable Invoice Container */}
-        <div className="p-6 sm:p-10 overflow-y-auto flex-1 bg-slate-100/50 print:bg-white print:p-0">
+        {/* Printable Invoice Container — Designed for A4 single page */}
+        <div className="p-4 sm:p-8 overflow-y-auto flex-1 bg-slate-100/50 print:bg-white print:p-0">
           <div
             id="barak-printable-invoice"
             ref={printAreaRef}
-            className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 sm:p-12 space-y-6 max-w-3xl mx-auto print:border-none print:shadow-none print:p-0 print:max-w-none text-ink text-xs leading-relaxed"
+            className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-4 max-w-3xl mx-auto print:border-none print:shadow-none print:p-0 print:space-y-3.5 print:max-w-none text-ink text-xs leading-normal"
           >
             {/* 1. Official Corporate Header */}
-            <div className="border-b-2 border-ink pb-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-start gap-3.5">
-                  <div className="w-12 h-12 rounded-xl bg-primary-red flex items-center justify-center text-white font-black text-2xl shadow-sm flex-none">
+            <div className="border-b-2 border-ink pb-2.5">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary-red flex items-center justify-center text-white font-black text-xl shadow-xs flex-none">
                     B
                   </div>
                   <div>
-                    <h1 className="text-lg sm:text-xl font-black tracking-tight text-ink uppercase">
+                    <h1 className="text-base sm:text-lg font-black tracking-tight text-ink uppercase leading-none">
                       PT. BIMASENA ADHIRAJA SARADIKA
                     </h1>
-                    <p className="text-2xs font-bold text-primary-red tracking-wider uppercase">
+                    <p className="text-[10px] font-bold text-primary-red tracking-wider uppercase mt-0.5">
                       Integrated Outsourcing Management System (BARAK IOMS)
                     </p>
-                    <p className="text-[11px] text-muted mt-1 leading-snug">
-                      Kantor Operasional: Jl. Melati I RT. 002/RW. 005 Kel. Tanah Tinggi, Kec. Tangerang, Kota Tangerang, Banten 15119
+                    <p className="text-[10px] text-muted mt-0.5 leading-snug">
+                      Kantor Operasional: Jl. Melati I RT. 002/RW. 005 Kel. Tanah Tinggi, Kec. Tangerang, Banten 15119
                       <br />
                       Telp / WhatsApp: +62 821-2374-2722 • Email: finance@barak.co.id • Web: www.barak.co.id
                     </p>
                   </div>
                 </div>
 
-                <div className="text-left sm:text-right flex-none">
-                  <div className="inline-block px-3 py-1 rounded bg-slate-100 font-mono text-[10px] text-slate-700 font-semibold border border-slate-200">
+                <div className="text-right flex-none">
+                  <div className="inline-block px-2.5 py-0.5 rounded bg-slate-100 font-mono text-[9px] text-slate-700 font-semibold border border-slate-200">
                     ABUJPI: 04986/08-10-2024
                   </div>
-                  <p className="text-[10px] text-muted mt-1">NIB: 0410240003185</p>
-                  <p className="text-[10px] text-muted">NPWP: 20.394.882.1-416.000</p>
+                  <p className="text-[9px] text-muted mt-0.5">NIB: 0410240003185</p>
+                  <p className="text-[9px] text-muted">NPWP: 20.394.882.1-416.000</p>
                 </div>
               </div>
             </div>
 
-            {/* 2. Invoice Document Title & Header Meta */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
+            {/* 2. Invoice Document Title & Status */}
+            <div className="flex items-center justify-between gap-2 pt-0.5">
               <div>
-                <span className="text-[11px] font-bold text-primary-red uppercase tracking-widest block">
+                <span className="text-[10px] font-bold text-primary-red uppercase tracking-widest block">
                   Official Billing Statement
                 </span>
-                <h2 className="text-xl sm:text-2xl font-black text-ink uppercase tracking-tight">
+                <h2 className="text-base sm:text-lg font-black text-ink uppercase tracking-tight leading-none mt-0.5">
                   FAKTUR PENAGIHAN / INVOICE
                 </h2>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-muted">Status:</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-semibold text-muted">Status:</span>
                 <span
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                     invoice.status === 'PAID'
                       ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                       : invoice.status === 'PARTIALLY_PAID'
@@ -198,144 +199,132 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
                       : 'bg-blue-100 text-blue-800 border border-blue-300'
                   }`}
                 >
-                  {invoice.status === 'PAID' ? 'LUNAS (PAID)' : invoice.status === 'PARTIALLY_PAID' ? 'TERBAYAR SEBAGIAN' : invoice.status === 'OVERDUE' ? 'JATUH TEMPO' : 'TERBIT / DIKIRIM'}
+                  {invoice.status === 'PAID' ? 'LUNAS' : invoice.status === 'PARTIALLY_PAID' ? 'SEBAGIAN' : invoice.status === 'OVERDUE' ? 'JATUH TEMPO' : 'TERBIT / DIKIRIM'}
                 </span>
               </div>
             </div>
 
             {/* 3. Billed To & Invoice Metadata Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-slate-50 p-4 sm:p-5 rounded-xl border border-slate-200">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50/80 p-3 rounded-lg border border-slate-200 text-xs">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted block mb-1">
+                <span className="text-[9px] font-bold uppercase tracking-wider text-muted block mb-0.5">
                   Tagihan Ditujukan Kepada (Billed To):
                 </span>
-                <h4 className="text-sm font-bold text-ink">
+                <h4 className="text-xs font-bold text-ink">
                   {invoice.clientName}
                 </h4>
                 {client && (
-                  <div className="mt-1 space-y-0.5 text-xs text-muted">
+                  <div className="mt-0.5 space-y-0.5 text-[11px] text-muted">
                     {client.contactPerson && (
                       <p className="text-ink font-medium">U.P. : {client.contactPerson}</p>
                     )}
-                    {client.address && <p>{client.address}</p>}
+                    {client.address && <p className="line-clamp-1">{client.address}</p>}
                     <p>{client.city || 'Jabodetabek'}, Indonesia</p>
-                    {client.phone && <p>Telp: {client.phone}</p>}
-                    {client.email && <p>Email: {client.email}</p>}
                   </div>
                 )}
                 {!client && (
-                  <p className="text-xs text-muted mt-1">
+                  <p className="text-[11px] text-muted mt-0.5">
                     Mitra Korporasi Rekanan PT. Bimasena Adhirajasa Radhika
                   </p>
                 )}
               </div>
 
-              <div className="space-y-1.5 sm:border-l sm:border-slate-200 sm:pl-6">
-                <div className="flex justify-between items-center text-xs">
+              <div className="space-y-1 sm:border-l sm:border-slate-200 sm:pl-4 text-[11px]">
+                <div className="flex justify-between items-center">
                   <span className="text-muted">Nomor Faktur:</span>
                   <span className="font-mono font-bold text-ink">{invoice.invoiceNumber}</span>
                 </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-muted">Tanggal Penerbitan:</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted">Tanggal Terbit:</span>
                   <span className="font-medium text-ink">{formattedDate(invoice.issueDate)}</span>
                 </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-muted">Jatuh Tempo (Due Date):</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted">Jatuh Tempo:</span>
                   <span className="font-bold text-primary-red">{formattedDate(invoice.dueDate)}</span>
                 </div>
-                <div className="flex justify-between items-center text-xs">
+                <div className="flex justify-between items-center">
                   <span className="text-muted">Periode Layanan:</span>
-                  <span className="font-medium text-ink">{invoice.billingPeriod}</span>
+                  <span className="font-semibold text-ink">{invoice.billingPeriod}</span>
                 </div>
               </div>
             </div>
 
-            {/* 4. Table of Billed Services & Adjustments */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse border border-slate-200">
+            {/* 4. Table of Billed Services & Adjustments (Clean, Simpel, No Periode Column, No Badges) */}
+            <div className="overflow-x-auto border border-slate-200 rounded-lg">
+              <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-slate-100 text-ink uppercase text-[11px] font-bold tracking-wider border-b border-slate-200">
-                    <th className="py-2.5 px-3 border-r border-slate-200 w-10 text-center">No</th>
-                    <th className="py-2.5 px-4 border-r border-slate-200">Deskripsi Rincian Layanan & Penyesuaian</th>
-                    <th className="py-2.5 px-4 border-r border-slate-200 w-32 text-center">Periode</th>
-                    <th className="py-2.5 px-4 text-right w-40">Jumlah (IDR)</th>
+                  <tr className="bg-slate-100 text-ink uppercase text-[10px] font-bold tracking-wider border-b border-slate-200">
+                    <th className="py-2 px-2.5 border-r border-slate-200 w-10 text-center">No</th>
+                    <th className="py-2 px-3 border-r border-slate-200">Deskripsi Rincian Layanan & Penyesuaian</th>
+                    <th className="py-2 px-3 text-right w-44">Jumlah (IDR)</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 text-xs">
+                  {/* Rincian Jasa Penempatan */}
                   {invoice.serviceItems && invoice.serviceItems.length > 0 ? (
                     invoice.serviceItems.map((item, idx) => (
-                      <tr key={item.id || idx}>
-                        <td className="py-2.5 px-3 border-r border-slate-200 text-center font-medium">{idx + 1}</td>
-                        <td className="py-2.5 px-4 border-r border-slate-200">
-                          <p className="font-semibold text-ink whitespace-pre-line">{item.description}</p>
+                      <tr key={item.id || idx} className="hover:bg-slate-50/50">
+                        <td className="py-1.5 px-2.5 border-r border-slate-200 text-center font-medium text-slate-500">
+                          {idx + 1}
                         </td>
-                        <td className="py-2.5 px-4 border-r border-slate-200 text-center text-muted">
-                          {invoice.billingPeriod}
+                        <td className="py-1.5 px-3 border-r border-slate-200">
+                          <p className="font-semibold text-ink whitespace-pre-line leading-tight">{item.description}</p>
                         </td>
-                        <td className="py-2.5 px-4 text-right font-semibold text-ink">
+                        <td className="py-1.5 px-3 text-right font-semibold text-ink">
                           Rp {(Number(item.amount) || 0).toLocaleString('id-ID')}
                         </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td className="py-3 px-3 border-r border-slate-200 text-center font-medium">1</td>
-                      <td className="py-3 px-4 border-r border-slate-200">
-                        <p className="font-bold text-ink">{invoice.serviceDescription}</p>
+                      <td className="py-2 px-2.5 border-r border-slate-200 text-center font-medium text-slate-500">1</td>
+                      <td className="py-2 px-3 border-r border-slate-200">
+                        <p className="font-semibold text-ink leading-tight">{invoice.serviceDescription}</p>
                         {invoice.notes && (
-                          <p className="text-[11px] text-muted mt-0.5">{invoice.notes}</p>
+                          <p className="text-[10px] text-muted mt-0.5">{invoice.notes}</p>
                         )}
                       </td>
-                      <td className="py-3 px-4 border-r border-slate-200 text-center text-muted">
-                        {invoice.billingPeriod}
-                      </td>
-                      <td className="py-3 px-4 text-right font-semibold text-ink">
+                      <td className="py-2 px-3 text-right font-semibold text-ink">
                         Rp {subtotal.toLocaleString('id-ID')}
                       </td>
                     </tr>
                   )}
 
-                  {/* Render Adjustments (Reward / Potongan) in table if present */}
-                  {invoice.adjustments && invoice.adjustments.map((adj, idx) => (
-                    <tr key={adj.id || `adj-${idx}`} className={adj.type === 'REWARD' ? 'bg-emerald-50/30' : 'bg-amber-50/30'}>
-                      <td className="py-2 px-3 border-r border-slate-200 text-center font-medium text-slate-500">
-                        {(invoice.serviceItems?.length || 1) + idx + 1}
-                      </td>
-                      <td className="py-2 px-4 border-r border-slate-200">
-                        <div className="flex items-center gap-1.5">
-                          <span
-                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                              adj.type === 'REWARD'
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : 'bg-amber-100 text-amber-800'
-                            }`}
-                          >
-                            {adj.type === 'REWARD' ? 'REWARD (+)' : 'POTONGAN (-)'}
+                  {/* Rincian Penyesuaian (Reward & Potongan tanpa badge Reward/Potongan) */}
+                  {invoice.adjustments && invoice.adjustments.map((adj, idx) => {
+                    const rowNum = (invoice.serviceItems?.length || 1) + idx + 1;
+                    const isPotongan = adj.type === 'POTONGAN';
+                    const amountNum = Number(adj.amount) || 0;
+
+                    return (
+                      <tr key={adj.id || `adj-${idx}`} className={isPotongan ? 'bg-red-50/15' : 'bg-slate-50/30'}>
+                        <td className="py-1.5 px-2.5 border-r border-slate-200 text-center font-medium text-slate-500">
+                          {rowNum}
+                        </td>
+                        <td className="py-1.5 px-3 border-r border-slate-200">
+                          <span className="font-medium text-ink leading-tight">
+                            {adj.description}
                           </span>
-                          <span className="font-medium text-ink">{adj.description}</span>
-                        </div>
-                      </td>
-                      <td className="py-2 px-4 border-r border-slate-200 text-center text-muted">
-                        {invoice.billingPeriod}
-                      </td>
-                      <td
-                        className={`py-2 px-4 text-right font-bold ${
-                          adj.type === 'REWARD' ? 'text-emerald-700' : 'text-red-600'
-                        }`}
-                      >
-                        {adj.type === 'REWARD' ? '+' : '-'} Rp {(Number(adj.amount) || 0).toLocaleString('id-ID')}
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td
+                          className={`py-1.5 px-3 text-right font-semibold ${
+                            isPotongan ? 'text-red-600' : 'text-slate-800'
+                          }`}
+                        >
+                          {isPotongan ? '- ' : ''}Rp {amountNum.toLocaleString('id-ID')}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
 
             {/* 5. Subtotal, Tax and Total Breakdown */}
-            <div className="flex flex-col sm:flex-row justify-between gap-6 items-start">
+            <div className="flex flex-col sm:flex-row justify-between gap-4 items-start pt-1">
               {/* Terbilang Box */}
-              <div className="flex-1 p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted block">
+              <div className="flex-1 p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1">
+                <span className="text-[9px] font-bold uppercase tracking-wider text-muted block">
                   Jumlah Terbilang:
                 </span>
                 <p className="text-xs font-semibold text-ink italic leading-snug">
@@ -344,58 +333,58 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
               </div>
 
               {/* Numerical Calculation Summary */}
-              <div className="w-full sm:w-80 space-y-1.5 text-xs">
-                <div className="flex justify-between text-muted">
+              <div className="w-full sm:w-72 space-y-1 text-xs">
+                <div className="flex justify-between text-muted text-[11px]">
                   <span>Subtotal Nilai Jasa:</span>
                   <span className="font-semibold text-ink">Rp {subtotal.toLocaleString('id-ID')}</span>
                 </div>
 
                 {invoice.subtotalReward > 0 && (
-                  <div className="flex justify-between text-accent-green">
+                  <div className="flex justify-between text-accent-green text-[11px]">
                     <span>Sub Total Reward (+):</span>
                     <span className="font-semibold">+ Rp {invoice.subtotalReward.toLocaleString('id-ID')}</span>
                   </div>
                 )}
 
                 {invoice.subtotalPotongan > 0 && (
-                  <div className="flex justify-between text-red-600">
+                  <div className="flex justify-between text-red-600 text-[11px]">
                     <span>Sub Total Potongan (-):</span>
                     <span className="font-semibold">- Rp {invoice.subtotalPotongan.toLocaleString('id-ID')}</span>
                   </div>
                 )}
 
                 {(invoice.managementFeeAmount > 0 || (invoice.managementFeeRate !== undefined && invoice.managementFeeRate > 0)) && (
-                  <div className="flex justify-between text-emerald-700">
+                  <div className="flex justify-between text-emerald-700 text-[11px]">
                     <span>Manajemen Fee ({invoice.managementFeeRate || 0}%):</span>
                     <span className="font-semibold">+ Rp {(invoice.managementFeeAmount || 0).toLocaleString('id-ID')}</span>
                   </div>
                 )}
 
                 {invoice.pph23Amount > 0 && (
-                  <div className="flex justify-between text-slate-600">
+                  <div className="flex justify-between text-slate-600 text-[11px]">
                     <span>PPH 23 (2%):</span>
                     <span className="font-semibold text-ink">- Rp {invoice.pph23Amount.toLocaleString('id-ID')}</span>
                   </div>
                 )}
 
-                <div className="flex justify-between text-muted">
+                <div className="flex justify-between text-muted text-[11px]">
                   <span>PPN 11%:</span>
                   <span className="font-semibold text-ink">Rp {taxAmount.toLocaleString('id-ID')}</span>
                 </div>
 
-                <div className="border-t-2 border-slate-200 pt-2 flex justify-between text-sm font-bold text-ink">
+                <div className="border-t-2 border-slate-200 pt-1.5 flex justify-between text-sm font-bold text-ink">
                   <span>Total Tagihan Bersih:</span>
                   <span className="text-primary-red">Rp {invoice.totalAmount.toLocaleString('id-ID')}</span>
                 </div>
 
                 {invoice.paidAmount > 0 && (
-                  <div className="flex justify-between text-emerald-700 font-semibold pt-1">
+                  <div className="flex justify-between text-emerald-700 font-semibold text-[11px] pt-0.5">
                     <span>Sudah Dibayar:</span>
                     <span>- Rp {invoice.paidAmount.toLocaleString('id-ID')}</span>
                   </div>
                 )}
 
-                <div className="border-t border-dashed border-slate-300 pt-2 flex justify-between font-bold text-xs">
+                <div className="border-t border-dashed border-slate-300 pt-1 flex justify-between font-bold text-xs">
                   <span>Sisa Tagihan (Balance Due):</span>
                   <span className={remaining > 0 ? 'text-primary-red' : 'text-emerald-700'}>
                     Rp {remaining.toLocaleString('id-ID')}
@@ -405,65 +394,65 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
             </div>
 
             {/* 6. Payment Instructions Box */}
-            <div className="p-4 bg-primary-red/5 border border-primary-red/20 rounded-xl space-y-1.5">
-              <h5 className="text-xs font-bold text-ink flex items-center gap-1.5">
-                <Building2 className="h-4 w-4 text-primary-red" />
+            <div className="p-3 bg-primary-red/5 border border-primary-red/20 rounded-lg space-y-1">
+              <h5 className="text-[11px] font-bold text-ink flex items-center gap-1.5">
+                <Building2 className="h-3.5 w-3.5 text-primary-red" />
                 <span>Instruksi Pembayaran Rekening Resmi:</span>
               </h5>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs pt-0.5">
                 <div>
-                  <span className="text-muted block text-[10px]">Bank Tujuan:</span>
-                  <strong className="text-ink">Bank Central Asia (BCA)</strong>
+                  <span className="text-muted block text-[9px]">Bank Tujuan:</span>
+                  <strong className="text-ink text-[11px]">Bank Central Asia (BCA)</strong>
                 </div>
                 <div>
-                  <span className="text-muted block text-[10px]">Nomor Rekening:</span>
-                  <strong className="text-primary-red font-mono text-sm tracking-wide">883-129-9000</strong>
+                  <span className="text-muted block text-[9px]">Nomor Rekening:</span>
+                  <strong className="text-primary-red font-mono text-xs tracking-wide">883-129-9000</strong>
                 </div>
                 <div>
-                  <span className="text-muted block text-[10px]">Atas Nama Rekening:</span>
-                  <strong className="text-ink">PT. BIMASENA ADHIRAJA SARADIKA</strong>
+                  <span className="text-muted block text-[9px]">Atas Nama Rekening:</span>
+                  <strong className="text-ink text-[11px]">PT. BIMASENA ADHIRAJA SARADIKA</strong>
                 </div>
               </div>
-              <p className="text-[10px] text-muted italic pt-1 border-t border-primary-red/10 mt-2">
-                * Mohon mencantumkan nomor faktur ({invoice.invoiceNumber}) pada berita transfer dan mengirimkan bukti pembayaran via WhatsApp (+62 821-2374-2722) atau email finance@barak.co.id.
+              <p className="text-[9px] text-muted italic pt-0.5 border-t border-primary-red/10">
+                * Mohon mencantumkan nomor faktur ({invoice.invoiceNumber}) pada berita transfer dan mengirimkan konfirmasi via WhatsApp (+62 821-2374-2722) atau email finance@barak.co.id.
               </p>
             </div>
 
             {/* 7. Signature & Authorization Seal */}
-            <div className="pt-4 flex justify-between items-end">
-              <div className="text-[10px] text-muted max-w-xs space-y-1">
+            <div className="pt-2 flex justify-between items-end">
+              <div className="text-[9px] text-muted max-w-xs space-y-0.5">
                 <div className="flex items-center gap-1 text-slate-700 font-semibold">
-                  <ShieldCheck className="h-3.5 w-3.5 text-accent-green" />
+                  <ShieldCheck className="h-3 w-3 text-accent-green" />
                   <span>Dokumen Sah & Terverifikasi Sistem</span>
                 </div>
                 <p>
-                  Faktur penagihan ini dihasilkan secara elektronik dan sah sesuai ketentuan tata kelola operasional PT. Bimasena Adhirajasa Radhika.
+                  Faktur penagihan ini dihasilkan secara elektronik dan sah sesuai tata kelola PT. Bimasena Adhirajasa Radhika.
                 </p>
-                <p className="font-mono text-[9px] text-slate-400">
+                <p className="font-mono text-[8px] text-slate-400">
                   REF-UUID: {invoice.id} • Cetak: {printDate}
                 </p>
               </div>
 
-              <div className="text-center w-56 space-y-1">
-                <p className="text-xs text-muted">
+              <div className="text-center w-48 space-y-0.5">
+                <p className="text-[10px] text-muted">
                   Tangerang, {formattedDate(invoice.issueDate)}
                 </p>
-                <p className="text-xs font-bold text-ink uppercase">
+                <p className="text-[11px] font-bold text-ink uppercase">
                   PT. Bimasena Adhirajasa Radhika
                 </p>
 
                 {/* Stempel & Signature Visual Placeholder */}
-                <div className="h-16 flex items-center justify-center relative">
-                  <div className="w-20 h-20 rounded-full border-2 border-primary-red/40 border-dashed flex flex-col items-center justify-center text-primary-red/50 text-[9px] font-bold uppercase rotate-12 pointer-events-none">
+                <div className="h-10 flex items-center justify-center relative">
+                  <div className="w-16 h-16 rounded-full border border-primary-red/40 border-dashed flex flex-col items-center justify-center text-primary-red/50 text-[7px] font-bold uppercase rotate-12 pointer-events-none">
                     <span>PT. BARAK</span>
-                    <span className="text-[7px]">FINANCE</span>
-                    <span className="text-[6px]">TANGERANG</span>
+                    <span className="text-[6px]">FINANCE</span>
+                    <span className="text-[5px]">TANGERANG</span>
                   </div>
                 </div>
 
-                <div className="border-t border-ink pt-1">
-                  <p className="font-bold text-ink text-xs">Divisi Keuangan & Penagihan</p>
-                  <p className="text-[10px] text-muted">Finance & Accounting Dept.</p>
+                <div className="border-t border-ink pt-0.5">
+                  <p className="font-bold text-ink text-[11px]">Divisi Keuangan & Penagihan</p>
+                  <p className="text-[9px] text-muted">Finance & Accounting Dept.</p>
                 </div>
               </div>
             </div>
@@ -471,12 +460,13 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
         </div>
 
         {/* Modal Bottom Actions (Hidden on Print) */}
-        <div className="p-4 border-t border-border bg-slate-50 flex items-center justify-end gap-2.5 flex-none print:hidden">
+        <div className="p-3.5 border-t border-border bg-slate-50 flex items-center justify-end gap-2.5 flex-none print:hidden">
           <Button
             type="button"
             variant="ghost"
             size="sm"
             onClick={onClose}
+            className="text-xs py-1.5 px-3"
           >
             Tutup
           </Button>
@@ -485,7 +475,7 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
             variant="primary"
             size="sm"
             onClick={handlePrint}
-            className="gap-1.5 shadow-sm"
+            className="gap-1.5 shadow-sm text-xs py-1.5 px-3"
           >
             <Printer className="h-4 w-4" />
             <span>Cetak Faktur (Print / PDF)</span>
