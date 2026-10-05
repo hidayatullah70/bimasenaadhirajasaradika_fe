@@ -81,10 +81,10 @@ export default function InvoiceFormModal({ isOpen, onClose, clients, onSubmit })
   // PPN 11% = 0
   const ppnAmount = 0;
 
-  // Total Tagihan Bersih = (Sub Total Nilai Jasa + sub total reward) - Sub Total Potongan - Manajemen Fee - PPH 23
+  // Total Tagihan Bersih = (Sub Total Nilai Jasa + sub total reward + Manajemen Fee) - Sub Total Potongan - PPH 23
   const totalNet = Math.max(
     0,
-    (subtotalServices + subtotalReward) - subtotalPotongan - managementFeeAmount - pph23Amount
+    (subtotalServices + subtotalReward + managementFeeAmount) - subtotalPotongan - pph23Amount
   );
 
   // --- Handlers: Form Data ---
@@ -520,18 +520,21 @@ export default function InvoiceFormModal({ isOpen, onClose, clients, onSubmit })
             <div className="p-3 bg-surface rounded-xl border border-border space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <Percent className="h-3.5 w-3.5 text-primary-red" />
+                  <Percent className="h-3.5 w-3.5 text-accent-green" />
                   <label className="font-semibold text-ink">
                     Manajemen Fee ({feeRateNum}%)
                   </label>
+                  <span className="text-[10px] text-accent-green font-bold bg-accent-green/10 px-1.5 py-0.5 rounded">
+                    + Penambah
+                  </span>
                   <span className="text-[10px] text-muted">(Tentatif / Manual)</span>
                 </div>
-                <span className="font-bold text-ink">
-                  - Rp {managementFeeAmount.toLocaleString('id-ID')}
+                <span className="font-bold text-accent-green">
+                  + Rp {managementFeeAmount.toLocaleString('id-ID')}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-xs">
-                <span className="text-muted">Persentase (n%):</span>
+                <span className="text-muted">Persentase ({feeRateNum}%):</span>
                 <input
                   type="number"
                   min="0"
@@ -601,9 +604,9 @@ export default function InvoiceFormModal({ isOpen, onClose, clients, onSubmit })
               )}
 
               {managementFeeAmount > 0 && (
-                <div className="flex justify-between text-muted">
+                <div className="flex justify-between text-accent-green">
                   <span>Manajemen Fee ({feeRateNum}%):</span>
-                  <span className="font-semibold text-ink">- Rp {managementFeeAmount.toLocaleString('id-ID')}</span>
+                  <span className="font-bold">+ Rp {managementFeeAmount.toLocaleString('id-ID')}</span>
                 </div>
               )}
 
@@ -623,7 +626,7 @@ export default function InvoiceFormModal({ isOpen, onClose, clients, onSubmit })
                 <div>
                   <span className="block">Total Tagihan Bersih:</span>
                   <span className="text-[10px] font-normal text-muted block">
-                    (Sub Total + Reward) - Potongan - Manajemen Fee - PPH 23
+                    (Sub Total + Reward + Manajemen Fee) - Potongan - PPH 23
                   </span>
                 </div>
                 <span className="text-base font-black text-primary-red">

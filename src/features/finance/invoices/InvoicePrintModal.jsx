@@ -365,9 +365,9 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
                 )}
 
                 {(invoice.managementFeeAmount > 0 || (invoice.managementFeeRate !== undefined && invoice.managementFeeRate > 0)) && (
-                  <div className="flex justify-between text-slate-600">
+                  <div className="flex justify-between text-emerald-700">
                     <span>Manajemen Fee ({invoice.managementFeeRate || 0}%):</span>
-                    <span className="font-semibold text-ink">- Rp {(invoice.managementFeeAmount || 0).toLocaleString('id-ID')}</span>
+                    <span className="font-semibold">+ Rp {(invoice.managementFeeAmount || 0).toLocaleString('id-ID')}</span>
                   </div>
                 )}
 
