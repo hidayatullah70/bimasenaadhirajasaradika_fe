@@ -43,6 +43,9 @@ export default function InvoiceFormModal({ isOpen, onClose, clients, onSubmit })
   // 3. Manajemen Fee n% (tentatif)
   const [managementFeeRate, setManagementFeeRate] = useState(0);
 
+  // 4. PPN 11% Toggle (ON/OFF)
+  const [isPpnActive, setIsPpnActive] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -78,13 +81,14 @@ export default function InvoiceFormModal({ isOpen, onClose, clients, onSubmit })
   // PPH 23 = Nilai Manajemen Fee (n%) * 2%
   const pph23Amount = Math.round(managementFeeAmount * 0.02);
 
-  // PPN 11% = 0
-  const ppnAmount = 0;
+  // PPN 11% (Toggle ON/OFF)
+  // Jika status ON: Manajemen Fee * 11%, jika OFF: 0
+  const ppnAmount = isPpnActive ? Math.round(managementFeeAmount * 0.11) : 0;
 
-  // Total Tagihan Bersih = (Sub Total Nilai Jasa + sub total reward + Manajemen Fee) - Sub Total Potongan - PPH 23
+  // Total Tagihan Bersih = (Sub Total Nilai Jasa + sub total reward + Manajemen Fee + PPN 11%) - Sub Total Potongan - PPH 23
   const totalNet = Math.max(
     0,
-    (subtotalServices + subtotalReward + managementFeeAmount) - subtotalPotongan - pph23Amount
+    (subtotalServices + subtotalReward + managementFeeAmount + ppnAmount) - subtotalPotongan - pph23Amount
   );
 
   // --- Handlers: Form Data ---
@@ -196,7 +200,8 @@ export default function InvoiceFormModal({ isOpen, onClose, clients, onSubmit })
         managementFeeRate: feeRateNum,
         managementFeeAmount,
         pph23Amount,
-        taxRate: 0,
+        isPpnActive,
+        taxRate: isPpnActive ? 0.11 : 0,
         taxAmount: ppnAmount,
         totalAmount: totalNet,
         remainingAmount: totalNet,
@@ -565,15 +570,53 @@ export default function InvoiceFormModal({ isOpen, onClose, clients, onSubmit })
               </span>
             </div>
 
-            {/* PPN 11% (Diberi nilai 0 saja) */}
-            <div className="p-3 bg-surface rounded-xl border border-border flex items-center justify-between">
-              <div>
-                <span className="font-semibold text-ink block">PPN 11%</span>
-                <span className="text-[11px] text-muted">Ditetapkan bernilai Rp 0</span>
+            {/* PPN 11% (Toggle ON/OFF) */}
+            <div className="p-3 bg-surface rounded-xl border border-border space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <span className="font-semibold text-ink">PPN 11%</span>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={isPpnActive}
+                    onClick={() => setIsPpnActive((prev) => !prev)}
+                    className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      isPpnActive ? 'bg-primary-red' : 'bg-slate-300'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                        isPpnActive ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      isPpnActive
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                        : 'bg-slate-100 text-slate-500 border border-slate-200'
+                    }`}
+                  >
+                    {isPpnActive ? 'STATUS: ON' : 'STATUS: OFF'}
+                  </span>
+                </div>
+                <span className={`font-bold ${isPpnActive ? 'text-accent-green' : 'text-muted'}`}>
+                  {isPpnActive ? `+ Rp ${ppnAmount.toLocaleString('id-ID')}` : 'Rp 0 (Hide)'}
+                </span>
               </div>
-              <span className="font-bold text-ink">
-                Rp 0
-              </span>
+
+              <div className="text-[11px] text-muted flex items-center justify-between pt-1 border-t border-slate-100">
+                <span>
+                  {isPpnActive
+                    ? `Rumus: Manajemen Fee (${feeRateNum}%) × 11%`
+                    : 'Status OFF: Tidak dikenakan PPN dan disembunyikan dari faktur cetak.'}
+                </span>
+                {isPpnActive && (
+                  <span className="text-[10px] text-accent-green font-bold bg-accent-green/10 px-1.5 py-0.5 rounded">
+                    + Penambah (11%)
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
@@ -617,16 +660,18 @@ export default function InvoiceFormModal({ isOpen, onClose, clients, onSubmit })
                 </div>
               )}
 
-              <div className="flex justify-between text-muted">
-                <span>PPN 11%:</span>
-                <span className="font-semibold text-ink">Rp 0</span>
-              </div>
+              {isPpnActive && (
+                <div className="flex justify-between text-accent-green">
+                  <span>PPN 11% (Manajemen Fee × 11%):</span>
+                  <span className="font-bold">+ Rp {ppnAmount.toLocaleString('id-ID')}</span>
+                </div>
+              )}
 
               <div className="flex justify-between items-center text-sm font-black text-ink pt-2.5 border-t border-primary-red/20">
                 <div>
                   <span className="block">Total Tagihan Bersih:</span>
                   <span className="text-[10px] font-normal text-muted block">
-                    (Sub Total + Reward + Manajemen Fee) - Potongan - PPH 23
+                    (Sub Total + Reward + Manajemen Fee{isPpnActive ? ' + PPN 11%' : ''}) - Potongan - PPH 23
                   </span>
                 </div>
                 <span className="text-base font-black text-primary-red">

@@ -64,7 +64,7 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
   });
 
   const subtotal = invoice.subtotalServices || invoice.subtotal || Math.round(invoice.totalAmount / 1.11);
-  const taxAmount = invoice.taxAmount !== undefined ? invoice.taxAmount : (invoice.totalAmount - subtotal);
+  const taxAmount = invoice.taxAmount !== undefined ? invoice.taxAmount : (invoice.isPpnActive ? Math.round((invoice.managementFeeAmount || 0) * 0.11) : 0);
   const remaining = invoice.remainingAmount !== undefined ? invoice.remainingAmount : (invoice.totalAmount - (invoice.paidAmount || 0));
 
   return (
@@ -367,10 +367,12 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
                   </div>
                 )}
 
-                <div className="flex justify-between text-muted text-[11px]">
-                  <span>PPN 11%:</span>
-                  <span className="font-semibold text-ink">Rp {taxAmount.toLocaleString('id-ID')}</span>
-                </div>
+                {(invoice.isPpnActive || taxAmount > 0) && (
+                  <div className="flex justify-between text-emerald-700 text-[11px]">
+                    <span>PPN 11% (Manajemen Fee × 11%):</span>
+                    <span className="font-semibold">+ Rp {taxAmount.toLocaleString('id-ID')}</span>
+                  </div>
+                )}
 
                 <div className="border-t-2 border-slate-200 pt-1.5 flex justify-between text-sm font-bold text-ink">
                   <span>Total Tagihan Bersih:</span>
