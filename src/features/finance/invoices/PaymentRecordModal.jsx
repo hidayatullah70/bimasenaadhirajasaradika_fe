@@ -111,7 +111,7 @@ export default function PaymentRecordModal({ isOpen, onClose, invoice, onSubmit 
               </label>
               <div className="w-full text-xs border border-border rounded-lg px-3 py-2 bg-slate-50 text-ink font-semibold flex items-center justify-between">
                 <span>Rekening BCA</span>
-                <span className="text-[10px] text-muted font-mono">883-129-9000</span>
+                <span className="text-[10px] text-muted font-mono">8833951911</span>
               </div>
             </div>
 

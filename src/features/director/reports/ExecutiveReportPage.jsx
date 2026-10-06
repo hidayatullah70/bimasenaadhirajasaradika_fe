@@ -101,10 +101,12 @@ export default function ExecutiveReportPage() {
           {/* 1. Official Header */}
           <div className="border-b-2 border-ink pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2">
-                <span className="w-8 h-8 rounded-lg bg-primary-red flex items-center justify-center text-white font-black text-sm">
-                  B
-                </span>
+              <div className="flex items-center gap-3">
+                <img
+                  src="/assets/img/logo/logoAja.png"
+                  alt="PT. Bimasena Adhirajasa Radhika"
+                  className="w-10 h-10 object-contain flex-none"
+                />
                 <div>
                   <h1 className="text-xl font-black tracking-tight text-ink uppercase">
                     PT. Bimasena Adhirajasa Radhika

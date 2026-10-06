@@ -25,7 +25,7 @@ export default function InvoiceFormModal({ isOpen, onClose, clients, onSubmit })
     billingPeriod: 'September 2026',
     issueDate: new Date().toISOString().slice(0, 10),
     dueDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-    notes: 'Rekening BCA PT Bimasena Adhirajasa Radhika 883-129-9000',
+    notes: 'Rekening BCA PT Bimasena Adhirajasa Radhika 8833951911',
   });
 
   // 1. Dynamic Service Items (can be added indefinitely)

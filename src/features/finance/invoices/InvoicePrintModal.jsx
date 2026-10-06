@@ -150,7 +150,7 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
                 <div className="flex items-center gap-3">
                   <img
                     src="/assets/img/logo/logoAja.png"
-                    alt="Logo PT. Bimasena Adhirajasa Saradika"
+                    alt="PT. Bimasena Adhirajasa Radhika"
                     className="w-12 h-12 object-contain flex-none"
                   />
                   <div>

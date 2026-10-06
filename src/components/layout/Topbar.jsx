@@ -51,6 +51,16 @@ export default function Topbar({ onMobileMenuOpen, unreadCount = 0, onSearchOpen
         <Menu className="h-5 w-5" aria-hidden />
       </button>
 
+      {/* Mobile brand display */}
+      <div className="lg:hidden flex items-center gap-2">
+        <img
+          src="/assets/img/logo/logoAja.png"
+          alt="PT. Bimasena Adhirajasa Radhika"
+          className="h-7 w-7 object-contain"
+        />
+        <span className="font-bold text-xs text-ink tracking-tight">PT. BARAK</span>
+      </div>
+
       {/* Spacer */}
       <div className="flex-1" />
 
