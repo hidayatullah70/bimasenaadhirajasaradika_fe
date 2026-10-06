@@ -147,13 +147,15 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
             {/* 1. Official Corporate Header */}
             <div className="border-b-2 border-ink pb-2.5">
               <div className="flex items-center justify-between gap-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary-red flex items-center justify-center text-white font-black text-xl shadow-xs flex-none">
-                    B
-                  </div>
+                <div className="flex items-center gap-3">
+                  <img
+                    src="/assets/img/logo/logoAja.png"
+                    alt="Logo PT. Bimasena Adhirajasa Saradika"
+                    className="w-12 h-12 object-contain flex-none"
+                  />
                   <div>
                     <h1 className="text-base sm:text-lg font-black tracking-tight text-ink uppercase leading-none">
-                      PT. BIMASENA ADHIRAJA SARADIKA
+                      PT. BIMASENA ADHIRAJASA RADIKA
                     </h1>
                     <p className="text-[10px] font-bold text-primary-red tracking-wider uppercase mt-0.5">
                       Integrated Outsourcing Management System (BARAK IOMS)
@@ -161,18 +163,11 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
                     <p className="text-[10px] text-muted mt-0.5 leading-snug">
                       Kantor Operasional: Jl. Melati I RT. 002/RW. 005 Kel. Tanah Tinggi, Kec. Tangerang, Banten 15119
                       <br />
-                      Telp / WhatsApp: +62 821-2374-2722 • Email: finance@barak.co.id • Web: www.barak.co.id
+                      Telp / WhatsApp: +6281380768088 • Email: arifin.smart99@gmail.com • Website: www.bimasenaadhirajasaradika.com
                     </p>
                   </div>
                 </div>
 
-                <div className="text-right flex-none">
-                  <div className="inline-block px-2.5 py-0.5 rounded bg-slate-100 font-mono text-[9px] text-slate-700 font-semibold border border-slate-200">
-                    ABUJPI: 04986/08-10-2024
-                  </div>
-                  <p className="text-[9px] text-muted mt-0.5">NIB: 0410240003185</p>
-                  <p className="text-[9px] text-muted">NPWP: 20.394.882.1-416.000</p>
-                </div>
               </div>
             </div>
 
@@ -189,15 +184,14 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
               <div className="flex items-center gap-1.5">
                 <span className="text-[11px] font-semibold text-muted">Status:</span>
                 <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                    invoice.status === 'PAID'
-                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                      : invoice.status === 'PARTIALLY_PAID'
+                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${invoice.status === 'PAID'
+                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                    : invoice.status === 'PARTIALLY_PAID'
                       ? 'bg-amber-100 text-amber-800 border border-amber-300'
                       : invoice.status === 'OVERDUE'
-                      ? 'bg-red-100 text-red-800 border border-red-300'
-                      : 'bg-blue-100 text-blue-800 border border-blue-300'
-                  }`}
+                        ? 'bg-red-100 text-red-800 border border-red-300'
+                        : 'bg-blue-100 text-blue-800 border border-blue-300'
+                    }`}
                 >
                   {invoice.status === 'PAID' ? 'LUNAS' : invoice.status === 'PARTIALLY_PAID' ? 'SEBAGIAN' : invoice.status === 'OVERDUE' ? 'JATUH TEMPO' : 'TERBIT / DIKIRIM'}
                 </span>
@@ -210,23 +204,22 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
                 <span className="text-[9px] font-bold uppercase tracking-wider text-muted block mb-0.5">
                   Tagihan Ditujukan Kepada (Billed To):
                 </span>
-                <h4 className="text-xs font-bold text-ink">
+                <h4 className="text-xs font-bold text-ink uppercase">
                   {invoice.clientName}
                 </h4>
-                {client && (
-                  <div className="mt-0.5 space-y-0.5 text-[11px] text-muted">
-                    {client.contactPerson && (
-                      <p className="text-ink font-medium">U.P. : {client.contactPerson}</p>
-                    )}
-                    {client.address && <p className="line-clamp-1">{client.address}</p>}
-                    <p>{client.city || 'Jabodetabek'}, Indonesia</p>
-                  </div>
-                )}
-                {!client && (
-                  <p className="text-[11px] text-muted mt-0.5">
-                    Mitra Korporasi Rekanan PT. Bimasena Adhirajasa Radhika
+                <div className="mt-0.5 space-y-0.5 text-[11px] text-muted">
+                  {(invoice.clientContact || client?.contactPerson || client?.picName) && (
+                    <p className="text-ink font-medium">
+                      U.P. : {invoice.clientContact || client?.contactPerson || client?.picName}
+                    </p>
+                  )}
+                  <p className="text-slate-700 font-medium">
+                    {invoice.clientAddress || client?.address || 'Alamat Operasional Jabodetabek'}
                   </p>
-                )}
+                  <p className="text-slate-600">
+                    {invoice.clientCity || client?.city || 'Tangerang'}{invoice.clientProvince || client?.province ? `, ${invoice.clientProvince || client?.province}` : ''}, Indonesia
+                  </p>
+                </div>
               </div>
 
               <div className="space-y-1 sm:border-l sm:border-slate-200 sm:pl-4 text-[11px]">
@@ -307,9 +300,8 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
                           </span>
                         </td>
                         <td
-                          className={`py-1.5 px-3 text-right font-semibold ${
-                            isPotongan ? 'text-red-600' : 'text-slate-800'
-                          }`}
+                          className={`py-1.5 px-3 text-right font-semibold ${isPotongan ? 'text-red-600' : 'text-slate-800'
+                            }`}
                         >
                           {isPotongan ? '- ' : ''}Rp {amountNum.toLocaleString('id-ID')}
                         </td>
@@ -408,15 +400,15 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
                 </div>
                 <div>
                   <span className="text-muted block text-[9px]">Nomor Rekening:</span>
-                  <strong className="text-primary-red font-mono text-xs tracking-wide">883-129-9000</strong>
+                  <strong className="text-primary-red font-mono text-xs tracking-wide">8833951911</strong>
                 </div>
                 <div>
                   <span className="text-muted block text-[9px]">Atas Nama Rekening:</span>
-                  <strong className="text-ink text-[11px]">PT. BIMASENA ADHIRAJA SARADIKA</strong>
+                  <strong className="text-ink text-[11px]">BIMASENA ADHIRAJASA RADHIKA</strong>
                 </div>
               </div>
               <p className="text-[9px] text-muted italic pt-0.5 border-t border-primary-red/10">
-                * Mohon mencantumkan nomor faktur ({invoice.invoiceNumber}) pada berita transfer dan mengirimkan konfirmasi via WhatsApp (+62 821-2374-2722) atau email finance@barak.co.id.
+                * Mohon mencantumkan nomor faktur ({invoice.invoiceNumber}) pada berita transfer dan mengirimkan konfirmasi via WhatsApp (+62 0813-8076-8088) atau email : arifin.smart99@gmail.com
               </p>
             </div>
 
@@ -447,14 +439,12 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
                 <div className="h-10 flex items-center justify-center relative">
                   <div className="w-16 h-16 rounded-full border border-primary-red/40 border-dashed flex flex-col items-center justify-center text-primary-red/50 text-[7px] font-bold uppercase rotate-12 pointer-events-none">
                     <span>PT. BARAK</span>
-                    <span className="text-[6px]">FINANCE</span>
                     <span className="text-[5px]">TANGERANG</span>
                   </div>
                 </div>
-
+                <p className="font-bold text-ink text-[11px]">Juli Priyanto</p>
                 <div className="border-t border-ink pt-0.5">
-                  <p className="font-bold text-ink text-[11px]">Divisi Keuangan & Penagihan</p>
-                  <p className="text-[9px] text-muted">Finance & Accounting Dept.</p>
+                  <p className="text-[9px] text-muted">Direktur Utama</p>
                 </div>
               </div>
             </div>

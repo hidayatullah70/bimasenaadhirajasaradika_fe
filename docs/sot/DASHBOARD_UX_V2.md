@@ -177,7 +177,7 @@ Saat status berubah menjadi `WON`, sistem secara otomatis:
    - Integrasi pemilihan Klien dan Lokasi Penempatan yang secara reaktif memuat seluruh personil aktif di posko tersebut.
    - Kolom "Datang", "Pulang", dan "Lembur" disiapkan kosong dengan placeholder jelas untuk input manual yang cepat dan fleksibel bagi petugas lapangan.
    - Banner Empty State ramah pengguna: `"Data Karyawan pada lokasi klien ini masih kosong"` apabila posko belum memiliki plotting personil aktif.
-   - Ekspor Excel formal lengkap dengan kop resmi PT. BIMASENA ADHIRAJA SARADIKA, judul dokumen, dan metadata administratif.
+   - Ekspor Excel formal lengkap dengan kop resmi PT. BIMASENA ADHIRAJASA RADIKA, judul dokumen, dan metadata administratif.
 3. **Pembersihan Riwayat Kerja Sesi Petugas Inputer:**
    - Fitur logout cerdas pada `AuthProvider.jsx` yang secara otomatis membersihkan draf lembar kerja sementara milik `user1` dan `user2` agar antarmuka login berikutnya selalu dalam kondisi segar dan siap pakai.
 

@@ -12,15 +12,15 @@ import {
   X,
   Plus,
   Trash2,
-  Gift,
-  Scissors,
   Calculator,
   Percent,
+  Building2,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 
 export default function InvoiceFormModal({ isOpen, onClose, clients, onSubmit }) {
   const [formData, setFormData] = useState({
+    invoiceNumber: 'INV/BRK/2026/09/001',
     clientId: '',
     billingPeriod: 'September 2026',
     issueDate: new Date().toISOString().slice(0, 10),
@@ -50,6 +50,8 @@ export default function InvoiceFormModal({ isOpen, onClose, clients, onSubmit })
   const [error, setError] = useState('');
 
   if (!isOpen) return null;
+
+  const selectedClient = clients.find((c) => c.id === formData.clientId);
 
   // --- Calculations ---
   // Sub Total Nilai Jasa = Sum of all service items amounts
@@ -151,6 +153,11 @@ export default function InvoiceFormModal({ isOpen, onClose, clients, onSubmit })
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!formData.invoiceNumber.trim()) {
+      setError('Nomor Faktur wajib diisi.');
+      return;
+    }
+
     if (!formData.clientId) {
       setError('Klien tertagih wajib dipilih.');
       return;
@@ -189,7 +196,12 @@ export default function InvoiceFormModal({ isOpen, onClose, clients, onSubmit })
 
       await onSubmit({
         ...formData,
+        invoiceNumber: formData.invoiceNumber.trim(),
         clientName: client ? client.name : 'Klien Korporasi',
+        clientAddress: client?.address || '',
+        clientCity: client?.city || '',
+        clientProvince: client?.province || '',
+        clientContact: client?.contactPerson || client?.picName || '',
         serviceDescription: combinedServiceDesc,
         serviceItems,
         adjustments,
@@ -246,8 +258,23 @@ export default function InvoiceFormModal({ isOpen, onClose, clients, onSubmit })
             </div>
           )}
 
-          {/* Section: Client & Billing Period */}
+          {/* Section: Nomor Faktur & Klien Tertagih */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div>
+              <label className="block font-semibold text-ink mb-1">
+                Nomor Faktur <span className="text-primary-red">*</span>
+              </label>
+              <input
+                type="text"
+                name="invoiceNumber"
+                value={formData.invoiceNumber}
+                onChange={handleChange}
+                placeholder="Contoh: INV/BRK/2026/09/001"
+                className="w-full text-xs sm:text-sm font-mono font-bold border border-border rounded-xl px-3 py-2 bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary-red/20"
+                required
+              />
+            </div>
+
             <div>
               <label className="block font-semibold text-ink mb-1">
                 Klien Tertagih <span className="text-primary-red">*</span>
@@ -267,7 +294,28 @@ export default function InvoiceFormModal({ isOpen, onClose, clients, onSubmit })
                 ))}
               </select>
             </div>
+          </div>
 
+          {/* Preview Klien & Alamat jika Klien dipilih */}
+          {selectedClient && (
+            <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-muted flex items-start gap-2.5">
+              <Building2 className="h-4 w-4 text-primary-red flex-none mt-0.5" />
+              <div className="space-y-0.5">
+                <span className="font-bold text-ink block">{selectedClient.name}</span>
+                <p className="text-slate-700">
+                  <span className="font-semibold text-slate-500">Alamat:</span> {selectedClient.address || 'Alamat operasional klien'}, {selectedClient.city || 'Tangerang'}{selectedClient.province ? `, ${selectedClient.province}` : ''}
+                </p>
+                {selectedClient.contactPerson && (
+                  <p className="text-[11px] text-slate-500">
+                    <span className="font-semibold">U.P.:</span> {selectedClient.contactPerson}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Section: Periode & Dates */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
             <div>
               <label className="block font-semibold text-ink mb-1">
                 Periode Tagihan <span className="text-primary-red">*</span>
@@ -282,10 +330,7 @@ export default function InvoiceFormModal({ isOpen, onClose, clients, onSubmit })
                 required
               />
             </div>
-          </div>
 
-          {/* Section: Dates */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
               <label className="block font-semibold text-ink mb-1">
                 Tanggal Terbit Faktur

@@ -125,7 +125,7 @@ Enam jenis layanan alih daya (*outsourcing*) kanonikal telah dibakukan di dalam 
   - Kolom jam "Datang", "Pulang", dan "Lembur" disiapkan kosong agar petugas lapangan dapat mengisinya secara manual.
   - Jika belum ada penugasan aktif pada lokasi tersebut, antarmuka menampilkan spanduk notifikasi: `"Data Karyawan pada lokasi klien ini masih kosong"`.
 - **Ekspor Formal Kop Perusahaan:**
-  - Fungsi ekspor menghasilkan file Excel dengan kop resmi korporat PT. BIMASENA ADHIRAJA SARADIKA, judul dokumen formal, metadata klien, lokasi, periode, tanggal cetak, dan identitas petugas inputer.
+  - Fungsi ekspor menghasilkan file Excel dengan kop resmi korporat PT. BIMASENA ADHIRAJASA RADIKA, judul dokumen formal, metadata klien, lokasi, periode, tanggal cetak, dan identitas petugas inputer.
 - **Pembersihan Sesi Petugas Inputer (`AuthProvider.jsx`):**
   - Khusus pengguna peran inputer (`user1`, `user2`), riwayat lembar kerja sementara pada sesi tersebut ("Lembar Tersedia" di `barak_attendance_sheets`) dibersihkan dari penyimpanan lokal saat aksi Logout dieksekusi.
   - Hal ini menjamin bahwa setiap sesi kerja baru dimulai dalam keadaan bersih tanpa kontaminasi draf pekerjaan sesi terdahulu.

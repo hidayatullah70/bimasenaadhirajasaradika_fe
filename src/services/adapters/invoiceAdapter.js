@@ -87,7 +87,7 @@ export const invoiceAdapter = {
       const newInvoice = {
         ...payload,
         id: `INV-2026-09-${nextNum}`,
-        invoiceNumber: `INV/BRK/2026/09/${nextNum}`,
+        invoiceNumber: payload.invoiceNumber?.trim() || `INV/BRK/2026/09/${nextNum}`,
         subtotal,
         taxRate,
         taxAmount,
