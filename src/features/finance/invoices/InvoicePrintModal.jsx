@@ -6,7 +6,7 @@
  */
 
 import React, { useRef } from 'react';
-import { Printer, X, Building2, ShieldCheck } from 'lucide-react';
+import { Printer, X, Building2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 
 /**
@@ -56,12 +56,6 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
       return dateStr;
     }
   };
-
-  const printDate = new Date().toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
 
   const subtotal = invoice.subtotalServices || invoice.subtotal || Math.round(invoice.totalAmount / 1.11);
   const taxAmount = invoice.taxAmount !== undefined ? invoice.taxAmount : (invoice.isPpnActive ? Math.round((invoice.managementFeeAmount || 0) * 0.11) : 0);
@@ -419,22 +413,8 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
               </p>
             </div>
 
-            {/* 7. Signature & Authorization Seal */}
-            <div className="pt-2 print:pt-1.5 flex justify-between items-end gap-4">
-              <div className="text-[9px] print:text-[7.5px] text-muted max-w-sm sm:max-w-md space-y-1 leading-normal">
-                <div className="flex items-center gap-1 text-slate-700 font-semibold text-[9.5px] print:text-[8px]">
-                  <ShieldCheck className="h-3 w-3 text-accent-green" />
-                  <span>Dokumen Sah & Terverifikasi Sistem</span>
-                </div>
-                <p>
-                  Faktur penagihan ini dihasilkan secara elektronik dan sah sesuai tata kelola{' '}
-                  <span className="whitespace-nowrap font-medium text-slate-700">PT. BIMASENA ADHIRAJASA RADIKA</span>.
-                </p>
-                <p className="font-mono text-[8.5px] print:text-[7px] text-slate-400">
-                  REF-UUID: {invoice.invoiceNumber || invoice.id} • Cetak: {printDate}
-                </p>
-              </div>
-
+            {/* 7. Signature & Authorization Block */}
+            <div className="pt-2 print:pt-1.5 flex justify-end items-end">
               <div className="text-center min-w-[220px] sm:min-w-[240px] space-y-1">
                 <p className="text-[9.5px] print:text-[8px] text-muted">
                   Tangerang, {formattedDate(invoice.issueDate)}
