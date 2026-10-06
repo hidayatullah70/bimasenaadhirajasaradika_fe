@@ -69,9 +69,14 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-ink/70 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 print:p-0 print:bg-white print:static print:inset-auto">
-      {/* Stylesheet khusus untuk print agar pas di A4 portrait */}
+      {/* Stylesheet khusus untuk print agar pas di 1 lembar A4 portrait */}
       <style>{`
         @media print {
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+          }
           body * {
             visibility: hidden !important;
           }
@@ -85,11 +90,14 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
             width: 100% !important;
             max-width: 100% !important;
             margin: 0 !important;
-            padding: 8mm 12mm !important;
+            padding: 6mm 10mm !important;
             background: white !important;
             border: none !important;
             box-shadow: none !important;
-            font-size: 10.5px !important;
+            font-size: 8.5px !important;
+            line-height: 1.2 !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
           }
           @page {
             size: A4 portrait;
@@ -138,29 +146,29 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
         </div>
 
         {/* Printable Invoice Container — Designed for A4 single page */}
-        <div className="p-4 sm:p-8 overflow-y-auto flex-1 bg-slate-100/50 print:bg-white print:p-0">
+        <div className="p-3 sm:p-6 overflow-y-auto flex-1 bg-slate-100/50 print:bg-white print:p-0">
           <div
             id="barak-printable-invoice"
             ref={printAreaRef}
-            className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-4 max-w-3xl mx-auto print:border-none print:shadow-none print:p-0 print:space-y-3.5 print:max-w-none text-ink text-xs leading-normal"
+            className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-6 space-y-2.5 print:p-0 print:space-y-1.5 max-w-3xl mx-auto print:max-w-none text-ink text-[11px] print:text-[8.5px] leading-tight"
           >
             {/* 1. Official Corporate Header */}
-            <div className="border-b-2 border-ink pb-2.5">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
+            <div className="border-b-2 border-ink pb-2 print:pb-1">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
                   <img
                     src="/assets/img/logo/logoAja.png"
                     alt="PT. BIMASENA ADHIRAJASA RADIKA"
-                    className="w-12 h-12 object-contain flex-none"
+                    className="w-10 h-10 print:w-8 print:h-8 object-contain flex-none"
                   />
                   <div>
-                    <h1 className="text-base sm:text-lg font-black tracking-tight text-ink uppercase leading-none">
+                    <h1 className="text-sm sm:text-base print:text-[12px] font-black tracking-tight text-ink uppercase leading-none">
                       PT. BIMASENA ADHIRAJASA RADIKA
                     </h1>
-                    <p className="text-[10px] font-bold text-primary-red tracking-wider uppercase mt-0.5">
+                    <p className="text-[9px] print:text-[7.5px] font-bold text-primary-red tracking-wider uppercase mt-0.5">
                       Integrated Outsourcing Management System (BARAK IOMS)
                     </p>
-                    <p className="text-[10px] text-muted mt-0.5 leading-snug">
+                    <p className="text-[8.5px] print:text-[7px] text-muted mt-0.5 leading-snug">
                       Kantor Operasional: Jl. Melati I RT. 002/RW. 005 Kel. Tanah Tinggi, Kec. Tangerang, Banten 15119
                       <br />
                       Telp / WhatsApp: +6281380768088 • Email: arifin.smart99@gmail.com • Website: www.bimasenaadhirajasaradika.com
@@ -172,19 +180,19 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
             </div>
 
             {/* 2. Invoice Document Title & Status */}
-            <div className="flex items-center justify-between gap-2 pt-0.5">
+            <div className="flex items-center justify-between gap-2 pt-0">
               <div>
-                <span className="text-[10px] font-bold text-primary-red uppercase tracking-widest block">
+                <span className="text-[9px] print:text-[7px] font-bold text-primary-red uppercase tracking-widest block">
                   Official Billing Statement
                 </span>
-                <h2 className="text-base sm:text-lg font-black text-ink uppercase tracking-tight leading-none mt-0.5">
+                <h2 className="text-sm sm:text-base print:text-[11px] font-black text-ink uppercase tracking-tight leading-none mt-0.5">
                   FAKTUR PENAGIHAN / INVOICE
                 </h2>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="text-[11px] font-semibold text-muted">Status:</span>
+                <span className="text-[10px] print:text-[7.5px] font-semibold text-muted">Status:</span>
                 <span
-                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${invoice.status === 'PAID'
+                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] print:text-[7px] font-bold uppercase tracking-wider ${invoice.status === 'PAID'
                     ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                     : invoice.status === 'PARTIALLY_PAID'
                       ? 'bg-amber-100 text-amber-800 border border-amber-300'
@@ -199,21 +207,21 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
             </div>
 
             {/* 3. Billed To & Invoice Metadata Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50/80 p-3 rounded-lg border border-slate-200 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50/80 p-2 print:p-1.5 rounded-lg border border-slate-200 text-[10px] print:text-[8px]">
               <div>
-                <span className="text-[9px] font-bold uppercase tracking-wider text-muted block mb-0.5">
+                <span className="text-[8px] print:text-[6.5px] font-bold uppercase tracking-wider text-muted block mb-0.5">
                   Tagihan Ditujukan Kepada (Billed To):
                 </span>
-                <h4 className="text-xs font-bold text-ink uppercase">
+                <h4 className="text-[11px] print:text-[9px] font-bold text-ink uppercase">
                   {invoice.clientName}
                 </h4>
-                <div className="mt-0.5 space-y-0.5 text-[11px] text-muted">
+                <div className="mt-0.5 space-y-0.5 text-[9.5px] print:text-[7.5px] text-muted leading-tight">
                   {(invoice.clientContact || client?.contactPerson || client?.picName) && (
                     <p className="text-ink font-medium">
                       U.P. : {invoice.clientContact || client?.contactPerson || client?.picName}
                     </p>
                   )}
-                  <p className="text-slate-700 font-medium">
+                  <p className="text-slate-700 font-medium line-clamp-1">
                     {invoice.clientAddress || client?.address || 'Alamat Operasional Jabodetabek'}
                   </p>
                   <p className="text-slate-600">
@@ -222,7 +230,7 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
                 </div>
               </div>
 
-              <div className="space-y-1 sm:border-l sm:border-slate-200 sm:pl-4 text-[11px]">
+              <div className="space-y-0.5 sm:border-l sm:border-slate-200 sm:pl-3 text-[9.5px] print:text-[7.5px] leading-tight">
                 <div className="flex justify-between items-center">
                   <span className="text-muted">Nomor Faktur:</span>
                   <span className="font-mono font-bold text-ink">{invoice.invoiceNumber}</span>
@@ -246,38 +254,38 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
             <div className="overflow-x-auto border border-slate-200 rounded-lg">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-slate-100 text-ink uppercase text-[10px] font-bold tracking-wider border-b border-slate-200">
-                    <th className="py-2 px-2.5 border-r border-slate-200 w-10 text-center">No</th>
-                    <th className="py-2 px-3 border-r border-slate-200">Deskripsi Rincian Layanan & Penyesuaian</th>
-                    <th className="py-2 px-3 text-right w-44">Jumlah (IDR)</th>
+                  <tr className="bg-slate-100 text-ink uppercase text-[8.5px] print:text-[7px] font-bold tracking-wider border-b border-slate-200">
+                    <th className="py-1 px-1.5 border-r border-slate-200 w-7 text-center">No</th>
+                    <th className="py-1 px-2 border-r border-slate-200">Deskripsi Rincian Layanan & Penyesuaian</th>
+                    <th className="py-1 px-2 text-right w-36 print:w-28">Jumlah (IDR)</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200 text-xs">
+                <tbody className="divide-y divide-slate-200 text-[9.5px] print:text-[7.5px]">
                   {/* Rincian Jasa Penempatan */}
                   {invoice.serviceItems && invoice.serviceItems.length > 0 ? (
                     invoice.serviceItems.map((item, idx) => (
                       <tr key={item.id || idx} className="hover:bg-slate-50/50">
-                        <td className="py-1.5 px-2.5 border-r border-slate-200 text-center font-medium text-slate-500">
+                        <td className="py-0.5 px-1.5 border-r border-slate-200 text-center font-medium text-slate-500">
                           {idx + 1}
                         </td>
-                        <td className="py-1.5 px-3 border-r border-slate-200">
+                        <td className="py-0.5 px-2 border-r border-slate-200">
                           <p className="font-semibold text-ink whitespace-pre-line leading-tight">{item.description}</p>
                         </td>
-                        <td className="py-1.5 px-3 text-right font-semibold text-ink">
+                        <td className="py-0.5 px-2 text-right font-semibold text-ink">
                           Rp {(Number(item.amount) || 0).toLocaleString('id-ID')}
                         </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td className="py-2 px-2.5 border-r border-slate-200 text-center font-medium text-slate-500">1</td>
-                      <td className="py-2 px-3 border-r border-slate-200">
+                      <td className="py-0.5 px-1.5 border-r border-slate-200 text-center font-medium text-slate-500">1</td>
+                      <td className="py-0.5 px-2 border-r border-slate-200">
                         <p className="font-semibold text-ink leading-tight">{invoice.serviceDescription}</p>
                         {invoice.notes && (
-                          <p className="text-[10px] text-muted mt-0.5">{invoice.notes}</p>
+                          <p className="text-[8px] text-muted mt-0.5">{invoice.notes}</p>
                         )}
                       </td>
-                      <td className="py-2 px-3 text-right font-semibold text-ink">
+                      <td className="py-0.5 px-2 text-right font-semibold text-ink">
                         Rp {subtotal.toLocaleString('id-ID')}
                       </td>
                     </tr>
@@ -291,16 +299,16 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
 
                     return (
                       <tr key={adj.id || `adj-${idx}`} className={isPotongan ? 'bg-red-50/15' : 'bg-slate-50/30'}>
-                        <td className="py-1.5 px-2.5 border-r border-slate-200 text-center font-medium text-slate-500">
+                        <td className="py-0.5 px-1.5 border-r border-slate-200 text-center font-medium text-slate-500">
                           {rowNum}
                         </td>
-                        <td className="py-1.5 px-3 border-r border-slate-200">
+                        <td className="py-0.5 px-2 border-r border-slate-200">
                           <span className="font-medium text-ink leading-tight">
                             {adj.description}
                           </span>
                         </td>
                         <td
-                          className={`py-1.5 px-3 text-right font-semibold ${isPotongan ? 'text-red-600' : 'text-slate-800'
+                          className={`py-0.5 px-2 text-right font-semibold ${isPotongan ? 'text-red-600' : 'text-slate-800'
                             }`}
                         >
                           {isPotongan ? '- ' : ''}Rp {amountNum.toLocaleString('id-ID')}
@@ -313,72 +321,72 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
             </div>
 
             {/* 5. Subtotal, Tax and Total Breakdown */}
-            <div className="flex flex-col sm:flex-row justify-between gap-4 items-start pt-1">
+            <div className="flex flex-col sm:flex-row justify-between gap-2.5 items-start pt-0.5">
               {/* Terbilang Box */}
-              <div className="flex-1 p-3 bg-slate-50 border border-slate-200 rounded-lg space-y-1">
-                <span className="text-[9px] font-bold uppercase tracking-wider text-muted block">
+              <div className="flex-1 p-2 print:p-1.5 bg-slate-50 border border-slate-200 rounded-lg space-y-0.5">
+                <span className="text-[8px] print:text-[6.5px] font-bold uppercase tracking-wider text-muted block">
                   Jumlah Terbilang:
                 </span>
-                <p className="text-xs font-semibold text-ink italic leading-snug">
+                <p className="text-[9.5px] print:text-[7.5px] font-semibold text-ink italic leading-snug">
                   # {angkaKeTerbilang(invoice.totalAmount)} #
                 </p>
               </div>
 
               {/* Numerical Calculation Summary */}
-              <div className="w-full sm:w-72 space-y-1 text-xs">
-                <div className="flex justify-between text-muted text-[11px]">
+              <div className="w-full sm:w-64 print:w-56 space-y-0.5 text-[9.5px] print:text-[7.5px]">
+                <div className="flex justify-between text-muted">
                   <span>Subtotal Nilai Jasa:</span>
                   <span className="font-semibold text-ink">Rp {subtotal.toLocaleString('id-ID')}</span>
                 </div>
 
                 {invoice.subtotalReward > 0 && (
-                  <div className="flex justify-between text-accent-green text-[11px]">
+                  <div className="flex justify-between text-accent-green">
                     <span>Sub Total Reward (+):</span>
                     <span className="font-semibold">+ Rp {invoice.subtotalReward.toLocaleString('id-ID')}</span>
                   </div>
                 )}
 
                 {invoice.subtotalPotongan > 0 && (
-                  <div className="flex justify-between text-red-600 text-[11px]">
+                  <div className="flex justify-between text-red-600">
                     <span>Sub Total Potongan (-):</span>
                     <span className="font-semibold">- Rp {invoice.subtotalPotongan.toLocaleString('id-ID')}</span>
                   </div>
                 )}
 
                 {(invoice.managementFeeAmount > 0 || (invoice.managementFeeRate !== undefined && invoice.managementFeeRate > 0)) && (
-                  <div className="flex justify-between text-emerald-700 text-[11px]">
+                  <div className="flex justify-between text-emerald-700">
                     <span>Manajemen Fee ({invoice.managementFeeRate || 0}%):</span>
                     <span className="font-semibold">+ Rp {(invoice.managementFeeAmount || 0).toLocaleString('id-ID')}</span>
                   </div>
                 )}
 
                 {invoice.pph23Amount > 0 && (
-                  <div className="flex justify-between text-slate-600 text-[11px]">
+                  <div className="flex justify-between text-slate-600">
                     <span>PPH 23 (2%):</span>
                     <span className="font-semibold text-ink">- Rp {invoice.pph23Amount.toLocaleString('id-ID')}</span>
                   </div>
                 )}
 
                 {(invoice.isPpnActive || taxAmount > 0) && (
-                  <div className="flex justify-between text-emerald-700 text-[11px]">
+                  <div className="flex justify-between text-emerald-700">
                     <span>PPN 11% (Manajemen Fee × 11%):</span>
                     <span className="font-semibold">+ Rp {taxAmount.toLocaleString('id-ID')}</span>
                   </div>
                 )}
 
-                <div className="border-t-2 border-slate-200 pt-1.5 flex justify-between text-sm font-bold text-ink">
+                <div className="border-t border-slate-300 pt-0.5 flex justify-between text-[10.5px] print:text-[8.5px] font-bold text-ink">
                   <span>Total Tagihan Bersih:</span>
                   <span className="text-primary-red">Rp {invoice.totalAmount.toLocaleString('id-ID')}</span>
                 </div>
 
                 {invoice.paidAmount > 0 && (
-                  <div className="flex justify-between text-emerald-700 font-semibold text-[11px] pt-0.5">
+                  <div className="flex justify-between text-emerald-700 font-semibold pt-0.5">
                     <span>Sudah Dibayar:</span>
                     <span>- Rp {invoice.paidAmount.toLocaleString('id-ID')}</span>
                   </div>
                 )}
 
-                <div className="border-t border-dashed border-slate-300 pt-1 flex justify-between font-bold text-xs">
+                <div className="border-t border-dashed border-slate-300 pt-0.5 flex justify-between font-bold">
                   <span>Sisa Tagihan (Balance Due):</span>
                   <span className={remaining > 0 ? 'text-primary-red' : 'text-emerald-700'}>
                     Rp {remaining.toLocaleString('id-ID')}
@@ -388,60 +396,60 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
             </div>
 
             {/* 6. Payment Instructions Box */}
-            <div className="p-3 bg-primary-red/5 border border-primary-red/20 rounded-lg space-y-1">
-              <h5 className="text-[11px] font-bold text-ink flex items-center gap-1.5">
-                <Building2 className="h-3.5 w-3.5 text-primary-red" />
+            <div className="p-2 print:p-1.5 bg-primary-red/5 border border-primary-red/20 rounded-lg space-y-0.5">
+              <h5 className="text-[9.5px] print:text-[7.5px] font-bold text-ink flex items-center gap-1.5">
+                <Building2 className="h-3 w-3 text-primary-red" />
                 <span>Instruksi Pembayaran Rekening Resmi:</span>
               </h5>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs pt-0.5">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 text-[9px] print:text-[7px] pt-0.5">
                 <div>
-                  <span className="text-muted block text-[9px]">Bank Tujuan:</span>
-                  <strong className="text-ink text-[11px]">Bank Central Asia (BCA)</strong>
+                  <span className="text-muted block text-[8px] print:text-[6.5px]">Bank Tujuan:</span>
+                  <strong className="text-ink text-[9.5px] print:text-[7.5px]">Bank Central Asia (BCA)</strong>
                 </div>
                 <div>
-                  <span className="text-muted block text-[9px]">Nomor Rekening:</span>
-                  <strong className="text-primary-red font-mono text-xs tracking-wide">8833951911</strong>
+                  <span className="text-muted block text-[8px] print:text-[6.5px]">Nomor Rekening:</span>
+                  <strong className="text-primary-red font-mono text-[10px] print:text-[8px] tracking-wide">8833951911</strong>
                 </div>
                 <div>
-                  <span className="text-muted block text-[9px]">Atas Nama Rekening:</span>
-                  <strong className="text-ink text-[11px]">PT. BIMASENA ADHIRAJASA RADHIKA</strong>
+                  <span className="text-muted block text-[8px] print:text-[6.5px]">Atas Nama Rekening:</span>
+                  <strong className="text-ink text-[9.5px] print:text-[7.5px]">PT. BIMASENA ADHIRAJASA RADIKA</strong>
                 </div>
               </div>
-              <p className="text-[9px] text-muted italic pt-0.5 border-t border-primary-red/10">
-                * Mohon mencantumkan nomor faktur ({invoice.invoiceNumber}) pada berita transfer dan mengirimkan konfirmasi via WhatsApp (+62 0813-8076-8088) atau email : arifin.smart99@gmail.com
+              <p className="text-[8px] print:text-[6.5px] text-muted italic pt-0.5 border-t border-primary-red/10 leading-tight">
+                * Mohon mencantumkan nomor faktur ({invoice.invoiceNumber}) pada berita transfer dan konfirmasi via WhatsApp (+62 0813-8076-8088) atau email: arifin.smart99@gmail.com
               </p>
             </div>
 
             {/* 7. Signature & Authorization Seal */}
-            <div className="pt-2 flex justify-between items-end">
-              <div className="text-[9px] text-muted max-w-xs space-y-0.5">
+            <div className="pt-1 print:pt-0.5 flex justify-between items-end">
+              <div className="text-[8px] print:text-[6.5px] text-muted max-w-xs space-y-0.5 leading-tight">
                 <div className="flex items-center gap-1 text-slate-700 font-semibold">
-                  <ShieldCheck className="h-3 w-3 text-accent-green" />
+                  <ShieldCheck className="h-2.5 w-2.5 text-accent-green" />
                   <span>Dokumen Sah & Terverifikasi Sistem</span>
                 </div>
                 <p>
                   Faktur penagihan ini dihasilkan secara elektronik dan sah sesuai tata kelola PT. BIMASENA ADHIRAJASA RADIKA.
                 </p>
-                <p className="font-mono text-[8px] text-slate-400">
-                  REF: {invoice.invoiceNumber || invoice.id} • Cetak: {printDate}
+                <p className="font-mono text-[7.5px] print:text-[6px] text-slate-400">
+                  REF-UUID: {invoice.invoiceNumber || invoice.id} • Cetak: {printDate}
                 </p>
               </div>
 
-              <div className="text-center min-w-[220px] sm:min-w-[240px] space-y-0.5">
-                <p className="text-[10px] text-muted">
+              <div className="text-center min-w-[200px] sm:min-w-[220px] space-y-0.5">
+                <p className="text-[8.5px] print:text-[7px] text-muted">
                   Tangerang, {formattedDate(invoice.issueDate)}
                 </p>
-                <p className="text-[10px] sm:text-[11px] font-bold text-ink uppercase whitespace-nowrap tracking-tight">
+                <p className="text-[9.5px] print:text-[7.5px] font-bold text-ink uppercase whitespace-nowrap tracking-tight">
                   PT. BIMASENA ADHIRAJASA RADIKA
                 </p>
 
                 {/* Stempel & Signature Visual Placeholder */}
-                <div className="h-10 flex items-center justify-center relative">
+                <div className="h-7 print:h-5 flex items-center justify-center relative">
                 </div>
-                <div className="w-44 mx-auto">
-                  <p className="font-bold text-ink text-[11px]">Juli Priyanto</p>
+                <div className="w-36 print:w-32 mx-auto">
+                  <p className="font-bold text-ink text-[9.5px] print:text-[7.5px]">Juli Priyanto</p>
                   <div className="border-t border-ink pt-0.5">
-                    <p className="text-[9px] text-muted">Direktur Utama</p>
+                    <p className="text-[8px] print:text-[6.5px] text-muted">Direktur Utama</p>
                   </div>
                 </div>
               </div>
