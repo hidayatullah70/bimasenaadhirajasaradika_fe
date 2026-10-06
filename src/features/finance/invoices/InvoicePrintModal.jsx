@@ -404,7 +404,7 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
                 </div>
                 <div>
                   <span className="text-muted block text-[9px]">Atas Nama Rekening:</span>
-                  <strong className="text-ink text-[11px]">BIMASENA ADHIRAJASA RADHIKA</strong>
+                  <strong className="text-ink text-[11px]">PT. BIMASENA ADHIRAJASA RADHIKA</strong>
                 </div>
               </div>
               <p className="text-[9px] text-muted italic pt-0.5 border-t border-primary-red/10">
@@ -423,7 +423,7 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
                   Faktur penagihan ini dihasilkan secara elektronik dan sah sesuai tata kelola PT. BIMASENA ADHIRAJASA RADIKA.
                 </p>
                 <p className="font-mono text-[8px] text-slate-400">
-                  REF-UUID: {invoice.id} • Cetak: {printDate}
+                  REF-UUID: {invoice.invoiceNumber || invoice.id} • Cetak: {printDate}
                 </p>
               </div>
 
@@ -437,10 +437,6 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
 
                 {/* Stempel & Signature Visual Placeholder */}
                 <div className="h-10 flex items-center justify-center relative">
-                  <div className="w-16 h-16 rounded-full border border-primary-red/40 border-dashed flex flex-col items-center justify-center text-primary-red/50 text-[7px] font-bold uppercase rotate-12 pointer-events-none">
-                    <span>PT. BARAK</span>
-                    <span className="text-[5px]">TANGERANG</span>
-                  </div>
                 </div>
                 <p className="font-bold text-ink text-[11px]">Juli Priyanto</p>
                 <div className="border-t border-ink pt-0.5">
