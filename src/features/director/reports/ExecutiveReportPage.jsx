@@ -104,12 +104,12 @@ export default function ExecutiveReportPage() {
               <div className="flex items-center gap-3">
                 <img
                   src="/assets/img/logo/logoAja.png"
-                  alt="PT. Bimasena Adhirajasa Radhika"
+                  alt="PT. BIMASENA ADHIRAJASA RADIKA"
                   className="w-10 h-10 object-contain flex-none"
                 />
                 <div>
                   <h1 className="text-xl font-black tracking-tight text-ink uppercase">
-                    PT. Bimasena Adhirajasa Radhika
+                    PT. BIMASENA ADHIRAJASA RADIKA
                   </h1>
                   <p className="text-2xs font-semibold text-primary-red tracking-wider uppercase">
                     Integrated Outsourcing Management System (BARAK IOMS)
@@ -278,7 +278,7 @@ export default function ExecutiveReportPage() {
           {/* 6. Formal Sign-Off Section */}
           <div className="pt-8 border-t border-slate-200">
             <p className="text-xs text-muted mb-6 text-center">
-              Laporan manajemen ini disahkan dan ditandatangani oleh pejabat struktural PT. Bimasena Adhirajasa Radhika.
+              Laporan manajemen ini disahkan dan ditandatangani oleh pejabat struktural PT. BIMASENA ADHIRAJASA RADIKA.
             </p>
             <div className="grid grid-cols-3 gap-6 text-center text-xs">
               <div>

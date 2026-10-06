@@ -111,10 +111,10 @@ export default function NewsPage() {
                       <span>
                         {selectedArticle.publishedAt
                           ? new Date(selectedArticle.publishedAt).toLocaleDateString('id-ID', {
-                              day: 'numeric',
-                              month: 'long',
-                              year: 'numeric',
-                            })
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                          })
                           : '-'}
                       </span>
                     </span>
@@ -203,7 +203,7 @@ export default function NewsPage() {
                 <div className="mt-10 p-4 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center gap-3 text-xs text-muted">
                   <ShieldCheck className="w-5 h-5 text-accent-green flex-shrink-0" />
                   <span>
-                    Diterbitkan secara resmi oleh Divisi Komunikasi & Kepatuhan Legal PT. Bimasena Adhirajasa Radhika.
+                    Diterbitkan secara resmi oleh Divisi Komunikasi & Kepatuhan Legal PT. BIMASENA ADHIRAJASA RADIKA.
                   </span>
                 </div>
 

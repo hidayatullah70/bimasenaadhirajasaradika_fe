@@ -150,7 +150,7 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
                 <div className="flex items-center gap-3">
                   <img
                     src="/assets/img/logo/logoAja.png"
-                    alt="PT. Bimasena Adhirajasa Radhika"
+                    alt="PT. BIMASENA ADHIRAJASA RADIKA"
                     className="w-12 h-12 object-contain flex-none"
                   />
                   <div>
@@ -420,7 +420,7 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
                   <span>Dokumen Sah & Terverifikasi Sistem</span>
                 </div>
                 <p>
-                  Faktur penagihan ini dihasilkan secara elektronik dan sah sesuai tata kelola PT. Bimasena Adhirajasa Radhika.
+                  Faktur penagihan ini dihasilkan secara elektronik dan sah sesuai tata kelola PT. BIMASENA ADHIRAJASA RADIKA.
                 </p>
                 <p className="font-mono text-[8px] text-slate-400">
                   REF-UUID: {invoice.id} • Cetak: {printDate}
@@ -432,7 +432,7 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
                   Tangerang, {formattedDate(invoice.issueDate)}
                 </p>
                 <p className="text-[11px] font-bold text-ink uppercase">
-                  PT. Bimasena Adhirajasa Radhika
+                  PT. BIMASENA ADHIRAJASA RADIKA
                 </p>
 
                 {/* Stempel & Signature Visual Placeholder */}

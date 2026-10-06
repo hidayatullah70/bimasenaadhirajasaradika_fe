@@ -93,7 +93,7 @@ export default function LandingPage() {
               <span className="text-primary-yellow">Bisnis Anda</span>
             </h1>
             <p className="mt-6 text-lg text-white/75 leading-relaxed max-w-xl">
-              PT. Bimasena Adhirajasa Radhika hadir sebagai mitra strategis dari perspektif dan pengalaman tenaga kerja outsourcing yang profesional, kompeten dan berintegritas.
+              PT. BIMASENA ADHIRAJASA RADIKA hadir sebagai mitra strategis dari perspektif dan pengalaman tenaga kerja outsourcing yang profesional, kompeten dan berintegritas.
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <Link

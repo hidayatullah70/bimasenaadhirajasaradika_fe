@@ -99,21 +99,21 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
 
   const visibleItems = currentUser?.isAttendanceOnly
     ? [
-        {
-          label: 'Attendance Spreadsheet',
-          to: '/ops/hrd/attendance',
-          icon: FileSpreadsheet,
-        },
-      ]
+      {
+        label: 'Attendance Spreadsheet',
+        to: '/ops/hrd/attendance',
+        icon: FileSpreadsheet,
+      },
+    ]
     : currentUser?.isPicKorlap
-    ? [
+      ? [
         {
           label: 'Laporan Kegiatan PIC',
           to: '/ops/operations/activity-reports',
           icon: ClipboardCheck,
         },
       ]
-    : NAV_ITEMS.filter((item) => {
+      : NAV_ITEMS.filter((item) => {
         const roleAllowed = !item.roles || item.roles.includes(currentUser?.role);
         const permAllowed = !item.permission || hasPermission(item.permission);
         return roleAllowed && permAllowed;
@@ -169,7 +169,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
         <div className="flex items-center gap-2.5 min-w-0">
           <img
             src="/assets/img/logo/logoAja.png"
-            alt="PT. Bimasena Adhirajasa Radhika"
+            alt="PT. BIMASENA ADHIRAJASA RADIKA"
             className="h-8 w-8 object-contain flex-none"
           />
           {!collapsed && (

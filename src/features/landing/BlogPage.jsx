@@ -111,10 +111,10 @@ export default function BlogPage() {
                       <span>
                         {selectedArticle.publishedAt
                           ? new Date(selectedArticle.publishedAt).toLocaleDateString('id-ID', {
-                              day: 'numeric',
-                              month: 'long',
-                              year: 'numeric',
-                            })
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                          })
                           : '-'}
                       </span>
                     </span>
@@ -203,7 +203,7 @@ export default function BlogPage() {
                 <div className="mt-10 p-4 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center gap-3 text-xs text-muted">
                   <Sparkles className="w-5 h-5 text-primary-yellow flex-shrink-0" />
                   <span>
-                    Artikel wawasan bisnis & edukasi operasional fasilitas oleh Dewan Pakar PT. Bimasena Adhirajasa Radhika.
+                    Artikel wawasan bisnis & edukasi operasional fasilitas oleh Dewan Pakar PT. BIMASENA ADHIRAJASA RADIKA.
                   </span>
                 </div>
 

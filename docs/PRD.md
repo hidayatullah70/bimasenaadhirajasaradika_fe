@@ -1,6 +1,6 @@
 # PRD — PT. BARAK Integrated Outsourcing Management System (IOMS)
 
-**Project:** PT. Bimasena Adhirajasa Radhika (PT. BARAK)  
+**Project:** PT. BIMASENA ADHIRAJASA RADIKA (PT. BARAK)  
 **System:** Integrated Outsourcing Management System (IOMS)  
 **Version:** 1.1 — SOT Baseline (Refined)  
 **Language:** Bahasa Indonesia  
@@ -53,7 +53,7 @@ Landing page PT. BARAK untuk calon client, pelamar kerja, dan publik:
 - **Pusat Informasi & FAQ (`/faq`)**: Tanya jawab legalitas, standar UMK, dan SOP darurat.
 - **Halaman Kontak Dedikasi (`/contact`)**:
   - Form konsultasi / inquiry ("Kirim Pesan") terintegrasi dengan Marketing Lead Queue.
-  - Peta interaktif Google Maps resmi PT. Bimasena Adhirajasa Radhika di Tangerang.
+  - Peta interaktif Google Maps resmi PT. BIMASENA ADHIRAJASA RADIKA di Tangerang.
   - Kanal kontak langsung: WhatsApp Konsultasi (`0851 2479 9305`), WhatsApp Lowongan Kerja (`0851 8784 5044`), dan email resmi.
 - **Public Navbar**:
   - Warna default `bg-accent-green` (`#32B23E`), scroll transition ke `bg-white/95 backdrop-blur-md`.

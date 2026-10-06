@@ -32,7 +32,7 @@ export default function DashboardShell({ kpis = [], widgets, actions, descriptio
     <div>
       <PageHeader
         title={`${greeting}, ${currentUser?.name?.split(' ')[0] ?? ''}!`}
-        description={description || `Dashboard ${roleLabel} — PT. Bimasena Adhirajasa Radhika`}
+        description={description || `Dashboard ${roleLabel} — PT. BIMASENA ADHIRAJASA RADIKA`}
         actions={actions}
       />
 
@@ -41,9 +41,9 @@ export default function DashboardShell({ kpis = [], widgets, actions, descriptio
         <div className={clsx(
           'grid gap-4 mb-6',
           kpis.length === 1 ? 'grid-cols-1' :
-          kpis.length === 2 ? 'grid-cols-1 sm:grid-cols-2' :
-          kpis.length <= 4 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' :
-          'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+            kpis.length === 2 ? 'grid-cols-1 sm:grid-cols-2' :
+              kpis.length <= 4 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' :
+                'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
         )}>
           {kpis.map((kpi, i) => (
             <KpiCard key={i} {...kpi} />

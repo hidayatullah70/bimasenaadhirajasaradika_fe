@@ -58,16 +58,16 @@ export default function PublicFooter() {
             <Link
               to="/"
               className="inline-block mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white rounded-lg"
-              aria-label="PT. Bimasena Adhirajasa Radhika — Beranda"
+              aria-label="PT. BIMASENA ADHIRAJASA RADIKA — Beranda"
             >
               <img
                 src="/assets/img/logo/logoAja.png"
-                alt="PT. Bimasena Adhirajasa Radhika"
+                alt="PT. BIMASENA ADHIRAJASA RADIKA"
                 className="h-10 sm:h-12 md:h-14 w-auto object-contain hover:scale-105 transition-transform"
               />
             </Link>
             <p className="text-sm text-white/70 leading-relaxed">
-              PT. Bimasena Adhirajasa Radhika — mitra strategis outsourcing yang profesional, kompeten, dan berintegritas.
+              PT. BIMASENA ADHIRAJASA RADIKA — mitra strategis outsourcing yang profesional, kompeten, dan berintegritas.
             </p>
             <div className="flex items-center gap-3 mt-5">
               {SOCIAL_LINKS.map(({ icon: SocialIcon, href, label, hoverText, hoverBg }) => (
@@ -193,7 +193,7 @@ export default function PublicFooter() {
         </div>
 
         <div className="mt-12 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/40">
-          <p>© {year} PT. Bimasena Adhirajasa Radhika. Hak cipta dilindungi Undang-Undang.</p>
+          <p>© {year} PT. BIMASENA ADHIRAJASA RADIKA. Hak cipta dilindungi Undang-Undang.</p>
           <p className="flex items-center gap-1 flex-wrap">
             <span>Sistem IOMS v1.0 by</span>
             <a

@@ -8,7 +8,7 @@
 
 ## Ringkasan Eksekutif (Executive QA Summary)
 
-Laporan ini merupakan dokumentasi pengujian jaminan kualitas (*Quality Assurance*) komprehensif untuk **STEP 5 — FULL FRONTEND QA & FUNCTIONAL TESTING** pada sistem operasional **PT. Bimasena Adhirajasa Radhika (BARAK IOMS)**.
+Laporan ini merupakan dokumentasi pengujian jaminan kualitas (*Quality Assurance*) komprehensif untuk **STEP 5 — FULL FRONTEND QA & FUNCTIONAL TESTING** pada sistem operasional **PT. BIMASENA ADHIRAJASA RADIKA (BARAK IOMS)**.
 
 Pengujian mencakup verifikasi build produksi, integritas pohon rute publik dan terproteksi, penegakan matriks hak akses 8 peran (RBAC & Maker-Checker), validasi alur CRUD pada entitas bisnis utama, pengujian persistensi data dan reload browser pada 18 modul, pengujian keterhubungan relasi entitas, pengujian alur persetujuan Direktur (Approval Center), pengujian lapisan abstraksi API adapter, simulasi penanganan anomali data (error resilience), serta audit konsol browser.
 

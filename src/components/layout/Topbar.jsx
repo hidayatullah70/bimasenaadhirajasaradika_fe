@@ -41,134 +41,134 @@ export default function Topbar({ onMobileMenuOpen, unreadCount = 0, onSearchOpen
 
   return (
     <>
-    <header className="h-14 flex-none bg-surface border-b border-border flex items-center px-4 gap-3 sticky top-0 z-30">
-      {/* Mobile menu trigger */}
-      <button
-        onClick={onMobileMenuOpen}
-        className="lg:hidden flex items-center justify-center h-8 w-8 rounded-lg text-muted hover:text-ink hover:bg-canvas transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate"
-        aria-label="Buka menu navigasi"
-      >
-        <Menu className="h-5 w-5" aria-hidden />
-      </button>
-
-      {/* Mobile brand display */}
-      <div className="lg:hidden flex items-center gap-2">
-        <img
-          src="/assets/img/logo/logoAja.png"
-          alt="PT. Bimasena Adhirajasa Radhika"
-          className="h-7 w-7 object-contain"
-        />
-        <span className="font-bold text-xs text-ink tracking-tight">PT. BARAK</span>
-      </div>
-
-      {/* Spacer */}
-      <div className="flex-1" />
-
-      {/* Development Environment Indicator Pill (PRD Step 3) */}
-      <button
-        type="button"
-        onClick={() => setDevModalOpen(true)}
-        id="dev-environment-indicator"
-        title="Status Lingkungan Pengembangan: Klien REAL | Karyawan/Ops DEMO"
-        className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-surface border border-warning/30 text-[11px] font-medium text-warning hover:bg-warning/5 transition-all shadow-2xs"
-      >
-        <span className="h-2 w-2 rounded-full bg-accent-green animate-pulse" aria-hidden />
-        <span className="font-mono text-[10px] font-bold text-ink">DEV ENV</span>
-        <span className="text-muted/40 text-[10px]">|</span>
-        <span className="text-accent-green font-semibold">Klien: REAL</span>
-        <span className="text-muted/40 text-[10px]">|</span>
-        <span className="text-muted">Ops: DEMO</span>
-      </button>
-
-      {/* Global Search trigger */}
-      <button
-        onClick={onSearchOpen}
-        id="global-search-trigger"
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-canvas text-muted text-sm hover:border-slate/40 hover:text-ink transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate"
-        aria-label="Buka pencarian global (Ctrl+K)"
-      >
-        <Search className="h-4 w-4" aria-hidden />
-        <span className="hidden sm:inline">Cari...</span>
-        <kbd className="hidden sm:inline ml-1 text-xs font-mono bg-border text-muted px-1.5 py-0.5 rounded">
-          Ctrl K
-        </kbd>
-      </button>
-
-      {/* Notification Bell */}
-      <Link
-        to="/ops/notifications"
-        id="notification-bell"
-        className="relative flex items-center justify-center h-9 w-9 rounded-lg text-muted hover:text-ink hover:bg-canvas border border-transparent hover:border-border transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate"
-        aria-label={`Notifikasi${unreadCount > 0 ? ` — ${unreadCount} belum dibaca` : ''}`}
-      >
-        <Bell className="h-5 w-5" aria-hidden />
-        {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary-red text-white text-[10px] font-bold leading-none">
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </span>
-        )}
-      </Link>
-
-      {/* Profile dropdown */}
-      <div ref={profileRef} className="relative">
+      <header className="h-14 flex-none bg-surface border-b border-border flex items-center px-4 gap-3 sticky top-0 z-30">
+        {/* Mobile menu trigger */}
         <button
-          onClick={() => setProfileOpen((v) => !v)}
-          id="profile-menu-trigger"
-          className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-sm font-medium text-slate hover:text-ink hover:bg-canvas border border-transparent hover:border-border transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate"
-          aria-expanded={profileOpen}
-          aria-haspopup="menu"
-          aria-label="Menu profil"
+          onClick={onMobileMenuOpen}
+          className="lg:hidden flex items-center justify-center h-8 w-8 rounded-lg text-muted hover:text-ink hover:bg-canvas transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate"
+          aria-label="Buka menu navigasi"
         >
-          <div className="h-7 w-7 rounded-full bg-primary-red/10 flex items-center justify-center flex-none">
-            <span className="text-primary-red font-bold text-xs" aria-hidden>
-              {currentUser?.name?.[0] ?? 'U'}
-            </span>
-          </div>
-          <span className="hidden md:block max-w-[120px] truncate">{currentUser?.name}</span>
-          <ChevronDown className={clsx('h-4 w-4 text-muted transition-transform', profileOpen && 'rotate-180')} aria-hidden />
+          <Menu className="h-5 w-5" aria-hidden />
         </button>
 
-        {profileOpen && (
-          <div
-            className="absolute right-0 top-full mt-1 w-56 bg-surface rounded-xl border border-border shadow-dropdown z-50"
-            role="menu"
+        {/* Mobile brand display */}
+        <div className="lg:hidden flex items-center gap-2">
+          <img
+            src="/assets/img/logo/logoAja.png"
+            alt="PT. BIMASENA ADHIRAJASA RADIKA"
+            className="h-7 w-7 object-contain"
+          />
+          <span className="font-bold text-xs text-ink tracking-tight">PT. BARAK</span>
+        </div>
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Development Environment Indicator Pill (PRD Step 3) */}
+        <button
+          type="button"
+          onClick={() => setDevModalOpen(true)}
+          id="dev-environment-indicator"
+          title="Status Lingkungan Pengembangan: Klien REAL | Karyawan/Ops DEMO"
+          className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-surface border border-warning/30 text-[11px] font-medium text-warning hover:bg-warning/5 transition-all shadow-2xs"
+        >
+          <span className="h-2 w-2 rounded-full bg-accent-green animate-pulse" aria-hidden />
+          <span className="font-mono text-[10px] font-bold text-ink">DEV ENV</span>
+          <span className="text-muted/40 text-[10px]">|</span>
+          <span className="text-accent-green font-semibold">Klien: REAL</span>
+          <span className="text-muted/40 text-[10px]">|</span>
+          <span className="text-muted">Ops: DEMO</span>
+        </button>
+
+        {/* Global Search trigger */}
+        <button
+          onClick={onSearchOpen}
+          id="global-search-trigger"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border bg-canvas text-muted text-sm hover:border-slate/40 hover:text-ink transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate"
+          aria-label="Buka pencarian global (Ctrl+K)"
+        >
+          <Search className="h-4 w-4" aria-hidden />
+          <span className="hidden sm:inline">Cari...</span>
+          <kbd className="hidden sm:inline ml-1 text-xs font-mono bg-border text-muted px-1.5 py-0.5 rounded">
+            Ctrl K
+          </kbd>
+        </button>
+
+        {/* Notification Bell */}
+        <Link
+          to="/ops/notifications"
+          id="notification-bell"
+          className="relative flex items-center justify-center h-9 w-9 rounded-lg text-muted hover:text-ink hover:bg-canvas border border-transparent hover:border-border transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate"
+          aria-label={`Notifikasi${unreadCount > 0 ? ` — ${unreadCount} belum dibaca` : ''}`}
+        >
+          <Bell className="h-5 w-5" aria-hidden />
+          {unreadCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary-red text-white text-[10px] font-bold leading-none">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </Link>
+
+        {/* Profile dropdown */}
+        <div ref={profileRef} className="relative">
+          <button
+            onClick={() => setProfileOpen((v) => !v)}
+            id="profile-menu-trigger"
+            className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-sm font-medium text-slate hover:text-ink hover:bg-canvas border border-transparent hover:border-border transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate"
+            aria-expanded={profileOpen}
+            aria-haspopup="menu"
             aria-label="Menu profil"
           >
-            <div className="px-4 py-3 border-b border-border">
-              <p className="text-sm font-semibold text-ink truncate">{currentUser?.name}</p>
-              <p className="text-xs text-muted truncate">{currentUser?.email}</p>
-              <p className="text-xs text-primary-red font-medium mt-0.5">
-                {ROLE_LABELS[currentUser?.role] ?? currentUser?.role}
-              </p>
+            <div className="h-7 w-7 rounded-full bg-primary-red/10 flex items-center justify-center flex-none">
+              <span className="text-primary-red font-bold text-xs" aria-hidden>
+                {currentUser?.name?.[0] ?? 'U'}
+              </span>
             </div>
-            <div className="py-1">
-              <Link
-                to="/ops/profile"
-                role="menuitem"
-                onClick={() => setProfileOpen(false)}
-                className="flex items-center gap-3 px-4 py-2 text-sm text-slate hover:text-ink hover:bg-canvas transition-colors"
-              >
-                <User className="h-4 w-4 text-muted" aria-hidden />
-                Profil Saya
-              </Link>
-              <button
-                role="menuitem"
-                onClick={handleLogout}
-                className="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate hover:text-danger hover:bg-danger/5 transition-colors"
-              >
-                <LogOut className="h-4 w-4 text-muted" aria-hidden />
-                Keluar
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    </header>
+            <span className="hidden md:block max-w-[120px] truncate">{currentUser?.name}</span>
+            <ChevronDown className={clsx('h-4 w-4 text-muted transition-transform', profileOpen && 'rotate-180')} aria-hidden />
+          </button>
 
-    <DevIndicatorModal
-      isOpen={devModalOpen}
-      onClose={() => setDevModalOpen(false)}
-    />
+          {profileOpen && (
+            <div
+              className="absolute right-0 top-full mt-1 w-56 bg-surface rounded-xl border border-border shadow-dropdown z-50"
+              role="menu"
+              aria-label="Menu profil"
+            >
+              <div className="px-4 py-3 border-b border-border">
+                <p className="text-sm font-semibold text-ink truncate">{currentUser?.name}</p>
+                <p className="text-xs text-muted truncate">{currentUser?.email}</p>
+                <p className="text-xs text-primary-red font-medium mt-0.5">
+                  {ROLE_LABELS[currentUser?.role] ?? currentUser?.role}
+                </p>
+              </div>
+              <div className="py-1">
+                <Link
+                  to="/ops/profile"
+                  role="menuitem"
+                  onClick={() => setProfileOpen(false)}
+                  className="flex items-center gap-3 px-4 py-2 text-sm text-slate hover:text-ink hover:bg-canvas transition-colors"
+                >
+                  <User className="h-4 w-4 text-muted" aria-hidden />
+                  Profil Saya
+                </Link>
+                <button
+                  role="menuitem"
+                  onClick={handleLogout}
+                  className="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate hover:text-danger hover:bg-danger/5 transition-colors"
+                >
+                  <LogOut className="h-4 w-4 text-muted" aria-hidden />
+                  Keluar
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </header>
+
+      <DevIndicatorModal
+        isOpen={devModalOpen}
+        onClose={() => setDevModalOpen(false)}
+      />
     </>
   );
 }

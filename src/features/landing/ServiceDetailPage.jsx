@@ -172,7 +172,7 @@ export default function ServiceDetailPage() {
             </h1>
             <div className="w-16 h-1 bg-primary-red rounded-full mb-3" />
             <p className="text-white/70 text-sm sm:text-base max-w-3xl leading-relaxed">
-              Solusi tenaga kerja dan pengelolaan fasilitas terintegrasi dari PT. Bimasena Adhirajasa Radhika untuk mendukung efisiensi bisnis Anda.
+              Solusi tenaga kerja dan pengelolaan fasilitas terintegrasi dari PT. BIMASENA ADHIRAJASA RADIKA untuk mendukung efisiensi bisnis Anda.
             </p>
           </div>
         </section>
@@ -181,7 +181,7 @@ export default function ServiceDetailPage() {
         <section className="py-12">
           <div className="w-full px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              
+
               {/* Left Column: KATEGORI LAYANAN Sidebar */}
               <aside className="lg:col-span-3">
                 <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-4 sticky top-24">

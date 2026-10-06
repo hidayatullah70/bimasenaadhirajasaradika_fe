@@ -1,7 +1,7 @@
 # 01_FRONTEND_FINAL_ARCHITECTURE.md — PT. BARAK IOMS
 **Versi:** 3.1 (Authoritative Consolidated Architecture)  
 **Tanggal:** 4 Oktober 2026  
-**Perusahaan:** PT. Bimasena Adhirajasa Radhika (PT. BARAK)  
+**Perusahaan:** PT. BIMASENA ADHIRAJASA RADIKA (PT. BARAK)  
 **Sistem:** Integrated Outsourcing Management System (IOMS)  
 **Status:** COMPLETE & AUTHORITATIVE  
 **Ruang Lingkup:** Arsitektur Berlapis Frontend, Model Domain, Pola Adapter & Kesiapan Integrasi Backend

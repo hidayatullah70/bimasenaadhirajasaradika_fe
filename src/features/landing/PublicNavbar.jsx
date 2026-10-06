@@ -139,11 +139,11 @@ export default function PublicNavbar() {
         <Link
           to="/"
           className="flex items-center flex-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-red rounded-lg py-1"
-          aria-label="PT. Bimasena Adhirajasa Radhika — Beranda"
+          aria-label="PT. BIMASENA ADHIRAJASA RADIKA — Beranda"
         >
           <img
             src="/assets/img/logo/logoNavbar.png"
-            alt="PT. Bimasena Adhirajasa Radhika"
+            alt="PT. BIMASENA ADHIRAJASA RADIKA"
             className="h-8 sm:h-9 md:h-10 lg:h-9 xl:h-11 w-auto max-w-[150px] sm:max-w-[180px] md:max-w-[210px] lg:max-w-[170px] xl:max-w-[240px] object-contain transition-all"
           />
         </Link>
@@ -204,8 +204,8 @@ export default function PublicNavbar() {
                               clsx(
                                 'flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all group/item',
                                 isActive
-                                   ? 'bg-accent-green/10 text-accent-green font-semibold'
-                                   : 'text-slate-700 hover:bg-slate-50 hover:text-accent-green'
+                                  ? 'bg-accent-green/10 text-accent-green font-semibold'
+                                  : 'text-slate-700 hover:bg-slate-50 hover:text-accent-green'
                               )
                             }
                           >

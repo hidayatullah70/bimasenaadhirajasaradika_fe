@@ -36,7 +36,7 @@ export default function ContactPage() {
   const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
-    document.title = 'Hubungi Kami - PT. Bimasena Adhirajasa Radhika';
+    document.title = 'Hubungi Kami - PT. BIMASENA ADHIRAJASA RADIKA';
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
@@ -288,7 +288,7 @@ export default function ContactPage() {
                     allowFullScreen=""
                     loading="lazy"
                     referrerPolicy="strict-origin-when-cross-origin"
-                    title="Lokasi Kantor PT. Bimasena Adhirajasa Radhika"
+                    title="Lokasi Kantor PT. BIMASENA ADHIRAJASA RADIKA"
                     className="w-full h-48 sm:h-56 block"
                   />
                 </div>
@@ -297,7 +297,7 @@ export default function ContactPage() {
               {/* Header Title */}
               <div>
                 <h2 className="text-xl font-extrabold text-slate-900 mb-1.5">
-                  PT. Bimasena Adhirajasa Radhika
+                  PT. BIMASENA ADHIRAJASA RADIKA
                 </h2>
               </div>
 
