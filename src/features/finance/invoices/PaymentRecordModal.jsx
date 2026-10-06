@@ -107,20 +107,12 @@ export default function PaymentRecordModal({ isOpen, onClose, invoice, onSubmit 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-ink mb-1">
-                Metode Pembayaran <span className="text-primary-red">*</span>
+                Metode Pembayaran
               </label>
-              <select
-                name="paymentMethod"
-                value={formData.paymentMethod}
-                onChange={handleChange}
-                className="w-full text-xs border border-border rounded-lg px-3 py-2 bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-accent-green/20"
-              >
-                <option value="Bank Transfer (BCA)">Bank Transfer (BCA)</option>
-                <option value="Bank Transfer (Mandiri)">Bank Transfer (Mandiri)</option>
-                <option value="Bank Transfer (BRI)">Bank Transfer (BRI)</option>
-                <option value="Giro / Cek">Giro / Bilyet Cek</option>
-                <option value="Tunai / Kasir">Tunai / Kasir Langsung</option>
-              </select>
+              <div className="w-full text-xs border border-border rounded-lg px-3 py-2 bg-slate-50 text-ink font-semibold flex items-center justify-between">
+                <span>Rekening BCA</span>
+                <span className="text-[10px] text-muted font-mono">883-129-9000</span>
+              </div>
             </div>
 
             <div>
