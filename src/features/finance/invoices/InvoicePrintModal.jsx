@@ -423,24 +423,26 @@ export default function InvoicePrintModal({ isOpen, onClose, invoice, client }) 
                   Faktur penagihan ini dihasilkan secara elektronik dan sah sesuai tata kelola PT. BIMASENA ADHIRAJASA RADIKA.
                 </p>
                 <p className="font-mono text-[8px] text-slate-400">
-                  REF-UUID: {invoice.invoiceNumber || invoice.id} • Cetak: {printDate}
+                  REF: {invoice.invoiceNumber || invoice.id} • Cetak: {printDate}
                 </p>
               </div>
 
-              <div className="text-center w-48 space-y-0.5">
+              <div className="text-center min-w-[220px] sm:min-w-[240px] space-y-0.5">
                 <p className="text-[10px] text-muted">
                   Tangerang, {formattedDate(invoice.issueDate)}
                 </p>
-                <p className="text-[11px] font-bold text-ink uppercase">
+                <p className="text-[10px] sm:text-[11px] font-bold text-ink uppercase whitespace-nowrap tracking-tight">
                   PT. BIMASENA ADHIRAJASA RADIKA
                 </p>
 
                 {/* Stempel & Signature Visual Placeholder */}
                 <div className="h-10 flex items-center justify-center relative">
                 </div>
-                <p className="font-bold text-ink text-[11px]">Juli Priyanto</p>
-                <div className="border-t border-ink pt-0.5">
-                  <p className="text-[9px] text-muted">Direktur Utama</p>
+                <div className="w-44 mx-auto">
+                  <p className="font-bold text-ink text-[11px]">Juli Priyanto</p>
+                  <div className="border-t border-ink pt-0.5">
+                    <p className="text-[9px] text-muted">Direktur Utama</p>
+                  </div>
                 </div>
               </div>
             </div>
