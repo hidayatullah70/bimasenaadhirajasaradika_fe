@@ -204,3 +204,74 @@ Menjamin personil yang diimpor langsung tersinkronisasi ke penugasan posko klien
           seluruh nama karyawan yang diimpor langsung otomatis muncul di lembar presensi.
 ```
 
+---
+
+## 7. Alur Siklus Faktur Penagihan & Pembayaran Bank BCA (Billing & Payment Lifecycle)
+
+```
+[Finance Membuka Modal "Terbitkan Tagihan (Invoice) Baru"]
+     │
+     ├──> 1. Input Nomor Faktur:
+     │       - Diinput manual oleh staf keuangan, ATAU
+     │       - Dihasilkan otomatis sistem: INV/BRK/YYYY/MM/XXX
+     │
+     ├──> 2. Pemilihan Klien Tertagih (Client Selection):
+     │       - Memilih klien mitra dari master data
+     │       - Sistem otomatis mengambil snapshot data profil klien:
+     │         Nama Klien, U.P. Kontak PIC, Alamat Operasional, Kota & Provinsi
+     │       - Snapshot ini tersimpan permanen pada faktur untuk menjaga integritas cetak
+     │
+     ├──> 3. Rincian Penempatan Jasa (Dynamic Service Items):
+     │       - Dapat ditambah barisnya tak terhingga (+ Tambah Rincian Jasa)
+     │       - Mengisi uraian deskripsi dan nominal (Rp)
+     │       - Jumlah seluruh rincian menghasilkan: "Sub Total Nilai Jasa"
+     │
+     ├──> 4. Rincian Reward & Potongan (Dynamic Adjustments):
+     │       - Dapat ditambah barisnya tak terhingga (+ Tambah Rincian Penyesuaian)
+     │       - Reward: bernilai penambah (+) Sub Total Nilai Jasa
+     │       - Potongan: bernilai pengurang (-) Sub Total Nilai Jasa
+     │
+     ├──> 5. Manajemen Fee (n%):
+     │       - Persentase n diinput manual (bersifat tentatif per kontrak)
+     │       - Rumus: Nilai Jasa Sub Total * n%
+     │
+     ├──> 6. Pajak Penghasilan PPh 23 (2%):
+     │       - Rumus: Nilai Manajemen Fee * 2% (sebagai pengurang)
+     │
+     ├──> 7. Pajak Pertambahan Nilai PPN 11% (Toggle ON/OFF):
+     │       - Jika status ON: Rumus Manajemen Fee * 11% (sebagai penambah)
+     │       - Jika status OFF: Nilai 0 dan disembunyikan (hide) dari lembar pratinjau & cetak
+     │
+     ▼
+[Kalkulasi Total Tagihan Bersih (Total Net)]
+     │
+     │ Rumus: (Sub Total Jasa + Sub Total Reward + Manajemen Fee + PPN 11%)
+     │        - Sub Total Potongan - PPh 23
+     │
+     ▼
+[Penerbitan & Pratinjau / Cetak Faktur (Invoice Print Modal)]
+     │
+     ├──> Kop Resmi Perusahaan: Logo resmi (/assets/img/logo/logoAja.png),
+     │    PT. BIMASENA ADHIRAJASA RADIKA, Alamat Kantor, Kontak & Email
+     │
+     ├──> Lembar format A4 tunggal efisien tanpa elemen redundan
+     │
+     ├──> Data Rekening Pembayaran Resmi Tunggal Perusahaan:
+     │    - Bank Central Asia (BCA)
+     │    - No. Rekening: 8833951911
+     │    - Atas Nama: BIMASENA ADHIRAJASA RADHIKA
+     │
+     └──> Tanda Tangan Pengesahan: Juli Priyanto (Direktur Utama)
+     │
+     ▼
+[Pencatatan Pembayaran Tagihan: POST /finance/invoices/:id/payment]
+     │
+     ├──> Dibuka melalui modal "Catat Pembayaran Tagihan"
+     ├──> Dropdown bank dihilangkan: Metode pembayaran terkunci ke "Bank Transfer (BCA)"
+     ├──> Petugas menginput Nominal Pembayaran (Rp) dan No. Bukti Transfer Bank
+     │
+     ├───> Sisa Tagihan = 0 ──> Status: 'PAID' (Lunas)
+     └───> Sisa Tagihan > 0 ──> Status: 'PARTIALLY_PAID' (Dibayar Sebagian)
+```
+
+

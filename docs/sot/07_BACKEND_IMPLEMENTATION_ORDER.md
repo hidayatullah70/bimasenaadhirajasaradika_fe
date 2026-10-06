@@ -78,9 +78,14 @@ Frontend telah siap 100% dan dapat diuji secara bertahap dengan mengalihkan endp
 - Validasi bahwa lembar absensi telah berstatus terkunci sebelum payroll dapat dibentuk.
 
 ### Tahap 12: Keuangan, Faktur & COD (Finance Module)
-- Endpoint faktur: `GET /finance/invoices`, `POST /finance/invoices`, `PATCH /finance/invoices/:id/status`, `POST /finance/invoices/:id/payment`.
-- Endpoint kalkulasi jatuh tempo otomatis (`OVERDUE`).
-- Endpoint kas titipan kurir COD: rekonsiliasi dan eskalasi selisih.
+- Tabel database: `invoices` (header + snapshot profil klien), `invoice_service_items` (rincian penempatan jasa tak terhingga), `invoice_adjustments` (penambah reward & pengurang potongan), dan `payments` (setoran pembayaran).
+- Endpoint faktur:
+  - `GET /finance/invoices`: Daftar faktur tagihan dengan filter pencarian, status, dan klien.
+  - `POST /finance/invoices`: Pembuatan faktur baru mendukung Nomor Faktur manual atau generator otomatis (`INV/BRK/YYYY/MM/XXX`), rincian jasa, rincian reward/potongan, input persentase Manajemen Fee ($n\%$), toggle PPN 11%, serta kalkulasi otomatis PPh 23 (2% dari Manajemen Fee).
+  - `PATCH /finance/invoices/:id/status`: Transisi status faktur (`ISSUED`, `PAID`, `OVERDUE`, `VOID`).
+  - `POST /finance/invoices/:id/payment`: Rekam pembayaran setoran yang dikunci secara eksklusif ke channel Rekening BCA (`8833951911`), mewajibkan nomor referensi / bukti transfer bank, dan memutakhirkan status faktur (`PAID` jika sisa tagihan = 0).
+- Penjadwalan latar belakang (*cron job*): Kalkulasi tagihan jatuh tempo otomatis menjadi status `OVERDUE`.
+- Endpoint kas titipan kurir COD: rekonsiliasi dan eskalasi selisih ke Legal.
 
 ### Tahap 13: Hukum & Kontrak Korporat (Legal Module)
 - Endpoint `GET /legal/contracts`, `POST /legal/contracts`, `PATCH /legal/contracts/:id/status`.

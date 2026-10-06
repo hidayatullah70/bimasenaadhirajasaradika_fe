@@ -151,3 +151,18 @@ Untuk menguji modul Karyawan & Presensi:
   - Railway Node.js Service (Express.js)
   - Railway MySQL Service (Database berelasi dengan backup harian)
   - Variabel lingkungan Vercel diatur: `VITE_API_MODE=rest` dan `VITE_API_BASE_URL=https://api-barak.up.railway.app/api/v1`.
+
+---
+
+## 7. Catatan Integrasi Finansial & Faktur (Invoicing & Single BCA Channel)
+
+1. **Pembuatan Faktur (`POST /api/v1/finance/invoices`):**
+   - Backend wajib menerima dan menyimpan header faktur beserta snapshot profil klien (`clientName`, `clientContact`, `clientAddress`, `clientCity`, `clientProvince`) agar lembar cetak A4 tidak terpengaruh jika data master klien berubah di masa mendatang.
+   - Child items `serviceItems` (rincian jasa) dan `adjustments` (penambah reward / pengurang potongan) disimpan ke tabel relasional terpisah (`invoice_service_items` dan `invoice_adjustments`).
+   - Formula total tagihan bersih wajib divalidasi di backend:
+     $$\text{Total} = (\text{Subtotal Jasa} + \text{Subtotal Reward} + \text{Manajemen Fee} + \text{PPN 11\%}) - \text{Subtotal Potongan} - \text{PPh 23}$$
+2. **Pencatatan Pembayaran (`POST /api/v1/finance/invoices/:id/payment`):**
+   - Kanal penerimaan dikunci tunggal ke **Rekening BCA `8833951911` a.n. BIMASENA ADHIRAJASA RADHIKA**.
+   - Kolom `paymentMethod` selalu bernilai `"Bank Transfer (BCA)"`.
+   - Backend wajib memvalidasi `referenceNumber` (nomor bukti transfer) dan memutakhirkan `amountPaid`, `remainingAmount`, serta transisi status faktur (`PAID` jika sisa tagihan $\le 0$).
+

@@ -147,12 +147,25 @@ Halaman Audit Log dilengkapi fitur pencarian kata kunci multi-kolom, filter berd
 2. Rotasi penugasan secara otomatis mencatat riwayat (*assignment history*) dan memperbarui status formasi posko.
 3. Roster jadwal terhubung langsung ke pencatatan presensi (*attendance tracking*), di mana ketidakhadiran langsung memicu tiket permohonan personil pengganti (*replacement request*).
 
-### 5.2 Alur Keuangan: Siklus Faktur & Arus Kas
+### 5.2 Alur Keuangan: Siklus Faktur, Layout Cetak A4 & Pembayaran BCA
 Transisi status faktur (`Invoice`) divalidasi secara ketat:
 $$\text{DRAFT} \longrightarrow \text{ISSUED} \longrightarrow \text{PARTIALLY\_PAID} \longrightarrow \text{PAID}$$
 dengan jalur alternatif:
 $$\text{ISSUED} \longrightarrow \text{OVERDUE} \quad \text{atau} \quad \text{VOID}$$
 Setiap pelunasan invoice langsung mengalir secara reaktif ke agregasi penerimaan kas pada kartu **Net Cash Flow** di Finance Dashboard dan Director Cockpit.
+
+- **Fitur Pembuatan Faktur Dinamis (`InvoiceFormModal.jsx`):**
+  - Input manual Nomor Faktur (opsional, fallback ke format otomatis `INV/BRK/YYYY/MM/XXX`).
+  - Pemilihan Klien otomatis merekam snapshot Nama, Kontak U.P., dan Alamat Lengkap untuk konsistensi cetak jangka panjang.
+  - Penambahan baris dinamis tak terhingga untuk Rincian Penempatan Jasa dan Penyesuaian Reward (+)/Potongan (-).
+  - Kalkulasi otomatis Manajemen Fee ($n\%$), PPh 23 ($2\%$), dan toggle ON/OFF PPN 11%.
+- **Lembar Pratinjau & Cetak A4 Efisien (`InvoicePrintModal.jsx`):**
+  - Desain proporsional ramah cetak satu lembar kertas A4 standar tanpa kolom redundan.
+  - Menampilkan logo resmi korporat (`/assets/img/logo/logoAja.png`) dan identitas hukum perusahaan.
+  - Menampilkan instruksi pembayaran resmi eksklusif: **Bank Central Asia (BCA) No. Rekening 8833951911 a.n. BIMASENA ADHIRAJASA RADHIKA**.
+  - Kolom tanda tangan resmi oleh Direktur Utama (Juli Priyanto).
+- **Pencatatan Pembayaran Tagihan (`PaymentRecordModal.jsx`):**
+  - Pilihan metode pembayaran dikunci langsung ke `Bank Transfer (BCA)` (tanpa dropdown bank lain) dan mewajibkan nomor bukti transfer.
 
 ### 5.3 Alur Legal: Siklus Kontrak PKS & Kepatuhan
 $$\text{Draft PKS} \longrightarrow \text{Legal Review} \longrightarrow \text{Director Approval} \longrightarrow \text{Signed} \longrightarrow \text{Active} \longrightarrow \text{Expiring} \longrightarrow \text{Renewed / Expired}$$

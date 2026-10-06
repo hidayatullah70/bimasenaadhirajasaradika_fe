@@ -213,26 +213,58 @@
 
 17. **`invoices`**:
     - `id`: `VARCHAR(36)` (PK, UUID)
-    - `invoice_number`: `VARCHAR(40)` (UNIQUE, e.g. `'INV-2026-09-001'`)
+    - `invoice_number`: `VARCHAR(50)` (UNIQUE, format: `'INV/BRK/YYYY/MM/XXX'`, mendukung input manual atau autogenerate)
     - `client_id`: `VARCHAR(36)` (FK $\rightarrow$ `clients.id`, NOT NULL)
-    - `period`: `VARCHAR(30)` (e.g. `'September 2026'`)
-    - `subtotal`: `DECIMAL(15, 2)` (NOT NULL)
-    - `tax_amount`: `DECIMAL(15, 2)` (PPN 11%)
-    - `total_amount`: `DECIMAL(15, 2)` (NOT NULL)
-    - `amount_paid`: `DECIMAL(15, 2)` (DEFAULT: 0.00)
+    - `client_name`: `VARCHAR(120)` (Snapshot nama klien saat invoice terbit)
+    - `client_contact`: `VARCHAR(100)` (Snapshot kontak PIC / U.P. penagihan)
+    - `client_address`: `TEXT` (Snapshot alamat fisik operasional klien)
+    - `client_city`: `VARCHAR(60)`
+    - `client_province`: `VARCHAR(60)`
+    - `billing_period`: `VARCHAR(40)` (e.g. `'September 2026'`)
     - `issue_date`: `DATE` (NOT NULL)
     - `due_date`: `DATE` (NOT NULL)
-    - `status`: `ENUM('DRAFT', 'ISSUED', 'PARTIALLY_PAID', 'PAID', 'OVERDUE', 'VOID')`
+    - `subtotal_services`: `DECIMAL(15, 2)` (Jumlah Sub Total Nilai Jasa)
+    - `subtotal_reward`: `DECIMAL(15, 2)` (Jumlah rincian penambah reward)
+    - `subtotal_potongan`: `DECIMAL(15, 2)` (Jumlah rincian pengurang potongan)
+    - `management_fee_rate`: `DECIMAL(5, 2)` (Persentase Manajemen Fee, input n%)
+    - `management_fee_amount`: `DECIMAL(15, 2)` (Rumus: `subtotal_services * (management_fee_rate / 100)`)
+    - `include_ppn`: `BOOLEAN` (DEFAULT: `TRUE`, Toggle ON/OFF PPN 11%)
+    - `ppn_rate`: `DECIMAL(5, 2)` (DEFAULT: 0.11)
+    - `ppn_amount`: `DECIMAL(15, 2)` (Rumus jika ON: `management_fee_amount * 0.11`, jika OFF: 0.00)
+    - `pph23_rate`: `DECIMAL(5, 2)` (DEFAULT: 0.02)
+    - `pph23_amount`: `DECIMAL(15, 2)` (Rumus: `management_fee_amount * 0.02`)
+    - `total_amount`: `DECIMAL(15, 2)` (Rumus: `(subtotal_services + subtotal_reward + management_fee_amount + ppn_amount) - subtotal_potongan - pph23_amount`)
+    - `amount_paid`: `DECIMAL(15, 2)` (DEFAULT: 0.00)
+    - `remaining_amount`: `DECIMAL(15, 2)` (`total_amount - amount_paid`)
+    - `notes`: `TEXT` (DEFAULT: `'Rekening BCA PT Bimasena Adhirajasa Radhika 8833951911'`)
+    - `bank_name`: `VARCHAR(50)` (DEFAULT: `'Bank Central Asia (BCA)'`)
+    - `bank_account_number`: `VARCHAR(30)` (DEFAULT: `'8833951911'`)
+    - `bank_account_holder`: `VARCHAR(100)` (DEFAULT: `'BIMASENA ADHIRAJASA RADHIKA'`)
+    - `status`: `ENUM('DRAFT', 'ISSUED', 'PARTIALLY_PAID', 'PAID', 'OVERDUE', 'VOID')` (DEFAULT: `'ISSUED'`)
 
-18. **`payments`**:
+18. **`invoice_service_items` (Rincian Penempatan Jasa Faktur)**:
+    - `id`: `VARCHAR(36)` (PK, UUID)
+    - `invoice_id`: `VARCHAR(36)` (FK $\rightarrow$ `invoices.id`, ON DELETE CASCADE)
+    - `description`: `TEXT` (Deskripsi penempatan jasa outsourcing)
+    - `amount`: `DECIMAL(15, 2)` (Nominal jasa Rp)
+
+19. **`invoice_adjustments` (Rincian Penambah Reward & Pengurang Potongan)**:
+    - `id`: `VARCHAR(36)` (PK, UUID)
+    - `invoice_id`: `VARCHAR(36)` (FK $\rightarrow$ `invoices.id`, ON DELETE CASCADE)
+    - `type`: `ENUM('REWARD', 'POTONGAN')`
+    - `description`: `TEXT` (Keterangan penyesuaian)
+    - `amount`: `DECIMAL(15, 2)` (Nominal penyesuaian Rp)
+
+20. **`payments` (Pencatatan Setoran Pembayaran Tagihan)**:
     - `id`: `VARCHAR(36)` (PK, UUID)
     - `invoice_id`: `VARCHAR(36)` (FK $\rightarrow$ `invoices.id`, ON DELETE CASCADE)
     - `amount`: `DECIMAL(15, 2)` (NOT NULL)
-    - `payment_method`: `ENUM('BANK_TRANSFER', 'VIRTUAL_ACCOUNT', 'GIRO', 'CHEQUE')`
-    - `reference_number`: `VARCHAR(50)` (NOT NULL)
+    - `payment_method`: `VARCHAR(50)` (DEFAULT: `'Bank Transfer (BCA)'`)
+    - `reference_number`: `VARCHAR(100)` (NOT NULL, Bukti transfer / referensi bank)
     - `payment_date`: `DATE` (NOT NULL)
+    - `notes`: `TEXT`
 
-19. **`expenses`**:
+21. **`expenses`**:
     - `id`: `VARCHAR(36)` (PK, UUID)
     - `category`: `ENUM('OPERASIONAL', 'BBM_PATROLI', 'LOGISTIK', 'SERAGAM', 'CAPEX')`
     - `amount`: `DECIMAL(15, 2)` (NOT NULL)

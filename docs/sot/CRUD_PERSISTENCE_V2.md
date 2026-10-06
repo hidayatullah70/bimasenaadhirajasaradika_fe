@@ -130,6 +130,20 @@ Enam jenis layanan alih daya (*outsourcing*) kanonikal telah dibakukan di dalam 
   - Khusus pengguna peran inputer (`user1`, `user2`), riwayat lembar kerja sementara pada sesi tersebut ("Lembar Tersedia" di `barak_attendance_sheets`) dibersihkan dari penyimpanan lokal saat aksi Logout dieksekusi.
   - Hal ini menjamin bahwa setiap sesi kerja baru dimulai dalam keadaan bersih tanpa kontaminasi draf pekerjaan sesi terdahulu.
 
+### 3.6 Standarisasi Faktur Penagihan Dinamis & Pembayaran Rekening BCA Tunggal (`invoiceAdapter.js`)
+- **Penerbitan Faktur Dinamis (`InvoiceFormModal.jsx`):**
+  - Kolom Nomor Faktur dapat diisi manual sesuai penomoran faktur perpajakan/perusahaan atau secara otomatis mengikuti format `INV/BRK/YYYY/MM/XXX`.
+  - Pilihan Klien otomatis mengisi dan merekam snapshot nama, kontak PIC, dan alamat fisik klien pada entitas faktur untuk menjamin integritas lembar cetak.
+  - Rincian penempatan jasa (`serviceItems`) mendukung penambahan baris tak terhingga secara dinamis.
+  - Rincian reward (penambah) dan potongan (pengurang) mendukung penambahan baris penyesuaian tak terhingga.
+  - Komponen Manajemen Fee ($n\% = \text{Sub Total Jasa} \times n\%$), PPh 23 ($2\% = \text{Manajemen Fee} \times 2\%$), dan PPN 11% Toggle ON/OFF ($\text{Manajemen Fee} \times 11\%$).
+- **Pratinjau & Cetak A4 Standar (`InvoicePrintModal.jsx`):**
+  - Menggunakan logo resmi korporat (`/assets/img/logo/logoAja.png`) dengan tata letak lembar tunggal A4 yang rapi dan ringkas.
+  - Menampilkan rekening resmi perusahaan: **Bank Central Asia (BCA) No. Rek. 8833951911 a.n. BIMASENA ADHIRAJASA RADHIKA**.
+- **Pencatatan Pembayaran Tagihan (`PaymentRecordModal.jsx`):**
+  - Pilihan metode pembayaran dikunci ke `Bank Transfer (BCA)` dengan kewajiban mengisi nomor referensi bukti transfer bank.
+  - Memutakhirkan `amountPaid`, `remainingAmount`, dan status faktur secara otomatis (`PAID` jika sisa tagihan lunas).
+
 ---
 
 ## 4. Alur Kerja Pengajuan Hapus Karyawan (Operasi Staf Non-Destruktif)

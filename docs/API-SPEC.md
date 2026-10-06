@@ -154,9 +154,9 @@ Frontend mengirimkan filter dan paginasi melalui query string URL terserialisasi
 |---|---|---|---|---|
 | `GET` | `/finance/invoices` | Daftar faktur tagihan jasa outsourcing | `?search=&status=&clientId=&page=` | `invoice.read` |
 | `GET` | `/finance/invoices/:id` | Detail termin, rincian biaya, histori bayar | - | `invoice.read` |
-| `POST` | `/finance/invoices` | Terbitkan draf invoice baru ke klien | `{ invoiceNumber, clientId, period, amount, dueDate }` | `invoice.create` |
-| `PATCH` | `/finance/invoices/:id/status` | Transisi status faktur | `{ status: "ISSUED"|"PAID"|"OVERDUE"|"VOID", reason }` | `invoice.update` |
-| `POST` | `/finance/invoices/:id/payment` | Rekam pembayaran invoice | `{ amount, paymentMethod, referenceNumber, date }` | `invoice.payment` |
+| `POST` | `/finance/invoices` | Terbitkan faktur invoice baru ke klien | `{ invoiceNumber, clientId, clientName, clientContact, clientAddress, clientCity, clientProvince, billingPeriod, issueDate, dueDate, serviceItems: [{ description, amount }], adjustments: [{ type: 'REWARD'\|'POTONGAN', description, amount }], subtotalServices, subtotalReward, subtotalPotongan, managementFeeRate, managementFeeAmount, includePpn, ppnRate, ppnAmount, pph23Rate, pph23Amount, totalAmount, notes }` | `invoice.create` |
+| `PATCH` | `/finance/invoices/:id/status` | Transisi status faktur | `{ status: "ISSUED"\|"PARTIALLY_PAID"\|"PAID"\|"OVERDUE"\|"VOID", reason }` | `invoice.update` |
+| `POST` | `/finance/invoices/:id/payment` | Rekam pembayaran invoice via Rekening BCA | `{ amount, paymentMethod: "Bank Transfer (BCA)", referenceNumber, notes, date }` | `invoice.payment` |
 | `GET` | `/finance/payroll` | Daftar periode penggajian karyawan | `?period=&status=&page=` | `payroll.read` |
 | `POST` | `/finance/payroll` | Buat kalkulasi draf payroll (Maker) | `{ periodMonth, year, notes }` | `payroll.create` |
 | `POST` | `/finance/payroll/:id/approve` | Otorisasi eksekutif payroll (Checker) | `{ approvedBy, notes }` | `payroll.approve` |

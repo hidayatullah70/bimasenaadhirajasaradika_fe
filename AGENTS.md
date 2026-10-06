@@ -46,6 +46,9 @@ Bangun dan pelihara PT. BARAK IOMS (*Integrated Outsourcing Management System*) 
 11. **Tidak Ada Angka KPI Statis:** Seluruh indikator kartu analitik dashboard dihitung secara dinamis dari repository/data selektor aktif.
 12. **Kemandirian Penyimpanan Dokumen:** Berkas dan dokumen diabstraksikan melalui `fileAdapter.js` tanpa keterikatan pada satu penyedia cloud tertentu.
 13. **Tidak Ada Kunci/Rahasia di Source Control:** Variabel rahasia dan URL backend dikonfigurasi melalui `.env`.
+14. **Standarisasi Faktur Penagihan & Rumus Finansial (Invoice Governance):** Pembuatan faktur (`InvoiceFormModal.jsx`) mendukung input Nomor Faktur manual atau generator otomatis, rincian penempatan jasa dan reward/potongan dinamis tak terhingga, Manajemen Fee ($n\% = \text{Sub Total Jasa} \times n\%$), PPh 23 ($2\% = \text{Manajemen Fee} \times 2\%$), dan toggle PPN 11% ($\text{Manajemen Fee} \times 11\%$). Snapshot data profil klien (Nama, Kontak U.P., Alamat lengkap, Kota) wajib tersimpan pada entitas invoice untuk integritas lembar cetak.
+15. **Eksklusivitas Rekening Pembayaran (Single Corporate BCA Channel):** Kanal pembayaran invoice klien ditetapkan secara eksklusif ke Rekening Bank Central Asia (BCA) `8833951911` a.n. `BIMASENA ADHIRAJASA RADHIKA`. Modal pencatatan pembayaran (`PaymentRecordModal.jsx`) mengunci metode pembayaran ke `Bank Transfer (BCA)` dengan nomor referensi transfer bank wajib diisi.
+16. **Integritas Aset Brand Resmi (Official Corporate Branding):** Seluruh badge placeholder huruf "B" dilarang dan digantikan secara permanen oleh aset logo resmi korporat `/assets/img/logo/logoAja.png` pada seluruh kop laporan eksekutif, lembar cetak faktur A4, modal dialog, dan bilah navigasi shell.
 
 ---
 
