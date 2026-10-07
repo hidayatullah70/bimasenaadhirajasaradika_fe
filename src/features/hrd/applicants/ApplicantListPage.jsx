@@ -594,21 +594,23 @@ export default function ApplicantListPage() {
                 size="sm"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="h-7 w-7 p-0"
+                className="h-7 w-7 p-0 border border-primary-red/50 text-primary-red bg-primary-red/10 hover:bg-primary-red hover:text-white transition-colors disabled:opacity-30 disabled:border-border disabled:text-slate-400 disabled:bg-transparent"
+                title="Halaman Sebelumnya"
               >
-                <ChevronLeft className="h-3.5 w-3.5" />
+                <ChevronLeft className="h-4 w-4" />
               </Button>
               <span className="font-semibold text-ink px-2">
-                {page} / {meta.totalPages}
+                Halaman {page} dari {meta.totalPages}
               </span>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setPage((p) => Math.min(meta.totalPages, p + 1))}
                 disabled={page === meta.totalPages}
-                className="h-7 w-7 p-0"
+                className="h-7 w-7 p-0 border border-primary-red/50 text-primary-red bg-primary-red/10 hover:bg-primary-red hover:text-white transition-colors disabled:opacity-30 disabled:border-border disabled:text-slate-400 disabled:bg-transparent"
+                title="Halaman Berikutnya"
               >
-                <ChevronRight className="h-3.5 w-3.5" />
+                <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
           </div>

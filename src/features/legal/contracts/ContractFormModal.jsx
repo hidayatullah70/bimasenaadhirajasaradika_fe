@@ -232,7 +232,7 @@ export default function ContractFormModal({ isOpen, contract, clients = [], onCl
           {/* Baris 3: Layanan & Kuota Personel */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="sm:col-span-2">
-              <label className="block font-medium text-ink mb-1">Jenis Layanan Outsourcing *</label>
+              <label className="block font-medium text-ink mb-1">Jenis Layanan *</label>
               <input
                 type="text"
                 list="service-suggestions"

@@ -62,12 +62,13 @@ export function Pagination({
       <div className="flex items-center gap-1.5">
         <Button
           type="button"
-          variant="secondary"
+          variant="outline"
           size="xs"
           disabled={currentPage <= 1}
           onClick={() => onPageChange(currentPage - 1)}
-          iconLeft={<ChevronLeft className="h-3.5 w-3.5" />}
+          iconLeft={<ChevronLeft className="h-3.5 w-3.5 text-primary-red" />}
           aria-label="Halaman sebelumnya"
+          className="border-primary-red/50 text-primary-red bg-primary-red/10 hover:bg-primary-red hover:text-white transition-colors disabled:opacity-30 disabled:border-border disabled:text-slate-400 disabled:bg-transparent"
         >
           Sebelumnya
         </Button>
@@ -78,12 +79,13 @@ export function Pagination({
 
         <Button
           type="button"
-          variant="secondary"
+          variant="outline"
           size="xs"
           disabled={currentPage >= totalPages}
           onClick={() => onPageChange(currentPage + 1)}
-          iconRight={<ChevronRight className="h-3.5 w-3.5" />}
+          iconRight={<ChevronRight className="h-3.5 w-3.5 text-primary-red" />}
           aria-label="Halaman berikutnya"
+          className="border-primary-red/50 text-primary-red bg-primary-red/10 hover:bg-primary-red hover:text-white transition-colors disabled:opacity-30 disabled:border-border disabled:text-slate-400 disabled:bg-transparent"
         >
           Selanjutnya
         </Button>
