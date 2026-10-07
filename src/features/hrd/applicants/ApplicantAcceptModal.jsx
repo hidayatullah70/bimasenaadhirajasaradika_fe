@@ -32,11 +32,22 @@ export default function ApplicantAcceptModal({
 
   if (!isOpen || !applicant) return null;
 
+  const isHo = applicant?.departemen === 'Head Office (HO)' ||
+    applicant?.jenis_layanan === 'head-office' ||
+    (applicant?.departemen && applicant.departemen.toLowerCase().includes('head office'));
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await onConfirm(applicant.id, formData);
+      const payload = {
+        ...formData,
+        penugasan_klien: isHo ? '' : formData.penugasan_klien,
+        lokasi_penugasan: isHo ? '' : formData.lokasi_penugasan,
+        clientName: isHo ? 'Kantor Pusat PT. BARAK' : '',
+        locationName: isHo ? 'Kantor Pusat BARAK' : '',
+      };
+      await onConfirm(applicant.id, payload);
       onClose();
     } finally {
       setIsSubmitting(false);
@@ -144,39 +155,48 @@ export default function ApplicantAcceptModal({
                 />
               </div>
 
-              {/* Klien Penugasan */}
-              <div>
-                <label className="block font-medium text-ink mb-1">Klien Penempatan Awal</label>
-                <select
-                  value={formData.penugasan_klien}
-                  onChange={(e) => setFormData({ ...formData, penugasan_klien: e.target.value })}
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink font-medium"
-                >
-                  <option value="">-- Standby / Cadangan Kantor Pusat --</option>
-                  {allClients.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {isHo ? (
+                <div className="col-span-full p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700">
+                  <p className="font-semibold text-ink">Penempatan Internal: Kantor Pusat PT. BARAK (Head Office)</p>
+                  <p className="text-muted text-[11px] mt-0.5">Personel Head Office bertugas di Kantor Pusat tanpa ikatan proyek klien alih daya.</p>
+                </div>
+              ) : (
+                <>
+                  {/* Klien Penugasan */}
+                  <div>
+                    <label className="block font-medium text-ink mb-1">Klien Penempatan Awal</label>
+                    <select
+                      value={formData.penugasan_klien}
+                      onChange={(e) => setFormData({ ...formData, penugasan_klien: e.target.value })}
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink font-medium"
+                    >
+                      <option value="">-- Standby / Cadangan Kantor Pusat --</option>
+                      {allClients.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              {/* Lokasi Penugasan */}
-              <div>
-                <label className="block font-medium text-ink mb-1">Lokasi Proyek / Area</label>
-                <select
-                  value={formData.lokasi_penugasan}
-                  onChange={(e) => setFormData({ ...formData, lokasi_penugasan: e.target.value })}
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink font-medium"
-                >
-                  <option value="">-- Area Pusat / Mengikuti Klien --</option>
-                  {allLocations.map((l) => (
-                    <option key={l.id} value={l.id}>
-                      {l.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  {/* Lokasi Penugasan */}
+                  <div>
+                    <label className="block font-medium text-ink mb-1">Lokasi Proyek / Area</label>
+                    <select
+                      value={formData.lokasi_penugasan}
+                      onChange={(e) => setFormData({ ...formData, lokasi_penugasan: e.target.value })}
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink font-medium"
+                    >
+                      <option value="">-- Area Pusat / Mengikuti Klien --</option>
+                      {allLocations.map((l) => (
+                        <option key={l.id} value={l.id}>
+                          {l.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 

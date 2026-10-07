@@ -111,6 +111,12 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, o
     return combined;
   }, [customServiceList, employee]);
 
+  const isHeadOffice = useMemo(() => {
+    const key = (formData.jenis_layanan || '').toLowerCase();
+    const label = (formData.jenis_pekerjaan || '').toLowerCase();
+    return key === 'head-office' || key === 'ho' || label.includes('head office') || label.includes('(ho)');
+  }, [formData.jenis_layanan, formData.jenis_pekerjaan]);
+
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const videoRef = useRef(null);
@@ -339,8 +345,10 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, o
       setCustomServiceList(getCustomServices());
     }
 
-    const clientObj = allClients.find((c) => c.id === formData.penugasan_klien || c.code === formData.penugasan_klien);
-    const locObj = allLocations.find((l) => l.id === formData.lokasi_penugasan || l.code === formData.lokasi_penugasan);
+    const isHo = isHeadOffice;
+
+    const clientObj = isHo ? null : allClients.find((c) => c.id === formData.penugasan_klien || c.code === formData.penugasan_klien);
+    const locObj = isHo ? null : allLocations.find((l) => l.id === formData.lokasi_penugasan || l.code === formData.lokasi_penugasan);
 
     const sObj = allServiceOptions.find((s) => s.key === finalLayananKey) || { key: finalLayananKey, label: finalLayananLabel };
     const serviceLabel = sObj ? sObj.label : finalLayananLabel;
@@ -350,8 +358,11 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, o
       jenis_layanan: finalLayananKey,
       jenis_pekerjaan: serviceLabel,
       jabatan: finalJabatan,
-      clientName: clientObj ? clientObj.name : '',
-      locationName: locObj ? locObj.name : '',
+      penugasan_klien: isHo ? '' : formData.penugasan_klien,
+      lokasi_penugasan: isHo ? '' : formData.lokasi_penugasan,
+      clientName: isHo ? 'Kantor Pusat PT. BARAK' : (clientObj ? clientObj.name : ''),
+      locationName: isHo ? 'Kantor Pusat BARAK' : (locObj ? locObj.name : ''),
+      departemen: isHo ? (formData.departemen === 'Operasional' ? 'Head Office' : formData.departemen) : formData.departemen,
       kontak_darurat: {
         nama: formData.emergency_nama,
         relasi: formData.emergency_relasi,
@@ -788,45 +799,57 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, o
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-              <div>
-                <label className="block font-medium text-ink mb-1">Klien Penempatan</label>
-                <select
-                  value={formData.penugasan_klien}
-                  onChange={(e) => {
-                    const newCId = e.target.value;
-                    const matches = allLocations.filter((l) => l.clientId === newCId);
-                    setFormData((prev) => ({
-                      ...prev,
-                      penugasan_klien: newCId,
-                      lokasi_penugasan: matches.length > 0 ? matches[0].id : prev.lokasi_penugasan,
-                    }));
-                  }}
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
-                >
-                  {allClients.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name} ({c.type})</option>
-                  ))}
-                </select>
+            {isHeadOffice ? (
+              <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2.5 text-xs text-slate-700">
+                <div className="w-8 h-8 rounded-lg bg-primary-red/10 flex items-center justify-center text-primary-red flex-none font-bold">
+                  HO
+                </div>
+                <div>
+                  <p className="font-semibold text-ink">Penempatan Internal: Kantor Pusat PT. BARAK</p>
+                  <p className="text-muted text-[11px]">Karyawan Head Office ditempatkan di Kantor Pusat (HO) tanpa ikatan proyek klien alih daya.</p>
+                </div>
               </div>
-              <div>
-                <label className="block font-medium text-ink mb-1">Lokasi Kerja</label>
-                <select
-                  value={formData.lokasi_penugasan}
-                  onChange={(e) => setFormData({ ...formData, lokasi_penugasan: e.target.value })}
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
-                >
-                  {(allLocations.filter((l) => l.clientId === formData.penugasan_klien).length > 0
-                    ? allLocations.filter((l) => l.clientId === formData.penugasan_klien)
-                    : allLocations
-                  ).map((l) => (
-                    <option key={l.id} value={l.id}>{l.name} - {l.city}</option>
-                  ))}
-                </select>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                <div>
+                  <label className="block font-medium text-ink mb-1">Klien Penempatan</label>
+                  <select
+                    value={formData.penugasan_klien}
+                    onChange={(e) => {
+                      const newCId = e.target.value;
+                      const matches = allLocations.filter((l) => l.clientId === newCId);
+                      setFormData((prev) => ({
+                        ...prev,
+                        penugasan_klien: newCId,
+                        lokasi_penugasan: matches.length > 0 ? matches[0].id : prev.lokasi_penugasan,
+                      }));
+                    }}
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
+                  >
+                    {allClients.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name} ({c.type})</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-medium text-ink mb-1">Lokasi Kerja</label>
+                  <select
+                    value={formData.lokasi_penugasan}
+                    onChange={(e) => setFormData({ ...formData, lokasi_penugasan: e.target.value })}
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
+                  >
+                    {(allLocations.filter((l) => l.clientId === formData.penugasan_klien).length > 0
+                      ? allLocations.filter((l) => l.clientId === formData.penugasan_klien)
+                      : allLocations
+                    ).map((l) => (
+                      <option key={l.id} value={l.id}>{l.name} - {l.city}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
-            </div>
+            )}
 
-            {!employee && (
+            {!employee && !isHeadOffice && (
               <div className="mt-3 p-3 bg-primary-red/5 border border-primary-red/20 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                 <div className="flex items-center gap-2 text-xs text-ink">
                   <FileSpreadsheet className="h-4 w-4 text-primary-red flex-none" />
