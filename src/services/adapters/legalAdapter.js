@@ -225,9 +225,12 @@ export const legalAdapter = {
       const nextNum = (contractsStore.length + 1).toString().padStart(3, '0');
       const newContract = {
         ...payload,
-        id: `CTR-2026-${nextNum}`,
-        contractNumber: `CTR/BRK/2026/09/${nextNum}`,
-        status: payload.status || 'LEGAL_REVIEW',
+        id: payload.id || `CTR-2026-${nextNum}`,
+        contractNumber: payload.contractNumber || `PKS/BARAK/2026/10/${nextNum}`,
+        status: payload.status || 'ACTIVE',
+        monthlyValue: Number(payload.monthlyValue) || 0,
+        manpowerQuota: Number(payload.manpowerQuota) || 0,
+        pendingDelete: false,
         createdAt: new Date().toISOString(),
       };
       saveStoredCollection('legal_contracts', [newContract, ...contractsStore]);
@@ -241,6 +244,7 @@ export const legalAdapter = {
           contractNumber: newContract.contractNumber,
           client: newContract.clientName,
           status: newContract.status,
+          monthlyValue: newContract.monthlyValue,
         },
       });
 
@@ -249,6 +253,164 @@ export const legalAdapter = {
 
     const { data } = await apiClient.post('/legal/contracts', payload);
     return data;
+  },
+
+  async updateContract(contractId, payload) {
+    if (isMock) {
+      const contractsStore = getContractsStore();
+      const idx = contractsStore.findIndex((c) => c.id === contractId);
+      if (idx === -1) return { data: null, error: { message: 'Kontrak tidak ditemukan.' } };
+
+      const updated = {
+        ...contractsStore[idx],
+        ...payload,
+        monthlyValue: payload.monthlyValue !== undefined ? Number(payload.monthlyValue) : contractsStore[idx].monthlyValue,
+        manpowerQuota: payload.manpowerQuota !== undefined ? Number(payload.manpowerQuota) : contractsStore[idx].manpowerQuota,
+        updatedAt: new Date().toISOString(),
+      };
+
+      contractsStore[idx] = updated;
+      saveStoredCollection('legal_contracts', contractsStore);
+
+      await emitAudit({
+        action: 'CONTRACT_EDIT',
+        module: 'Legal',
+        entity: 'Contract',
+        entityId: contractId,
+        details: {
+          contractNumber: updated.contractNumber,
+          client: updated.clientName,
+          changes: Object.keys(payload),
+        },
+      });
+
+      return { data: updated, error: null };
+    }
+
+    const { data } = await apiClient.patch(`/legal/contracts/${contractId}`, payload);
+    return data;
+  },
+
+  async deleteContract(contractId, { deletedBy = 'Direktur Utama', reason = '' } = {}) {
+    if (isMock) {
+      const contractsStore = getContractsStore();
+      const idx = contractsStore.findIndex((c) => c.id === contractId);
+      if (idx === -1) return { data: null, error: { message: 'Kontrak tidak ditemukan.' } };
+
+      const removed = contractsStore[idx];
+      const updatedStore = contractsStore.filter((c) => c.id !== contractId);
+      saveStoredCollection('legal_contracts', updatedStore);
+
+      await emitAudit({
+        action: 'CONTRACT_DELETE',
+        module: 'Legal',
+        entity: 'Contract',
+        entityId: contractId,
+        details: {
+          contractNumber: removed.contractNumber,
+          client: removed.clientName,
+          deletedBy,
+          reason,
+        },
+      });
+
+      return { data: { success: true }, error: null };
+    }
+
+    const { data } = await apiClient.delete(`/legal/contracts/${contractId}`);
+    return data;
+  },
+
+  async requestDeleteContract(contractId, { reason = '', requestedBy = 'Staff Legal', contractNumber = '', clientName = '' } = {}) {
+    if (isMock) {
+      const contractsStore = getContractsStore();
+      const idx = contractsStore.findIndex((c) => c.id === contractId);
+      if (idx === -1) return { data: null, error: { message: 'Kontrak tidak ditemukan.' } };
+
+      const ctr = contractsStore[idx];
+      const deleteRequest = {
+        id: `DEL-CTR-${Date.now().toString().slice(-6)}`,
+        entityType: 'CONTRACT',
+        recordId: contractId,
+        referenceId: contractId,
+        entityId: contractId,
+        title: `Permohonan Hapus PKS: ${contractNumber || ctr.contractNumber} (${clientName || ctr.clientName})`,
+        category: 'CONTRACT_DELETE',
+        type: 'CONTRACT_DELETE',
+        submitter: requestedBy,
+        submittedBy: requestedBy,
+        department: 'LEGAL',
+        submittedAt: new Date().toISOString(),
+        amount: ctr.monthlyValue || 0,
+        details: {
+          contractId,
+          contractNumber: ctr.contractNumber,
+          clientName: ctr.clientName,
+          serviceType: ctr.serviceType,
+          monthlyValue: ctr.monthlyValue,
+          reason,
+        },
+        status: 'PENDING',
+      };
+
+      // Mark contract as pending delete
+      contractsStore[idx] = {
+        ...ctr,
+        pendingDelete: true,
+        deleteRequestId: deleteRequest.id,
+        deleteReason: reason,
+      };
+      saveStoredCollection('legal_contracts', contractsStore);
+
+      // Save into approvals collection for Director
+      const approvals = getStoredCollection('approvals', () => []);
+      saveStoredCollection('approvals', [deleteRequest, ...approvals]);
+
+      await emitAudit({
+        action: 'CONTRACT_DELETE_REQUEST',
+        module: 'Legal',
+        entity: 'Contract',
+        entityId: contractId,
+        details: {
+          contractNumber: ctr.contractNumber,
+          client: ctr.clientName,
+          requestedBy,
+          reason,
+        },
+      });
+
+      return {
+        data: {
+          success: true,
+          pendingApproval: true,
+          requestId: deleteRequest.id,
+          message: 'Permohonan penghapusan PKS telah diajukan ke Direktur Utama.',
+        },
+        error: null,
+      };
+    }
+
+    const { data } = await apiClient.post(`/legal/contracts/${contractId}/request-delete`, { reason, requestedBy });
+    return data;
+  },
+
+  async cancelDeleteRequest(contractId, { rejectedBy = 'Direktur Utama', reason = '' } = {}) {
+    if (isMock) {
+      const contractsStore = getContractsStore();
+      const idx = contractsStore.findIndex((c) => c.id === contractId);
+      if (idx !== -1) {
+        contractsStore[idx] = {
+          ...contractsStore[idx],
+          pendingDelete: false,
+          deletionRejectedAt: new Date().toISOString(),
+          deletionRejectedBy: rejectedBy,
+          deletionRejectReason: reason,
+        };
+        saveStoredCollection('legal_contracts', contractsStore);
+      }
+      return { data: { success: true }, error: null };
+    }
+    return { data: { success: true }, error: null };
   },
 
   async updateContractStatus(contractId, newStatus, { notes = '', actorName = 'Farhan Maulana (Legal)' } = {}) {

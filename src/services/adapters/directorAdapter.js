@@ -22,6 +22,7 @@ import { MOCK_ARTICLES, MOCK_CAREER_POSTINGS, MOCK_INCOMING_INQUIRIES } from '@/
 import { MOCK_PENDING_APPROVALS } from '@/services/mock/mockDirectorData';
 import { payrollAdapter } from '@/services/adapters/payrollAdapter';
 import { employeeAdapter } from '@/services/adapters/employeeAdapter';
+import { legalAdapter } from '@/services/adapters/legalAdapter';
 import { auditAdapter } from '@/services/adapters/auditAdapter';
 import { emitAudit } from '@/utils/auditLogger';
 import { getStoredCollection, saveStoredCollection } from '@/utils/storage';
@@ -328,6 +329,13 @@ export const directorAdapter = {
           };
           saveStoredCollection('legal_contracts', contractsStore);
         }
+      }      // Cross-department hook: If approving contract deletion
+      if ((item.type === 'CONTRACT_DELETE' || item.category === 'CONTRACT_DELETE') && (item.referenceId || item.recordId)) {
+        const ctrId = item.referenceId || item.recordId;
+        await legalAdapter.deleteContract(ctrId, {
+          deletedBy: actorName,
+          reason: notes || item.details?.reason || 'Disetujui oleh Direktur Utama',
+        });
       }
 
       // Log to central audit trail
@@ -345,7 +353,6 @@ export const directorAdapter = {
           approvedBy: actorName,
         },
       });
-
 
       return { data: updated, error: null };
     }
@@ -383,6 +390,15 @@ export const directorAdapter = {
         await employeeAdapter.updateEmployee(empId, {
           pendingDelete: false,
           deleteRequestId: null,
+        });
+      }
+
+      // Cross-department hook: If rejecting contract deletion, clear pendingDelete flag
+      if ((item.type === 'CONTRACT_DELETE' || item.category === 'CONTRACT_DELETE') && (item.referenceId || item.recordId)) {
+        const ctrId = item.referenceId || item.recordId;
+        await legalAdapter.cancelDeleteRequest(ctrId, {
+          rejectedBy: actorName,
+          reason,
         });
       }
 
