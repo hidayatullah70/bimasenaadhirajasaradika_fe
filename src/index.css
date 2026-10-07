@@ -162,6 +162,51 @@
     background-color: var(--color-border);
     border-radius: 3px;
   }
+
+  /* Tombol Navigasi Paginasi — Border Hijau Gradient & Icon Panah Merah Resmi Korporat */
+  .btn-pagination-nav {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.875rem;
+    height: 1.875rem;
+    padding: 0;
+    border-radius: 0.5rem;
+    background-color: #ffffff;
+    border: 2px solid transparent;
+    background-image: linear-gradient(#ffffff, #ffffff), linear-gradient(135deg, #10B981, #32B23E, #059669);
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    color: #BA1D23;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(50, 178, 62, 0.15);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-pagination-nav:hover:not(:disabled) {
+    background-image: linear-gradient(#f0fdf4, #f0fdf4), linear-gradient(135deg, #059669, #32B23E, #10B981);
+    box-shadow: 0 2px 8px rgba(50, 178, 62, 0.3);
+    transform: translateY(-0.5px);
+  }
+
+  .btn-pagination-nav:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(50, 178, 62, 0.2);
+  }
+
+  .btn-pagination-nav:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    background-image: none !important;
+    border-color: #e2e8f0 !important;
+    background-color: #f8fafc !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  .btn-pagination-nav:disabled svg {
+    color: #94a3b8 !important;
+  }
 }
 
 /* ── Transitions ── */

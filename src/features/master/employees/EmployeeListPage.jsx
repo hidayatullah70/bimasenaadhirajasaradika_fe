@@ -476,30 +476,30 @@ export default function EmployeeListPage() {
               <span className="font-medium text-ink">{Math.min(page * 10, meta.total)}</span> dari{' '}
               <span className="font-medium text-ink">{meta.total}</span> data karyawan
             </p>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
                 disabled={page <= 1}
                 onClick={() => setPage(page - 1)}
-                className="h-7 w-7 p-0 border border-primary-red/50 text-primary-red bg-primary-red/10 hover:bg-primary-red hover:text-white transition-colors disabled:opacity-30 disabled:border-border disabled:text-slate-400 disabled:bg-transparent"
+                className="btn-pagination-nav"
                 title="Halaman Sebelumnya"
+                aria-label="Halaman Sebelumnya"
               >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
+                <ChevronLeft className="h-4 w-4 text-primary-red" strokeWidth={2.5} />
+              </button>
               <span className="px-2 font-medium text-ink">
                 Halaman {page} dari {meta.totalPages || 1}
               </span>
-              <Button
-                variant="outline"
-                size="sm"
+              <button
+                type="button"
                 disabled={page >= meta.totalPages}
                 onClick={() => setPage(page + 1)}
-                className="h-7 w-7 p-0 border border-primary-red/50 text-primary-red bg-primary-red/10 hover:bg-primary-red hover:text-white transition-colors disabled:opacity-30 disabled:border-border disabled:text-slate-400 disabled:bg-transparent"
+                className="btn-pagination-nav"
                 title="Halaman Berikutnya"
+                aria-label="Halaman Berikutnya"
               >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
+                <ChevronRight className="h-4 w-4 text-primary-red" strokeWidth={2.5} />
+              </button>
             </div>
           </div>
         )}

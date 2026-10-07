@@ -1,7 +1,6 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import clsx from 'clsx';
-import { Button } from './Button';
 
 /**
  * Standardized Pagination Component
@@ -60,35 +59,31 @@ export function Pagination({
       </div>
 
       <div className="flex items-center gap-1.5">
-        <Button
+        <button
           type="button"
-          variant="outline"
-          size="xs"
           disabled={currentPage <= 1}
           onClick={() => onPageChange(currentPage - 1)}
-          iconLeft={<ChevronLeft className="h-3.5 w-3.5 text-primary-red" />}
           aria-label="Halaman sebelumnya"
-          className="border-primary-red/50 text-primary-red bg-primary-red/10 hover:bg-primary-red hover:text-white transition-colors disabled:opacity-30 disabled:border-border disabled:text-slate-400 disabled:bg-transparent"
+          title="Halaman Sebelumnya"
+          className="btn-pagination-nav"
         >
-          Sebelumnya
-        </Button>
+          <ChevronLeft className="h-4 w-4 text-primary-red" strokeWidth={2.5} />
+        </button>
 
-        <span className="px-2 py-1 font-medium text-ink bg-canvas rounded border border-border">
+        <span className="px-2.5 py-1 text-xs font-semibold text-ink bg-canvas rounded border border-border">
           {currentPage} / {totalPages || 1}
         </span>
 
-        <Button
+        <button
           type="button"
-          variant="outline"
-          size="xs"
           disabled={currentPage >= totalPages}
           onClick={() => onPageChange(currentPage + 1)}
-          iconRight={<ChevronRight className="h-3.5 w-3.5 text-primary-red" />}
           aria-label="Halaman berikutnya"
-          className="border-primary-red/50 text-primary-red bg-primary-red/10 hover:bg-primary-red hover:text-white transition-colors disabled:opacity-30 disabled:border-border disabled:text-slate-400 disabled:bg-transparent"
+          title="Halaman Berikutnya"
+          className="btn-pagination-nav"
         >
-          Selanjutnya
-        </Button>
+          <ChevronRight className="h-4 w-4 text-primary-red" strokeWidth={2.5} />
+        </button>
       </div>
     </div>
   );
