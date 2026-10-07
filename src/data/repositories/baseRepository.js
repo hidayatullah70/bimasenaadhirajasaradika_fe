@@ -246,7 +246,7 @@ export class BaseRepository {
         success: true,
         pendingApproval: true,
         requestId: deleteRequest.id,
-        message: 'Permohonan penghapusan telah diajukan ke Direktur untuk disetujui.',
+        message: 'Permohonan penghapusan telah diajukan ke Direktur Utama untuk disetujui.',
       },
       error: null,
     };

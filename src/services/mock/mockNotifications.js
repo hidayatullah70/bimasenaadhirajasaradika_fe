@@ -98,7 +98,7 @@ export const MOCK_NOTIFICATIONS = [
   {
     id: 'notif-005',
     title: 'Approval Payroll Menunggu',
-    message: 'Payroll September 2026 memerlukan persetujuan Direktur.',
+    message: 'Payroll September 2026 memerlukan persetujuan Direktur Utama.',
     category: NOTIFICATION_CATEGORIES.APPROVAL,
     severity: NOTIFICATION_SEVERITY.INFO,
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
@@ -112,8 +112,8 @@ export const MOCK_NOTIFICATIONS = [
       totalEmployees: '124 Personel',
       grossPayroll: 'Rp 548.200.000',
       preparedBy: 'Dian Permata (Staf Keuangan - Maker)',
-      approvalStatus: 'Menunggu Persetujuan Direktur (Checker Only)',
-      summary: 'Draf kalkulasi penggajian seluruh personel operasional posko dan staf kantor pusat telah selesai divalidasi dengan rekonsiliasi absensi. Dana siap diproses transfer payroll setelah Direktur menandatangani persetujuan elektronik.',
+      approvalStatus: 'Menunggu Persetujuan Direktur Utama (Checker Only)',
+      summary: 'Draf kalkulasi penggajian seluruh personel operasional posko dan staf kantor pusat telah selesai divalidasi dengan rekonsiliasi absensi. Dana siap diproses transfer payroll setelah Direktur Utama menandatangani persetujuan elektronik.',
       recommendation: 'Direktur Utama diharapkan meninjau ringkasan biaya penggajian di Approval Center sebelum jadwal cut-off bank.',
     },
   },
@@ -156,7 +156,7 @@ export const MOCK_NOTIFICATIONS = [
       scope: 'Penyediaan 28 Personel Pengamanan & Patroli Logistik',
       legalStatus: 'Review Klausul Tanggung Jawab Hukum & Asuransi Ketenagakerjaan',
       summary: 'Draf adendum kontrak perpanjangan kerja sama telah diserahkan oleh pihak legal klien. Bagian Legal PT. BARAK perlu memeriksa kesesuaian klausul ganti rugi dan SLA operasional sebelum finalisasi penandatanganan basah/elektronik.',
-      recommendation: 'Staf Legal menyelesaikan analisis yuridis formal dan mengajukan rekomendasi pengesahan kepada Direktur.',
+      recommendation: 'Staf Legal menyelesaikan analisis yuridis formal dan mengajukan rekomendasi pengesahan kepada Direktur Utama.',
     },
   },
   {

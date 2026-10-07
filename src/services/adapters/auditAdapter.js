@@ -41,7 +41,7 @@ const INITIAL_AUDIT_LOGS = [
   },
   {
     id: 'audit-003',
-    actor: 'Juli Priyanto (Direktur)',
+    actor: 'Juli Priyanto (Direktur Utama)',
     actor_id: 'usr-001',
     timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
     action: AUDIT_ACTIONS.PAYROLL_APPROVE || 'PAYROLL_APPROVE',

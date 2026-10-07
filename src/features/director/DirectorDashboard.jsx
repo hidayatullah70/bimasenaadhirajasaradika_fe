@@ -185,7 +185,7 @@ export default function DirectorDashboard() {
             </span>
             <div>
               <h2 className="text-sm font-bold text-amber-900">
-                Terdapat {kpi.pendingApprovalsCount} Pengajuan Menunggu Persetujuan Direktur
+                Terdapat {kpi.pendingApprovalsCount} Pengajuan Menunggu Persetujuan Direktur Utama
               </h2>
               <p className="text-xs text-amber-700 mt-0.5">
                 Penggajian bulanan karyawan, kontrak kemitraan baru, dan otorisasi eskalasi hukum memerlukan tanda tangan eksekutif Anda.
@@ -401,7 +401,7 @@ export default function DirectorDashboard() {
             {approvals.length === 0 ? (
               <div className="p-6 text-center text-xs text-muted">
                 <CheckCircle className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
-                Tidak ada pengajuan yang menunggu persetujuan Direktur saat ini.
+                Tidak ada pengajuan yang menunggu persetujuan Direktur Utama saat ini.
               </div>
             ) : (
               <div className="divide-y divide-border">

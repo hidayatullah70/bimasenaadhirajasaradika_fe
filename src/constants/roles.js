@@ -17,7 +17,7 @@ export const ROLES = Object.freeze({
 });
 
 export const ROLE_LABELS = Object.freeze({
-  [ROLES.DIREKTUR]: 'Direktur',
+  [ROLES.DIREKTUR]: 'Direktur Utama',
   [ROLES.HRD]: 'HRD',
   [ROLES.LEGAL]: 'Legal',
   [ROLES.OPERASIONAL]: 'Operasional',

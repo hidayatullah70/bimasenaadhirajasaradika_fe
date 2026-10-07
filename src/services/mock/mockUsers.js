@@ -208,7 +208,7 @@ const ROLE_PERMISSIONS = {
     PERMISSIONS.INVOICE_EDIT,
     PERMISSIONS.PAYMENT_VIEW,
     PERMISSIONS.PAYMENT_CREATE,
-    // Payroll Ketenagakerjaan (C, R, U, E, X [submit] - Approval reserved for Direktur)
+    // Payroll Ketenagakerjaan (C, R, U, E, X [submit] - Approval reserved for Direktur Utama)
     PERMISSIONS.PAYROLL_VIEW,
     PERMISSIONS.PAYROLL_CREATE,
     // Rekonsiliasi Kas COD Kurir (R/W)
@@ -318,12 +318,13 @@ const ROLE_PERMISSIONS = {
 export const MOCK_USERS = Object.freeze([
   {
     id: 'usr-001',
-    username: 'direktur',
+    username: 'direkturutama',
     // DEV-ONLY placeholder — no real credential
-    password: 'dev_direktur_2026',
+    password: 'dev_direkturutama_2026',
     name: 'Juli Priyanto',
-    email: 'direktur@bimasenaadhirajasaradika.com',
+    email: 'direkturutama@bimasenaadhirajasaradika.com',
     role: ROLES.DIREKTUR,
+    roleLabel: 'Direktur Utama',
     permissions: ROLE_PERMISSIONS[ROLES.DIREKTUR],
     avatar: null,
     department: 'Direksi',

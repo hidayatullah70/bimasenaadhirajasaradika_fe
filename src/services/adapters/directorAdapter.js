@@ -257,7 +257,7 @@ export const directorAdapter = {
    * Approve a pending item by Director.
    * Emits DIRECTOR_APPROVAL audit trail and invokes cross-module hooks.
    */
-  async approveItem(approvalId, { notes = '', actorName = 'Juli Priyanto (Direktur)' } = {}) {
+  async approveItem(approvalId, { notes = '', actorName = 'Juli Priyanto (Direktur Utama)' } = {}) {
     if (isMock) {
       const approvalsStore = getApprovalsStore();
       const idx = approvalsStore.findIndex((a) => a.id === approvalId);
@@ -286,7 +286,7 @@ export const directorAdapter = {
         const empId = item.referenceId || item.recordId;
         await employeeAdapter.softDeleteEmployee(empId, {
           deletedBy: actorName,
-          reason: notes || item.details?.reason || 'Disetujui oleh Direktur',
+          reason: notes || item.details?.reason || 'Disetujui oleh Direktur Utama',
         });
       }
 
@@ -358,7 +358,7 @@ export const directorAdapter = {
    * Reject a pending item by Director.
    * Emits DIRECTOR_REJECT audit trail.
    */
-  async rejectItem(approvalId, { reason = '', actorName = 'Juli Priyanto (Direktur)' } = {}) {
+  async rejectItem(approvalId, { reason = '', actorName = 'Juli Priyanto (Direktur Utama)' } = {}) {
     if (isMock) {
       const approvalsStore = getApprovalsStore();
       const idx = approvalsStore.findIndex((a) => a.id === approvalId);

@@ -28,7 +28,7 @@ export default function ExecutiveActivityPage() {
       }
     } catch (err) {
       console.error('Failed to load director audit logs', err);
-      toast.error('Gagal memuat rekam jejak aktivitas Direktur.');
+      toast.error('Gagal memuat rekam jejak aktivitas Direktur Utama.');
     } finally {
       setLoading(false);
     }
@@ -58,7 +58,7 @@ export default function ExecutiveActivityPage() {
         <div>
           <h2 className="text-base font-bold text-ink flex items-center gap-2">
             <History className="h-5 w-5 text-primary-red" />
-            Rekam Jejak Otoritas & Log Keputusan Direktur
+            Rekam Jejak Otoritas & Log Keputusan Direktur Utama
           </h2>
           <p className="text-xs text-muted mt-0.5">
             Audit trail immutable mencatat seluruh keputusan persetujuan, penolakan, dan pengesahan berkas oleh Direksi.

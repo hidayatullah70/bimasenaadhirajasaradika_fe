@@ -219,12 +219,12 @@ export default function NotificationPage() {
                     {hasAccess ? (
                       <span className="text-[11px] text-accent-green font-medium flex items-center gap-1">
                         <Unlock className="h-3 w-3" />
-                        {isDirector ? 'Akses Penuh Direktur' : 'Akses Divisi Anda'}
+                        {isDirector ? 'Akses Penuh Direktur Utama' : 'Akses Divisi Anda'}
                       </span>
                     ) : (
                       <span className="text-[11px] text-muted font-medium flex items-center gap-1 bg-canvas/80 px-2 py-0.5 rounded border border-border">
                         <Lock className="h-3 w-3 text-amber-600" />
-                        Khusus {notif.department} & Direktur
+                        Khusus {notif.department} & Direktur Utama
                       </span>
                     )}
                   </div>
@@ -264,7 +264,7 @@ export default function NotificationPage() {
         </div>
       )}
 
-      {/* MODAL 1: Detail Notifikasi Lengkap (Diizinkan: Direktur & Divisi Terkait) */}
+      {/* MODAL 1: Detail Notifikasi Lengkap (Diizinkan: Direktur Utama & Divisi Terkait) */}
       {isDetailOpen && selectedNotif && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full flex flex-col overflow-hidden animate-scale-up border border-border">
@@ -552,7 +552,7 @@ export default function NotificationPage() {
                 </div>
 
                 <p className="text-[11px] text-muted">
-                  Catatan: Akun <strong>Direktur</strong> memiliki wewenang
+                  Catatan: Akun <strong>Direktur Utama</strong> memiliki wewenang
                   menyeluruh untuk meninjau dan menindaklanjuti seluruh notifikasi
                   lintas divisi.
                 </p>

@@ -394,7 +394,7 @@ export const employeeAdapter = {
   /**
    * Soft-delete employee — sets isDeleted: true & status: INACTIVE (Director supreme action)
    */
-  async softDeleteEmployee(id, { deletedBy = 'Direktur', reason = 'Penonaktifan' } = {}) {
+  async softDeleteEmployee(id, { deletedBy = 'Direktur Utama', reason = 'Penonaktifan' } = {}) {
     if (isMock) {
       const store = getStore();
       const idx = store.findIndex((e) => e.id === id || e.id_karyawan === id);
@@ -494,7 +494,7 @@ export const employeeAdapter = {
           success: true,
           pendingApproval: true,
           requestId: deleteRequest.id,
-          message: 'Permohonan penghapusan telah diajukan ke Direktur.',
+          message: 'Permohonan penghapusan telah diajukan ke Direktur Utama.',
         },
         error: null,
       };

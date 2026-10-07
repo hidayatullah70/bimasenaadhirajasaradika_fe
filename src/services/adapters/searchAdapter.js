@@ -26,7 +26,7 @@ const SEARCH_TYPE_LABELS = {
   lead: 'Lead',
   article: 'Artikel Berita',
   career: 'Lowongan Karir',
-  approval: 'Persetujuan Direktur',
+  approval: 'Persetujuan Direktur Utama',
 };
 
 const mockSearch = {

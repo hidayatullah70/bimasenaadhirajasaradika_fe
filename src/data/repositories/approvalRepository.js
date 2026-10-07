@@ -26,7 +26,7 @@ export class ApprovalRepository extends BaseRepository {
   /**
    * Approve an approval request.
    */
-  async approve(id, { reviewer = 'Juli Priyanto (Direktur)', notes = '' } = {}) {
+  async approve(id, { reviewer = 'Juli Priyanto (Direktur Utama)', notes = '' } = {}) {
     return this.update(id, {
       status: STATUS.APPROVED || 'APPROVED',
       reviewedBy: reviewer,
@@ -38,7 +38,7 @@ export class ApprovalRepository extends BaseRepository {
   /**
    * Reject an approval request.
    */
-  async reject(id, { reviewer = 'Juli Priyanto (Direktur)', notes = 'Permohonan ditolak oleh Direktur.' } = {}) {
+  async reject(id, { reviewer = 'Juli Priyanto (Direktur Utama)', notes = 'Permohonan ditolak oleh Direktur Utama.' } = {}) {
     return this.update(id, {
       status: STATUS.REJECTED || 'REJECTED',
       reviewedBy: reviewer,

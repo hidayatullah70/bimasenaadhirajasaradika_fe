@@ -1095,7 +1095,7 @@ export const attendanceAdapter = {
   /**
    * Reopen finalized sheet — requires privileged permission + audit trail
    */
-  async reopenSheet(sheetId, { reason, reopenedBy = 'Juli Priyanto (Direktur)' }) {
+  async reopenSheet(sheetId, { reason, reopenedBy = 'Juli Priyanto (Direktur Utama)' }) {
     if (isMock) {
       const sheets = getSheetsStore();
       const idx = sheets.findIndex((s) => s.id === sheetId);

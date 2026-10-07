@@ -34,7 +34,7 @@ export default function DeleteRequestModal({ isOpen, employee, onClose, onSucces
       if (isDirector) {
         // Direktur performs direct soft delete
         await employeeAdapter.softDeleteEmployee(employee.id || employee.id_karyawan, {
-          deletedBy: `${currentUser.name} (Direktur)`,
+          deletedBy: `${currentUser.name} (Direktur Utama)`,
           reason: reason.trim(),
         });
         toast.success(`Karyawan ${employee.nama_lengkap_sesuai_KTP} berhasil dinonaktifkan (Soft Delete).`);
@@ -46,7 +46,7 @@ export default function DeleteRequestModal({ isOpen, employee, onClose, onSucces
           entityLabel: employee.nama_lengkap_sesuai_KTP,
         });
         toast.success(
-          `Pengajuan hapus untuk ${employee.nama_lengkap_sesuai_KTP} telah dikirim ke Direktur untuk disetujui.`
+          `Pengajuan hapus untuk ${employee.nama_lengkap_sesuai_KTP} telah dikirim ke Direktur Utama untuk disetujui.`
         );
       }
 
@@ -74,7 +74,7 @@ export default function DeleteRequestModal({ isOpen, employee, onClose, onSucces
                 {isDirector ? 'Konfirmasi Penonaktifan Karyawan' : 'Pengajuan Hapus Karyawan'}
               </h2>
               <p className="text-xs text-muted">
-                {isDirector ? 'Otoritas Tertinggi Direksi (Soft Delete)' : 'Memerlukan Persetujuan Direktur'}
+                {isDirector ? 'Otoritas Tertinggi Direksi (Soft Delete)' : 'Memerlukan Persetujuan Direktur Utama'}
               </p>
             </div>
           </div>
@@ -93,7 +93,7 @@ export default function DeleteRequestModal({ isOpen, employee, onClose, onSucces
           <div className="p-3 rounded-lg bg-canvas border border-border space-y-1">
             <p className="font-semibold text-ink text-sm">{employee.nama_lengkap_sesuai_KTP}</p>
             <p className="text-muted font-mono text-[11px]">
-              ID: {employee.id_karyawan || employee.id} • NIK: {employee.NIK || '-'}
+               ID: {employee.id_karyawan || employee.id} • NIK: {employee.NIK || '-'}
             </p>
             <p className="text-muted">
               {employee.jabatan || 'Staff'} • Departemen: {employee.departemen || 'Operasional'}
@@ -106,14 +106,14 @@ export default function DeleteRequestModal({ isOpen, employee, onClose, onSucces
             <div className="text-[11px] leading-relaxed">
               {isDirector ? (
                 <p>
-                  Sebagai Direktur, tindakan ini akan melakukan <strong>Soft Delete</strong> (menonaktifkan akun
+                  Sebagai Direktur Utama, tindakan ini akan melakukan <strong>Soft Delete</strong> (menonaktifkan akun
                   dan menyembunyikan dari penugasan aktif). Catatan audit akan dicatat permanen.
                 </p>
               ) : (
                 <p>
                   Sesuai <strong>Prinsip Tata Kelola PT. BARAK</strong>, penghapusan data karyawan{' '}
                   <strong>bukan operasi langsung yang destruktif</strong>. Permohonan Anda akan tercatat dalam{' '}
-                  <strong>Pending Approval Direktur</strong>.
+                  <strong>Pending Approval Direktur Utama</strong>.
                 </p>
               )}
             </div>
@@ -152,7 +152,7 @@ export default function DeleteRequestModal({ isOpen, employee, onClose, onSucces
                   <span>Setujui & Nonaktifkan (Soft Delete)</span>
                 </>
               ) : (
-                <span>Kirim Pengajuan ke Direktur</span>
+                <span>Kirim Pengajuan ke Direktur Utama</span>
               )}
             </Button>
           </div>

@@ -685,7 +685,7 @@ export default function AttendanceSpreadsheetPage() {
     if (!sheetData) return;
     const res = await attendanceAdapter.reopenSheet(sheetData.sheet.id, {
       reason,
-      reopenedBy: currentUser ? currentUser.name : 'Juli Priyanto (Direktur)',
+      reopenedBy: currentUser ? currentUser.name : 'Juli Priyanto (Direktur Utama)',
     });
     if (res.data) {
       toast.success('Lembar absensi berhasil dibuka kembali (REOPENED).');

@@ -544,7 +544,7 @@ export const MOCK_EMPLOYEES = RAW_EMPLOYEES_SEED.map((raw, idx) => {
     clientName: assignedClient.name,
     lokasi_penugasan: assignedLocation.id,
     locationName: assignedLocation.name,
-    atasan: raw.rank === 'Staff' ? 'Hadi Suprianto (Korlap)' : 'Juli Priyanto (Direktur Ops)',
+    atasan: raw.rank === 'Staff' ? 'Hadi Suprianto (Korlap)' : 'Juli Priyanto (Direktur Utama)',
     nama_bank: 'BCA',
     nomor_rekening_bank: `123000${(4567890 + idx * 11111).toString().slice(0, 7)}`,
     rekening_atas_nama: raw.name,
@@ -606,7 +606,7 @@ export const MOCK_SYSTEM_USERS = [
   {
     id: 'USR-001',
     username: 'juli.priyanto',
-    email: 'direktur@bimasenaadhirajasaradika.com',
+    email: 'direkturutama@bimasenaadhirajasaradika.com',
     name: 'Juli Priyanto',
     role: ROLES.DIREKTUR,
     department: 'Direksi',

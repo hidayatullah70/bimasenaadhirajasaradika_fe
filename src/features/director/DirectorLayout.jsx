@@ -86,7 +86,7 @@ export default function DirectorLayout() {
                 <ShieldCheck className="h-5 w-5" />
               </span>
               <h1 className="text-xl sm:text-2xl font-bold text-ink">
-                Konsol Eksekutif & Pengambilan Keputusan Direktur
+                Konsol Eksekutif & Pengambilan Keputusan Direktur Utama
               </h1>
             </div>
             <p className="text-xs sm:text-sm text-muted mt-1">

@@ -200,7 +200,7 @@ export default function RiskAlertsPage() {
                           <div className="p-2.5 bg-emerald-50/50 rounded-lg border border-emerald-100">
                             <span className="font-semibold text-emerald-900 flex items-center gap-1">
                               <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
-                              Rekomendasi Mitigasi Direktur:
+                              Rekomendasi Mitigasi Direktur Utama:
                             </span>
                             <p className="text-emerald-800 mt-0.5">{risk.mitigation}</p>
                           </div>

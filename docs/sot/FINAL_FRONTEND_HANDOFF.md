@@ -132,16 +132,16 @@ Seluruh entitas primer mendukung alur siklus hidup lengkap:
 
 1. **8 Peran Resmi:** `DIREKTUR`, `HRD`, `OPERASIONAL`, `FINANCE`, `LEGAL`, `MARKETING`, `IT_SUPPORT`, `ADMIN_WEBSITE`.
 2. **Penegakan Maker-Checker:**
-   - Penggajian: Dibuat oleh Keuangan (`PAYROLL_CREATE`), disetujui secara eksklusif oleh Direktur (`PAYROLL_APPROVE`).
-   - Absensi: Difinalisasi oleh HRD (`ATTENDANCE_FINALIZE`), hanya dapat dibuka kembali oleh Direktur (`ATTENDANCE_REOPEN`).
-   - Hapus Karyawan: Diajukan oleh HRD (`employee.delete.request`), disahkan oleh Direktur (`employee.delete.approve`).
+   - Penggajian: Dibuat oleh Keuangan (`PAYROLL_CREATE`), disetujui secara eksklusif oleh Direktur Utama (`PAYROLL_APPROVE`).
+   - Absensi: Difinalisasi oleh HRD (`ATTENDANCE_FINALIZE`), hanya dapat dibuka kembali oleh Direktur Utama (`ATTENDANCE_REOPEN`).
+   - Hapus Karyawan: Diajukan oleh HRD (`employee.delete.request`), disahkan oleh Direktur Utama (`employee.delete.approve`).
 3. **Guard Ganda:** Rute dilindungi di tingkat navigasi melalui `RequireAuth` dan `RequireRole`.
 
 ---
 
 ## 8. Approval Workflow (Alur Persetujuan Terpusat)
 
-Direktur memiliki kendali tunggal pada `/ops/director/approvals` untuk:
+Direktur Utama memiliki kendali tunggal pada `/ops/director/approvals` untuk:
 - `EMPLOYEE_DELETE`: Otorisasi soft-delete personil.
 - `EMPLOYEE_STATUS_CHANGE`: Pengangkatan PKWT ke Karyawan Tetap.
 - `CONTRACT_APPROVAL`: Pengesahan kontrak PKS bernilai besar.

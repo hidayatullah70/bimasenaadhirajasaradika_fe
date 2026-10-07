@@ -4,7 +4,7 @@ import { ChevronRight, Home } from 'lucide-react';
 
 const ROUTE_LABELS = {
   ops: null, // hidden
-  director: 'Direktur',
+  director: 'Direktur Utama',
   hrd: 'HRD',
   legal: 'Legal',
   operations: 'Operasional',

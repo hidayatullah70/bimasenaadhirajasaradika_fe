@@ -279,7 +279,7 @@ export default function PermissionMatrixModal({ isOpen, onClose }) {
                 Matriks Otorisasi Granular & Hak Akses (Granular RBAC Matrix)
               </h2>
               <p className="text-xs text-muted">
-                Standar tata kelola hak akses PT. BARAK IOMS — Mengatur 15 modul, 8 peran, prinsip pemisahan wewenang (Maker-Checker), dan hak otoritas tertinggi Direktur.
+                Standar tata kelola hak akses PT. BARAK IOMS — Mengatur 15 modul, 8 peran, prinsip pemisahan wewenang (Maker-Checker), dan hak otoritas tertinggi Direktur Utama.
               </p>
             </div>
           </div>
@@ -393,7 +393,7 @@ export default function PermissionMatrixModal({ isOpen, onClose }) {
           <div className="flex items-center gap-2 text-muted">
             <Lock className="h-4 w-4 text-primary-red shrink-0" />
             <span>
-              <strong>Prinsip Segregation of Duties</strong>: Pembuat draf transaksi tidak dapat menyetujui transaksi final. Otoritas tertinggi dan persetujuan eksekutif berada pada <strong>Direktur</strong>.
+              <strong>Prinsip Segregation of Duties</strong>: Pembuat draf transaksi tidak dapat menyetujui transaksi final. Otoritas tertinggi dan persetujuan eksekutif berada pada <strong>Direktur Utama</strong>.
             </span>
           </div>
           <Button variant="outline" size="sm" onClick={onClose} className="self-end sm:self-auto">

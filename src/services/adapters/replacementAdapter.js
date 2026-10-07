@@ -128,7 +128,7 @@ export const replacementAdapter = {
     return data;
   },
 
-  async approveReplacement(id, actorName = 'Juli Priyanto (Direktur Ops)') {
+  async approveReplacement(id, actorName = 'Juli Priyanto (Direktur Utama)') {
     if (isMock) {
       const store = getStore();
       const idx = store.findIndex((r) => r.id === id || r.requestNumber === id);

@@ -24,9 +24,16 @@ const mockAuth = {
     // Simulate network latency
     await new Promise((r) => setTimeout(r, 600));
 
-    const user = MOCK_USERS.find(
-      (u) => u.username === username && u.password === password
-    );
+    const normalizedUsername = (username === 'direktur' || username === 'direkturutama') ? 'direkturutama' : username;
+    const user = MOCK_USERS.find((u) => {
+      if (u.username === normalizedUsername) {
+        if (normalizedUsername === 'direkturutama') {
+          return password === 'dev_direkturutama_2026' || password === 'dev_direktur_2026' || u.password === password;
+        }
+        return u.password === password;
+      }
+      return false;
+    });
 
     if (!user) {
       return apiError('AUTH_INVALID', 'Username atau password salah.');

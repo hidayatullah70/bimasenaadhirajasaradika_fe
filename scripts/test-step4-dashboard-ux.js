@@ -173,7 +173,7 @@ async function runStep4Tests() {
 
   // Emit a new audit log
   await auditAdapter.createLog({
-    user: 'Juli Priyanto (Direktur)',
+    user: 'Juli Priyanto (Direktur Utama)',
     role: 'DIREKTUR',
     action: 'APPROVAL_TEST',
     module: 'director',
@@ -184,7 +184,7 @@ async function runStep4Tests() {
   const refreshedLogs = await auditAdapter.getLogs();
   const foundLog = refreshedLogs.data.find((l) => l.action === 'APPROVAL_TEST');
   assert.ok(foundLog, 'Emitted audit log must be found in storage');
-  assert.equal(foundLog.user, 'Juli Priyanto (Direktur)');
+  assert.equal(foundLog.user, 'Juli Priyanto (Direktur Utama)');
   assert.equal(foundLog.description, 'Verifikasi audit log otomatis Step 4');
   pass('Audit log persisted and queried with user, role, action, module, record, and description');
 

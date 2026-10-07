@@ -70,7 +70,7 @@ export default function ApprovalCenterPage() {
     try {
       const res = await directorAdapter.approveItem(selectedItem.id, {
         notes: directorNotes || 'Disetujui oleh Direktur Utama sesuai pertimbangan kepatuhan operasional.',
-        actorName: 'Juli Priyanto (Direktur)',
+        actorName: 'Juli Priyanto (Direktur Utama)',
       });
 
       if (res.data) {
@@ -97,7 +97,7 @@ export default function ApprovalCenterPage() {
   const handleReject = async () => {
     if (!selectedItem) return;
     if (!directorNotes.trim()) {
-      toast.error('Wajib mengisi alasan penolakan pada catatan Direktur.');
+      toast.error('Wajib mengisi alasan penolakan pada catatan Direktur Utama.');
       return;
     }
 
@@ -105,7 +105,7 @@ export default function ApprovalCenterPage() {
     try {
       const res = await directorAdapter.rejectItem(selectedItem.id, {
         reason: directorNotes,
-        actorName: 'Juli Priyanto (Direktur)',
+        actorName: 'Juli Priyanto (Direktur Utama)',
       });
 
       if (res.data) {
@@ -142,7 +142,7 @@ export default function ApprovalCenterPage() {
             <Clock className="h-6 w-6" />
           </span>
           <div>
-            <p className="text-xs font-medium text-muted">Menunggu Persetujuan Direktur</p>
+            <p className="text-xs font-medium text-muted">Menunggu Persetujuan Direktur Utama</p>
             <p className="text-xl font-bold text-ink mt-0.5">{pendingCount} Pengajuan</p>
           </div>
         </div>
@@ -339,7 +339,7 @@ export default function ApprovalCenterPage() {
         <Modal
           isOpen={true}
           onClose={closeReviewModal}
-          title="Tinjauan Berkas Pengajuan Keputusan Direktur"
+          title="Tinjauan Berkas Pengajuan Keputusan Direktur Utama"
           size="lg"
         >
           <div className="space-y-4">

@@ -138,7 +138,7 @@ export const MOCK_IT_TICKETS = [
     assignedTo: 'Fajar Nugroho (IT System Administrator)',
     slaDeadline: '2026-09-23T16:00:00Z',
     status: STATUS.RESOLVED,
-    resolution: 'Arsip log database bulan Juli 2026 telah diekstrak dari backup cold-storage dan dikirimkan via email terenkripsi ke Direktur.',
+    resolution: 'Arsip log database bulan Juli 2026 telah diekstrak dari backup cold-storage dan dikirimkan via email terenkripsi ke Direktur Utama.',
     closedAt: '2026-09-23T15:30:00Z',
     createdAt: '2026-09-23T09:00:00Z',
   },

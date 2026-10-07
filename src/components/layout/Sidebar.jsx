@@ -20,7 +20,7 @@ import toast from 'react-hot-toast';
 
 const NAV_ITEMS = [
   {
-    label: 'Direktur',
+    label: 'Direktur Utama',
     to: '/ops/director',
     icon: LayoutDashboard,
     roles: [ROLES.DIREKTUR],

@@ -418,7 +418,7 @@ async function runTests() {
   assert(foundReq !== undefined, '[DELETE REQUEST -> REFRESH] Pending deletion request remains in Director queue');
 
   // 11.6 DIRECTOR APPROVAL -> REFRESH -> STATUS REMAINS (Soft Delete / Inactive)
-  await directorAdapter.approveItem(foundReq.id, { notes: 'Disetujui untuk mutasi keluar', actorName: 'Juli Priyanto (Direktur)' });
+  await directorAdapter.approveItem(foundReq.id, { notes: 'Disetujui untuk mutasi keluar', actorName: 'Juli Priyanto (Direktur Utama)' });
   
   // Re-read employee from repo
   const afterApprovalEmp = (await employeeAdapter.getEmployeeById(createdAcceptanceEmp.id)).data;

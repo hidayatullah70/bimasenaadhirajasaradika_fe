@@ -40,9 +40,9 @@ Bangun dan pelihara PT. BARAK IOMS (*Integrated Outsourcing Management System*) 
 8. **Sinkronisasi Presensi Berbasis Klien & Lokasi:** Lembar presensi (`AttendanceSpreadsheetPage.jsx`) wajib secara otomatis menampilkan daftar karyawan aktif pada Klien dan Lokasi terpilih dengan kolom jam Datang, Pulang, Lembur disiapkan kosong untuk entri manual, serta menampilkan notifikasi informatif jika data karyawan pada lokasi klien tersebut masih kosong.
 9. **Isolasi Sesi Petugas Inputer:** Ketika petugas inputer (`user1`, `user2`) melakukan logout, riwayat kerja sementara / draft lembar ("Lembar Tersedia") wajib dibersihkan dari penyimpanan sesi agar login berikutnya dimulai dalam kondisi bersih.
 10. **Batas Maker-Checker (Segregation of Duties):**
-    - Penggajian: Dibuat oleh Keuangan (`payroll.create`), disetujui secara eksklusif oleh Direktur (`payroll.approve`).
-    - Presensi: Difinalisasi oleh HRD (`attendance.finalize`), hanya dibuka kembali oleh Direktur (`attendance.reopen`).
-    - Hapus Karyawan: Diajukan oleh HRD (`employee.delete.request`), dieksekusi soft-delete oleh Direktur (`employee.delete.approve`).
+    - Penggajian: Dibuat oleh Keuangan (`payroll.create`), disetujui secara eksklusif oleh Direktur Utama (`payroll.approve`).
+    - Presensi: Difinalisasi oleh HRD (`attendance.finalize`), hanya dibuka kembali oleh Direktur Utama (`attendance.reopen`).
+    - Hapus Karyawan: Diajukan oleh HRD (`employee.delete.request`), dieksekusi soft-delete oleh Direktur Utama (`employee.delete.approve`).
 11. **Tidak Ada Angka KPI Statis:** Seluruh indikator kartu analitik dashboard dihitung secara dinamis dari repository/data selektor aktif.
 12. **Kemandirian Penyimpanan Dokumen:** Berkas dan dokumen diabstraksikan melalui `fileAdapter.js` tanpa keterikatan pada satu penyedia cloud tertentu.
 13. **Tidak Ada Kunci/Rahasia di Source Control:** Variabel rahasia dan URL backend dikonfigurasi melalui `.env`.

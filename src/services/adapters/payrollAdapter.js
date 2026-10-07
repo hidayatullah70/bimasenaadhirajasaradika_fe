@@ -99,7 +99,7 @@ export const payrollAdapter = {
     return data;
   },
 
-  async approvePayroll(periodId, actorName = 'Juli Priyanto (Direktur)') {
+  async approvePayroll(periodId, actorName = 'Juli Priyanto (Direktur Utama)') {
     if (isMock) {
       const periods = getPeriodsStore();
       const idx = periods.findIndex((p) => p.id === periodId);
