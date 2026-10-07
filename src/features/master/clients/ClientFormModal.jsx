@@ -3,10 +3,15 @@
  * Source of Truth: PRD Section 9 & API-SPEC Section 3.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { X, Save } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import toast from 'react-hot-toast';
+import {
+  DEFAULT_CLIENT_CATEGORIES,
+  getCustomClientCategories,
+  saveCustomClientCategory,
+} from '@/constants/business';
 
 export default function ClientFormModal({ isOpen, client, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -26,8 +31,36 @@ export default function ClientFormModal({ isOpen, client, onClose, onSave }) {
   });
 
   const [errors, setErrors] = useState({});
+  const [customCategoryList, setCustomCategoryList] = useState(() => getCustomClientCategories());
+  const [isInputtingNewCategory, setIsInputtingNewCategory] = useState(false);
+  const [newCategoryInput, setNewCategoryInput] = useState('');
 
   useEffect(() => {
+    const handleCategoryUpdate = () => {
+      setCustomCategoryList(getCustomClientCategories());
+    };
+    window.addEventListener('barak_client_categories_updated', handleCategoryUpdate);
+    return () => window.removeEventListener('barak_client_categories_updated', handleCategoryUpdate);
+  }, []);
+
+  const allCategoryOptions = useMemo(() => {
+    const combined = [...DEFAULT_CLIENT_CATEGORIES];
+    const existingValues = new Set(combined.map((c) => c.value.toLowerCase()));
+    customCategoryList.forEach((c) => {
+      if (!existingValues.has(c.value.toLowerCase())) {
+        combined.push(c);
+        existingValues.add(c.value.toLowerCase());
+      }
+    });
+    if (client?.type && !existingValues.has(client.type.toLowerCase())) {
+      combined.push({ value: client.type, label: client.type });
+    }
+    return combined;
+  }, [customCategoryList, client]);
+
+  useEffect(() => {
+    setIsInputtingNewCategory(false);
+    setNewCategoryInput('');
     if (client) {
       setFormData({
         name: client.name || '',
@@ -69,6 +102,7 @@ export default function ClientFormModal({ isOpen, client, onClose, onSave }) {
   const validate = () => {
     const errs = {};
     if (!formData.name.trim()) errs.name = 'Nama instansi/klien wajib diisi.';
+    if (!formData.type?.trim()) errs.type = 'Kategori klien wajib diisi atau dipilih.';
     if (!formData.picName.trim()) errs.picName = 'Nama PIC wajib diisi.';
     if (!formData.picPhone.trim()) errs.picPhone = 'Nomor telepon PIC wajib diisi.';
     if (!formData.address.trim()) errs.address = 'Alamat kantor klien wajib diisi.';
@@ -82,7 +116,13 @@ export default function ClientFormModal({ isOpen, client, onClose, onSave }) {
       toast.error('Mohon lengkapi kolom yang wajib diisi.');
       return;
     }
-    onSave(formData);
+    const finalType = formData.type.trim();
+    saveCustomClientCategory(finalType);
+    setCustomCategoryList(getCustomClientCategories());
+    onSave({
+      ...formData,
+      type: finalType,
+    });
   };
 
   return (
@@ -119,17 +159,83 @@ export default function ClientFormModal({ isOpen, client, onClose, onSave }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block font-medium text-ink mb-1">Kategori Klien</label>
-              <select
-                value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
-              >
-                <option value="Logistik">Logistik & Ekspedisi</option>
-                <option value="Area">Kawasan Industri / Komersial</option>
-                <option value="Drop Point">Drop Point Jaringan</option>
-                <option value="Perbankan">Perbankan & Finansial</option>
-              </select>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block font-medium text-ink">Kategori Klien</label>
+                {isInputtingNewCategory ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsInputtingNewCategory(false);
+                      setNewCategoryInput('');
+                      const fallback = allCategoryOptions[0]?.value || 'Logistik';
+                      setFormData((prev) => ({ ...prev, type: fallback }));
+                    }}
+                    className="text-[11px] text-primary-red hover:underline font-semibold"
+                  >
+                    ← Pilih List
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsInputtingNewCategory(true);
+                      setNewCategoryInput('');
+                      setFormData((prev) => ({ ...prev, type: '' }));
+                    }}
+                    className="text-[11px] text-primary-red hover:underline font-semibold"
+                  >
+                    + Tambah Baru
+                  </button>
+                )}
+              </div>
+
+              {isInputtingNewCategory ? (
+                <div>
+                  <input
+                    type="text"
+                    autoFocus
+                    value={newCategoryInput}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setNewCategoryInput(val);
+                      setFormData((prev) => ({ ...prev, type: val }));
+                    }}
+                    className={`w-full px-3 py-2 border rounded-lg bg-white text-ink focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red ${
+                      errors.type ? 'border-error ring-1 ring-error/30' : 'border-primary-red/60'
+                    }`}
+                    placeholder="Ketik kategori klien baru..."
+                  />
+                  {errors.type && <p className="text-error text-[11px] mt-1">{errors.type}</p>}
+                </div>
+              ) : (
+                <div>
+                  <select
+                    value={formData.type}
+                    onChange={(e) => {
+                      if (e.target.value === '__NEW__') {
+                        setIsInputtingNewCategory(true);
+                        setNewCategoryInput('');
+                        setFormData((prev) => ({ ...prev, type: '' }));
+                      } else {
+                        setFormData((prev) => ({ ...prev, type: e.target.value }));
+                      }
+                    }}
+                    className={`w-full px-3 py-2 border rounded-lg bg-white text-ink ${
+                      errors.type ? 'border-error ring-1 ring-error/30' : 'border-border'
+                    }`}
+                  >
+                    {allCategoryOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label || opt.value}
+                      </option>
+                    ))}
+                    <option value="__NEW__" className="font-semibold text-primary-red">
+                      + Tambah Baru...
+                    </option>
+                  </select>
+                  {errors.type && <p className="text-error text-[11px] mt-1">{errors.type}</p>}
+                </div>
+              )}
             </div>
             <div>
               <label className="block font-medium text-ink mb-1">Kota Operasional</label>

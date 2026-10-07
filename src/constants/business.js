@@ -44,6 +44,65 @@ export const REAL_CLIENTS = Object.freeze([
   { id: 'CLI-000018', name: 'DROP POINT KELAPA DUA', type: 'Drop Point' },
 ]);
 
+/** Canonical Client Categories (PRD Section 9) */
+export const DEFAULT_CLIENT_CATEGORIES = Object.freeze([
+  { value: 'Logistik', label: 'Logistik & Ekspedisi' },
+  { value: 'Area', label: 'Kawasan Industri / Komersial' },
+  { value: 'Drop Point', label: 'Drop Point Jaringan' },
+  { value: 'Perbankan', label: 'Perbankan & Finansial' },
+]);
+
+/**
+ * Retrieve user-defined custom client categories from local persistence
+ */
+export function getCustomClientCategories() {
+  if (typeof window === 'undefined') return [];
+  try {
+    const stored = localStorage.getItem('barak_custom_client_categories');
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Persist a newly typed client category into local storage
+ */
+export function saveCustomClientCategory(category) {
+  if (typeof window === 'undefined' || !category) return null;
+  try {
+    const raw = typeof category === 'string' ? category.trim() : (category.label || category.value || '').trim();
+    if (!raw) return null;
+    const value = typeof category === 'object' && category.value ? category.value.trim() : raw;
+    const label = typeof category === 'object' && category.label ? category.label.trim() : raw;
+
+    const list = getCustomClientCategories();
+    const existing = list.find(
+      (c) => c.value.toLowerCase() === value.toLowerCase() || c.label.toLowerCase() === label.toLowerCase()
+    );
+    if (!existing) {
+      const newEntry = { value, label };
+      list.push(newEntry);
+      localStorage.setItem('barak_custom_client_categories', JSON.stringify(list));
+      window.dispatchEvent(new CustomEvent('barak_client_categories_updated', { detail: newEntry }));
+      return newEntry;
+    }
+    return existing;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Retrieve all client categories (canonical + custom)
+ */
+export function getAllClientCategories() {
+  const custom = getCustomClientCategories();
+  const canonicalValues = new Set(DEFAULT_CLIENT_CATEGORIES.map((c) => c.value.toLowerCase()));
+  const uniqueCustom = custom.filter((c) => !canonicalValues.has(c.value.toLowerCase()));
+  return [...DEFAULT_CLIENT_CATEGORIES, ...uniqueCustom];
+}
+
 /** PT. BARAK service lines (PRD Section 1) */
 export const SERVICE_TYPES = Object.freeze([
   { key: 'security', label: 'Jasa Pengamanan / Security', slug: 'security' },

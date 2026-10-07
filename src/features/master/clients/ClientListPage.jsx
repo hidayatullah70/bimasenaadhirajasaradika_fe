@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { StateLoading, StateEmpty } from '@/components/ui/StateViews';
 import ClientFormModal from './ClientFormModal';
+import { getAllClientCategories } from '@/constants/business';
 import toast from 'react-hot-toast';
 
 export default function ClientListPage() {
@@ -25,11 +26,20 @@ export default function ClientListPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [type, setType] = useState('');
+  const [categories, setCategories] = useState(() => getAllClientCategories());
   const [page, setPage] = useState(1);
   const [meta, setMeta] = useState({ total: 0, totalPages: 1 });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
+
+  useEffect(() => {
+    const handleCategoryUpdate = () => {
+      setCategories(getAllClientCategories());
+    };
+    window.addEventListener('barak_client_categories_updated', handleCategoryUpdate);
+    return () => window.removeEventListener('barak_client_categories_updated', handleCategoryUpdate);
+  }, []);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -113,9 +123,11 @@ export default function ClientListPage() {
             className="px-3 py-2 text-xs border border-border rounded-lg bg-white text-ink"
           >
             <option value="">Semua Kategori</option>
-            <option value="Logistik">Logistik</option>
-            <option value="Area">Kawasan Area</option>
-            <option value="Drop Point">Drop Point Jaringan</option>
+            {categories.map((cat) => (
+              <option key={cat.value} value={cat.value}>
+                {cat.label || cat.value}
+              </option>
+            ))}
           </select>
 
           {canCreate && (
@@ -157,7 +169,17 @@ export default function ClientListPage() {
                       {c.name}
                     </h3>
                   </div>
-                  <Badge variant={c.type === 'Logistik' ? 'danger' : c.type === 'Area' ? 'info' : 'warning'}>
+                  <Badge
+                    variant={
+                      c.type === 'Logistik'
+                        ? 'danger'
+                        : c.type === 'Area'
+                        ? 'info'
+                        : c.type === 'Drop Point'
+                        ? 'warning'
+                        : 'default'
+                    }
+                  >
                     {c.type}
                   </Badge>
                 </div>
