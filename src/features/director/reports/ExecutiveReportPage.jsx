@@ -117,8 +117,8 @@ export default function ExecutiveReportPage() {
                 </div>
               </div>
               <p className="text-2xs text-muted mt-2">
-                Izin Operasional Mabes Polri: ABUJPI : 04986/08-10-2024 ·  Jl. Melati I RT. 002/RW.005 Kel. Tanah
-                Tinggi Kec. Tangerang Kota Tangerang, Banten 15119</p>
+                Jl. Melati I RT. 002/RW.005 Kel. Tanah Tinggi Kec. Tangerang Kota Tangerang, Banten 15119
+              </p>
             </div>
 
             <div className="text-left sm:text-right text-xs">
