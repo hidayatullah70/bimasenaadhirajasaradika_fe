@@ -7,7 +7,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { X, Save, Camera, Upload, Trash2, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { MOCK_CLIENTS, MOCK_LOCATIONS } from '@/services/mock/mockMasterData';
-import { EMPLOYEE_SERVICE_TYPES, PTKP_OPTIONS, getServiceLabel, getCustomServices, saveCustomService } from '@/constants/business';
+import { EMPLOYEE_SERVICE_TYPES, PTKP_OPTIONS, getServiceLabel, getCustomServices, saveCustomService, isCertificationService } from '@/constants/business';
 import { resizeImageTo3x4 } from '@/utils/imageResize';
 import EmployeeImportModal from './EmployeeImportModal';
 import toast from 'react-hot-toast';
@@ -46,7 +46,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, o
     jenis_layanan: 'head-office',
     penugasan_klien: allClients[0]?.id || '',
     lokasi_penugasan: allLocations[0]?.id || '',
-    sertifikasi: 'Gada Pratama',
+    sertifikasi: '',
     nama_bank: 'BCA',
     nomor_rekening_bank: '',
     rekening_atas_nama: '',
@@ -146,7 +146,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, o
         departemen: employee.departemen || 'Operasional',
         penugasan_klien: employee.penugasan_klien || MOCK_CLIENTS[0]?.id || '',
         lokasi_penugasan: employee.lokasi_penugasan || MOCK_LOCATIONS[0]?.id || '',
-        sertifikasi: employee.sertifikasi || 'Gada Pratama',
+        sertifikasi: employee.sertifikasi || '',
         nama_bank: 'BCA',
         nomor_rekening_bank: employee.nomor_rekening_bank || '',
         rekening_atas_nama: employee.rekening_atas_nama || employee.nama_pemilik_rekening || employee.nama_lengkap_sesuai_KTP || '',
@@ -177,7 +177,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, o
         departemen: 'Operasional',
         penugasan_klien: MOCK_CLIENTS[0]?.id || '',
         lokasi_penugasan: MOCK_LOCATIONS[0]?.id || '',
-        sertifikasi: 'Gada Pratama',
+        sertifikasi: '',
         nama_bank: 'BCA',
         nomor_rekening_bank: '',
         rekening_atas_nama: '',
@@ -353,11 +353,15 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, o
     const sObj = allServiceOptions.find((s) => s.key === finalLayananKey) || { key: finalLayananKey, label: finalLayananLabel };
     const serviceLabel = sObj ? sObj.label : finalLayananLabel;
 
+    const isCertRequired = isCertificationService(finalLayananKey || finalLayananLabel);
+    const finalSertifikasi = isCertRequired ? (formData.sertifikasi || (finalLayananKey === 'kurir' ? 'SIM C / A' : 'Gada Pratama')) : '';
+
     const payload = {
       ...formData,
       jenis_layanan: finalLayananKey,
       jenis_pekerjaan: serviceLabel,
       jabatan: finalJabatan,
+      sertifikasi: finalSertifikasi,
       penugasan_klien: isHo ? '' : formData.penugasan_klien,
       lokasi_penugasan: isHo ? '' : formData.lokasi_penugasan,
       clientName: isHo ? 'Kantor Pusat PT. BARAK' : (clientObj ? clientObj.name : ''),
@@ -846,6 +850,23 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, o
                     ))}
                   </select>
                 </div>
+              </div>
+            )}
+
+            {isCertificationService(formData.jenis_layanan || formData.jenis_pekerjaan) && (
+              <div className="mt-3">
+                <label className="block font-medium text-ink mb-1">Sertifikasi & Lisensi</label>
+                <input
+                  type="text"
+                  value={formData.sertifikasi}
+                  onChange={(e) => setFormData({ ...formData, sertifikasi: e.target.value })}
+                  placeholder={
+                    (formData.jenis_layanan || '').includes('kurir')
+                      ? 'Contoh: SIM C, SIM A, SIM B1 Umum...'
+                      : 'Contoh: Gada Pratama, Gada Madya, Gada Utama...'
+                  }
+                  className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
+                />
               </div>
             )}
 

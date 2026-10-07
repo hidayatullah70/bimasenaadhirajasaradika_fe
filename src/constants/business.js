@@ -128,6 +128,23 @@ export function getServiceLabel(key) {
 }
 
 /**
+ * Helper to determine if a service line requires/displays certification & license
+ * (Strictly for Security / Pengamanan and Courier / Ekspedisi)
+ */
+export function isCertificationService(serviceKeyOrLabel) {
+  if (!serviceKeyOrLabel) return false;
+  const s = String(serviceKeyOrLabel).toLowerCase();
+  return (
+    s === 'security' ||
+    s === 'kurir' ||
+    s.includes('pengamanan') ||
+    s.includes('security') ||
+    s.includes('kurir') ||
+    s.includes('ekspedisi')
+  );
+}
+
+/**
  * 6 Canonical Outsourcing Service Types (Requirement 8)
  */
 export const OUTSOURCING_SERVICES = Object.freeze({

@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { PERMISSIONS } from '@/constants/permissions';
-import { getServiceLabel } from '@/constants/business';
+import { getServiceLabel, isCertificationService } from '@/constants/business';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import placementRepository from '@/data/repositories/placementRepository';
@@ -183,10 +183,12 @@ export default function EmployeeDetailDrawer({ employee, isOpen, onClose, onEdit
                   {employee.tanggal_masuk}
                 </p>
               </div>
-              <div className="p-3 rounded-lg bg-canvas border border-border">
-                <p className="text-muted">Sertifikasi & Lisensi</p>
-                <p className="font-semibold text-primary-red mt-0.5">{employee.sertifikasi || 'Gada Pratama'}</p>
-              </div>
+              {isCertificationService(employee.jenis_layanan || employee.jenis_pekerjaan || employee.departemen) && (
+                <div className="p-3 rounded-lg bg-canvas border border-border">
+                  <p className="text-muted">Sertifikasi & Lisensi</p>
+                  <p className="font-semibold text-primary-red mt-0.5">{employee.sertifikasi || '-'}</p>
+                </div>
+              )}
             </div>
 
             {/* Riwayat Penempatan & Rotasi (Requirement 4) */}

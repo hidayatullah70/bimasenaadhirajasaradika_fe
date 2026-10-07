@@ -15,7 +15,7 @@ import locationAdapter from '@/services/adapters/locationAdapter';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ROLES } from '@/constants/roles';
 import { PERMISSIONS } from '@/constants/permissions';
-import { EMPLOYEE_SERVICE_TYPES, getServiceLabel, getAllEmployeeServiceTypes } from '@/constants/business';
+import { EMPLOYEE_SERVICE_TYPES, getServiceLabel, getAllEmployeeServiceTypes, isCertificationService } from '@/constants/business';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { StateLoading, StateEmpty } from '@/components/ui/StateViews';
@@ -363,7 +363,12 @@ export default function EmployeeListPage() {
                       <p className="font-medium text-ink">
                         {getServiceLabel(emp.jenis_layanan) || emp.jenis_pekerjaan}
                       </p>
-                      <p className="text-[11px] text-muted">{emp.jabatan} • {emp.sertifikasi || 'Standard'}</p>
+                      <p className="text-[11px] text-muted">
+                        {emp.jabatan}
+                        {isCertificationService(emp.jenis_layanan || emp.jenis_pekerjaan || emp.departemen) && emp.sertifikasi
+                          ? ` • ${emp.sertifikasi}`
+                          : ''}
+                      </p>
                     </td>
 
                     {/* Klien & Lokasi */}
