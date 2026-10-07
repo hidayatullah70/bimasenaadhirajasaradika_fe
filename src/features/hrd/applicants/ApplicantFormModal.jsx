@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/Button';
 import toast from 'react-hot-toast';
 
 const DEPARTMENT_SERVICES = [
+  'Head Office (HO)',
   'Jasa Pengamanan / Security',
   'Ekspedisi Kurir',
   'Parkir',
@@ -28,6 +29,14 @@ const DEPARTMENT_SERVICES = [
 ];
 
 const DEPARTMENT_POSITIONS = {
+  'Head Office (HO)': [
+    'Staff Operasional HO',
+    'HR & GA Staff',
+    'Finance & Accounting Staff',
+    'IT Support & Developer',
+    'Legal & Compliance Staff',
+    'Marketing & Business Development',
+  ],
   'Jasa Pengamanan / Security': [
     'Staff / Anggota Security',
     'Danru (Komandan Regu)',

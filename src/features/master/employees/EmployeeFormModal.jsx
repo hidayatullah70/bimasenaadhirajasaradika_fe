@@ -7,7 +7,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { X, Save, Camera, Upload, Trash2, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { MOCK_CLIENTS, MOCK_LOCATIONS } from '@/services/mock/mockMasterData';
-import { SERVICE_TYPES, PTKP_OPTIONS, getServiceLabel } from '@/constants/business';
+import { EMPLOYEE_SERVICE_TYPES, PTKP_OPTIONS, getServiceLabel } from '@/constants/business';
 import { resizeImageTo3x4 } from '@/utils/imageResize';
 import EmployeeImportModal from './EmployeeImportModal';
 import toast from 'react-hot-toast';
@@ -40,10 +40,10 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, o
     nomor_telepon: '',
     email: '',
     status_kerja: 'TETAP',
-    jenis_pekerjaan: 'Jasa Pengamanan / Security',
+    jenis_pekerjaan: 'Head Office (HO)',
     jabatan: 'Staff',
     departemen: 'Operasional',
-    jenis_layanan: 'security',
+    jenis_layanan: 'head-office',
     penugasan_klien: allClients[0]?.id || '',
     lokasi_penugasan: allLocations[0]?.id || '',
     sertifikasi: 'Gada Pratama',
@@ -136,8 +136,8 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, o
         nomor_telepon: '',
         email: '',
         status_kerja: 'TETAP',
-        jenis_layanan: 'security',
-        jenis_pekerjaan: 'Jasa Pengamanan / Security',
+        jenis_layanan: 'head-office',
+        jenis_pekerjaan: 'Head Office (HO)',
         jabatan: 'Staff',
         departemen: 'Operasional',
         penugasan_klien: MOCK_CLIENTS[0]?.id || '',
@@ -302,7 +302,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, o
     const clientObj = allClients.find((c) => c.id === formData.penugasan_klien || c.code === formData.penugasan_klien);
     const locObj = allLocations.find((l) => l.id === formData.lokasi_penugasan || l.code === formData.lokasi_penugasan);
 
-    const sObj = SERVICE_TYPES.find((s) => s.key === formData.jenis_layanan);
+    const sObj = EMPLOYEE_SERVICE_TYPES.find((s) => s.key === formData.jenis_layanan);
     const serviceLabel = sObj ? sObj.label : (formData.jenis_pekerjaan || formData.jenis_layanan);
 
     const payload = {
@@ -564,12 +564,12 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, o
             <h4 className="font-bold text-ink mb-2">Penempatan & Jabatan</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <div>
-                <label className="block font-medium text-ink mb-1">Layanan Outsourcing</label>
+                <label className="block font-medium text-ink mb-1">Layanan</label>
                 <select
                   value={formData.jenis_layanan}
                   onChange={(e) => {
                     const selectedKey = e.target.value;
-                    const sObj = SERVICE_TYPES.find((s) => s.key === selectedKey);
+                    const sObj = EMPLOYEE_SERVICE_TYPES.find((s) => s.key === selectedKey);
                     const serviceLabel = sObj ? sObj.label : selectedKey;
                     setFormData((prev) => ({
                       ...prev,
@@ -579,7 +579,7 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, o
                   }}
                   className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
                 >
-                  {SERVICE_TYPES.map((s) => (
+                  {EMPLOYEE_SERVICE_TYPES.map((s) => (
                     <option key={s.key} value={s.key}>{s.label}</option>
                   ))}
                 </select>

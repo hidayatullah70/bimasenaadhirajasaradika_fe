@@ -71,7 +71,7 @@ export default function EmployeeImportModal({
         'Email': 'ahmad.fauzi@barak.co.id',
         'Alamat Lengkap (KTP)': 'Jl. Daan Mogot No. 12, Jakarta Barat',
         'Jabatan / Role': 'Staff',
-        'Layanan Outsourcing': 'Jasa Pengamanan / Security',
+        'Layanan': 'Jasa Pengamanan / Security',
         'Status Ikatan Kerja': 'TETAP',
         'Tanggal Bergabung (YYYY-MM-DD)': '2026-01-01',
         'Klien Penempatan': sampleClient?.name || 'JNT LOGISTIK',
@@ -94,7 +94,7 @@ export default function EmployeeImportModal({
         'Email': 'siti.nur@barak.co.id',
         'Alamat Lengkap (KTP)': 'Jl. Sudirman No. 45, Tangerang',
         'Jabatan / Role': 'Danru (Komandan Regu)',
-        'Layanan Outsourcing': 'Jasa Pengamanan / Security',
+        'Layanan': 'Jasa Pengamanan / Security',
         'Status Ikatan Kerja': 'TETAP',
         'Tanggal Bergabung (YYYY-MM-DD)': '2026-02-01',
         'Klien Penempatan': sampleClient?.name || 'JNT LOGISTIK',
@@ -239,7 +239,16 @@ export default function EmployeeImportModal({
             alamat_sesuai_KTP: alamat,
             jabatan,
             jenis_pekerjaan: layanan,
-            jenis_layanan: layanan.toLowerCase().includes('clean') ? 'cleaning' : layanan.toLowerCase().includes('driver') ? 'driver' : 'security',
+            jenis_layanan: (() => {
+              const lower = layanan.toLowerCase();
+              if (lower.includes('head') || lower.includes('ho')) return 'head-office';
+              if (lower.includes('kurir') || lower.includes('driver') || lower.includes('ekspedisi')) return 'kurir';
+              if (lower.includes('parkir')) return 'parkir';
+              if (lower.includes('clean')) return 'cleaning-service';
+              if (lower.includes('man') || lower.includes('power')) return 'man-power';
+              if (lower.includes('loss') || lower.includes('prev')) return 'loss-prevention';
+              return 'security';
+            })(),
             status_kerja: statusKerja,
             tanggal_masuk: tglMasuk,
             penugasan_klien: rowClientId,

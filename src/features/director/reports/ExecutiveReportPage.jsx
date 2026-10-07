@@ -332,7 +332,6 @@ export default function ExecutiveReportPage() {
                 <div>
                   <p className="text-muted print:text-[7px]">Disiapkan Oleh,</p>
                   <div className="h-14 print:h-7 flex items-center justify-center">
-                    <span className="font-serif italic text-slate-400 text-sm print:text-[11px]">[Nazi Rinaldi / Finance]</span>
                   </div>
                   <p className="font-bold text-ink print:text-[8px]">Nazi Rinaldi</p>
                   <p className="text-2xs print:text-[7px] text-muted">Finance & Accounting Manager</p>
@@ -341,7 +340,6 @@ export default function ExecutiveReportPage() {
                 <div>
                   <p className="text-muted print:text-[7px]">Diperiksa Oleh,</p>
                   <div className="h-14 print:h-7 flex items-center justify-center">
-                    <span className="font-serif italic text-slate-400 text-sm print:text-[11px]">[Zaenal Arifin / HRD]</span>
                   </div>
                   <p className="font-bold text-ink print:text-[8px]">Zaenal Arifin</p>
                   <p className="text-2xs print:text-[7px] text-muted">Head of Human Resources</p>
@@ -350,9 +348,6 @@ export default function ExecutiveReportPage() {
                 <div>
                   <p className="text-muted print:text-[7px]">Disahkan & Disetujui Oleh,</p>
                   <div className="h-14 print:h-7 flex items-center justify-center">
-                    <span className="font-serif italic text-primary-red font-bold text-base print:text-[12px]">
-                      Juli Priyanto
-                    </span>
                   </div>
                   <p className="font-bold text-ink print:text-[8px]">Juli Priyanto</p>
                   <p className="text-2xs print:text-[7px] text-primary-red font-semibold">Direktur Utama</p>

@@ -15,7 +15,7 @@ import locationAdapter from '@/services/adapters/locationAdapter';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ROLES } from '@/constants/roles';
 import { PERMISSIONS } from '@/constants/permissions';
-import { SERVICE_TYPES, getServiceLabel } from '@/constants/business';
+import { EMPLOYEE_SERVICE_TYPES, getServiceLabel } from '@/constants/business';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { StateLoading, StateEmpty } from '@/components/ui/StateViews';
@@ -236,7 +236,7 @@ export default function EmployeeListPage() {
             className="px-2.5 py-2 text-xs border border-border rounded-lg bg-white text-ink"
           >
             <option value="">Semua Layanan</option>
-            {SERVICE_TYPES.map((s) => (
+            {EMPLOYEE_SERVICE_TYPES.map((s) => (
               <option key={s.key} value={s.key}>{s.label}</option>
             ))}
           </select>

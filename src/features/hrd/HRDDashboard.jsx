@@ -67,7 +67,10 @@ export default function HRDDashboard() {
             role.includes('DIREKTUR') ||
             role.includes('MANAGER') ||
             role.includes('LEGAL') ||
-            svc === 'INTERNAL'
+            svc === 'INTERNAL' ||
+            svc === 'HEAD-OFFICE' ||
+            svc === 'HEAD_OFFICE' ||
+            svc.includes('HEAD')
           );
         }).length;
         const outsourcing = Math.max(0, total - internal);

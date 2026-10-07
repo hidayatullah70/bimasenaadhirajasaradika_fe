@@ -54,12 +54,23 @@ export const SERVICE_TYPES = Object.freeze([
   { key: 'loss-prevention', label: 'Loss Prevention', slug: 'loss-prevention' },
 ]);
 
+/** PT. BARAK employee & operational service lines (including Head Office) */
+export const EMPLOYEE_SERVICE_TYPES = Object.freeze([
+  { key: 'head-office', label: 'Head Office (HO)', slug: 'head-office' },
+  { key: 'security', label: 'Jasa Pengamanan / Security', slug: 'security' },
+  { key: 'kurir', label: 'Ekspedisi Kurir', slug: 'kurir' },
+  { key: 'parkir', label: 'Parkir', slug: 'parkir' },
+  { key: 'cleaning-service', label: 'Cleaning Service', slug: 'cleaning-service' },
+  { key: 'man-power', label: 'Man Power', slug: 'man-power' },
+  { key: 'loss-prevention', label: 'Loss Prevention', slug: 'loss-prevention' },
+]);
+
 /**
  * Helper to get user-friendly service label from key or slug
  */
 export function getServiceLabel(key) {
   if (!key) return '-';
-  const found = SERVICE_TYPES.find(
+  const found = EMPLOYEE_SERVICE_TYPES.find(
     (s) => s.key === key || s.slug === key || s.label?.toLowerCase() === key?.toLowerCase()
   );
   return found ? found.label : key;

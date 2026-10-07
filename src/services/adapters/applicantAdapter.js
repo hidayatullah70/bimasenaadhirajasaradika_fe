@@ -15,8 +15,9 @@ const isMock = import.meta.env.VITE_API_MODE !== 'rest';
 const STORAGE_KEY = 'barak_applicants';
 
 function mapDeptToServiceKey(dept) {
-  if (!dept) return 'security';
+  if (!dept) return 'head-office';
   const lower = dept.toLowerCase();
+  if (lower.includes('head') || lower.includes('ho')) return 'head-office';
   if (lower.includes('kurir') || lower.includes('ekspedisi')) return 'kurir';
   if (lower.includes('parkir')) return 'parkir';
   if (lower.includes('cleaning')) return 'cleaning-service';

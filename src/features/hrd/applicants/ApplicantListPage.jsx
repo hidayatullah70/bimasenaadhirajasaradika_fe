@@ -385,6 +385,7 @@ export default function ApplicantListPage() {
               className="px-3 py-2 border border-border rounded-lg bg-white text-ink font-medium"
             >
               <option value="">Semua Layanan / Departemen</option>
+              <option value="Head Office (HO)">Head Office (HO)</option>
               <option value="Jasa Pengamanan / Security">Jasa Pengamanan / Security</option>
               <option value="Ekspedisi Kurir">Ekspedisi Kurir</option>
               <option value="Parkir">Parkir</option>
