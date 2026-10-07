@@ -11,6 +11,12 @@ import clsx from 'clsx';
 export function Modal({ isOpen, onClose, title, children, size = 'md', className }) {
   const overlayRef = useRef(null);
   const firstFocusRef = useRef(null);
+  const panelRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
 
   const SIZE_CLASSES = {
     sm: 'max-w-md',
@@ -23,9 +29,15 @@ export function Modal({ isOpen, onClose, title, children, size = 'md', className
   useEffect(() => {
     if (!isOpen) return;
     const prev = document.activeElement;
-    firstFocusRef.current?.focus();
 
-    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    // Only focus initial element if focus is not already inside the modal panel
+    if (!panelRef.current?.contains(document.activeElement)) {
+      firstFocusRef.current?.focus();
+    }
+
+    const onKey = (e) => {
+      if (e.key === 'Escape') onCloseRef.current?.();
+    };
     document.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
 
@@ -34,7 +46,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md', className
       document.body.style.overflow = '';
       prev?.focus();
     };
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -55,6 +67,7 @@ export function Modal({ isOpen, onClose, title, children, size = 'md', className
 
       {/* Panel */}
       <div
+        ref={panelRef}
         className={clsx(
           'relative w-full bg-surface rounded-xl shadow-modal flex flex-col max-h-[90vh]',
           SIZE_CLASSES[size],

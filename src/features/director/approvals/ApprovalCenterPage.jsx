@@ -54,15 +54,15 @@ export default function ApprovalCenterPage() {
     fetchApprovals();
   }, [fetchApprovals]);
 
-  const openReviewModal = (item) => {
+  const openReviewModal = useCallback((item) => {
     setSelectedItem(item);
     setDirectorNotes('');
-  };
+  }, []);
 
-  const closeReviewModal = () => {
+  const closeReviewModal = useCallback(() => {
     setSelectedItem(null);
     setDirectorNotes('');
-  };
+  }, []);
 
   const handleApprove = async () => {
     if (!selectedItem) return;
@@ -96,8 +96,13 @@ export default function ApprovalCenterPage() {
 
   const handleReject = async () => {
     if (!selectedItem) return;
-    if (!directorNotes.trim()) {
+    const trimmedNotes = directorNotes.trim();
+    if (!trimmedNotes) {
       toast.error('Wajib mengisi alasan penolakan pada catatan Direktur Utama.');
+      return;
+    }
+    if (trimmedNotes.length < 5) {
+      toast.error('Alasan penolakan minimal 5 karakter agar instruksi terdokumentasi jelas.');
       return;
     }
 
@@ -401,16 +406,22 @@ export default function ApprovalCenterPage() {
             {/* Existing Director Notes or Input */}
             {selectedItem.status === 'PENDING' ? (
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-ink flex items-center gap-1">
-                  Catatan / Instruksi Direktur Utama
-                  <span className="text-muted font-normal">(Wajib jika menolak)</span>
-                </label>
+                <div className="flex items-center justify-between">
+                  <label htmlFor="director-instruction-notes" className="text-xs font-bold text-ink flex items-center gap-1">
+                    Catatan / Instruksi Direktur Utama
+                    <span className="text-muted font-normal">(Wajib jika menolak)</span>
+                  </label>
+                  <span className="text-2xs text-muted font-mono">
+                    {directorNotes.length} karakter
+                  </span>
+                </div>
                 <textarea
-                  rows={3}
+                  id="director-instruction-notes"
+                  rows={4}
                   value={directorNotes}
                   onChange={(e) => setDirectorNotes(e.target.value)}
-                  placeholder="Tambahkan catatan pertimbangan eksekutif atau alasan penolakan..."
-                  className="w-full p-2.5 text-xs sm:text-sm bg-white border border-border rounded-lg focus:outline-hidden focus:ring-1 focus:ring-primary-red"
+                  placeholder="Tambahkan catatan pertimbangan eksekutif atau uraian alasan penolakan secara lengkap..."
+                  className="w-full p-3 text-xs sm:text-sm bg-white border border-border rounded-lg focus:outline-hidden focus:ring-1 focus:ring-primary-red min-h-[110px] resize-y leading-relaxed text-ink"
                 />
               </div>
             ) : (
