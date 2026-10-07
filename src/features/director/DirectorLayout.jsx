@@ -76,9 +76,9 @@ export default function DirectorLayout() {
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 print:space-y-0">
       {/* Top Header & Navigation Tabs */}
-      <div className="border-b border-border bg-white rounded-xl shadow-xs p-4 sm:p-6 pb-0">
+      <div className="border-b border-border bg-white rounded-xl shadow-xs p-4 sm:p-6 pb-0 print:hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
           <div>
             <div className="flex items-center gap-2">

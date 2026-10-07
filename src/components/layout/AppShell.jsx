@@ -66,33 +66,41 @@ export default function AppShell() {
   }, []);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-canvas">
-      <Sidebar
-        collapsed={sidebarCollapsed}
-        onToggle={() => setSidebarCollapsed((v) => !v)}
-        mobileOpen={mobileMenuOpen}
-        onMobileClose={() => setMobileMenuOpen(false)}
-      />
+    <div className="flex h-screen overflow-hidden bg-canvas print:h-auto print:overflow-visible print:bg-white">
+      <div className="print:hidden">
+        <Sidebar
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed((v) => !v)}
+          mobileOpen={mobileMenuOpen}
+          onMobileClose={() => setMobileMenuOpen(false)}
+        />
+      </div>
 
       {/* Main area */}
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <Topbar
-          onMobileMenuOpen={() => setMobileMenuOpen(true)}
-          unreadCount={unreadCount}
-          onSearchOpen={() => setSearchOpen(true)}
-        />
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden print:overflow-visible print:h-auto print:w-full print:block">
+        <div className="print:hidden">
+          <Topbar
+            onMobileMenuOpen={() => setMobileMenuOpen(true)}
+            unreadCount={unreadCount}
+            onSearchOpen={() => setSearchOpen(true)}
+          />
+        </div>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-screen-2xl mx-auto">
-            <Breadcrumb />
+        <main className="flex-1 overflow-y-auto print:overflow-visible print:h-auto print:w-full print:p-0">
+          <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-screen-2xl mx-auto print:p-0 print:m-0 print:max-w-none print:w-full">
+            <div className="print:hidden">
+              <Breadcrumb />
+            </div>
             <Outlet context={{ refreshUnread }} />
           </div>
         </main>
       </div>
 
       {/* Global Search overlay */}
-      <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+      <div className="print:hidden">
+        <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+      </div>
     </div>
   );
 }
