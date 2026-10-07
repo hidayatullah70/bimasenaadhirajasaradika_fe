@@ -15,7 +15,7 @@ import locationAdapter from '@/services/adapters/locationAdapter';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ROLES } from '@/constants/roles';
 import { PERMISSIONS } from '@/constants/permissions';
-import { EMPLOYEE_SERVICE_TYPES, getServiceLabel } from '@/constants/business';
+import { EMPLOYEE_SERVICE_TYPES, getServiceLabel, getAllEmployeeServiceTypes } from '@/constants/business';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { StateLoading, StateEmpty } from '@/components/ui/StateViews';
@@ -40,6 +40,15 @@ export default function EmployeeListPage() {
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [meta, setMeta] = useState({ total: 0, totalPages: 1 });
+  const [serviceOptions, setServiceOptions] = useState(() => getAllEmployeeServiceTypes());
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setServiceOptions(getAllEmployeeServiceTypes());
+    };
+    window.addEventListener('barak_services_updated', handleUpdate);
+    return () => window.removeEventListener('barak_services_updated', handleUpdate);
+  }, []);
 
   // Sensitive data global toggle
   const [showSensitive, setShowSensitive] = useState(false);
@@ -236,7 +245,7 @@ export default function EmployeeListPage() {
             className="px-2.5 py-2 text-xs border border-border rounded-lg bg-white text-ink"
           >
             <option value="">Semua Layanan</option>
-            {EMPLOYEE_SERVICE_TYPES.map((s) => (
+            {serviceOptions.map((s) => (
               <option key={s.key} value={s.key}>{s.label}</option>
             ))}
           </select>

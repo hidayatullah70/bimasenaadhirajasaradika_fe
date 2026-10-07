@@ -7,7 +7,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { X, Save, Camera, Upload, Trash2, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { MOCK_CLIENTS, MOCK_LOCATIONS } from '@/services/mock/mockMasterData';
-import { EMPLOYEE_SERVICE_TYPES, PTKP_OPTIONS, getServiceLabel } from '@/constants/business';
+import { EMPLOYEE_SERVICE_TYPES, PTKP_OPTIONS, getServiceLabel, getCustomServices, saveCustomService } from '@/constants/business';
 import { resizeImageTo3x4 } from '@/utils/imageResize';
 import EmployeeImportModal from './EmployeeImportModal';
 import toast from 'react-hot-toast';
@@ -76,6 +76,13 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, o
   const [isInputtingNewJabatan, setIsInputtingNewJabatan] = useState(false);
   const [newJabatanInput, setNewJabatanInput] = useState('');
 
+  // Dynamic custom services / layanan state
+  const [customServiceList, setCustomServiceList] = useState(() => {
+    return getCustomServices();
+  });
+  const [isInputtingNewLayanan, setIsInputtingNewLayanan] = useState(false);
+  const [newLayananInput, setNewLayananInput] = useState('');
+
   const allJabatanOptions = useMemo(() => {
     const combined = [...DEFAULT_JABATAN_OPTIONS, ...customJabatanList];
     if (employee?.jabatan && !combined.includes(employee.jabatan)) {
@@ -83,6 +90,26 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, o
     }
     return Array.from(new Set(combined.filter(Boolean)));
   }, [customJabatanList, employee]);
+
+  const allServiceOptions = useMemo(() => {
+    const combined = [...EMPLOYEE_SERVICE_TYPES];
+    const existingKeys = new Set(combined.map((s) => s.key));
+    customServiceList.forEach((cs) => {
+      if (!existingKeys.has(cs.key)) {
+        combined.push(cs);
+        existingKeys.add(cs.key);
+      }
+    });
+    if (employee?.jenis_layanan && !existingKeys.has(employee.jenis_layanan)) {
+      const customLabel = employee.jenis_pekerjaan || getServiceLabel(employee.jenis_layanan) || employee.jenis_layanan;
+      combined.push({
+        key: employee.jenis_layanan,
+        label: customLabel,
+        slug: employee.jenis_layanan,
+      });
+    }
+    return combined;
+  }, [customServiceList, employee]);
 
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
@@ -93,6 +120,8 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, o
   useEffect(() => {
     setIsInputtingNewJabatan(false);
     setNewJabatanInput('');
+    setIsInputtingNewLayanan(false);
+    setNewLayananInput('');
     if (employee) {
       setFormData({
         nama_lengkap_sesuai_KTP: employee.nama_lengkap_sesuai_KTP || '',
@@ -274,6 +303,9 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, o
     if (isInputtingNewJabatan && !formData.jabatan?.trim()) {
       errs.jabatan = 'Nama jabatan/role baru wajib diisi.';
     }
+    if (isInputtingNewLayanan && !formData.jenis_pekerjaan?.trim()) {
+      errs.jenis_layanan = 'Nama layanan baru wajib diisi.';
+    }
     setErrors(errs);
     return errs;
   };
@@ -299,15 +331,23 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, o
       }
     }
 
+    const finalLayananLabel = (formData.jenis_pekerjaan || formData.jenis_layanan || 'Head Office (HO)').trim();
+    const finalLayananKey = (formData.jenis_layanan || finalLayananLabel.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')).trim();
+
+    if (finalLayananLabel && !EMPLOYEE_SERVICE_TYPES.some((s) => s.key === finalLayananKey || s.label.toLowerCase() === finalLayananLabel.toLowerCase())) {
+      saveCustomService({ key: finalLayananKey, label: finalLayananLabel, slug: finalLayananKey });
+      setCustomServiceList(getCustomServices());
+    }
+
     const clientObj = allClients.find((c) => c.id === formData.penugasan_klien || c.code === formData.penugasan_klien);
     const locObj = allLocations.find((l) => l.id === formData.lokasi_penugasan || l.code === formData.lokasi_penugasan);
 
-    const sObj = EMPLOYEE_SERVICE_TYPES.find((s) => s.key === formData.jenis_layanan);
-    const serviceLabel = sObj ? sObj.label : (formData.jenis_pekerjaan || formData.jenis_layanan);
+    const sObj = allServiceOptions.find((s) => s.key === finalLayananKey) || { key: finalLayananKey, label: finalLayananLabel };
+    const serviceLabel = sObj ? sObj.label : finalLayananLabel;
 
     const payload = {
       ...formData,
-      jenis_layanan: formData.jenis_layanan,
+      jenis_layanan: finalLayananKey,
       jenis_pekerjaan: serviceLabel,
       jabatan: finalJabatan,
       clientName: clientObj ? clientObj.name : '',
@@ -564,25 +604,91 @@ export default function EmployeeFormModal({ isOpen, employee, onClose, onSave, o
             <h4 className="font-bold text-ink mb-2">Penempatan & Jabatan</h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <div>
-                <label className="block font-medium text-ink mb-1">Layanan</label>
-                <select
-                  value={formData.jenis_layanan}
-                  onChange={(e) => {
-                    const selectedKey = e.target.value;
-                    const sObj = EMPLOYEE_SERVICE_TYPES.find((s) => s.key === selectedKey);
-                    const serviceLabel = sObj ? sObj.label : selectedKey;
-                    setFormData((prev) => ({
-                      ...prev,
-                      jenis_layanan: selectedKey,
-                      jenis_pekerjaan: serviceLabel,
-                    }));
-                  }}
-                  className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
-                >
-                  {EMPLOYEE_SERVICE_TYPES.map((s) => (
-                    <option key={s.key} value={s.key}>{s.label}</option>
-                  ))}
-                </select>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block font-medium text-ink">Layanan</label>
+                  {isInputtingNewLayanan ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsInputtingNewLayanan(false);
+                        const defaultSvc = allServiceOptions[0] || EMPLOYEE_SERVICE_TYPES[0];
+                        setFormData((prev) => ({
+                          ...prev,
+                          jenis_layanan: defaultSvc.key,
+                          jenis_pekerjaan: defaultSvc.label,
+                        }));
+                      }}
+                      className="text-[11px] text-primary-red hover:underline font-semibold"
+                    >
+                      ← Pilih List
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsInputtingNewLayanan(true);
+                        setNewLayananInput('');
+                        setFormData((prev) => ({ ...prev, jenis_layanan: '', jenis_pekerjaan: '' }));
+                      }}
+                      className="text-[11px] text-primary-red hover:underline font-semibold"
+                    >
+                      + Ketik Baru
+                    </button>
+                  )}
+                </div>
+
+                {isInputtingNewLayanan ? (
+                  <div>
+                    <input
+                      type="text"
+                      autoFocus
+                      value={newLayananInput}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setNewLayananInput(val);
+                        const slug = val.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || val.trim();
+                        setFormData((prev) => ({
+                          ...prev,
+                          jenis_layanan: slug,
+                          jenis_pekerjaan: val,
+                        }));
+                      }}
+                      placeholder="Ketik layanan baru..."
+                      className={`w-full px-3 py-2 border rounded-lg bg-white text-ink focus:ring-2 focus:ring-primary-red/20 focus:border-primary-red ${
+                        errors.jenis_layanan ? 'border-error ring-1 ring-error/30' : 'border-primary-red/60'
+                      }`}
+                    />
+                    {errors.jenis_layanan && (
+                      <p className="text-error text-[10px] mt-1">{errors.jenis_layanan}</p>
+                    )}
+                  </div>
+                ) : (
+                  <select
+                    value={formData.jenis_layanan}
+                    onChange={(e) => {
+                      if (e.target.value === '__NEW__') {
+                        setIsInputtingNewLayanan(true);
+                        setNewLayananInput('');
+                        setFormData((prev) => ({ ...prev, jenis_layanan: '', jenis_pekerjaan: '' }));
+                      } else {
+                        const selectedKey = e.target.value;
+                        const sObj = allServiceOptions.find((s) => s.key === selectedKey);
+                        const serviceLabel = sObj ? sObj.label : selectedKey;
+                        setFormData((prev) => ({
+                          ...prev,
+                          jenis_layanan: selectedKey,
+                          jenis_pekerjaan: serviceLabel,
+                        }));
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
+                  >
+                    {allServiceOptions.map((s) => (
+                      <option key={s.key} value={s.key}>{s.label}</option>
+                    ))}
+                    <option value="__NEW__" className="text-primary-red font-semibold">+ Ketik Baru...</option>
+                  </select>
+                )}
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1">

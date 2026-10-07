@@ -66,11 +66,62 @@ export const EMPLOYEE_SERVICE_TYPES = Object.freeze([
 ]);
 
 /**
+ * Retrieve user-defined custom service lines from local persistence
+ */
+export function getCustomServices() {
+  if (typeof window === 'undefined') return [];
+  try {
+    const stored = localStorage.getItem('barak_custom_services');
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Persist a newly typed service line into local storage
+ */
+export function saveCustomService(service) {
+  if (typeof window === 'undefined' || !service) return null;
+  try {
+    const label = typeof service === 'string' ? service.trim() : (service.label || '').trim();
+    if (!label) return null;
+    const key = typeof service === 'object' && service.key
+      ? service.key
+      : label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+
+    const list = getCustomServices();
+    const existing = list.find((s) => s.key === key || s.label.toLowerCase() === label.toLowerCase());
+    if (!existing) {
+      const newEntry = { key, label, slug: key };
+      list.push(newEntry);
+      localStorage.setItem('barak_custom_services', JSON.stringify(list));
+      window.dispatchEvent(new CustomEvent('barak_services_updated', { detail: newEntry }));
+      return newEntry;
+    }
+    return existing;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Retrieve all employee service lines (canonical + custom)
+ */
+export function getAllEmployeeServiceTypes() {
+  const custom = getCustomServices();
+  const canonicalKeys = new Set(EMPLOYEE_SERVICE_TYPES.map((s) => s.key));
+  const uniqueCustom = custom.filter((c) => !canonicalKeys.has(c.key));
+  return [...EMPLOYEE_SERVICE_TYPES, ...uniqueCustom];
+}
+
+/**
  * Helper to get user-friendly service label from key or slug
  */
 export function getServiceLabel(key) {
   if (!key) return '-';
-  const found = EMPLOYEE_SERVICE_TYPES.find(
+  const allServices = getAllEmployeeServiceTypes();
+  const found = allServices.find(
     (s) => s.key === key || s.slug === key || s.label?.toLowerCase() === key?.toLowerCase()
   );
   return found ? found.label : key;
