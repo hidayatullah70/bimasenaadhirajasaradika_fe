@@ -12,6 +12,7 @@ import {
 import employeeAdapter from '@/services/adapters/employeeAdapter';
 import clientAdapter from '@/services/adapters/clientAdapter';
 import locationAdapter from '@/services/adapters/locationAdapter';
+import * as XLSX from 'xlsx';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ROLES } from '@/constants/roles';
 import { PERMISSIONS } from '@/constants/permissions';
@@ -148,31 +149,58 @@ export default function EmployeeListPage() {
     }
   };
 
-  const handleExportCSV = () => {
-    if (!employees.length) return;
-    const headers = ['ID Karyawan', 'Nama Lengkap', 'NIK', 'Jenis Kelamin', 'Layanan', 'Jabatan', 'Status', 'Tanggal Bergabung', 'Status Pajak (PTKP)', 'NPWP', 'Klien Penugasan'];
-    const rows = employees.map((e) => [
-      e.id_karyawan,
-      `"${e.nama_lengkap_sesuai_KTP}"`,
-      showSensitive ? e.NIK : `"${e.NIK.slice(0, 4)}************"`,
-      e.jenis_kelamin,
-      `"${getServiceLabel(e.jenis_layanan) || e.jenis_pekerjaan || e.jenis_layanan || '-'}"`,
-      e.jabatan,
-      e.status_kerja,
-      e.tanggal_masuk || '-',
-      e.status_pajak || 'TK0',
-      `"${e.NPWP || '-'}"`,
-      `"${e.clientName || '-'}"`,
-    ]);
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `Master_Karyawan_BARAK_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.success('File CSV berhasil diunduh.');
+  const handleExportExcel = () => {
+    if (!employees.length) {
+      toast.error('Tidak ada data karyawan untuk diekspor.');
+      return;
+    }
+    const exportData = employees.map((e, idx) => ({
+      'No': idx + 1,
+      'ID Karyawan': e.id_karyawan,
+      'Nama Lengkap': e.nama_lengkap_sesuai_KTP,
+      'NIK': showSensitive ? e.NIK : (e.NIK ? `${e.NIK.slice(0, 4)}************` : '-'),
+      'Jenis Kelamin': e.jenis_kelamin === 'P' ? 'Perempuan' : 'Laki-laki',
+      'Layanan': getServiceLabel(e.jenis_layanan) || e.jenis_pekerjaan || '-',
+      'Jabatan': e.jabatan || '-',
+      'Sertifikasi & Lisensi': isCertificationService(e.jenis_layanan || e.jenis_pekerjaan || e.departemen) ? (e.sertifikasi || '-') : '-',
+      'Status Ikatan Kerja': e.status_kerja || 'TETAP',
+      'Tanggal Bergabung': e.tanggal_masuk || '-',
+      'Klien Penempatan': e.clientName || 'Kantor Pusat PT. BARAK',
+      'Lokasi Kerja': e.locationName || 'Kantor Pusat BARAK',
+      'Nomor Rekening BCA': showSensitive ? (e.nomor_rekening_bank || '-') : (e.nomor_rekening_bank ? `${e.nomor_rekening_bank.slice(0, 4)}****` : '-'),
+      'Rekening Atas Nama': e.rekening_atas_nama || e.nama_lengkap_sesuai_KTP || '-',
+      'NPWP': showSensitive ? (e.NPWP || '-') : (e.NPWP ? `${e.NPWP.slice(0, 4)}****` : '-'),
+      'Status Pajak (PTKP)': e.status_pajak || 'TK0',
+      'BPJS Kesehatan': e.BPJS_kesehatan || '-',
+      'BPJS Ketenagakerjaan': e.BPJS_ketenagakerjaan || '-',
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    ws['!cols'] = [
+      { wch: 5 },  // No
+      { wch: 15 }, // ID Karyawan
+      { wch: 28 }, // Nama Lengkap
+      { wch: 22 }, // NIK
+      { wch: 14 }, // JK
+      { wch: 24 }, // Layanan
+      { wch: 20 }, // Jabatan
+      { wch: 22 }, // Sertifikasi
+      { wch: 18 }, // Status Kerja
+      { wch: 18 }, // Tanggal Bergabung
+      { wch: 26 }, // Klien
+      { wch: 26 }, // Lokasi
+      { wch: 20 }, // No Rekening
+      { wch: 24 }, // Rekening An
+      { wch: 22 }, // NPWP
+      { wch: 14 }, // PTKP
+      { wch: 18 }, // BPJS Kes
+      { wch: 18 }, // BPJS TK
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Master_Karyawan');
+    XLSX.writeFile(wb, `Master_Karyawan_BARAK_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    toast.success('File Excel (.xlsx) berhasil diunduh.');
   };
 
   const maskNik = (nik) => {
@@ -263,11 +291,11 @@ export default function EmployeeListPage() {
             </button>
           )}
 
-          {/* Export CSV */}
+          {/* Export Excel (.xlsx) */}
           {canExport && (
-            <Button variant="outline" size="sm" onClick={handleExportCSV} className="gap-1.5">
+            <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1.5">
               <Download className="h-3.5 w-3.5" />
-              <span>Export CSV</span>
+              <span>Export Excel (.xlsx)</span>
             </Button>
           )}
 
