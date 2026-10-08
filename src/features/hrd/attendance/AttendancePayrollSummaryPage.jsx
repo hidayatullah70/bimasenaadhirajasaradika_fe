@@ -30,7 +30,10 @@ export default function AttendancePayrollSummaryPage() {
       const res = await attendanceAdapter.getSheets({ year, month });
       if (res.data && res.data.length > 0) {
         setSheets(res.data);
-        setSelectedSheetId(res.data[0].id);
+        setSelectedSheetId((prev) => {
+          if (prev && res.data.some((s) => s.id === prev)) return prev;
+          return res.data[0].id;
+        });
       } else {
         setSheets([]);
         setSelectedSheetId(null);
@@ -129,11 +132,11 @@ export default function AttendancePayrollSummaryPage() {
             <select
               value={selectedSheetId || ''}
               onChange={(e) => setSelectedSheetId(e.target.value)}
-              className="px-3 py-1.5 text-xs border border-border rounded-lg bg-white max-w-[280px]"
+              className="px-3 py-1.5 text-xs border border-border rounded-lg bg-white max-w-[320px]"
             >
               {sheets.map((s) => (
                 <option key={s.id} value={s.id}>
-                  {s.clientName} ({s.locationName}) - [{s.status}]
+                  {s.clientName} ({s.locationName}) - [{s.status}] ({s.workDuration || 8} Jam)
                 </option>
               ))}
             </select>
@@ -150,19 +153,29 @@ export default function AttendancePayrollSummaryPage() {
 
       {/* Main Aggregated Table */}
       <div className="bg-white rounded-xl border border-border shadow-xs overflow-hidden">
-        <div className="p-4 border-b border-border bg-canvas/40 flex items-center justify-between">
+        <div className="p-4 border-b border-border bg-canvas/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h3 className="font-bold text-ink text-sm sm:text-base">
               Ringkasan Kehadiran Penggajian (Payroll Input Summary)
             </h3>
-            <p className="text-xs text-muted mt-0.5">
-              Data teragregasi resmi dari lembar absensi terverifikasi untuk diteruskan ke Divisi Finance.
+            <p className="text-xs text-muted mt-0.5 flex flex-wrap items-center gap-2">
+              <span>Data teragregasi resmi dari lembar absensi terverifikasi untuk diteruskan ke Divisi Finance.</span>
+              {activeSheet && (
+                <span className="inline-flex items-center gap-1 font-bold text-primary-red bg-primary-red/10 px-2 py-0.5 rounded text-[11px] border border-primary-red/20">
+                  Standar Durasi Kerja: {activeSheet.workDuration || 8} Jam Kerja
+                </span>
+              )}
             </p>
           </div>
           {activeSheet && (
-            <Badge variant={activeSheet.status === 'FINALIZED' ? 'default' : 'success'}>
-              Status: {activeSheet.status}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-muted">
+                Acuan Lembur: &gt; {activeSheet.workDuration || 8} Jam
+              </span>
+              <Badge variant={activeSheet.status === 'FINALIZED' ? 'default' : 'success'}>
+                Status: {activeSheet.status}
+              </Badge>
+            </div>
           )}
         </div>
 

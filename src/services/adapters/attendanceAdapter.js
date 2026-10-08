@@ -552,6 +552,8 @@ export const attendanceAdapter = {
         return { data: null, error: { message: 'Lembar absensi sudah final dan terkunci.' } };
       }
 
+      const sheetWorkDuration = parseFloat(sheet?.workDuration) || 8;
+
       if (isAttendanceOnly) {
         const inputerKey = `attendance_rows_inputer_${userId || 'default'}`;
         const inputerStore = getStoredCollection(inputerKey, () => ({}));
@@ -569,7 +571,7 @@ export const attendanceAdapter = {
             newCheckIn,
             newCheckOut
           );
-          const overtime = calculateOvertime(newCheckIn, newCheckOut, 8);
+          const overtime = calculateOvertime(newCheckIn, newCheckOut, sheetWorkDuration);
           updatedRow = {
             ...currentRow,
             checkIn: newCheckIn,
@@ -591,7 +593,7 @@ export const attendanceAdapter = {
             checkIn || '',
             checkOut || ''
           );
-          const overtime = calculateOvertime(checkIn || '', checkOut || '', 8);
+          const overtime = calculateOvertime(checkIn || '', checkOut || '', sheetWorkDuration);
           updatedRow = {
             id: newId,
             sheetId,
@@ -637,7 +639,7 @@ export const attendanceAdapter = {
           newCheckIn,
           newCheckOut
         );
-        const overtime = calculateOvertime(newCheckIn, newCheckOut, 8);
+        const overtime = calculateOvertime(newCheckIn, newCheckOut, sheetWorkDuration);
         updatedRow = {
           ...currentRow,
           checkIn: newCheckIn,
@@ -659,7 +661,7 @@ export const attendanceAdapter = {
           checkIn || '',
           checkOut || ''
         );
-        const overtime = calculateOvertime(checkIn || '', checkOut || '', 8);
+        const overtime = calculateOvertime(checkIn || '', checkOut || '', sheetWorkDuration);
         updatedRow = {
           id: newId,
           sheetId,
@@ -701,6 +703,118 @@ export const attendanceAdapter = {
   },
 
   /**
+   * Update work duration configuration for a sheet
+   * Persists to attendance_sheets and inputer sheets so Rekap Input Payroll stays synchronized.
+   */
+  async updateSheetWorkDuration(sheetId, workDuration, workDurationType = '8', manualHours = '8', options = {}) {
+    const { userId = null } = options;
+    const durationNum = parseFloat(workDuration) || 8;
+
+    if (isMock) {
+      const sheets = getSheetsStore();
+      const sheetIdx = sheets.findIndex((s) => s.id === sheetId);
+      if (sheetIdx !== -1) {
+        sheets[sheetIdx] = {
+          ...sheets[sheetIdx],
+          workDuration: durationNum,
+          workDurationType,
+          manualHours,
+          updatedAt: new Date().toISOString(),
+        };
+        saveSheetsStore(sheets);
+      }
+
+      // Also update overtimeMinutes for existing rows in regular store
+      const allRows = getRowsStore();
+      if (allRows[sheetId]) {
+        allRows[sheetId] = allRows[sheetId].map((r) => {
+          if (r.checkIn && r.checkOut) {
+            const ot = calculateOvertime(r.checkIn, r.checkOut, durationNum);
+            return {
+              ...r,
+              overtimeMinutes: Math.round(ot * 60),
+            };
+          }
+          return r;
+        });
+        saveRowsStore(allRows);
+      }
+
+      // Also check/update inputer stores
+      const uIds = ['user1', 'user2', 'default', userId].filter(Boolean);
+      uIds.forEach((uid) => {
+        const inputerKey = `attendance_sheets_inputer_${uid}`;
+        const inputerSheets = getStoredCollection(inputerKey, () => []);
+        const idx = inputerSheets.findIndex((s) => s.id === sheetId);
+        if (idx !== -1) {
+          inputerSheets[idx] = {
+            ...inputerSheets[idx],
+            workDuration: durationNum,
+            workDurationType,
+            manualHours,
+            updatedAt: new Date().toISOString(),
+          };
+          saveStoredCollection(inputerKey, inputerSheets);
+        }
+
+        // Recalculate overtimeMinutes in inputer rows
+        const inputerRowsKey = `attendance_rows_inputer_${uid}`;
+        const inputerRows = getStoredCollection(inputerRowsKey, () => ({}));
+        if (inputerRows[sheetId]) {
+          inputerRows[sheetId] = inputerRows[sheetId].map((r) => {
+            if (r.checkIn && r.checkOut) {
+              const ot = calculateOvertime(r.checkIn, r.checkOut, durationNum);
+              return {
+                ...r,
+                overtimeMinutes: Math.round(ot * 60),
+              };
+            }
+            return r;
+          });
+          saveStoredCollection(inputerRowsKey, inputerRows);
+        }
+      });
+
+      // Ensure sheets store has this sheet even if created dynamically in an inputer store
+      if (sheetIdx === -1) {
+        for (const uid of uIds) {
+          const inputerKey = `attendance_sheets_inputer_${uid}`;
+          const inputerSheets = getStoredCollection(inputerKey, () => []);
+          const found = inputerSheets.find((s) => s.id === sheetId);
+          if (found) {
+            sheets.push({
+              ...found,
+              workDuration: durationNum,
+              workDurationType,
+              manualHours,
+              updatedAt: new Date().toISOString(),
+            });
+            saveSheetsStore(sheets);
+            break;
+          }
+        }
+      }
+
+      emitAudit({
+        action: 'ATTENDANCE_WORK_DURATION_UPDATE',
+        module: 'HRD',
+        entity: 'AttendanceSheet',
+        entityId: sheetId,
+        details: { workDuration: durationNum, workDurationType, manualHours },
+      });
+
+      return { data: { success: true, workDuration: durationNum }, error: null };
+    }
+
+    const { data } = await apiClient.patch(`/attendance/sheets/${sheetId}/work-duration`, {
+      workDuration: durationNum,
+      workDurationType,
+      manualHours,
+    });
+    return data;
+  },
+
+  /**
    * Bulk fill check-in & check-out time (e.g. fill on-time for multiple personnel)
    */
   async bulkFillTime(sheetId, { timeIn, timeOut, rowIds = [] }, options = {}) {
@@ -712,6 +826,8 @@ export const attendanceAdapter = {
         return { data: null, error: { message: 'Tidak dapat mengisi lembar yang terkunci.' } };
       }
 
+      const sheetWorkDuration = parseFloat(sheet?.workDuration) || 8;
+
       if (isAttendanceOnly) {
         const inputerKey = `attendance_rows_inputer_${userId || 'default'}`;
         const inputerStore = getStoredCollection(inputerKey, () => ({}));
@@ -719,7 +835,7 @@ export const attendanceAdapter = {
         inputerStore[sheetId] = rows.map((r) => {
           if (rowIds.length === 0 || rowIds.includes(r.id)) {
             const metrics = calculateAttendanceMetrics(null, null, timeIn, timeOut);
-            const overtime = calculateOvertime(timeIn, timeOut, 8);
+            const overtime = calculateOvertime(timeIn, timeOut, sheetWorkDuration);
             return {
               ...r,
               checkIn: timeIn,
@@ -743,7 +859,7 @@ export const attendanceAdapter = {
       allRows[sheetId] = rows.map((r) => {
         if (rowIds.length === 0 || rowIds.includes(r.id)) {
           const metrics = calculateAttendanceMetrics(null, null, timeIn, timeOut);
-          const overtime = calculateOvertime(timeIn, timeOut, 8);
+          const overtime = calculateOvertime(timeIn, timeOut, sheetWorkDuration);
           return {
             ...r,
             checkIn: timeIn,
@@ -1171,11 +1287,25 @@ export const attendanceAdapter = {
         }
       }
 
-      // Cari sheet untuk sinkronisasi jumlah hari kalender bulan bersangkutan
+      // Cari sheet untuk sinkronisasi jumlah hari kalender bulan bersangkutan dan durasi kerja
       const sheets = getSheetsStore();
-      const sheet = sheets.find((s) => s.id === sheetId);
+      let sheet = sheets.find((s) => s.id === sheetId);
+      if (!sheet) {
+        const uIds = ['user1', 'user2', 'default', userId].filter(Boolean);
+        for (const uid of uIds) {
+          const inputerSheets = getStoredCollection(`attendance_sheets_inputer_${uid}`, () => []);
+          const found = inputerSheets.find((s) => s.id === sheetId);
+          if (found) {
+            sheet = found;
+            break;
+          }
+        }
+      }
+
       const year = parseInt(sheet?.periodYear, 10) || 2026;
       const month = parseInt(sheet?.periodMonth, 10) || 9;
+      // Durasi kerja acuan dari sheet yang aktif di Attendance Spreadsheet:
+      const effectiveWorkDuration = parseFloat(sheet?.workDuration) || 8;
       // Sinkron dengan total hari kalender pada bulan saat input (misal September = 30 Hari):
       const totalDaysInMonth = new Date(year, month, 0).getDate();
 
@@ -1210,8 +1340,8 @@ export const attendanceAdapter = {
         }
 
         if (hasCheckIn && hasCheckOut) {
-          // Akumulasi Lembur: max(0, Jam Kerja - Durasi Standar)
-          const ot = calculateOvertime(r.checkIn, r.checkOut, 8);
+          // Akumulasi Lembur: max(0, Jam Kerja - Durasi Standar Sheet)
+          const ot = calculateOvertime(r.checkIn, r.checkOut, effectiveWorkDuration);
           emp.totalOvertimeHours = Math.round((emp.totalOvertimeHours + ot) * 10) / 10;
 
           // Akumulasi Jam Kerja

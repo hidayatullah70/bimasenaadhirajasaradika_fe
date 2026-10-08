@@ -115,6 +115,9 @@ export const INITIAL_ATTENDANCE_SHEETS = [
     finalizedAt: null,
     finalizedBy: null,
     totalPersonnel: 24,
+    workDuration: 8,
+    workDurationType: '8',
+    manualHours: '8',
   },
   // 2. September 2026 — Surya Dunia Express (OPEN)
   {
@@ -134,6 +137,9 @@ export const INITIAL_ATTENDANCE_SHEETS = [
     finalizedAt: null,
     finalizedBy: null,
     totalPersonnel: 20,
+    workDuration: 8,
+    workDurationType: '8',
+    manualHours: '8',
   },
   // 3. Agustus 2026 — JNT Central Hub (FINALIZED / Locked)
   {
@@ -153,6 +159,9 @@ export const INITIAL_ATTENDANCE_SHEETS = [
     finalizedAt: '2026-08-31T17:00:00Z',
     finalizedBy: 'Siti Rahmawati (HRD)',
     totalPersonnel: 24,
+    workDuration: 8,
+    workDurationType: '8',
+    manualHours: '8',
   },
   // 4. Juli 2026 — JNT Central Hub (FINALIZED / Locked)
   {
@@ -172,6 +181,9 @@ export const INITIAL_ATTENDANCE_SHEETS = [
     finalizedAt: '2026-07-31T17:00:00Z',
     finalizedBy: 'Siti Rahmawati (HRD)',
     totalPersonnel: 24,
+    workDuration: 8,
+    workDurationType: '8',
+    manualHours: '8',
   },
 ];
 

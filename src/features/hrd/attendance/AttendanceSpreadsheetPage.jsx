@@ -455,6 +455,24 @@ export default function AttendanceSpreadsheetPage() {
         if (res.data.sheet) {
           if (res.data.sheet.clientId) setClientId(res.data.sheet.clientId);
           if (res.data.sheet.locationId) setLocationId(res.data.sheet.locationId);
+          if (res.data.sheet.workDurationType) {
+            setWorkDurationType(res.data.sheet.workDurationType);
+          } else if (res.data.sheet.workDuration) {
+            const durStr = String(res.data.sheet.workDuration);
+            if (['8', '10', '12'].includes(durStr)) {
+              setWorkDurationType(durStr);
+            } else {
+              setWorkDurationType('manual');
+              setManualHours(durStr);
+            }
+          } else {
+            setWorkDurationType('8');
+          }
+          if (res.data.sheet.manualHours) {
+            setManualHours(String(res.data.sheet.manualHours));
+          } else {
+            setManualHours('8');
+          }
         }
 
         // Tampilkan notifikasi jika data karyawan di lokasi klien ini kosong
@@ -472,6 +490,75 @@ export default function AttendanceSpreadsheetPage() {
       setLoading(false);
     }
   }, [isAttendanceOnly, currentUserId]);
+
+  // Sinkronisasi Durasi Kerja ke adapter persisten dan Rekap Input Payroll
+  const handleWorkDurationTypeChange = (newType) => {
+    setWorkDurationType(newType);
+    let dur = parseFloat(newType);
+    if (newType === 'manual') {
+      dur = parseFloat(manualHours) || 8;
+    }
+    if (!isNaN(dur) && dur > 0 && sheetData?.sheet?.id) {
+      attendanceAdapter.updateSheetWorkDuration(sheetData.sheet.id, dur, newType, manualHours, {
+        isAttendanceOnly,
+        userId: currentUserId,
+      });
+      setSheetData((prev) =>
+        prev
+          ? {
+              ...prev,
+              sheet: {
+                ...prev.sheet,
+                workDuration: dur,
+                workDurationType: newType,
+                manualHours,
+              },
+            }
+          : prev
+      );
+      setSheets((prev) =>
+        prev.map((s) =>
+          s.id === sheetData.sheet.id
+            ? { ...s, workDuration: dur, workDurationType: newType }
+            : s
+        )
+      );
+      toast.success(`Durasi kerja diubah ke ${dur} Jam. Rekap Input Payroll otomatis disinkronkan.`, {
+        id: 'work-duration-sync-toast',
+      });
+    }
+  };
+
+  const handleManualHoursChange = (newHours) => {
+    setManualHours(newHours);
+    const dur = parseFloat(newHours);
+    if (!isNaN(dur) && dur > 0 && sheetData?.sheet?.id) {
+      attendanceAdapter.updateSheetWorkDuration(sheetData.sheet.id, dur, 'manual', newHours, {
+        isAttendanceOnly,
+        userId: currentUserId,
+      });
+      setSheetData((prev) =>
+        prev
+          ? {
+              ...prev,
+              sheet: {
+                ...prev.sheet,
+                workDuration: dur,
+                workDurationType: 'manual',
+                manualHours: newHours,
+              },
+            }
+          : prev
+      );
+      setSheets((prev) =>
+        prev.map((s) =>
+          s.id === sheetData.sheet.id
+            ? { ...s, workDuration: dur, workDurationType: 'manual', manualHours: newHours }
+            : s
+        )
+      );
+    }
+  };
 
   useEffect(() => {
     loadSheets();
@@ -997,7 +1084,7 @@ export default function AttendanceSpreadsheetPage() {
               </span>
               <select
                 value={workDurationType}
-                onChange={(e) => setWorkDurationType(e.target.value)}
+                onChange={(e) => handleWorkDurationTypeChange(e.target.value)}
                 className="px-2.5 py-1.5 text-xs font-bold border border-primary-red/30 rounded-lg bg-primary-red/5 text-primary-red focus:ring-1 focus:ring-primary-red"
               >
                 <option value="8">8 Jam</option>
@@ -1014,7 +1101,7 @@ export default function AttendanceSpreadsheetPage() {
                     max="24"
                     step="0.5"
                     value={manualHours}
-                    onChange={(e) => setManualHours(e.target.value)}
+                    onChange={(e) => handleManualHoursChange(e.target.value)}
                     className="w-16 px-2 py-1 text-xs font-bold border border-primary-red rounded-lg bg-white text-ink text-center focus:ring-1 focus:ring-primary-red"
                     placeholder="8"
                   />
