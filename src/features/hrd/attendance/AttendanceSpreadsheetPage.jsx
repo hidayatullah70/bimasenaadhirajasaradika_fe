@@ -609,12 +609,12 @@ export default function AttendanceSpreadsheetPage() {
       return;
     }
 
-    if (!window.confirm('Isi otomatis seluruh baris yang kosong dengan jadwal tepat waktu (07:00 - 15:00)?')) return;
+    if (!window.confirm('Isi otomatis seluruh baris yang kosong dengan jam kerja normal (08:00 - 16:00)?')) return;
 
     try {
       await attendanceAdapter.bulkFillTime(sheetData.sheet.id, {
-        timeIn: '07:00',
-        timeOut: '15:00',
+        timeIn: '08:00',
+        timeOut: '16:00',
       }, {
         isAttendanceOnly,
         userId: currentUserId,

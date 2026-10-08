@@ -15,6 +15,8 @@ import {
   INITIAL_ATTENDANCE_SHEETS,
   generateRowsForSheet,
   calculateAttendanceMetrics,
+  calculateWorkHours,
+  calculateOvertime,
 } from '@/services/mock/mockAttendanceData';
 import { MOCK_ASSIGNMENTS, MOCK_CLIENTS, MOCK_LOCATIONS } from '@/services/mock/mockMasterData';
 import { emitAudit } from '@/utils/auditLogger';
@@ -80,9 +82,11 @@ function saveRowsStore(rows) {
  * Generate blank attendance rows for active assignments (jam datang & pulang kosong siap diisi manual)
  */
 function createBlankRowsForAssignments(sheet, assignments) {
-  const yStr = sheet.periodYear || 2026;
-  const mStr = String(sheet.periodMonth || 9).padStart(2, '0');
-  const daysInPeriod = Array.from({ length: 31 }, (_, i) => {
+  const yStr = parseInt(sheet.periodYear, 10) || 2026;
+  const mNum = parseInt(sheet.periodMonth, 10) || 9;
+  const totalDays = new Date(yStr, mNum, 0).getDate();
+  const mStr = String(mNum).padStart(2, '0');
+  const daysInPeriod = Array.from({ length: totalDays }, (_, i) => {
     const dStr = String(i + 1).padStart(2, '0');
     return `${yStr}-${mStr}-${dStr}`;
   });
@@ -102,10 +106,10 @@ function createBlankRowsForAssignments(sheet, assignments) {
         locationName: sheet.locationName,
         serviceType: asn.serviceType || sheet.serviceType || 'security',
         roleInUnit: asn.roleInUnit || 'Anggota',
-        shiftId: asn.shiftId || 'SHF-001',
-        shiftName: asn.shiftName || 'Shift Pagi Reguler',
-        scheduledIn: '07:00',
-        scheduledOut: '15:00',
+        shiftId: '',
+        shiftName: '',
+        scheduledIn: '',
+        scheduledOut: '',
         attendanceDate: dateStr,
         checkIn: '', // Jam Datang kosong - siap input manual
         checkOut: '', // Jam Pulang kosong - siap input manual
@@ -560,20 +564,21 @@ export const attendanceAdapter = {
           const newCheckIn = checkIn !== undefined ? checkIn : currentRow.checkIn;
           const newCheckOut = checkOut !== undefined ? checkOut : currentRow.checkOut;
           const metrics = calculateAttendanceMetrics(
-            currentRow.scheduledIn || '07:00',
-            currentRow.scheduledOut || '15:00',
+            null,
+            null,
             newCheckIn,
-            newCheckOut,
-            15
+            newCheckOut
           );
+          const overtime = calculateOvertime(newCheckIn, newCheckOut, 8);
           updatedRow = {
             ...currentRow,
             checkIn: newCheckIn,
             checkOut: newCheckOut,
             status: metrics.status,
             totalMinutes: metrics.totalMinutes,
-            lateMinutes: metrics.lateMinutes,
-            earlyLeaveMinutes: metrics.earlyLeaveMinutes,
+            lateMinutes: 0,
+            earlyLeaveMinutes: 0,
+            overtimeMinutes: Math.round(overtime * 60),
             notes: notes || metrics.notes,
             updatedAt: new Date().toISOString(),
           };
@@ -581,12 +586,12 @@ export const attendanceAdapter = {
         } else {
           const newId = `ROW-${sheetId}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
           const metrics = calculateAttendanceMetrics(
-            '07:00',
-            '15:00',
+            null,
+            null,
             checkIn || '',
-            checkOut || '',
-            15
+            checkOut || ''
           );
+          const overtime = calculateOvertime(checkIn || '', checkOut || '', 8);
           updatedRow = {
             id: newId,
             sheetId,
@@ -595,16 +600,18 @@ export const attendanceAdapter = {
             employeeNik: employeeNik || '',
             roleInUnit: roleInUnit || 'Anggota',
             attendanceDate,
-            scheduledIn: '07:00',
-            scheduledOut: '15:00',
+            scheduledIn: '',
+            scheduledOut: '',
+            shiftId: '',
+            shiftName: '',
             checkIn: checkIn || '',
             checkOut: checkOut || '',
             status: metrics.status,
             totalMinutes: metrics.totalMinutes,
-            lateMinutes: metrics.lateMinutes,
-            earlyLeaveMinutes: metrics.earlyLeaveMinutes,
+            lateMinutes: 0,
+            earlyLeaveMinutes: 0,
             notes: notes || metrics.notes,
-            overtimeMinutes: 0,
+            overtimeMinutes: Math.round(overtime * 60),
             updatedAt: new Date().toISOString(),
           };
           rows.push(updatedRow);
@@ -625,20 +632,21 @@ export const attendanceAdapter = {
         const newCheckIn = checkIn !== undefined ? checkIn : currentRow.checkIn;
         const newCheckOut = checkOut !== undefined ? checkOut : currentRow.checkOut;
         const metrics = calculateAttendanceMetrics(
-          currentRow.scheduledIn || '07:00',
-          currentRow.scheduledOut || '15:00',
+          null,
+          null,
           newCheckIn,
-          newCheckOut,
-          15
+          newCheckOut
         );
+        const overtime = calculateOvertime(newCheckIn, newCheckOut, 8);
         updatedRow = {
           ...currentRow,
           checkIn: newCheckIn,
           checkOut: newCheckOut,
           status: metrics.status,
           totalMinutes: metrics.totalMinutes,
-          lateMinutes: metrics.lateMinutes,
-          earlyLeaveMinutes: metrics.earlyLeaveMinutes,
+          lateMinutes: 0,
+          earlyLeaveMinutes: 0,
+          overtimeMinutes: Math.round(overtime * 60),
           notes: notes || metrics.notes,
           updatedAt: new Date().toISOString(),
         };
@@ -646,12 +654,12 @@ export const attendanceAdapter = {
       } else {
         const newId = `ROW-${sheetId}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
         const metrics = calculateAttendanceMetrics(
-          '07:00',
-          '15:00',
+          null,
+          null,
           checkIn || '',
-          checkOut || '',
-          15
+          checkOut || ''
         );
+        const overtime = calculateOvertime(checkIn || '', checkOut || '', 8);
         updatedRow = {
           id: newId,
           sheetId,
@@ -660,16 +668,18 @@ export const attendanceAdapter = {
           employeeNik: employeeNik || '',
           roleInUnit: roleInUnit || 'Anggota',
           attendanceDate,
-          scheduledIn: '07:00',
-          scheduledOut: '15:00',
+          scheduledIn: '',
+          scheduledOut: '',
+          shiftId: '',
+          shiftName: '',
           checkIn: checkIn || '',
           checkOut: checkOut || '',
           status: metrics.status,
           totalMinutes: metrics.totalMinutes,
-          lateMinutes: metrics.lateMinutes,
-          earlyLeaveMinutes: metrics.earlyLeaveMinutes,
+          lateMinutes: 0,
+          earlyLeaveMinutes: 0,
           notes: notes || metrics.notes,
-          overtimeMinutes: 0,
+          overtimeMinutes: Math.round(overtime * 60),
           updatedAt: new Date().toISOString(),
         };
         rows.push(updatedRow);
@@ -708,15 +718,17 @@ export const attendanceAdapter = {
         const rows = inputerStore[sheetId] || [];
         inputerStore[sheetId] = rows.map((r) => {
           if (rowIds.length === 0 || rowIds.includes(r.id)) {
-            const metrics = calculateAttendanceMetrics(r.scheduledIn, r.scheduledOut, timeIn, timeOut, 15);
+            const metrics = calculateAttendanceMetrics(null, null, timeIn, timeOut);
+            const overtime = calculateOvertime(timeIn, timeOut, 8);
             return {
               ...r,
               checkIn: timeIn,
               checkOut: timeOut,
               status: metrics.status,
               totalMinutes: metrics.totalMinutes,
-              lateMinutes: metrics.lateMinutes,
-              earlyLeaveMinutes: metrics.earlyLeaveMinutes,
+              lateMinutes: 0,
+              earlyLeaveMinutes: 0,
+              overtimeMinutes: Math.round(overtime * 60),
               notes: metrics.notes,
             };
           }
@@ -730,15 +742,17 @@ export const attendanceAdapter = {
       const rows = allRows[sheetId] || [];
       allRows[sheetId] = rows.map((r) => {
         if (rowIds.length === 0 || rowIds.includes(r.id)) {
-          const metrics = calculateAttendanceMetrics(r.scheduledIn, r.scheduledOut, timeIn, timeOut, 15);
+          const metrics = calculateAttendanceMetrics(null, null, timeIn, timeOut);
+          const overtime = calculateOvertime(timeIn, timeOut, 8);
           return {
             ...r,
             checkIn: timeIn,
             checkOut: timeOut,
             status: metrics.status,
             totalMinutes: metrics.totalMinutes,
-            lateMinutes: metrics.lateMinutes,
-            earlyLeaveMinutes: metrics.earlyLeaveMinutes,
+            lateMinutes: 0,
+            earlyLeaveMinutes: 0,
+            overtimeMinutes: Math.round(overtime * 60),
             notes: metrics.notes,
           };
         }
@@ -797,9 +811,11 @@ export const attendanceAdapter = {
       const currentRows = isAttendanceOnly ? (inputerStore[sheetId] || []) : (allRows[sheetId] || []);
 
       // Determine period dates (Day 1..31)
-      const yStr = sheet.periodYear || 2026;
-      const mStr = String(sheet.periodMonth || 9).padStart(2, '0');
-      const daysInPeriod = Array.from({ length: 31 }, (_, i) => {
+      const yStr = parseInt(sheet.periodYear, 10) || 2026;
+      const mNum = parseInt(sheet.periodMonth, 10) || 9;
+      const totalDays = new Date(yStr, mNum, 0).getDate();
+      const mStr = String(mNum).padStart(2, '0');
+      const daysInPeriod = Array.from({ length: totalDays }, (_, i) => {
         const dStr = String(i + 1).padStart(2, '0');
         return `${yStr}-${mStr}-${dStr}`;
       });
@@ -827,7 +843,7 @@ export const attendanceAdapter = {
         // Filter out any invalid / header placeholder names like '(LOCKED)'
         employeesToSync = employeesToSync.filter((e) => !isInvalidEmployeeName(e.employeeName));
 
-        // Generate authoritative roster rows for this sheet (31 days per employee)
+        // Generate authoritative roster rows for this sheet (totalDays per employee)
         const newSheetRows = [];
         let rowCounter = 1;
 
@@ -850,7 +866,7 @@ export const attendanceAdapter = {
             // Check if importedItems has specific checkIn/checkOut for this employee & date
             const importedMatch = importedItems.find((item) => {
               const dateMatch = item.attendanceDate === dateStr;
-              const idMatch = empId && String(item.employeeId).toUpperCase() === String(empId).toUpperCase();
+              const idMatch = empId && String(item.employeeId).toUpperCase() === String(item.employeeId).toUpperCase();
               const nameMatch = empName && String(item.employeeName).trim().toLowerCase() === String(empName).trim().toLowerCase();
               return dateMatch && (idMatch || nameMatch);
             });
@@ -860,12 +876,12 @@ export const attendanceAdapter = {
             const notes = importedMatch?.notes || existingRow?.notes || '';
 
             const metrics = calculateAttendanceMetrics(
-              '07:00',
-              '15:00',
+              null,
+              null,
               checkIn,
-              checkOut,
-              15
+              checkOut
             );
+            const overtime = calculateOvertime(checkIn, checkOut, 8);
 
             newSheetRows.push({
               id: existingRow?.id || `ROW-${sheet.id}-${rowCounter.toString().padStart(5, '0')}`,
@@ -878,18 +894,18 @@ export const attendanceAdapter = {
               locationName: sheet.locationName,
               serviceType: sheet.serviceType || 'security',
               roleInUnit,
-              shiftId: existingRow?.shiftId || 'SHF-001',
-              shiftName: existingRow?.shiftName || 'Shift Pagi Reguler',
-              scheduledIn: '07:00',
-              scheduledOut: '15:00',
+              shiftId: '',
+              shiftName: '',
+              scheduledIn: '',
+              scheduledOut: '',
               attendanceDate: dateStr,
               checkIn,
               checkOut,
               status: metrics.status,
               totalMinutes: metrics.totalMinutes,
-              lateMinutes: metrics.lateMinutes,
-              earlyLeaveMinutes: metrics.earlyLeaveMinutes,
-              overtimeMinutes: 0,
+              lateMinutes: 0,
+              earlyLeaveMinutes: 0,
+              overtimeMinutes: Math.round(overtime * 60),
               notes,
               updatedAt: new Date().toISOString(),
             });
@@ -1131,10 +1147,38 @@ export const attendanceAdapter = {
    * Generate aggregated attendance summary for Finance Payroll input
    * Aggregates: Hadir, Terlambat, Pulang Awal, Mangkir/Alfa, Total Jam per Employee.
    */
-  async getPayrollAttendanceSummary(sheetId) {
+  async getPayrollAttendanceSummary(sheetId, options = {}) {
     if (isMock) {
-      const allRows = getRowsStore();
-      const rows = allRows[sheetId] || [];
+      const { isAttendanceOnly = false, userId = null } = options;
+      let rows = [];
+      if (isAttendanceOnly || userId) {
+        const inputerKey = `attendance_rows_inputer_${userId || 'default'}`;
+        const inputerStore = getStoredCollection(inputerKey, () => ({}));
+        rows = inputerStore[sheetId] || [];
+      }
+      if (!rows || rows.length === 0) {
+        const allRows = getRowsStore();
+        rows = allRows[sheetId] || [];
+      }
+      if (!rows || rows.length === 0) {
+        const keys = ['attendance_rows_inputer_user1', 'attendance_rows_inputer_user2', 'attendance_rows_inputer_default'];
+        for (const k of keys) {
+          const s = getStoredCollection(k, () => ({}));
+          if (s[sheetId] && s[sheetId].length > 0) {
+            rows = s[sheetId];
+            break;
+          }
+        }
+      }
+
+      // Cari sheet untuk sinkronisasi jumlah hari kalender bulan bersangkutan
+      const sheets = getSheetsStore();
+      const sheet = sheets.find((s) => s.id === sheetId);
+      const year = parseInt(sheet?.periodYear, 10) || 2026;
+      const month = parseInt(sheet?.periodMonth, 10) || 9;
+      // Sinkron dengan total hari kalender pada bulan saat input (misal September = 30 Hari):
+      const totalDaysInMonth = new Date(year, month, 0).getDate();
+
       const employeeMap = {};
 
       rows.forEach((r) => {
@@ -1142,37 +1186,43 @@ export const attendanceAdapter = {
           employeeMap[r.employeeId] = {
             employeeId: r.employeeId,
             employeeName: r.employeeName,
-            employeeNik: r.employeeNik,
-            roleInUnit: r.roleInUnit,
-            serviceType: r.serviceType,
-            totalWorkDays: 0,
+            employeeNik: r.employeeNik || '-',
+            roleInUnit: r.roleInUnit || 'Anggota',
+            serviceType: r.serviceType || 'Operasional',
+            totalWorkDays: totalDaysInMonth,
             presentDays: 0,
             lateDays: 0,
             totalLateMinutes: 0,
             earlyLeaveDays: 0,
             absentDays: 0,
+            totalOvertimeHours: 0,
             totalWorkHours: 0,
           };
         }
 
         const emp = employeeMap[r.employeeId];
-        emp.totalWorkDays += 1;
 
-        if (r.status === STATUS.PRESENT || r.status === STATUS.LATE || r.status === STATUS.EARLY_LEAVE) {
+        const hasCheckIn = Boolean(r.checkIn && String(r.checkIn).trim());
+        const hasCheckOut = Boolean(r.checkOut && String(r.checkOut).trim());
+
+        if (hasCheckIn || hasCheckOut) {
           emp.presentDays += 1;
         }
-        if (r.status === STATUS.LATE) {
-          emp.lateDays += 1;
-          emp.totalLateMinutes += r.lateMinutes || 0;
-        }
-        if (r.status === STATUS.EARLY_LEAVE) {
-          emp.earlyLeaveDays += 1;
-        }
-        if (r.status === STATUS.UNFILLED || r.status === STATUS.ABSENT) {
-          emp.absentDays += 1;
-        }
 
-        emp.totalWorkHours += Math.round(((r.totalMinutes || 0) / 60) * 10) / 10;
+        if (hasCheckIn && hasCheckOut) {
+          // Akumulasi Lembur: max(0, Jam Kerja - Durasi Standar)
+          const ot = calculateOvertime(r.checkIn, r.checkOut, 8);
+          emp.totalOvertimeHours = Math.round((emp.totalOvertimeHours + ot) * 10) / 10;
+
+          // Akumulasi Jam Kerja
+          const wh = calculateWorkHours(r.checkIn, r.checkOut);
+          emp.totalWorkHours = Math.round((emp.totalWorkHours + wh) * 10) / 10;
+        }
+      });
+
+      // Mangkir / Kosong = Total Hari Kalender Roster - Hari Hadir
+      Object.values(employeeMap).forEach((emp) => {
+        emp.absentDays = Math.max(0, emp.totalWorkDays - emp.presentDays);
       });
 
       return { data: Object.values(employeeMap), error: null };

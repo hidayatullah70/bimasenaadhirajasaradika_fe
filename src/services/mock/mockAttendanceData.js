@@ -8,9 +8,46 @@ import { MOCK_ASSIGNMENTS, MOCK_CLIENTS, MOCK_LOCATIONS, MOCK_SHIFTS, MOCK_EMPLO
 import { STATUS } from '@/constants/status';
 
 /**
- * Helper to compute status, late minutes, and work duration
+ * Helper untuk menghitung total jam kerja (numeric desimal)
  */
-export function calculateAttendanceMetrics(scheduledIn, scheduledOut, checkIn, checkOut, gracePeriod = 15) {
+export function calculateWorkHours(checkIn, checkOut) {
+  if (!checkIn || !checkOut) return 0;
+  const inParts = checkIn.split(':').map(Number);
+  const outParts = checkOut.split(':').map(Number);
+  if (inParts.length < 2 || outParts.length < 2 || isNaN(inParts[0]) || isNaN(outParts[0])) return 0;
+
+  let inMin = inParts[0] * 60 + inParts[1];
+  let outMin = outParts[0] * 60 + outParts[1];
+  if (outMin < inMin) outMin += 24 * 60; // Lintas tengah malam
+
+  return Math.round(((outMin - inMin) / 60) * 10) / 10;
+}
+
+/**
+ * Helper untuk menghitung nilai numeric lembar lembur
+ * Rumus: max(0, Jam Kerja - Durasi Standar)
+ */
+export function calculateOvertime(checkIn, checkOut, workDurationHours = 8) {
+  if (!checkIn || !checkOut) return 0;
+  const inParts = checkIn.split(':').map(Number);
+  const outParts = checkOut.split(':').map(Number);
+  if (inParts.length < 2 || outParts.length < 2 || isNaN(inParts[0]) || isNaN(outParts[0])) return 0;
+
+  let inMin = inParts[0] * 60 + inParts[1];
+  let outMin = outParts[0] * 60 + outParts[1];
+  if (outMin < inMin) outMin += 24 * 60; // Lintas tengah malam
+
+  const workedMinutes = outMin - inMin;
+  const workedHours = workedMinutes / 60;
+  const overtime = workedHours - (workDurationHours || 8);
+  return Math.round(Math.max(0, overtime) * 10) / 10;
+}
+
+/**
+ * Helper to compute status, total minutes, and presence
+ * Tanpa jadwal masuk default 07:00 dan tanpa keterikatan sistem shift.
+ */
+export function calculateAttendanceMetrics(_scheduledIn, _scheduledOut, checkIn, checkOut) {
   if (!checkIn && !checkOut) {
     return {
       status: STATUS.UNFILLED,
@@ -31,39 +68,31 @@ export function calculateAttendanceMetrics(scheduledIn, scheduledOut, checkIn, c
     };
   }
 
-  const [sInH, sInM] = scheduledIn.split(':').map(Number);
-  const [sOutH, sOutM] = scheduledOut.split(':').map(Number);
-  const [cInH, cInM] = checkIn.split(':').map(Number);
-  const [cOutH, cOutM] = checkOut.split(':').map(Number);
-
-  const schedInMin = sInH * 60 + sInM;
-  let schedOutMin = sOutH * 60 + sOutM;
-  if (schedOutMin < schedInMin) schedOutMin += 24 * 60; // Crosses midnight
-
-  const actualInMin = cInH * 60 + cInM;
-  let actualOutMin = cOutH * 60 + cOutM;
-  if (actualOutMin < actualInMin) actualOutMin += 24 * 60;
-
-  const totalMinutes = Math.max(0, actualOutMin - actualInMin);
-  const diffLate = actualInMin - schedInMin;
-  const lateMinutes = diffLate > gracePeriod ? diffLate : 0;
-  const earlyLeaveMinutes = Math.max(0, schedOutMin - actualOutMin);
-
-  let status = STATUS.PRESENT;
-  let notes = 'Hadir normal';
-
-  if (lateMinutes > 0 && earlyLeaveMinutes > 0) {
-    status = STATUS.LATE;
-    notes = `Terlambat ${lateMinutes} menit & pulang awal ${earlyLeaveMinutes} menit`;
-  } else if (lateMinutes > 0) {
-    status = STATUS.LATE;
-    notes = `Terlambat ${lateMinutes} menit (Toleransi ${gracePeriod}m)`;
-  } else if (earlyLeaveMinutes > 15) {
-    status = STATUS.EARLY_LEAVE;
-    notes = `Pulang lebih awal ${earlyLeaveMinutes} menit`;
+  const inParts = checkIn.split(':').map(Number);
+  const outParts = checkOut.split(':').map(Number);
+  if (inParts.length < 2 || outParts.length < 2 || isNaN(inParts[0]) || isNaN(outParts[0])) {
+    return {
+      status: STATUS.PRESENT_PARTIAL,
+      totalMinutes: 0,
+      lateMinutes: 0,
+      earlyLeaveMinutes: 0,
+      notes: 'Format jam tidak valid',
+    };
   }
 
-  return { status, totalMinutes, lateMinutes, earlyLeaveMinutes, notes };
+  const actualInMin = inParts[0] * 60 + inParts[1];
+  let actualOutMin = outParts[0] * 60 + outParts[1];
+  if (actualOutMin < actualInMin) actualOutMin += 24 * 60; // Lintas tengah malam
+
+  const totalMinutes = Math.max(0, actualOutMin - actualInMin);
+
+  return {
+    status: STATUS.PRESENT,
+    totalMinutes,
+    lateMinutes: 0,
+    earlyLeaveMinutes: 0,
+    notes: 'Hadir',
+  };
 }
 
 // ── PRE-GENERATED SEED ATTENDANCE SHEETS (3 Months per PRD §14) ─────────────
@@ -185,10 +214,12 @@ export function generateRowsForSheet(sheet) {
     }
   });
 
-  // Days 1 through 31 in period
-  const yStr = sheet.periodYear || 2026;
-  const mStr = String(sheet.periodMonth || 9).padStart(2, '0');
-  const daysInPeriod = Array.from({ length: 31 }, (_, i) => {
+  // Days synchronized with actual calendar month (e.g. September = 30 days)
+  const yStr = parseInt(sheet.periodYear, 10) || 2026;
+  const mNum = parseInt(sheet.periodMonth, 10) || 9;
+  const totalDaysInMonth = new Date(yStr, mNum, 0).getDate();
+  const mStr = String(mNum).padStart(2, '0');
+  const daysInPeriod = Array.from({ length: totalDaysInMonth }, (_, i) => {
     const dStr = String(i + 1).padStart(2, '0');
     return `${yStr}-${mStr}-${dStr}`;
   });
@@ -197,35 +228,34 @@ export function generateRowsForSheet(sheet) {
   let rowCounter = 1;
 
   targetPersonnel.forEach((asn, empIdx) => {
-    const shift = MOCK_SHIFTS.find((s) => s.id === asn.shiftId) || MOCK_SHIFTS[0];
-
     daysInPeriod.forEach((dateStr, dayIdx) => {
-      // Simulate realistic attendance data
-      let checkIn = shift.startTime;
-      let checkOut = shift.endTime;
+      // Standar jam kerja: 08:00 - 17:00 (1 jam istirahat / 8 jam kerja)
+      let checkIn = '08:00';
+      let checkOut = '17:00';
 
       if (dayIdx % 7 === 6) {
-        // Off day
+        // Libur mingguan
         checkIn = '';
         checkOut = '';
       } else if (dayIdx === 3 && empIdx === 1) {
-        checkIn = '07:35';
-        checkOut = '17:00';
+        checkIn = '08:00';
+        checkOut = '19:00';
       } else if (dayIdx === 5 && empIdx === 2) {
         checkIn = '';
         checkOut = '';
       } else if (dayIdx === 8 && empIdx === 0) {
-        checkIn = '07:00';
-        checkOut = '18:00';
+        checkIn = '08:00';
+        checkOut = '20:00';
       }
 
       const metrics = calculateAttendanceMetrics(
-        shift.startTime,
-        shift.endTime,
+        null,
+        null,
         checkIn,
-        checkOut,
-        shift.gracePeriodMinutes || 15
+        checkOut
       );
+
+      const overtime = calculateOvertime(checkIn, checkOut, 8);
 
       rows.push({
         id: `ROW-${sheet.id}-${rowCounter.toString().padStart(5, '0')}`,
@@ -239,10 +269,10 @@ export function generateRowsForSheet(sheet) {
         locationName: sheet.locationName,
         serviceType: asn.serviceType || 'security',
         roleInUnit: asn.roleInUnit || 'Anggota',
-        shiftId: shift.id,
-        shiftName: shift.name,
-        scheduledIn: shift.startTime,
-        scheduledOut: shift.endTime,
+        shiftId: '',
+        shiftName: '',
+        scheduledIn: '',
+        scheduledOut: '',
         attendanceDate: dateStr,
         // HRD Input Fields
         checkIn: checkIn,
@@ -250,10 +280,10 @@ export function generateRowsForSheet(sheet) {
         // Calculated Fields
         status: metrics.status,
         totalMinutes: metrics.totalMinutes,
-        lateMinutes: metrics.lateMinutes,
-        earlyLeaveMinutes: metrics.earlyLeaveMinutes,
+        lateMinutes: 0,
+        earlyLeaveMinutes: 0,
         notes: metrics.notes,
-        overtimeMinutes: 0,
+        overtimeMinutes: Math.round(overtime * 60),
       });
 
       rowCounter++;

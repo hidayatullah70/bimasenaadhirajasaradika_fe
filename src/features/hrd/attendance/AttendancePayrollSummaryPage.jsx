@@ -72,7 +72,8 @@ export default function AttendancePayrollSummaryPage() {
     if (!summaryData.length) return;
     const headers = [
       'ID Karyawan', 'Nama Lengkap', 'NIK', 'Posisi', 'Layanan',
-      'Total Hari Roster', 'Hari Hadir', 'Hari Telat', 'Total Menit Telat', 'Pulang Awal', 'Mangkir', 'Total Jam Kerja',
+      'Total Hari Roster', 'Hari Hadir', 'Hari Telat', 'Total Menit Telat', 'Pulang Awal', 'Mangkir',
+      'Total Lembur (Jam)', 'Total Jam Kerja',
     ];
     const rows = summaryData.map((e) => [
       e.employeeId,
@@ -86,6 +87,7 @@ export default function AttendancePayrollSummaryPage() {
       e.totalLateMinutes,
       e.earlyLeaveDays,
       e.absentDays,
+      e.totalOvertimeHours || 0,
       e.totalWorkHours,
     ]);
 
@@ -188,6 +190,7 @@ export default function AttendancePayrollSummaryPage() {
                   <th className="px-4 py-3 text-right">Total Menit Telat</th>
                   <th className="px-4 py-3 text-center">Pulang Awal</th>
                   <th className="px-4 py-3 text-center text-amber-700">Mangkir / Kosong</th>
+                  <th className="px-4 py-3 text-center text-amber-900 font-bold bg-primary-yellow/15">Total Lembur (Jam)</th>
                   <th className="px-4 py-3 text-right font-bold">Total Jam Kerja</th>
                 </tr>
               </thead>
@@ -218,6 +221,9 @@ export default function AttendancePayrollSummaryPage() {
                     </td>
                     <td className="px-4 py-3 text-center font-mono text-amber-700 font-semibold">
                       {emp.absentDays > 0 ? `${emp.absentDays} Hari` : '0'}
+                    </td>
+                    <td className="px-4 py-3 text-center font-mono font-bold text-amber-900 bg-primary-yellow/10">
+                      {emp.totalOvertimeHours > 0 ? `${emp.totalOvertimeHours} Jam` : '0 Jam'}
                     </td>
                     <td className="px-4 py-3 text-right font-mono font-bold text-ink">
                       {emp.totalWorkHours} Jam
