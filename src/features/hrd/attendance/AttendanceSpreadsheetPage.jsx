@@ -12,7 +12,7 @@
  * - Dropdown Durasi Kerja di bilah filter: 8 Jam, 10 Jam, 12 Jam, Tambahan Isi Manual.
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   FileSpreadsheet, CheckCircle2, Lock, Unlock,
   RefreshCw, Zap, Clock, Upload, Users, Calendar, RotateCcw, AlertTriangle, Trash2
@@ -135,60 +135,107 @@ function formatTimeOnChange(val) {
 }
 
 /**
- * Komponen Input Waktu Cerdas untuk Jam Datang & Jam Pulang (Auto-Save Realtime)
+ * Komponen Input Waktu Cerdas untuk Jam Datang & Jam Pulang
+ * Aturan Bisnis:
+ * - Sebelum sel di-klik luar atau tombol Tab/Enter ditekan, nilai belum diubah/belum disimpan.
+ * - Pengguna bebas mengetik tanpa flicker (misal ketik 2, 20, 20:00).
+ * - Normalisasi dan penyimpanan (onSave) HANYA dieksekusi saat onBlur atau Enter.
  */
 function TimeInputCell({ value, disabled, onSave, ariaLabel }) {
   const [localVal, setLocalVal] = useState(value || '');
-  const lastSavedRef = React.useRef(value || '');
+  const [isEditing, setIsEditing] = useState(false);
+
+  const isEditingRef = useRef(false);
+  const localValRef = useRef(value || '');
+  const valueRef = useRef(value || '');
+  const onSaveRef = useRef(onSave);
 
   useEffect(() => {
-    setLocalVal(value || '');
-    lastSavedRef.current = value || '';
+    onSaveRef.current = onSave;
+  }, [onSave]);
+
+  useEffect(() => {
+    valueRef.current = value || '';
+    if (!isEditingRef.current) {
+      setLocalVal(value || '');
+      localValRef.current = value || '';
+    }
   }, [value]);
 
-  const commitSave = useCallback((valToSave) => {
-    if (valToSave === lastSavedRef.current) return;
-    lastSavedRef.current = valToSave;
-    onSave(valToSave);
-  }, [onSave]);
+  const handleFocus = () => {
+    setIsEditing(true);
+    isEditingRef.current = true;
+  };
 
   const handleChange = (e) => {
     const raw = e.target.value;
-    const formatted = formatTimeOnChange(raw);
+    // Hanya izinkan angka, titik dua, dan titik (maksimal 5 karakter)
+    const filtered = raw.replace(/[^0-9:.]/g, '');
+    const formatted = formatTimeOnChange(filtered);
     setLocalVal(formatted);
-    // Jika langsung terbentuk format valid "HH:mm" (panjang 5), simpan otomatis seketika
-    if (/^\d{2}:\d{2}$/.test(formatted)) {
-      commitSave(formatted);
-    }
+    localValRef.current = formatted;
   };
 
-  const handleBlur = () => {
-    if (!localVal) {
-      commitSave('');
+  const commit = useCallback(() => {
+    setIsEditing(false);
+    isEditingRef.current = false;
+    const raw = localValRef.current;
+    if (!raw || !raw.trim()) {
+      setLocalVal('');
+      localValRef.current = '';
+      if (valueRef.current !== '') {
+        valueRef.current = '';
+        onSaveRef.current?.('');
+      }
       return;
     }
-    const normalized = normalizeTimeString(localVal);
+
+    const normalized = normalizeTimeString(raw);
     setLocalVal(normalized);
-    commitSave(normalized);
+    localValRef.current = normalized;
+    if (normalized !== valueRef.current) {
+      valueRef.current = normalized;
+      onSaveRef.current?.(normalized);
+    }
+  }, []);
+
+  const handleBlur = () => {
+    commit();
   };
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
+      e.preventDefault();
+      commit();
+      e.target.blur();
+    } else if (e.key === 'Escape') {
+      setIsEditing(false);
+      isEditingRef.current = false;
+      const original = valueRef.current || '';
+      setLocalVal(original);
+      localValRef.current = original;
       e.target.blur();
     }
+    // Jika tombol Tab ditekan, biarkan event browser memindahkan fokus secara natural,
+    // yang secara otomatis akan memicu handleBlur (commit).
   };
 
-  // Auto-save jika komponen unmount (misal user klik lembar lain atau ganti tab sebelum blur)
+  // Simpan nilai hanya jika komponen unmount ketika masih dalam kondisi aktif diedit
   useEffect(() => {
     return () => {
-      if (localVal) {
-        const norm = normalizeTimeString(localVal);
-        if (norm !== lastSavedRef.current) {
-          onSave(norm);
+      if (isEditingRef.current) {
+        const raw = localValRef.current;
+        if (raw && raw.trim()) {
+          const normalized = normalizeTimeString(raw);
+          if (normalized !== valueRef.current) {
+            onSaveRef.current?.(normalized);
+          }
+        } else if (valueRef.current) {
+          onSaveRef.current?.('');
         }
       }
     };
-  }, [localVal, onSave]);
+  }, []);
 
   return (
     <input
@@ -196,6 +243,7 @@ function TimeInputCell({ value, disabled, onSave, ariaLabel }) {
       placeholder="--:--"
       disabled={disabled}
       value={localVal}
+      onFocus={handleFocus}
       onChange={handleChange}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
@@ -204,7 +252,9 @@ function TimeInputCell({ value, disabled, onSave, ariaLabel }) {
       className={`w-16 px-1 py-1 text-center font-mono text-xs border rounded transition-colors ${
         disabled
           ? 'bg-transparent border-transparent cursor-not-allowed text-ink'
-          : 'border-border bg-white text-ink focus:border-primary-red focus:ring-1 focus:ring-primary-red'
+          : isEditing
+            ? 'border-primary-red bg-white text-ink ring-1 ring-primary-red shadow-xs font-semibold'
+            : 'border-border bg-white text-ink hover:border-slate-400 focus:border-primary-red focus:ring-1 focus:ring-primary-red'
       }`}
     />
   );
