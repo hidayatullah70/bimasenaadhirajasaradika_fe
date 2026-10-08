@@ -119,8 +119,9 @@ export const directorAdapter = {
       // 4. Legal metrics
       const activeLegalCases = legalCasesStore.filter((c) => c.status !== STATUS.CLOSED && c.status !== STATUS.RESOLVED).length;
       const expiringContractsCount = contractsStore.filter((c) => c.status === STATUS.EXPIRING).length;
-      const compliantLicenses = MOCK_COMPLIANCE_ITEMS.filter((c) => c.status === 'COMPLIANT').length;
-      const totalLicenses = MOCK_COMPLIANCE_ITEMS.length;
+      const complianceStore = getStoredCollection('legal_compliance', () => [...MOCK_COMPLIANCE_ITEMS]).filter((c) => !c.isDeleted);
+      const compliantLicenses = complianceStore.filter((c) => c.status === 'COMPLIANT').length;
+      const totalLicenses = complianceStore.length;
 
       // 5. Marketing metrics
       const totalLeads = leadsStore.length;
@@ -345,6 +346,15 @@ export const directorAdapter = {
         });
       }
 
+      // Cross-department hook: If approving Legal Compliance / SIO license deletion
+      if ((item.type === 'LEGAL_COMPLIANCE_DELETE' || item.category === 'LEGAL_COMPLIANCE_DELETE' || (item.type === 'COMPLIANCE_DELETE' && item.department === 'LEGAL')) && (item.referenceId || item.recordId)) {
+        const compId = item.referenceId || item.recordId;
+        await legalAdapter.deleteComplianceItem(compId, {
+          deletedBy: actorName,
+          reason: notes || item.details?.reason || 'Disetujui oleh Direktur Utama',
+        });
+      }
+
       // Log to central audit trail
       await emitAudit({
         action: 'DIRECTOR_APPROVAL',
@@ -410,6 +420,15 @@ export const directorAdapter = {
       } else if ((item.type === 'CONTRACT_DELETE' || item.category === 'CONTRACT_DELETE') && (item.referenceId || item.recordId)) {
         const ctrId = item.referenceId || item.recordId;
         await legalAdapter.cancelDeleteRequest(ctrId, {
+          rejectedBy: actorName,
+          reason,
+        });
+      }
+
+      // Cross-department hook: If rejecting Legal Compliance deletion, clear pendingDelete flag
+      if ((item.type === 'LEGAL_COMPLIANCE_DELETE' || item.category === 'LEGAL_COMPLIANCE_DELETE' || (item.type === 'COMPLIANCE_DELETE' && item.department === 'LEGAL')) && (item.referenceId || item.recordId)) {
+        const compId = item.referenceId || item.recordId;
+        await legalAdapter.cancelDeleteComplianceRequest(compId, {
           rejectedBy: actorName,
           reason,
         });

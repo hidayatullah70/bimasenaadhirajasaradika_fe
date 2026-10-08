@@ -32,6 +32,10 @@ function getComplianceStore() {
   return getStoredCollection('legal_compliance', () => [...MOCK_COMPLIANCE_ITEMS]);
 }
 
+function saveComplianceStore(complianceItems) {
+  saveStoredCollection('legal_compliance', complianceItems);
+}
+
 export const legalAdapter = {
   async getLegalCases({ search = '', caseType = '', priority = '', status = '', page = 1, pageSize = 15 } = {}) {
     if (isMock) {
@@ -451,11 +455,245 @@ export const legalAdapter = {
     return data;
   },
 
-  async getComplianceRegister() {
+  async getComplianceRegister({ search = '', category = '', status = '' } = {}) {
     if (isMock) {
-      return { data: [...getComplianceStore()], error: null };
+      let filtered = [...getComplianceStore()].filter((i) => !i.isDeleted);
+
+      if (search.trim()) {
+        const q = search.toLowerCase();
+        filtered = filtered.filter(
+          (i) =>
+            i.licenseName.toLowerCase().includes(q) ||
+            i.licenseNumber.toLowerCase().includes(q) ||
+            i.issuingAuthority.toLowerCase().includes(q) ||
+            (i.remarks && i.remarks.toLowerCase().includes(q))
+        );
+      }
+
+      if (category) filtered = filtered.filter((i) => i.category === category);
+      if (status) {
+        if (status === 'PENDING_DELETE') {
+          filtered = filtered.filter((i) => i.pendingDelete);
+        } else {
+          filtered = filtered.filter((i) => i.status === status);
+        }
+      }
+
+      return { data: filtered, error: null };
     }
-    const { data } = await apiClient.get('/legal/compliance');
+    const { data } = await apiClient.get('/legal/compliance', { params: { search, category, status } });
+    return data;
+  },
+
+  async getComplianceItemById(id) {
+    if (isMock) {
+      const items = getComplianceStore();
+      const item = items.find((i) => i.id === id && !i.isDeleted);
+      if (!item) return { data: null, error: { message: 'Dokumen perizinan tidak ditemukan.' } };
+      return { data: { ...item }, error: null };
+    }
+    const { data } = await apiClient.get(`/legal/compliance/${id}`);
+    return data;
+  },
+
+  async createComplianceItem(payload) {
+    if (isMock) {
+      const items = getComplianceStore();
+      const nextNum = (items.length + 1).toString().padStart(3, '0');
+      const newItem = {
+        ...payload,
+        id: `CMP-${nextNum}`,
+        status: payload.status || 'COMPLIANT',
+        createdAt: new Date().toISOString(),
+        isDeleted: false,
+        pendingDelete: false,
+      };
+
+      saveComplianceStore([newItem, ...items]);
+
+      await emitAudit({
+        action: 'LEGAL_COMPLIANCE_CREATE',
+        module: 'Legal',
+        entity: 'ComplianceRegister',
+        entityId: newItem.id,
+        details: {
+          licenseName: newItem.licenseName,
+          licenseNumber: newItem.licenseNumber,
+          issuingAuthority: newItem.issuingAuthority,
+          category: newItem.category,
+        },
+      });
+
+      return { data: newItem, error: null };
+    }
+
+    const { data } = await apiClient.post('/legal/compliance', payload);
+    return data;
+  },
+
+  async updateComplianceItem(id, payload) {
+    if (isMock) {
+      const items = getComplianceStore();
+      const idx = items.findIndex((i) => i.id === id);
+      if (idx === -1) return { data: null, error: { message: 'Dokumen perizinan tidak ditemukan.' } };
+
+      const updated = {
+        ...items[idx],
+        ...payload,
+        updatedAt: new Date().toISOString(),
+      };
+      items[idx] = updated;
+      saveComplianceStore(items);
+
+      await emitAudit({
+        action: 'LEGAL_COMPLIANCE_UPDATE',
+        module: 'Legal',
+        entity: 'ComplianceRegister',
+        entityId: id,
+        details: {
+          licenseName: updated.licenseName,
+          licenseNumber: updated.licenseNumber,
+          status: updated.status,
+          updatedFields: Object.keys(payload),
+        },
+      });
+
+      return { data: updated, error: null };
+    }
+
+    const { data } = await apiClient.put(`/legal/compliance/${id}`, payload);
+    return data;
+  },
+
+  async requestDeleteComplianceItem(id, { reason, requestedBy = 'Staff Legal' }) {
+    if (isMock) {
+      const items = getComplianceStore();
+      const idx = items.findIndex((i) => i.id === id);
+      if (idx === -1) return { data: null, error: { message: 'Dokumen perizinan tidak ditemukan.' } };
+
+      const updated = {
+        ...items[idx],
+        pendingDelete: true,
+        deleteReason: reason,
+        deleteRequestedBy: requestedBy,
+        deleteRequestedAt: new Date().toISOString(),
+      };
+      items[idx] = updated;
+      saveComplianceStore(items);
+
+      // Route to Director Approval Center
+      const approvalsStore = getStoredCollection('approvals', () => []);
+      const newApproval = {
+        id: `APP-COMP-${Date.now().toString().slice(-6)}`,
+        title: `Hapus Dokumen Perizinan: ${items[idx].licenseName}`,
+        department: 'LEGAL',
+        submittedBy: requestedBy,
+        submissionDate: new Date().toISOString().slice(0, 10),
+        status: STATUS.PENDING,
+        priority: 'HIGH',
+        type: 'LEGAL_COMPLIANCE_DELETE',
+        category: 'LEGAL_COMPLIANCE_DELETE',
+        referenceId: id,
+        recordId: id,
+        description: `Permohonan penghapusan dokumen perizinan / sertifikasi legal ${items[idx].licenseName} (${items[idx].licenseNumber}) yang diterbitkan oleh ${items[idx].issuingAuthority}. Alasan: ${reason}`,
+        details: {
+          licenseName: items[idx].licenseName,
+          licenseNumber: items[idx].licenseNumber,
+          issuingAuthority: items[idx].issuingAuthority,
+          category: items[idx].category,
+          reason,
+        },
+        createdAt: new Date().toISOString(),
+      };
+      saveStoredCollection('approvals', [newApproval, ...approvalsStore]);
+
+      await emitAudit({
+        action: 'LEGAL_COMPLIANCE_DELETE_REQUEST',
+        module: 'Legal',
+        entity: 'ComplianceRegister',
+        entityId: id,
+        details: {
+          licenseName: items[idx].licenseName,
+          licenseNumber: items[idx].licenseNumber,
+          reason,
+          requestedBy,
+        },
+      });
+
+      return { data: updated, error: null };
+    }
+
+    const { data } = await apiClient.post(`/legal/compliance/${id}/request-delete`, { reason, requestedBy });
+    return data;
+  },
+
+  async deleteComplianceItem(id, { deletedBy = 'Direktur Utama', reason = '' } = {}) {
+    if (isMock) {
+      const items = getComplianceStore();
+      const idx = items.findIndex((i) => i.id === id);
+      if (idx === -1) return { data: null, error: { message: 'Dokumen perizinan tidak ditemukan.' } };
+
+      const deletedItem = items[idx];
+      // Soft-delete
+      items[idx] = {
+        ...deletedItem,
+        isDeleted: true,
+        pendingDelete: false,
+        deletedAt: new Date().toISOString(),
+        deletedBy,
+        deleteReason: reason || deletedItem.deleteReason,
+      };
+      saveComplianceStore(items);
+
+      await emitAudit({
+        action: 'LEGAL_COMPLIANCE_DELETE',
+        module: 'Legal',
+        entity: 'ComplianceRegister',
+        entityId: id,
+        details: {
+          licenseName: deletedItem.licenseName,
+          licenseNumber: deletedItem.licenseNumber,
+          deletedBy,
+          reason,
+        },
+      });
+
+      return { data: true, error: null };
+    }
+
+    const { data } = await apiClient.delete(`/legal/compliance/${id}`);
+    return data;
+  },
+
+  async cancelDeleteComplianceRequest(id, { rejectedBy = 'Direktur Utama', reason = '' } = {}) {
+    if (isMock) {
+      const items = getComplianceStore();
+      const idx = items.findIndex((i) => i.id === id);
+      if (idx === -1) return { data: null, error: { message: 'Dokumen perizinan tidak ditemukan.' } };
+
+      items[idx] = {
+        ...items[idx],
+        pendingDelete: false,
+        deleteReason: null,
+      };
+      saveComplianceStore(items);
+
+      await emitAudit({
+        action: 'LEGAL_COMPLIANCE_DELETE_REJECT',
+        module: 'Legal',
+        entity: 'ComplianceRegister',
+        entityId: id,
+        details: {
+          licenseName: items[idx].licenseName,
+          rejectedBy,
+          reason,
+        },
+      });
+
+      return { data: true, error: null };
+    }
+
+    const { data } = await apiClient.post(`/legal/compliance/${id}/cancel-delete`);
     return data;
   },
 };
