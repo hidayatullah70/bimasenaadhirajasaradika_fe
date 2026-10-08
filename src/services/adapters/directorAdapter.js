@@ -23,6 +23,7 @@ import { MOCK_PENDING_APPROVALS } from '@/services/mock/mockDirectorData';
 import { payrollAdapter } from '@/services/adapters/payrollAdapter';
 import { employeeAdapter } from '@/services/adapters/employeeAdapter';
 import { legalAdapter } from '@/services/adapters/legalAdapter';
+import { contractAdapter } from '@/services/adapters/contractAdapter';
 import { auditAdapter } from '@/services/adapters/auditAdapter';
 import { emitAudit } from '@/utils/auditLogger';
 import { getStoredCollection, saveStoredCollection } from '@/utils/storage';
@@ -329,8 +330,14 @@ export const directorAdapter = {
           };
           saveStoredCollection('legal_contracts', contractsStore);
         }
-      }      // Cross-department hook: If approving contract deletion
-      if ((item.type === 'CONTRACT_DELETE' || item.category === 'CONTRACT_DELETE') && (item.referenceId || item.recordId)) {
+      }      // Cross-department hook: If approving HRD employee contract deletion
+      if ((item.type === 'HRD_CONTRACT_DELETE' || item.category === 'HRD_CONTRACT_DELETE' || (item.type === 'CONTRACT_DELETE' && item.department === 'HRD')) && (item.referenceId || item.recordId)) {
+        const ctrId = item.referenceId || item.recordId;
+        await contractAdapter.deleteContract(ctrId, {
+          deletedBy: actorName,
+          reason: notes || item.details?.reason || 'Disetujui oleh Direktur Utama',
+        });
+      } else if ((item.type === 'CONTRACT_DELETE' || item.category === 'CONTRACT_DELETE') && (item.referenceId || item.recordId)) {
         const ctrId = item.referenceId || item.recordId;
         await legalAdapter.deleteContract(ctrId, {
           deletedBy: actorName,
@@ -393,8 +400,14 @@ export const directorAdapter = {
         });
       }
 
-      // Cross-department hook: If rejecting contract deletion, clear pendingDelete flag
-      if ((item.type === 'CONTRACT_DELETE' || item.category === 'CONTRACT_DELETE') && (item.referenceId || item.recordId)) {
+      // Cross-department hook: If rejecting HRD contract deletion, clear pendingDelete flag
+      if ((item.type === 'HRD_CONTRACT_DELETE' || item.category === 'HRD_CONTRACT_DELETE' || (item.type === 'CONTRACT_DELETE' && item.department === 'HRD')) && (item.referenceId || item.recordId)) {
+        const ctrId = item.referenceId || item.recordId;
+        await contractAdapter.cancelDeleteRequest(ctrId, {
+          rejectedBy: actorName,
+          reason,
+        });
+      } else if ((item.type === 'CONTRACT_DELETE' || item.category === 'CONTRACT_DELETE') && (item.referenceId || item.recordId)) {
         const ctrId = item.referenceId || item.recordId;
         await legalAdapter.cancelDeleteRequest(ctrId, {
           rejectedBy: actorName,
