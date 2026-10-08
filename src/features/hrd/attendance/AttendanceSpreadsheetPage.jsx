@@ -14,10 +14,11 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  FileSpreadsheet, CheckCircle2, Lock, Unlock, Download,
+  FileSpreadsheet, CheckCircle2, Lock, Unlock,
   RefreshCw, Zap, Clock, Upload, Users, Calendar, RotateCcw, AlertTriangle, Trash2
 } from 'lucide-react';
 import attendanceAdapter, { isInvalidEmployeeName } from '@/services/adapters/attendanceAdapter';
+import { calculateAttendanceMetrics } from '@/services/mock/mockAttendanceData';
 import * as XLSX from 'xlsx';
 import { MOCK_CLIENTS, MOCK_LOCATIONS } from '@/services/mock/mockMasterData';
 import { useAuth } from '@/app/providers/AuthProvider';
@@ -134,35 +135,41 @@ function formatTimeOnChange(val) {
 }
 
 /**
- * Komponen Input Waktu Cerdas untuk Jam Datang & Jam Pulang
+ * Komponen Input Waktu Cerdas untuk Jam Datang & Jam Pulang (Auto-Save Realtime)
  */
 function TimeInputCell({ value, disabled, onSave, ariaLabel }) {
   const [localVal, setLocalVal] = useState(value || '');
+  const lastSavedRef = React.useRef(value || '');
 
   useEffect(() => {
     setLocalVal(value || '');
+    lastSavedRef.current = value || '';
   }, [value]);
+
+  const commitSave = useCallback((valToSave) => {
+    if (valToSave === lastSavedRef.current) return;
+    lastSavedRef.current = valToSave;
+    onSave(valToSave);
+  }, [onSave]);
 
   const handleChange = (e) => {
     const raw = e.target.value;
     const formatted = formatTimeOnChange(raw);
     setLocalVal(formatted);
-    // Jika langsung terbentuk format valid "HH:mm" (panjang 5), simpan instan
+    // Jika langsung terbentuk format valid "HH:mm" (panjang 5), simpan otomatis seketika
     if (/^\d{2}:\d{2}$/.test(formatted)) {
-      onSave(formatted);
+      commitSave(formatted);
     }
   };
 
   const handleBlur = () => {
     if (!localVal) {
-      if (value) onSave('');
+      commitSave('');
       return;
     }
     const normalized = normalizeTimeString(localVal);
     setLocalVal(normalized);
-    if (normalized !== value) {
-      onSave(normalized);
-    }
+    commitSave(normalized);
   };
 
   const handleKeyDown = (e) => {
@@ -170,6 +177,18 @@ function TimeInputCell({ value, disabled, onSave, ariaLabel }) {
       e.target.blur();
     }
   };
+
+  // Auto-save jika komponen unmount (misal user klik lembar lain atau ganti tab sebelum blur)
+  useEffect(() => {
+    return () => {
+      if (localVal) {
+        const norm = normalizeTimeString(localVal);
+        if (norm !== lastSavedRef.current) {
+          onSave(norm);
+        }
+      }
+    };
+  }, [localVal, onSave]);
 
   return (
     <input
@@ -251,6 +270,26 @@ export default function AttendanceSpreadsheetPage() {
   const [sheetData, setSheetData] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const sheetDataRef = React.useRef(sheetData);
+  useEffect(() => {
+    sheetDataRef.current = sheetData;
+  }, [sheetData]);
+
+  // Urutkan lembar: sheet yang sedang dipilih paling awal, lalu seluruh sheet OPEN / REOPENED di depan FINALIZED
+  const sortedSheets = useMemo(() => {
+    return [...sheets].sort((a, b) => {
+      if (a.id === selectedSheetId) return -1;
+      if (b.id === selectedSheetId) return 1;
+
+      const aIsOpen = a.status === STATUS.OPEN || a.status === STATUS.REOPENED;
+      const bIsOpen = b.status === STATUS.OPEN || b.status === STATUS.REOPENED;
+      if (aIsOpen && !bIsOpen) return -1;
+      if (!aIsOpen && bIsOpen) return 1;
+
+      return (a.clientName || '').localeCompare(b.clientName || '');
+    });
+  }, [sheets, selectedSheetId]);
+
   // Modals & Reports
   const [validationReport, setValidationReport] = useState(null);
   const [isReopenModalOpen, setIsReopenModalOpen] = useState(false);
@@ -320,6 +359,7 @@ export default function AttendanceSpreadsheetPage() {
       setSheets([]);
       setSelectedSheetId(null);
       setSheetData(null);
+      sessionStorage.removeItem('barak_active_attendance_sheet_id');
       toast.success('Riwayat lembar kerja berhasil dibersihkan.');
     } catch {
       toast.error('Gagal membersihkan riwayat lembar kerja.');
@@ -346,11 +386,17 @@ export default function AttendanceSpreadsheetPage() {
         });
         if (match) {
           setSelectedSheetId(match.id);
+          sessionStorage.setItem('barak_active_attendance_sheet_id', match.id);
         } else if (res.data.length > 0) {
-          setSelectedSheetId((prev) => {
-            const exists = res.data.some((s) => s.id === prev);
-            return exists ? prev : res.data[0].id;
-          });
+          const savedId = sessionStorage.getItem('barak_active_attendance_sheet_id');
+          if (savedId && res.data.some((s) => s.id === savedId)) {
+            setSelectedSheetId(savedId);
+          } else {
+            const firstOpen = res.data.find((s) => s.status === STATUS.OPEN || s.status === STATUS.REOPENED);
+            const targetId = firstOpen ? firstOpen.id : res.data[0].id;
+            setSelectedSheetId(targetId);
+            sessionStorage.setItem('barak_active_attendance_sheet_id', targetId);
+          }
         } else {
           setSelectedSheetId(null);
           setSheetData(null);
@@ -385,6 +431,7 @@ export default function AttendanceSpreadsheetPage() {
         });
         if (res.data) {
           setSelectedSheetId(res.data.id);
+          sessionStorage.setItem('barak_active_attendance_sheet_id', res.data.id);
           const sheetsRes = await attendanceAdapter.getSheets({
             year,
             month,
@@ -423,6 +470,7 @@ export default function AttendanceSpreadsheetPage() {
         });
         if (res.data) {
           setSelectedSheetId(res.data.id);
+          sessionStorage.setItem('barak_active_attendance_sheet_id', res.data.id);
           const sheetsRes = await attendanceAdapter.getSheets({
             year,
             month,
@@ -443,6 +491,7 @@ export default function AttendanceSpreadsheetPage() {
   // Load active sheet rows
   const loadSheetRows = useCallback(async (id) => {
     if (!id) return;
+    sessionStorage.setItem('barak_active_attendance_sheet_id', id);
     setLoading(true);
     try {
       const res = await attendanceAdapter.getSheetById(id, {
@@ -602,27 +651,32 @@ export default function AttendanceSpreadsheetPage() {
 
   // Handle cell edit (check-in / check-out pada tanggal tertentu)
   const handleCellChange = async (emp, dateStr, field, value) => {
-    if (!sheetData) return;
-    if (sheetData.sheet.status === STATUS.FINALIZED) {
+    const currentSheetData = sheetDataRef.current;
+    if (!currentSheetData || !currentSheetData.sheet) return;
+    if (currentSheetData.sheet.status === STATUS.FINALIZED) {
       toast.error('Lembar absensi terkunci (Final). Silakan buka kunci untuk mengubah.');
       return;
     }
 
-    const cellKey = `${emp.employeeId}_${dateStr}`;
-    const existing = rowMap[cellKey] || {};
-    const newCheckIn = field === 'checkIn' ? value : existing.checkIn || '';
-    const newCheckOut = field === 'checkOut' ? value : existing.checkOut || '';
-
-    // Optimistic update di tabel UI
-    const updatedRows = [...sheetData.rows];
-    const existingIdx = updatedRows.findIndex(
+    const currentRows = currentSheetData.rows || [];
+    const existingIdx = currentRows.findIndex(
       (r) => r.employeeId === emp.employeeId && r.attendanceDate === dateStr
     );
+    const existingRow = existingIdx !== -1 ? currentRows[existingIdx] : null;
+
+    const existingCheckIn = existingRow?.checkIn || '';
+    const existingCheckOut = existingRow?.checkOut || '';
+
+    const newCheckIn = field === 'checkIn' ? value : existingCheckIn;
+    const newCheckOut = field === 'checkOut' ? value : existingCheckOut;
+
+    const metrics = calculateAttendanceMetrics(null, null, newCheckIn, newCheckOut);
+    const overtime = calculateOvertime(newCheckIn, newCheckOut, effectiveWorkDuration);
 
     const updatedRowData = {
-      ...(existing.id ? existing : {}),
-      id: existing.id || `ROW-OPT-${emp.employeeId}-${dateStr}`,
-      sheetId: sheetData.sheet.id,
+      ...(existingRow || {}),
+      id: existingRow?.id || `ROW-OPT-${emp.employeeId}-${dateStr}`,
+      sheetId: currentSheetData.sheet.id,
       employeeId: emp.employeeId,
       employeeName: emp.employeeName,
       employeeNik: emp.employeeNik,
@@ -630,22 +684,30 @@ export default function AttendanceSpreadsheetPage() {
       attendanceDate: dateStr,
       checkIn: newCheckIn,
       checkOut: newCheckOut,
+      status: metrics.status,
+      totalMinutes: metrics.totalMinutes,
+      overtimeMinutes: Math.round(overtime * 60),
+      notes: metrics.notes || '',
     };
 
+    let nextRows;
     if (existingIdx !== -1) {
-      updatedRows[existingIdx] = { ...updatedRows[existingIdx], ...updatedRowData };
+      nextRows = [...currentRows];
+      nextRows[existingIdx] = updatedRowData;
     } else {
-      updatedRows.push(updatedRowData);
+      nextRows = [...currentRows, updatedRowData];
     }
 
-    setSheetData((prev) => ({
-      ...prev,
-      rows: updatedRows,
-    }));
+    const nextSheetData = {
+      ...currentSheetData,
+      rows: nextRows,
+    };
+    sheetDataRef.current = nextSheetData;
+    setSheetData(nextSheetData);
 
-    // Simpan ke adapter persisten
+    // Simpan ke adapter persisten secara asinkron
     try {
-      await attendanceAdapter.updateCell(sheetData.sheet.id, {
+      await attendanceAdapter.updateCell(currentSheetData.sheet.id, {
         employeeId: emp.employeeId,
         attendanceDate: dateStr,
         checkIn: newCheckIn,
@@ -779,125 +841,6 @@ export default function AttendanceSpreadsheetPage() {
       loadSheetRows(sheetData.sheet.id);
       loadSheets();
     }
-  };
-
-  // Export CSV dalam format Matriks Kalender Tanggal 1 s/d 31 (2-Tier Header Bertingkat)
-  const handleExportCSV = () => {
-    if (!sheetData || !employeesList.length) {
-      toast.error('Tidak ada data personel untuk diekspor. Silakan import file Excel terlebih dahulu.');
-      return;
-    }
-
-    // Header Judul Laporan di atas tabel
-    const clientName = sheetData?.sheet?.clientName || MOCK_CLIENTS.find((c) => c.id === clientId)?.name || 'Semua Klien';
-    const locationName = sheetData?.sheet?.locationName || MOCK_LOCATIONS.find((l) => l.id === locationId)?.name || 'Semua Lokasi Penempatan';
-    const monthObj = MONTH_OPTIONS.find((m) => m.value === String(month));
-    const monthName = monthObj ? monthObj.label : `Bulan ${month}`;
-    const yearVal = year || sheetData?.sheet?.periodYear || '2026';
-
-    const titleRow1 = ['Rekapitulasi Absensi Karyawan'];
-    const titleRow2 = [`Klien: ${clientName}`];
-    const titleRow3 = [`Lokasi Penempatan: ${locationName}`];
-    const titleRow4 = [`Bulan: ${monthName}`, `Tahun: ${yearVal}`];
-
-    // Header Baris 1: Kolom Utama & Header Tanggal / Rekapitulasi (Menaungi sub kolom)
-    const headerRow1 = [
-      'No',
-      'ID Karyawan',
-      'Nama Karyawan',
-      'NIK',
-      'Jabatan',
-    ];
-
-    daysInMonth.forEach((d) => {
-      headerRow1.push(d.label, '', '');
-    });
-
-    headerRow1.push('Rekapitulasi Bulanan', '', '');
-
-    // Header Baris 2: Sub Kolom Datang, Pulang, Lembur & Hadir, Jam Kerja, Lembur
-    const headerRow2 = [
-      '',
-      '',
-      '',
-      '',
-      '',
-    ];
-
-    daysInMonth.forEach(() => {
-      headerRow2.push('Datang', 'Pulang', 'Lembur');
-    });
-
-    headerRow2.push('Hadir (HR)', 'Jam Kerja', 'Lembur (L)');
-
-    // Data Baris Karyawan (Hanya karyawan valid, tanpa (LOCKED))
-    const validEmployees = employeesList.filter((e) => !isInvalidEmployeeName(e.employeeName));
-
-    const dataRows = validEmployees.map((emp, idx) => {
-      let presentCount = 0;
-      let totalWork = 0;
-      let totalOvertime = 0;
-
-      const rowValues = [
-        idx + 1,
-        emp.employeeId,
-        emp.employeeName,
-        emp.employeeNik || '-',
-        emp.roleInUnit || 'Anggota',
-      ];
-
-      daysInMonth.forEach((d) => {
-        const cell = rowMap[`${emp.employeeId}_${d.dateStr}`] || rowMap[`${emp.employeeId}_${d.altDateStr}`] || {};
-        const cIn = cell.checkIn || '';
-        const cOut = cell.checkOut || '';
-        const ot = calculateOvertime(cIn, cOut, effectiveWorkDuration);
-        const wh = calculateWorkHours(cIn, cOut);
-
-        if (cIn || cOut) presentCount++;
-        totalWork += wh;
-        totalOvertime += ot;
-
-        rowValues.push(cIn || '-', cOut || '-', ot > 0 ? ot : 0);
-      });
-
-      rowValues.push(
-        presentCount,
-        Math.round(totalWork * 10) / 10,
-        Math.round(totalOvertime * 10) / 10
-      );
-      return rowValues;
-    });
-
-    const escapeCSV = (val) => {
-      if (val === null || val === undefined) return '""';
-      const str = String(val);
-      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-        return `"${str.replace(/"/g, '""')}"`;
-      }
-      return `"${str}"`;
-    };
-
-    const csvLines = [
-      titleRow1.map(escapeCSV).join(','),
-      titleRow2.map(escapeCSV).join(','),
-      titleRow3.map(escapeCSV).join(','),
-      titleRow4.map(escapeCSV).join(','),
-      headerRow1.map(escapeCSV).join(','),
-      headerRow2.map(escapeCSV).join(','),
-      ...dataRows.map((row) => row.map(escapeCSV).join(',')),
-    ];
-
-    const csvContent = '\uFEFF' + csvLines.join('\r\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `Attendance_Matrix_${sheetData.sheet.sheetCode}_Durasi${effectiveWorkDuration}Jam.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    toast.success('Matrix absensi CSV berhasil diekspor.');
   };
 
   // Export Excel (.xlsx) dengan merge cell bertingkat (Tgl 01 -> Datang, Pulang, Lembur)
@@ -1127,15 +1070,16 @@ export default function AttendanceSpreadsheetPage() {
         </div>
 
         {/* Sheet Tabs if multiple sheets for period */}
-        {sheets.length > 0 && (
+        {sortedSheets.length > 0 && (
           <div className="flex items-center gap-2 pt-2 border-t border-border overflow-x-auto scrollbar-none text-xs">
             <span className="text-muted text-[11px] font-medium flex-none">Lembar Tersedia:</span>
-            {sheets.map((s) => (
+            {sortedSheets.map((s) => (
               <button
                 key={s.id}
                 type="button"
                 onClick={() => {
                   setSelectedSheetId(s.id);
+                  sessionStorage.setItem('barak_active_attendance_sheet_id', s.id);
                   if (s.clientId) setClientId(s.clientId);
                   if (s.locationId) setLocationId(s.locationId);
                 }}
@@ -1275,10 +1219,6 @@ export default function AttendanceSpreadsheetPage() {
 
               {canExport && (
                 <div className="flex items-center gap-1.5">
-                  <Button variant="outline" size="sm" onClick={handleExportCSV} className="gap-1.5 text-xs">
-                    <Download className="h-3.5 w-3.5 text-primary-red" />
-                    <span>Export CSV</span>
-                  </Button>
                   <Button
                     variant="outline"
                     size="sm"

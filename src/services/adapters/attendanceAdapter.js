@@ -289,6 +289,15 @@ export const attendanceAdapter = {
       if (locationId) filtered = filtered.filter((s) => s.locationId === locationId);
       if (status) filtered = filtered.filter((s) => s.status === status);
 
+      // Urutkan status OPEN dan REOPENED selalu berada di posisi paling awal
+      filtered.sort((a, b) => {
+        const aIsOpen = a.status === STATUS.OPEN || a.status === STATUS.REOPENED;
+        const bIsOpen = b.status === STATUS.OPEN || b.status === STATUS.REOPENED;
+        if (aIsOpen && !bIsOpen) return -1;
+        if (!aIsOpen && bIsOpen) return 1;
+        return (a.clientName || '').localeCompare(b.clientName || '');
+      });
+
       return { data: filtered, meta: { total: filtered.length }, error: null };
     }
 
@@ -546,7 +555,19 @@ export const attendanceAdapter = {
     const { isAttendanceOnly = false, userId = null } = options;
     if (isMock) {
       const sheets = getSheetsStore();
-      const sheet = sheets.find((s) => s.id === sheetId);
+      let sheet = sheets.find((s) => s.id === sheetId);
+      if (!sheet) {
+        const uIds = ['user1', 'user2', 'default', userId].filter(Boolean);
+        for (const uid of uIds) {
+          const inputerSheets = getStoredCollection(`attendance_sheets_inputer_${uid}`, () => []);
+          const found = inputerSheets.find((s) => s.id === sheetId);
+          if (found) {
+            sheet = found;
+            break;
+          }
+        }
+      }
+
       if (!sheet) return { data: null, error: { message: 'Lembar absensi tidak ditemukan.' } };
       if (sheet.status === STATUS.FINALIZED) {
         return { data: null, error: { message: 'Lembar absensi sudah final dan terkunci.' } };
@@ -554,76 +575,7 @@ export const attendanceAdapter = {
 
       const sheetWorkDuration = parseFloat(sheet?.workDuration) || 8;
 
-      if (isAttendanceOnly) {
-        const inputerKey = `attendance_rows_inputer_${userId || 'default'}`;
-        const inputerStore = getStoredCollection(inputerKey, () => ({}));
-        const rows = inputerStore[sheetId] || [];
-        const rowIndex = rows.findIndex((r) => r.employeeId === employeeId && r.attendanceDate === attendanceDate);
-
-        let updatedRow;
-        if (rowIndex !== -1) {
-          const currentRow = rows[rowIndex];
-          const newCheckIn = checkIn !== undefined ? checkIn : currentRow.checkIn;
-          const newCheckOut = checkOut !== undefined ? checkOut : currentRow.checkOut;
-          const metrics = calculateAttendanceMetrics(
-            null,
-            null,
-            newCheckIn,
-            newCheckOut
-          );
-          const overtime = calculateOvertime(newCheckIn, newCheckOut, sheetWorkDuration);
-          updatedRow = {
-            ...currentRow,
-            checkIn: newCheckIn,
-            checkOut: newCheckOut,
-            status: metrics.status,
-            totalMinutes: metrics.totalMinutes,
-            lateMinutes: 0,
-            earlyLeaveMinutes: 0,
-            overtimeMinutes: Math.round(overtime * 60),
-            notes: notes || metrics.notes,
-            updatedAt: new Date().toISOString(),
-          };
-          rows[rowIndex] = updatedRow;
-        } else {
-          const newId = `ROW-${sheetId}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
-          const metrics = calculateAttendanceMetrics(
-            null,
-            null,
-            checkIn || '',
-            checkOut || ''
-          );
-          const overtime = calculateOvertime(checkIn || '', checkOut || '', sheetWorkDuration);
-          updatedRow = {
-            id: newId,
-            sheetId,
-            employeeId,
-            employeeName: employeeName || 'Karyawan',
-            employeeNik: employeeNik || '',
-            roleInUnit: roleInUnit || 'Anggota',
-            attendanceDate,
-            scheduledIn: '',
-            scheduledOut: '',
-            shiftId: '',
-            shiftName: '',
-            checkIn: checkIn || '',
-            checkOut: checkOut || '',
-            status: metrics.status,
-            totalMinutes: metrics.totalMinutes,
-            lateMinutes: 0,
-            earlyLeaveMinutes: 0,
-            notes: notes || metrics.notes,
-            overtimeMinutes: Math.round(overtime * 60),
-            updatedAt: new Date().toISOString(),
-          };
-          rows.push(updatedRow);
-        }
-
-        inputerStore[sheetId] = [...rows];
-        saveStoredCollection(inputerKey, inputerStore);
-        return { data: updatedRow, error: null };
-      }
-
+      // Persist to allRows store
       const allRows = getRowsStore();
       const rows = allRows[sheetId] || [];
       const rowIndex = rows.findIndex((r) => r.employeeId === employeeId && r.attendanceDate === attendanceDate);
@@ -631,8 +583,8 @@ export const attendanceAdapter = {
       let updatedRow;
       if (rowIndex !== -1) {
         const currentRow = rows[rowIndex];
-        const newCheckIn = checkIn !== undefined ? checkIn : currentRow.checkIn;
-        const newCheckOut = checkOut !== undefined ? checkOut : currentRow.checkOut;
+        const newCheckIn = checkIn !== undefined && checkIn !== null ? checkIn : currentRow.checkIn;
+        const newCheckOut = checkOut !== undefined && checkOut !== null ? checkOut : currentRow.checkOut;
         const metrics = calculateAttendanceMetrics(
           null,
           null,
@@ -689,6 +641,25 @@ export const attendanceAdapter = {
 
       allRows[sheetId] = [...rows];
       saveRowsStore(allRows);
+
+      // Also persist to inputer stores
+      const uIds = ['user1', 'user2', 'default', userId].filter(Boolean);
+      uIds.forEach((uid) => {
+        const inputerKey = `attendance_rows_inputer_${uid}`;
+        const inputerStore = getStoredCollection(inputerKey, () => ({}));
+        if (inputerStore[sheetId] || isAttendanceOnly) {
+          const iRows = inputerStore[sheetId] || [];
+          const iIdx = iRows.findIndex((r) => r.employeeId === employeeId && r.attendanceDate === attendanceDate);
+          if (iIdx !== -1) {
+            iRows[iIdx] = updatedRow;
+          } else {
+            iRows.push(updatedRow);
+          }
+          inputerStore[sheetId] = [...iRows];
+          saveStoredCollection(inputerKey, inputerStore);
+        }
+      });
+
       return { data: updatedRow, error: null };
     }
 
