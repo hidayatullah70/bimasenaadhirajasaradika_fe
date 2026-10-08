@@ -407,6 +407,85 @@ export const attendanceAdapter = {
         }
       }
 
+      // Merge data dari inputer stores jika ada nilai jam yang telah diinput di sana
+      const uIds = ['user1', 'user2', 'default', userId].filter(Boolean);
+      for (const uid of uIds) {
+        const inputerRowsKey = `attendance_rows_inputer_${uid}`;
+        const inputerRows = getStoredCollection(inputerRowsKey, () => ({}));
+        if (inputerRows[sheetId] && Array.isArray(inputerRows[sheetId]) && inputerRows[sheetId].length > 0) {
+          const iList = inputerRows[sheetId];
+          allRows[sheetId] = allRows[sheetId].map((r) => {
+            const found = iList.find((ir) => ir.employeeId === r.employeeId && ir.attendanceDate === r.attendanceDate);
+            if (found && (found.checkIn || found.checkOut)) {
+              return {
+                ...r,
+                checkIn: found.checkIn || r.checkIn,
+                checkOut: found.checkOut || r.checkOut,
+                status: found.status || r.status,
+                totalMinutes: found.totalMinutes || r.totalMinutes,
+                overtimeMinutes: found.overtimeMinutes || r.overtimeMinutes,
+                notes: found.notes || r.notes,
+              };
+            }
+            return r;
+          });
+        }
+      }
+
+      // Pastikan seluruh tanggal (Tgl 1 s/d total hari bulan aktif) lengkap tersedia untuk setiap personil
+      const yStr = parseInt(sheet.periodYear, 10) || 2026;
+      const mNum = parseInt(sheet.periodMonth, 10) || 9;
+      const totalDaysInPeriod = new Date(yStr, mNum, 0).getDate();
+      const mStr = String(mNum).padStart(2, '0');
+      const allPeriodDates = Array.from({ length: totalDaysInPeriod }, (_, i) => `${yStr}-${mStr}-${String(i + 1).padStart(2, '0')}`);
+
+      const distinctEmpsMap = new Map();
+      allRows[sheetId].forEach((r) => {
+        if (!distinctEmpsMap.has(r.employeeId)) {
+          distinctEmpsMap.set(r.employeeId, r);
+        }
+      });
+      matchingAssignments.forEach((asn) => {
+        if (!distinctEmpsMap.has(asn.employeeId)) {
+          distinctEmpsMap.set(asn.employeeId, {
+            employeeId: asn.employeeId,
+            employeeName: asn.employeeName,
+            employeeNik: asn.employeeNik || '-',
+            roleInUnit: asn.roleInUnit || 'Anggota',
+          });
+        }
+      });
+
+      let rowsWereAdded = false;
+      distinctEmpsMap.forEach((emp) => {
+        allPeriodDates.forEach((dStr) => {
+          const exists = allRows[sheetId].some((r) => r.employeeId === emp.employeeId && r.attendanceDate === dStr);
+          if (!exists) {
+            allRows[sheetId].push({
+              id: `ROW-${sheetId}-${emp.employeeId}-${dStr}`,
+              sheetId,
+              employeeId: emp.employeeId,
+              employeeName: emp.employeeName,
+              employeeNik: emp.employeeNik,
+              roleInUnit: emp.roleInUnit || 'Anggota',
+              attendanceDate: dStr,
+              checkIn: '',
+              checkOut: '',
+              status: STATUS.UNFILLED,
+              totalMinutes: 0,
+              overtimeMinutes: 0,
+              notes: '',
+              updatedAt: new Date().toISOString(),
+            });
+            rowsWereAdded = true;
+          }
+        });
+      });
+
+      if (rowsWereAdded) {
+        saveRowsStore(allRows);
+      }
+
       const distinctEmpIds = new Set(allRows[sheetId].map((r) => r.employeeId));
 
       return {
@@ -1162,12 +1241,55 @@ export const attendanceAdapter = {
   },
 
   /**
-   * Finalize sheet — locks roster, ready for payroll
+   * Explicitly save all sheet rows to persistent storage
    */
-  async finalizeSheet(sheetId, actorName = 'Siti Rahmawati (HRD)') {
+  async saveSheetRows(sheetId, rows, options = {}) {
+    const { userId = null } = options;
+    if (isMock) {
+      if (!rows || !Array.isArray(rows)) return { data: null, error: { message: 'Data baris tidak valid.' } };
+
+      const allRows = getRowsStore();
+      allRows[sheetId] = rows;
+      saveRowsStore(allRows);
+
+      const uIds = ['user1', 'user2', 'default', userId].filter(Boolean);
+      uIds.forEach((uid) => {
+        const inputerRowsKey = `attendance_rows_inputer_${uid}`;
+        const inputerRows = getStoredCollection(inputerRowsKey, () => ({}));
+        inputerRows[sheetId] = rows;
+        saveStoredCollection(inputerRowsKey, inputerRows);
+      });
+
+      return { data: { success: true, count: rows.length }, error: null };
+    }
+
+    const { data } = await apiClient.post(`/attendance/sheets/${sheetId}/rows`, { rows });
+    return data;
+  },
+
+  /**
+   * Finalize sheet — locks roster, snapshots attendance rows for payroll input
+   */
+  async finalizeSheet(sheetId, actorName = 'Siti Rahmawati (HRD)', rowsToSnapshot = null, options = {}) {
+    const { userId = null } = options;
     if (isMock) {
       const sheets = getSheetsStore();
-      const idx = sheets.findIndex((s) => s.id === sheetId);
+      let idx = sheets.findIndex((s) => s.id === sheetId);
+      
+      const uIds = ['user1', 'user2', 'default', userId].filter(Boolean);
+      if (idx === -1) {
+        for (const uid of uIds) {
+          const inputerKey = `attendance_sheets_inputer_${uid}`;
+          const inputerSheets = getStoredCollection(inputerKey, () => []);
+          const found = inputerSheets.find((s) => s.id === sheetId);
+          if (found) {
+            sheets.push(found);
+            idx = sheets.length - 1;
+            break;
+          }
+        }
+      }
+
       if (idx === -1) return { data: null, error: { message: 'Lembar tidak ditemukan.' } };
 
       const updated = {
@@ -1175,10 +1297,35 @@ export const attendanceAdapter = {
         status: STATUS.FINALIZED,
         finalizedAt: new Date().toISOString(),
         finalizedBy: actorName,
-        version: sheets[idx].version + 1,
+        version: (sheets[idx].version || 1) + 1,
       };
       sheets[idx] = updated;
       saveSheetsStore(sheets);
+
+      // Sinkronkan pembaruan status ke seluruh inputer stores
+      uIds.forEach((uid) => {
+        const inputerKey = `attendance_sheets_inputer_${uid}`;
+        const inputerSheets = getStoredCollection(inputerKey, () => []);
+        const sIdx = inputerSheets.findIndex((s) => s.id === sheetId);
+        if (sIdx !== -1) {
+          inputerSheets[sIdx] = updated;
+          saveStoredCollection(inputerKey, inputerSheets);
+        }
+      });
+
+      // Simpan permanen snapshot seluruh baris yang telah diinput
+      if (rowsToSnapshot && Array.isArray(rowsToSnapshot) && rowsToSnapshot.length > 0) {
+        const allRows = getRowsStore();
+        allRows[sheetId] = rowsToSnapshot;
+        saveRowsStore(allRows);
+
+        uIds.forEach((uid) => {
+          const inputerRowsKey = `attendance_rows_inputer_${uid}`;
+          const inputerRows = getStoredCollection(inputerRowsKey, () => ({}));
+          inputerRows[sheetId] = rowsToSnapshot;
+          saveStoredCollection(inputerRowsKey, inputerRows);
+        });
+      }
 
       await emitAudit({
         action: 'ATTENDANCE_FINALIZE',
@@ -1191,17 +1338,32 @@ export const attendanceAdapter = {
       return { data: updated, error: null };
     }
 
-    const { data } = await apiClient.post(`/attendance/sheets/${sheetId}/finalize`);
+    const { data } = await apiClient.post(`/attendance/sheets/${sheetId}/finalize`, { rows: rowsToSnapshot });
     return data;
   },
 
   /**
    * Reopen finalized sheet — requires privileged permission + audit trail
    */
-  async reopenSheet(sheetId, { reason, reopenedBy = 'Juli Priyanto (Direktur Utama)' }) {
+  async reopenSheet(sheetId, { reason, reopenedBy = 'Juli Priyanto (Direktur Utama)' }, options = {}) {
+    const { userId = null } = options;
     if (isMock) {
       const sheets = getSheetsStore();
-      const idx = sheets.findIndex((s) => s.id === sheetId);
+      let idx = sheets.findIndex((s) => s.id === sheetId);
+      const uIds = ['user1', 'user2', 'default', userId].filter(Boolean);
+      if (idx === -1) {
+        for (const uid of uIds) {
+          const inputerKey = `attendance_sheets_inputer_${uid}`;
+          const inputerSheets = getStoredCollection(inputerKey, () => []);
+          const found = inputerSheets.find((s) => s.id === sheetId);
+          if (found) {
+            sheets.push(found);
+            idx = sheets.length - 1;
+            break;
+          }
+        }
+      }
+
       if (idx === -1) return { data: null, error: { message: 'Lembar tidak ditemukan.' } };
 
       const updated = {
@@ -1210,10 +1372,20 @@ export const attendanceAdapter = {
         reopenedAt: new Date().toISOString(),
         reopenedBy,
         reopenReason: reason,
-        version: sheets[idx].version + 1,
+        version: (sheets[idx].version || 1) + 1,
       };
       sheets[idx] = updated;
       saveSheetsStore(sheets);
+
+      uIds.forEach((uid) => {
+        const inputerKey = `attendance_sheets_inputer_${uid}`;
+        const inputerSheets = getStoredCollection(inputerKey, () => []);
+        const sIdx = inputerSheets.findIndex((s) => s.id === sheetId);
+        if (sIdx !== -1) {
+          inputerSheets[sIdx] = updated;
+          saveStoredCollection(inputerKey, inputerSheets);
+        }
+      });
 
       await emitAudit({
         action: 'ATTENDANCE_REOPEN',
@@ -1236,27 +1408,34 @@ export const attendanceAdapter = {
    */
   async getPayrollAttendanceSummary(sheetId, options = {}) {
     if (isMock) {
-      const { isAttendanceOnly = false, userId = null } = options;
-      let rows = [];
-      if (isAttendanceOnly || userId) {
-        const inputerKey = `attendance_rows_inputer_${userId || 'default'}`;
-        const inputerStore = getStoredCollection(inputerKey, () => ({}));
-        rows = inputerStore[sheetId] || [];
-      }
-      if (!rows || rows.length === 0) {
-        const allRows = getRowsStore();
-        rows = allRows[sheetId] || [];
-      }
-      if (!rows || rows.length === 0) {
-        const keys = ['attendance_rows_inputer_user1', 'attendance_rows_inputer_user2', 'attendance_rows_inputer_default'];
-        for (const k of keys) {
-          const s = getStoredCollection(k, () => ({}));
-          if (s[sheetId] && s[sheetId].length > 0) {
-            rows = s[sheetId];
-            break;
-          }
+      const { userId = null } = options;
+      
+      const allRows = getRowsStore();
+      const baseRows = allRows[sheetId] || [];
+
+      // Gabungkan baris dari seluruh inputer store yang memiliki nilai jam terisi
+      const keys = ['attendance_rows_inputer_user1', 'attendance_rows_inputer_user2', 'attendance_rows_inputer_default'];
+      if (userId) keys.unshift(`attendance_rows_inputer_${userId}`);
+
+      let mergedMap = new Map();
+      baseRows.forEach((r) => {
+        mergedMap.set(`${r.employeeId}_${r.attendanceDate}`, r);
+      });
+
+      for (const k of keys) {
+        const s = getStoredCollection(k, () => ({}));
+        if (s[sheetId] && Array.isArray(s[sheetId])) {
+          s[sheetId].forEach((iRow) => {
+            const key = `${iRow.employeeId}_${iRow.attendanceDate}`;
+            const existing = mergedMap.get(key);
+            if (!existing || ((iRow.checkIn || iRow.checkOut) && (!existing.checkIn && !existing.checkOut))) {
+              mergedMap.set(key, iRow);
+            }
+          });
         }
       }
+
+      const rows = Array.from(mergedMap.values());
 
       // Cari sheet untuk sinkronisasi jumlah hari kalender bulan bersangkutan dan durasi kerja
       const sheets = getSheetsStore();

@@ -31,6 +31,8 @@ export default function AttendancePayrollSummaryPage() {
       if (res.data && res.data.length > 0) {
         setSheets(res.data);
         setSelectedSheetId((prev) => {
+          const savedId = sessionStorage.getItem('barak_active_attendance_sheet_id');
+          if (savedId && res.data.some((s) => s.id === savedId)) return savedId;
           if (prev && res.data.some((s) => s.id === prev)) return prev;
           return res.data[0].id;
         });

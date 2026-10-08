@@ -15,7 +15,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   FileSpreadsheet, CheckCircle2, Lock, Unlock,
-  RefreshCw, Zap, Clock, Upload, Users, Calendar, RotateCcw, AlertTriangle, Trash2
+  RefreshCw, Zap, Clock, Upload, Users, Calendar, RotateCcw, AlertTriangle, Trash2, Save
 } from 'lucide-react';
 import attendanceAdapter, { isInvalidEmployeeName } from '@/services/adapters/attendanceAdapter';
 import { calculateAttendanceMetrics } from '@/services/mock/mockAttendanceData';
@@ -230,8 +230,6 @@ function TimeInputCell({ value, disabled, onSave, ariaLabel }) {
           if (normalized !== valueRef.current) {
             onSaveRef.current?.(normalized);
           }
-        } else if (valueRef.current) {
-          onSaveRef.current?.('');
         }
       }
     };
@@ -859,15 +857,40 @@ export default function AttendanceSpreadsheetPage() {
     }
   };
 
+  // Simpan seluruh data lembar absensi secara persisten
+  const handleSaveSheet = async () => {
+    if (!sheetData || !sheetData.sheet) return;
+    try {
+      const activeRows = sheetDataRef.current?.rows || sheetData.rows || [];
+      const res = await attendanceAdapter.saveSheetRows(sheetData.sheet.id, activeRows, {
+        isAttendanceOnly,
+        userId: currentUserId,
+      });
+      if (res.data?.success) {
+        toast.success(`Seluruh data absensi (${activeRows.length} baris hari) berhasil disimpan.`);
+      } else {
+        toast.error(res.error?.message || 'Gagal menyimpan data absensi.');
+      }
+    } catch {
+      toast.error('Gagal menyimpan data absensi.');
+    }
+  };
+
   // Finalize month
   const handleFinalize = async () => {
-    if (!sheetData) return;
+    if (!sheetData || !sheetData.sheet) return;
     if (!window.confirm(`Konfirmasi finalisasi absensi ${sheetData.sheet.periodName}? Lembar akan dikunci permanen untuk input payroll.`)) return;
 
     try {
+      const activeRows = sheetDataRef.current?.rows || sheetData.rows || [];
       const res = await attendanceAdapter.finalizeSheet(
         sheetData.sheet.id,
-        currentUser ? currentUser.name : 'Siti Rahmawati (HRD)'
+        currentUser ? currentUser.name : 'Zaenal Arifin (HRD)',
+        activeRows,
+        {
+          isAttendanceOnly,
+          userId: currentUserId,
+        }
       );
       if (res.data) {
         toast.success(`Lembar absensi ${sheetData.sheet.periodName} berhasil difinalisasi & dikunci.`);
@@ -1220,8 +1243,18 @@ export default function AttendanceSpreadsheetPage() {
                     <CheckCircle2 className="h-3.5 w-3.5 text-info" />
                     <span>Validasi</span>
                   </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSaveSheet}
+                    className="gap-1.5 text-xs border-emerald-600/50 text-emerald-800 hover:bg-emerald-50 font-semibold shadow-2xs"
+                    title="Simpan seluruh perubahan jam datang & pulang ke penyimpanan persisten"
+                  >
+                    <Save className="h-3.5 w-3.5 text-emerald-600" />
+                    <span>Simpan Lembar</span>
+                  </Button>
                   {canFinalize && (
-                    <Button variant="primary" size="sm" onClick={handleFinalize} className="gap-1.5 text-xs bg-success hover:bg-green-700">
+                    <Button variant="primary" size="sm" onClick={handleFinalize} className="gap-1.5 text-xs bg-success hover:bg-green-700 shadow-2xs">
                       <Lock className="h-3.5 w-3.5" />
                       <span>Finalisasi Bulan</span>
                     </Button>
