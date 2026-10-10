@@ -5,7 +5,15 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { ShieldCheck, Search, Plus, User, CheckCircle2, XCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  ShieldCheck,
+  Search,
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  Trash2,
+  AlertTriangle,
+} from 'lucide-react';
 import userAdapter from '@/services/adapters/userAdapter';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { PERMISSIONS } from '@/constants/permissions';
@@ -28,11 +36,13 @@ export default function UserListPage() {
   const [search, setSearch] = useState('');
   const [role, setRole] = useState('');
   const [page, setPage] = useState(1);
-  const [meta, setMeta] = useState({ total: 0, totalPages: 1 });
+  const [meta, setMeta] = useState({ total: 0, totalPages: 1, pageSize: 25 });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [isMatrixOpen, setIsMatrixOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -40,7 +50,7 @@ export default function UserListPage() {
       const res = await userAdapter.getUsers({ search, role, page, pageSize: 25 });
       if (res.data) {
         setUsers(res.data);
-        setMeta(res.meta);
+        setMeta(res.meta || { total: res.data.length, totalPages: 1, pageSize: 25 });
       }
     } catch {
       toast.error('Gagal memuat akun pengguna.');
@@ -65,11 +75,35 @@ export default function UserListPage() {
 
   const handleToggleStatus = async (user) => {
     try {
-      await userAdapter.toggleUserStatus(user.id);
-      toast.success(`Status akun ${user.username} berhasil diubah.`);
-      loadData();
+      const res = await userAdapter.toggleUserStatus(user.id);
+      if (res?.error) {
+        toast.error(res.error.message || 'Gagal mengubah status akun.');
+        return;
+      }
+      const isNowActive = res.data?.status === 'ACTIVE';
+      toast.success(`Status akun @${user.username} berhasil ${isNowActive ? 'diaktifkan' : 'dinonaktifkan'}.`);
+      await loadData();
     } catch {
       toast.error('Gagal mengubah status akun.');
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!userToDelete) return;
+    setIsDeleting(true);
+    try {
+      const res = await userAdapter.deleteUser(userToDelete.id);
+      if (res?.error) {
+        toast.error(res.error.message || 'Gagal menghapus akun.');
+        return;
+      }
+      toast.success(`Akun @${userToDelete.username} berhasil dihapus.`);
+      setUserToDelete(null);
+      await loadData();
+    } catch {
+      toast.error('Gagal menghapus akun pengguna.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -77,14 +111,23 @@ export default function UserListPage() {
     try {
       if (editingUser) {
         const uId = editingUser.id || editingUser.username;
-        await userAdapter.updateUser(uId, payload);
-        toast.success(`Akun ${payload.username} berhasil diperbarui.`);
+        const res = await userAdapter.updateUser(uId, payload);
+        if (res?.error) {
+          toast.error(res.error.message || 'Gagal memperbarui akun pengguna.');
+          return;
+        }
+        toast.success(`Akun @${payload.username} berhasil diperbarui.`);
       } else {
-        await userAdapter.createUser(payload);
-        toast.success(`Akun baru ${payload.username} berhasil didaftarkan.`);
+        const res = await userAdapter.createUser(payload);
+        if (res?.error) {
+          toast.error(res.error.message || 'Gagal mendaftarkan akun baru.');
+          return;
+        }
+        toast.success(`Akun baru @${payload.username} berhasil didaftarkan.`);
       }
       setIsModalOpen(false);
-      loadData();
+      setEditingUser(null);
+      await loadData();
     } catch {
       toast.error('Gagal menyimpan akun pengguna.');
     }
@@ -208,20 +251,30 @@ export default function UserListPage() {
                           <button
                             type="button"
                             onClick={() => handleOpenEdit(u)}
-                            className="px-2 py-1 text-xs rounded border border-border bg-white text-muted hover:text-ink font-medium"
+                            className="px-2.5 py-1 text-xs rounded border border-border bg-white text-ink hover:bg-slate-50 font-medium transition-colors"
+                            title="Ubah data akun pengguna"
                           >
                             Ubah
                           </button>
                           <button
                             type="button"
                             onClick={() => handleToggleStatus(u)}
-                            className={`px-2 py-1 text-xs rounded border font-medium ${
+                            className={`px-2.5 py-1 text-xs rounded border font-medium transition-colors ${
                               u.status === 'ACTIVE'
                                 ? 'border-amber-200 text-amber-700 hover:bg-amber-50'
-                                : 'border-success text-success hover:bg-success/10'
+                                : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
                             }`}
+                            title={u.status === 'ACTIVE' ? 'Nonaktifkan akun' : 'Aktifkan akun kembali'}
                           >
                             {u.status === 'ACTIVE' ? 'Nonaktifkan' : 'Aktifkan'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setUserToDelete(u)}
+                            className="p-1 rounded border border-rose-200 text-rose-700 hover:bg-rose-50 transition-colors"
+                            title="Hapus akun secara permanen"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>
                       ) : (
@@ -239,8 +292,8 @@ export default function UserListPage() {
         {!loading && users.length > 0 && (
           <div className="p-3.5 border-t border-border bg-canvas/30 flex items-center justify-between text-xs text-muted">
             <p>
-              Menampilkan <span className="font-medium text-ink">{(page - 1) * 10 + 1}</span> -{' '}
-              <span className="font-medium text-ink">{Math.min(page * 10, meta.total)}</span> dari{' '}
+              Menampilkan <span className="font-medium text-ink">{(page - 1) * (meta.pageSize || 25) + 1}</span> -{' '}
+              <span className="font-medium text-ink">{Math.min(page * (meta.pageSize || 25), meta.total)}</span> dari{' '}
               <span className="font-medium text-ink">{meta.total}</span> akun sistem
             </p>
             <div className="flex items-center gap-1.5">
@@ -275,7 +328,10 @@ export default function UserListPage() {
       <UserFormModal
         isOpen={isModalOpen}
         user={editingUser}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingUser(null);
+        }}
         onSave={handleSave}
       />
 
@@ -283,6 +339,47 @@ export default function UserListPage() {
         isOpen={isMatrixOpen}
         onClose={() => setIsMatrixOpen(false)}
       />
+
+      {/* Delete Confirmation Modal */}
+      {userToDelete && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full p-5 space-y-4 animate-scale-up border border-border">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-full bg-rose-100 text-primary-red shrink-0">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-ink">Hapus Akun Pengguna</h3>
+                <p className="text-xs text-muted mt-1 leading-relaxed">
+                  Apakah Anda yakin ingin menghapus akun <strong className="text-ink">@{userToDelete.username}</strong> ({userToDelete.name})?
+                  Tindakan ini akan mencabut seluruh akses sistem akun ini.
+                </p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-3 border-t border-border">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isDeleting}
+                onClick={() => setUserToDelete(null)}
+              >
+                Batal
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                loading={isDeleting}
+                onClick={handleConfirmDelete}
+                className="bg-primary-red hover:bg-red-800 text-white gap-1.5"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                <span>Ya, Hapus Akun</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

@@ -274,7 +274,7 @@ const ROLE_PERMISSIONS = {
     PERMISSIONS.IT_TICKET_RESOLVE,
     PERMISSIONS.IT_ASSET_VIEW,
     PERMISSIONS.IT_ASSET_MANAGE,
-    // Manajemen Pengguna & Staf (R)
+    // Manajemen Pengguna & Staf (R/W)
     PERMISSIONS.USER_VIEW,
     // Tenaga Kerja (R)
     PERMISSIONS.EMPLOYEE_VIEW,

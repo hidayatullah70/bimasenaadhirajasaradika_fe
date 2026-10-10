@@ -104,6 +104,7 @@ export const roleRoutes = [
       { path: 'risk', element: <Suspense fallback={<PageLoader />}><RiskAlertsPage /></Suspense> },
       { path: 'reports', element: <Suspense fallback={<PageLoader />}><ExecutiveReportPage /></Suspense> },
       { path: 'activity', element: <Suspense fallback={<PageLoader />}><ExecutiveActivityPage /></Suspense> },
+      { path: 'users', element: <Suspense fallback={<PageLoader />}><UserListPage /></Suspense> },
     ],
   },
 
@@ -215,6 +216,7 @@ export const roleRoutes = [
       { path: 'tickets', element: <Suspense fallback={<PageLoader />}><TicketListPage /></Suspense> },
       { path: 'assets', element: <Suspense fallback={<PageLoader />}><AssetListPage /></Suspense> },
       { path: 'maintenance', element: <Suspense fallback={<PageLoader />}><MaintenancePage /></Suspense> },
+      { path: 'users', element: <Suspense fallback={<PageLoader />}><UserListPage /></Suspense> },
     ],
   },
 

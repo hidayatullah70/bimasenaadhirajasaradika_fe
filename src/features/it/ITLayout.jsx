@@ -8,7 +8,7 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import clsx from 'clsx';
-import { LayoutDashboard, Ticket, Server, Wrench } from 'lucide-react';
+import { LayoutDashboard, Ticket, Server, Wrench, ShieldCheck } from 'lucide-react';
 
 const TABS = [
   {
@@ -33,6 +33,12 @@ const TABS = [
     to: '/ops/it/maintenance',
     label: 'Pemeliharaan Preventif',
     icon: Wrench,
+    end: false,
+  },
+  {
+    to: '/ops/it/users',
+    label: 'Pengguna & Akses',
+    icon: ShieldCheck,
     end: false,
   },
 ];

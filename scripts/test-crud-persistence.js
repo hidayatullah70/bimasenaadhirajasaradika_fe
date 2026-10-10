@@ -224,6 +224,20 @@ async function runTests() {
   })).data;
   assert(updatedUser.name === 'Staff Senior Operasional', 'User edit persists');
 
+  // Status Toggle
+  const toggledUser = (await userAdapter.toggleUserStatus(newUser.id)).data;
+  assert(toggledUser && toggledUser.status === 'INACTIVE', 'User status toggle to INACTIVE persists');
+
+  const toggledBackUser = (await userAdapter.toggleUserStatus(newUser.id)).data;
+  assert(toggledBackUser && toggledBackUser.status === 'ACTIVE', 'User status toggle back to ACTIVE persists');
+
+  // User Delete
+  const deletedUserRes = await userAdapter.deleteUser(newUser.id);
+  assert(deletedUserRes.data?.success, 'User delete succeeds');
+
+  const userAfterDelete = (await userAdapter.getUserById(newUser.id)).data;
+  assert(!userAfterDelete, 'Deleted user cannot be retrieved');
+
   // 8. Test Assignment CRUD via Adapter
   console.log('\n--- 8. Testing Assignment Adapter CRUD ---');
   const assignmentAdapter = (await import(`file://${path.join(rootDir, 'src/services/adapters/assignmentAdapter.js')}`)).default;

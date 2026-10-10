@@ -11,17 +11,44 @@ import { getStoredCollection, saveStoredCollection } from '@/utils/storage';
 
 const isMock = import.meta.env.VITE_API_MODE !== 'rest';
 const STORAGE_KEY = 'barak_users';
+const DELETED_KEY = 'barak_deleted_user_ids';
+
+function getDeletedSet() {
+  const list = getStoredCollection(DELETED_KEY, () => []);
+  return new Set((Array.isArray(list) ? list : []).map((id) => String(id).toLowerCase().trim()));
+}
+
+function markAsDeleted(id, username) {
+  const list = getStoredCollection(DELETED_KEY, () => []);
+  const nextList = Array.from(
+    new Set([
+      ...(Array.isArray(list) ? list : []),
+      String(id || '').toLowerCase().trim(),
+      String(username || '').toLowerCase().trim(),
+    ].filter(Boolean))
+  );
+  saveStoredCollection(DELETED_KEY, nextList);
+}
 
 function getStore() {
   const store = getStoredCollection(STORAGE_KEY, () => [...MOCK_SYSTEM_USERS]);
+  const deletedSet = getDeletedSet();
 
-  // Self-healing & auto-sync: pastikan seluruh user default (termasuk user1, user2, pic) selalu ada di store
+  // Self-healing & auto-sync: pastikan seluruh user default ada jika belum secara eksplisit dihapus
   let hasMissing = false;
   MOCK_SYSTEM_USERS.forEach((defaultUser) => {
-    const idKey = (defaultUser.id || '').toUpperCase();
-    const userKey = (defaultUser.username || '').toLowerCase();
+    const idKey = (defaultUser.id || '').toLowerCase().trim();
+    const userKey = (defaultUser.username || '').toLowerCase().trim();
+
+    // Jika user ini sudah dihapus oleh pengguna, jangan hidupkan kembali
+    if (deletedSet.has(idKey) || deletedSet.has(userKey)) {
+      return;
+    }
+
     const existingIndex = store.findIndex(
-      (u) => (u.id || '').toUpperCase() === idKey || (u.username || '').toLowerCase() === userKey
+      (u) =>
+        (u.id || '').toLowerCase().trim() === idKey ||
+        (u.username || '').toLowerCase().trim() === userKey
     );
     if (existingIndex === -1) {
       store.push({ ...defaultUser });
@@ -96,7 +123,12 @@ export const userAdapter = {
   async getUserById(id) {
     if (isMock) {
       const store = getStore();
-      const user = store.find((u) => u.id === id);
+      const matchId = String(id || '').toLowerCase().trim();
+      const user = store.find(
+        (u) =>
+          (u.id && u.id.toLowerCase().trim() === matchId) ||
+          (u.username && u.username.toLowerCase().trim() === matchId)
+      );
       if (!user) return { data: null, error: { message: 'Pengguna tidak ditemukan.' } };
       return { data: { ...user }, error: null };
     }
@@ -107,6 +139,14 @@ export const userAdapter = {
   async createUser(payload) {
     if (isMock) {
       const store = getStore();
+      const userKey = (payload.username || '').toLowerCase().trim();
+
+      // Cek apakah username sudah dipakai
+      const duplicate = store.find((u) => (u.username || '').toLowerCase().trim() === userKey);
+      if (duplicate) {
+        return { data: null, error: { message: `Username "${payload.username}" sudah digunakan.` } };
+      }
+
       const maxNum = store.reduce((max, u) => {
         const match = (u.id || '').match(/(\d+)$/);
         return match ? Math.max(max, parseInt(match[1], 10)) : max;
@@ -115,6 +155,9 @@ export const userAdapter = {
       const newUser = {
         ...payload,
         id: newId,
+        username: payload.username.trim(),
+        name: payload.name.trim(),
+        email: payload.email.trim(),
         status: payload.status || STATUS.ACTIVE,
         createdAt: new Date().toISOString(),
       };
@@ -139,7 +182,12 @@ export const userAdapter = {
   async updateUser(id, payload) {
     if (isMock) {
       const store = getStore();
-      const idx = store.findIndex((u) => u.id === id || u.username === id);
+      const matchId = String(id || '').toLowerCase().trim();
+      const idx = store.findIndex(
+        (u) =>
+          (u.id && u.id.toLowerCase().trim() === matchId) ||
+          (u.username && u.username.toLowerCase().trim() === matchId)
+      );
       if (idx === -1) return { data: null, error: { message: 'Pengguna tidak ditemukan.' } };
 
       const oldUser = store[idx];
@@ -156,7 +204,7 @@ export const userAdapter = {
         action: 'USER_EDIT',
         module: 'IT',
         entity: 'User',
-        entityId: id,
+        entityId: oldUser.id,
         details: { changes: Object.keys(payload) },
       });
 
@@ -170,7 +218,12 @@ export const userAdapter = {
   async toggleUserStatus(id) {
     if (isMock) {
       const store = getStore();
-      const idx = store.findIndex((u) => u.id === id || u.username === id);
+      const matchId = String(id || '').toLowerCase().trim();
+      const idx = store.findIndex(
+        (u) =>
+          (u.id && u.id.toLowerCase().trim() === matchId) ||
+          (u.username && u.username.toLowerCase().trim() === matchId)
+      );
       if (idx === -1) return { data: null, error: { message: 'Pengguna tidak ditemukan.' } };
 
       const current = store[idx];
@@ -183,7 +236,7 @@ export const userAdapter = {
         action: 'USER_STATUS_CHANGE',
         module: 'IT',
         entity: 'User',
-        entityId: id,
+        entityId: current.id,
         details: { oldStatus: current.status, newStatus },
       });
 
@@ -197,22 +250,34 @@ export const userAdapter = {
   async deleteUser(id) {
     if (isMock) {
       const store = getStore();
-      const idx = store.findIndex((u) => u.id === id || u.username === id);
+      const matchId = String(id || '').toLowerCase().trim();
+      const idx = store.findIndex(
+        (u) =>
+          (u.id && u.id.toLowerCase().trim() === matchId) ||
+          (u.username && u.username.toLowerCase().trim() === matchId)
+      );
       if (idx === -1) return { data: null, error: { message: 'Pengguna tidak ditemukan.' } };
 
       const removed = store[idx];
-      const updatedStore = store.filter((u) => u.id !== id && u.username !== id);
+      const updatedStore = store.filter(
+        (u) =>
+          (u.id && u.id.toLowerCase().trim() !== matchId) &&
+          (u.username && u.username.toLowerCase().trim() !== matchId)
+      );
       saveStore(updatedStore);
+
+      // Tandai ID / username sebagai terhapus agar self-healing tidak memunculkan kembali
+      markAsDeleted(removed.id, removed.username);
 
       await emitAudit({
         action: 'USER_DELETE',
         module: 'IT',
         entity: 'User',
-        entityId: id,
+        entityId: removed.id || id,
         details: { username: removed.username },
       });
 
-      return { data: { success: true }, error: null };
+      return { data: { success: true, removed }, error: null };
     }
 
     const { data } = await apiClient.delete(`/users/${id}`);
@@ -221,3 +286,4 @@ export const userAdapter = {
 };
 
 export default userAdapter;
+

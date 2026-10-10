@@ -47,6 +47,12 @@ const TABS = [
     icon: History,
     end: false,
   },
+  {
+    to: '/ops/director/users',
+    label: 'Pengguna & Akses',
+    icon: ShieldCheck,
+    end: false,
+  },
 ];
 
 export default function DirectorLayout() {
