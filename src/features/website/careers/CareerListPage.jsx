@@ -74,7 +74,7 @@ export default function CareerListPage() {
           ? `Lowongan ${job.title} kembali dibuka!`
           : `Lowongan ${job.title} resmi ditutup.`
       );
-      loadData();
+      await loadData();
     } catch {
       toast.error('Gagal mengubah status lowongan.');
     }

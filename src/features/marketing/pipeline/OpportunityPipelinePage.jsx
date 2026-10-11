@@ -146,7 +146,7 @@ export default function OpportunityPipelinePage() {
         return;
       }
       toast.success(`Tahapan dipindahkan ke: ${targetStage ? targetStage.label : newStage}`);
-      loadData();
+      await loadData();
     } catch {
       toast.error('Gagal memperbarui tahapan deal.');
     }

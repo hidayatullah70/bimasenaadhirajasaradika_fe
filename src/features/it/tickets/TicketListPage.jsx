@@ -111,7 +111,7 @@ export default function TicketListPage() {
         return;
       }
       toast.success(`Status tiket diperbarui menjadi: ${newStatus}`);
-      loadData();
+      await loadData();
     } catch {
       toast.error('Gagal memperbarui status tiket.');
     }

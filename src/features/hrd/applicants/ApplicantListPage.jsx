@@ -228,14 +228,22 @@ export default function ApplicantListPage() {
   const handleSaveForm = async (formData) => {
     try {
       if (editingApplicant) {
-        await applicantAdapter.updateApplicant(editingApplicant.id, formData);
+        const res = await applicantAdapter.updateApplicant(editingApplicant.id, formData);
+        if (res?.error) {
+          toast.error(res.error.message || 'Gagal memperbarui data pelamar.');
+          return;
+        }
         toast.success(`Data pelamar ${formData.namaLengkap} berhasil diperbarui.`);
       } else {
-        await applicantAdapter.createApplicant(formData);
+        const res = await applicantAdapter.createApplicant(formData);
+        if (res?.error) {
+          toast.error(res.error.message || 'Gagal menambahkan pelamar.');
+          return;
+        }
         toast.success(`Pelamar ${formData.namaLengkap} berhasil ditambahkan.`);
       }
       setIsFormOpen(false);
-      loadData();
+      await loadData();
     } catch {
       toast.error('Gagal menyimpan formulir pelamar.');
     }

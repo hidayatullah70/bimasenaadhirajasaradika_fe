@@ -43,6 +43,79 @@ export const payrollAdapter = {
     return data;
   },
 
+  async createPayrollPeriod(payload) {
+    if (isMock) {
+      const periods = getPeriodsStore();
+      const month = payload.periodMonth || new Date().getMonth() + 1;
+      const year = payload.periodYear || new Date().getFullYear();
+      const id = payload.id || `PAYROLL-${year}-${String(month).padStart(2, '0')}`;
+      const periodLabel = payload.periodName || payload.periodLabel || `${month}/${year}`;
+
+      const newPeriod = {
+        id,
+        periodMonth: month,
+        periodYear: year,
+        periodLabel,
+        status: payload.status || STATUS.DRAFT,
+        totalEmployees: payload.totalEmployees || 0,
+        totalGrossAmount: payload.totalGrossAmount || 0,
+        totalDeductions: payload.totalDeductions || 0,
+        totalNet: payload.totalNet || (payload.totalGrossAmount || 0) - (payload.totalDeductions || 0),
+        startDate: payload.startDate || `${year}-${String(month).padStart(2, '0')}-01`,
+        endDate: payload.endDate || `${year}-${String(month).padStart(2, '0')}-28`,
+        createdAt: new Date().toISOString(),
+      };
+
+      const updatedPeriods = [newPeriod, ...periods.filter((p) => p.id !== id)];
+      savePeriodsStore(updatedPeriods);
+
+      await emitAudit({
+        action: 'PAYROLL_CREATE',
+        module: 'Finance',
+        entity: 'PayrollPeriod',
+        entityId: id,
+        details: { periodLabel, totalEmployees: newPeriod.totalEmployees },
+      });
+
+      return { data: newPeriod, error: null };
+    }
+
+    const { data } = await apiClient.post('/payroll', payload);
+    return data;
+  },
+
+  async updatePayrollPeriod(periodId, payload) {
+    if (isMock) {
+      const periods = getPeriodsStore();
+      const normId = String(periodId).toLowerCase().trim();
+      const idx = periods.findIndex((p) => String(p.id).toLowerCase().trim() === normId);
+      if (idx === -1) return { data: null, error: { message: 'Periode payroll tidak ditemukan.' } };
+
+      const oldPeriod = periods[idx];
+      const updated = {
+        ...oldPeriod,
+        ...payload,
+        id: oldPeriod.id,
+        updatedAt: new Date().toISOString(),
+      };
+      periods[idx] = updated;
+      savePeriodsStore(periods);
+
+      await emitAudit({
+        action: 'PAYROLL_UPDATE',
+        module: 'Finance',
+        entity: 'PayrollPeriod',
+        entityId: oldPeriod.id,
+        details: { changes: Object.keys(payload) },
+      });
+
+      return { data: updated, error: null };
+    }
+
+    const { data } = await apiClient.patch(`/payroll/${periodId}`, payload);
+    return data;
+  },
+
   async getPayrollItems(periodId, { search = '', position = '' } = {}) {
     if (isMock) {
       let filtered = [...getItemsStore()];

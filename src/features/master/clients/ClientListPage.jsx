@@ -74,14 +74,22 @@ export default function ClientListPage() {
     try {
       if (editingClient) {
         const cId = editingClient.id || editingClient.code;
-        await clientAdapter.updateClient(cId, payload);
+        const res = await clientAdapter.updateClient(cId, payload);
+        if (res?.error) {
+          toast.error(res.error.message || 'Gagal memperbarui klien.');
+          return;
+        }
         toast.success(`Data klien ${payload.name} berhasil diperbarui.`);
       } else {
-        await clientAdapter.createClient(payload);
+        const res = await clientAdapter.createClient(payload);
+        if (res?.error) {
+          toast.error(res.error.message || 'Gagal menambahkan klien.');
+          return;
+        }
         toast.success(`Klien baru ${payload.name} berhasil ditambahkan.`);
       }
       setIsModalOpen(false);
-      loadData();
+      await loadData();
     } catch {
       toast.error('Terjadi kesalahan saat menyimpan klien.');
     }

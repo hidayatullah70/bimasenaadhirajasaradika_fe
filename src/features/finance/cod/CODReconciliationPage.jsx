@@ -78,14 +78,14 @@ export default function CODReconciliationPage() {
     const res = await codAdapter.recordCollectionAttempt(caseId, payload);
     if (res.error) throw res.error;
     toast.success('Catatan upaya penagihan kurir berhasil disimpan.');
-    loadData();
+    await loadData();
   };
 
   const handleEscalateLegal = async (caseId, payload) => {
     const res = await codAdapter.escalateToLegal(caseId, payload);
     if (res.error) throw res.error;
     toast.success('Kasus selisih COD berhasil dilimpahkan ke Divisi Legal.');
-    loadData();
+    await loadData();
   };
 
   const handleSettlement = async (caseId) => {
@@ -111,7 +111,7 @@ export default function CODReconciliationPage() {
     setSettlingCaseId(null);
     setSettlementAmount('');
     setSettlementReceipt('');
-    loadData();
+    await loadData();
   };
 
   // KPIs

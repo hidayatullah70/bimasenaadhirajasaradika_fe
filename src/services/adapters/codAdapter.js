@@ -23,6 +23,10 @@ function saveCodCasesStore(cases) {
   saveStoredCollection('cod_cases', cases);
 }
 
+function saveCodTransactionsStore(trxs) {
+  saveStoredCollection('cod_transactions', trxs);
+}
+
 export const codAdapter = {
   async getCODTransactions({ search = '', clientId = '', status = '', page = 1, pageSize = 15 } = {}) {
     if (isMock) {
@@ -56,6 +60,60 @@ export const codAdapter = {
     const { data } = await apiClient.get('/cod/transactions', {
       params: { search, clientId, status, page, pageSize },
     });
+    return data;
+  },
+
+  async createTransaction(payload) {
+    if (isMock) {
+      const store = getCodTransactionsStore();
+      const nextNum = (store.length + 1).toString().padStart(4, '0');
+      const newTrx = {
+        ...payload,
+        id: payload.id || `TRX-COD-${nextNum}`,
+        trackingNumber: payload.trackingNumber || `BARAK-COD-${nextNum}`,
+        amount: Number(payload.amount) || 0,
+        status: payload.status || 'COLLECTED',
+        createdAt: new Date().toISOString(),
+      };
+      saveCodTransactionsStore([newTrx, ...store]);
+
+      await emitAudit({
+        action: 'COD_TRANSACTION_CREATE',
+        module: 'Finance',
+        entity: 'CODTransaction',
+        entityId: newTrx.id,
+        details: { trackingNumber: newTrx.trackingNumber, amount: newTrx.amount },
+      });
+
+      return { data: newTrx, error: null };
+    }
+
+    const { data } = await apiClient.post('/cod/transactions', payload);
+    return data;
+  },
+
+  async updateTransaction(id, payload) {
+    if (isMock) {
+      const store = getCodTransactionsStore();
+      const normId = String(id).toLowerCase().trim();
+      const idx = store.findIndex((t) => String(t.id).toLowerCase().trim() === normId || String(t.trackingNumber).toLowerCase().trim() === normId);
+      if (idx === -1) return { data: null, error: { message: 'Transaksi COD tidak ditemukan.' } };
+
+      const oldTrx = store[idx];
+      const updated = {
+        ...oldTrx,
+        ...payload,
+        id: oldTrx.id,
+        trackingNumber: oldTrx.trackingNumber,
+        updatedAt: new Date().toISOString(),
+      };
+      store[idx] = updated;
+      saveCodTransactionsStore(store);
+
+      return { data: updated, error: null };
+    }
+
+    const { data } = await apiClient.patch(`/cod/transactions/${id}`, payload);
     return data;
   },
 
@@ -102,6 +160,63 @@ export const codAdapter = {
       return { data: { ...c }, error: null };
     }
     const { data } = await apiClient.get(`/cod/cases/${id}`);
+    return data;
+  },
+
+  async createCODCase(payload) {
+    if (isMock) {
+      const cases = getCodCasesStore();
+      const nextNum = (cases.length + 1).toString().padStart(3, '0');
+      const newCase = {
+        ...payload,
+        id: payload.id || `CASE-COD-${nextNum}`,
+        caseNumber: payload.caseNumber || `COD/BRK/2026/09/${nextNum}`,
+        collectionStatus: payload.collectionStatus || 'OPEN',
+        status: payload.status || 'OPEN',
+        discrepancyAmount: Number(payload.discrepancyAmount || payload.amount || 0),
+        outstandingAmount: Number(payload.outstandingAmount || payload.discrepancyAmount || payload.amount || 0),
+        contactAttempts: [],
+        createdAt: new Date().toISOString(),
+      };
+      saveCodCasesStore([newCase, ...cases]);
+
+      await emitAudit({
+        action: 'COD_CASE_CREATE',
+        module: 'Finance',
+        entity: 'CODCase',
+        entityId: newCase.id,
+        details: { caseNumber: newCase.caseNumber, amount: newCase.discrepancyAmount },
+      });
+
+      return { data: newCase, error: null };
+    }
+
+    const { data } = await apiClient.post('/cod/cases', payload);
+    return data;
+  },
+
+  async updateCODCase(id, payload) {
+    if (isMock) {
+      const cases = getCodCasesStore();
+      const normId = String(id).toLowerCase().trim();
+      const idx = cases.findIndex((c) => String(c.id).toLowerCase().trim() === normId || String(c.caseNumber).toLowerCase().trim() === normId);
+      if (idx === -1) return { data: null, error: { message: 'Kasus COD tidak ditemukan.' } };
+
+      const oldCase = cases[idx];
+      const updated = {
+        ...oldCase,
+        ...payload,
+        id: oldCase.id,
+        caseNumber: oldCase.caseNumber,
+        updatedAt: new Date().toISOString(),
+      };
+      cases[idx] = updated;
+      saveCodCasesStore(cases);
+
+      return { data: updated, error: null };
+    }
+
+    const { data } = await apiClient.patch(`/cod/cases/${id}`, payload);
     return data;
   },
 
@@ -168,6 +283,7 @@ export const codAdapter = {
         ...c,
         outstandingAmount: newOutstanding,
         collectionStatus: isSettled ? 'SETTLED' : 'PARTIAL_SETTLEMENT',
+        status: isSettled ? 'SETTLED' : (c.status || 'PARTIAL_SETTLEMENT'),
         settlementDate: new Date().toISOString().slice(0, 10),
         settlementAmount: payAmount,
         settlementReceipt,
@@ -198,6 +314,49 @@ export const codAdapter = {
       settlementReceipt,
       notes,
     });
+    return data;
+  },
+
+  async settleTransaction(id, payload = {}) {
+    if (isMock) {
+      const trxs = getCodTransactionsStore();
+      const normId = String(id).toLowerCase().trim();
+      const trxIdx = trxs.findIndex(
+        (t) => String(t.id).toLowerCase().trim() === normId || String(t.trackingNumber).toLowerCase().trim() === normId
+      );
+      if (trxIdx !== -1) {
+        const oldTrx = trxs[trxIdx];
+        const updatedTrx = {
+          ...oldTrx,
+          status: 'SETTLED',
+          settledAmount: payload.settledAmount || payload.settlementAmount || oldTrx.amount,
+          settledAt: new Date().toISOString(),
+          settlementReceipt: payload.settlementReceipt || 'TRX-SETTLED',
+          notes: payload.notes || oldTrx.notes || '',
+        };
+        trxs[trxIdx] = updatedTrx;
+        saveCodTransactionsStore(trxs);
+
+        await emitAudit({
+          action: 'COD_TRANSACTION_SETTLE',
+          module: 'Finance',
+          entity: 'CODTransaction',
+          entityId: oldTrx.id,
+          details: { trackingNumber: oldTrx.trackingNumber, amount: updatedTrx.settledAmount },
+        });
+
+        return { data: updatedTrx, error: null };
+      }
+
+      return this.recordCODSettlement(id, {
+        settlementAmount: payload.settledAmount || payload.settlementAmount || payload.amount,
+        settlementReceipt: payload.settlementReceipt || payload.notes || 'TRX-SETTLED',
+        notes: payload.notes || '',
+        actorName: payload.actorName || 'Siti Rahma (Finance)',
+      });
+    }
+
+    const { data } = await apiClient.post(`/cod/transactions/${id}/settle`, payload);
     return data;
   },
 

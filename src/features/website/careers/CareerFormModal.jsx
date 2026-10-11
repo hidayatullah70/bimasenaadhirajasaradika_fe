@@ -16,20 +16,22 @@ const DEPARTMENTS = [
   { value: 'FINANCE', label: 'Keuangan & Akuntansi' },
 ];
 
-export default function CareerFormModal({ isOpen, onClose, onSuccess }) {
+export default function CareerFormModal({ isOpen, onClose, career, onSuccess }) {
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
-    title: '',
-    department: 'OPERATIONS',
-    employmentType: 'KONTRAK (PKWT)',
-    location: 'Jabodetabek Area',
-    manpowerQuota: 5,
-    salaryRange: 'Standar UMR / UMK Wilayah + BPJS',
-    deadline: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
-    description: '',
-    requirementsText: 'WNI, usia 20-35 tahun\nMemiliki Ijazah & KTA Gada Pratama resmi Polri\nBebas narkoba dan berkelakuan baik\nBersedia sistem shift 3 regu',
-    status: 'PUBLISHED',
+    title: career?.title || '',
+    department: career?.department || 'OPERATIONS',
+    employmentType: career?.employmentType || 'KONTRAK (PKWT)',
+    location: career?.location || 'Jabodetabek Area',
+    manpowerQuota: career?.manpowerQuota || 5,
+    salaryRange: career?.salaryRange || 'Standar UMR / UMK Wilayah + BPJS',
+    deadline: career?.deadline || new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+    description: career?.description || '',
+    requirementsText: Array.isArray(career?.requirements)
+      ? career.requirements.join('\n')
+      : (career?.requirements || 'WNI, usia 20-35 tahun\nMemiliki Ijazah & KTA Gada Pratama resmi Polri\nBebas narkoba dan berkelakuan baik\nBersedia sistem shift 3 regu'),
+    status: career?.status || 'PUBLISHED',
   });
 
   const handleChange = (e) => {
@@ -52,22 +54,33 @@ export default function CareerFormModal({ isOpen, onClose, onSuccess }) {
         .map((r) => r.trim())
         .filter(Boolean);
 
-      const res = await cmsAdapter.createCareer({
+      const payload = {
         ...formData,
         departmentLabel: selectedDept ? selectedDept.label : formData.department,
         requirements: reqList,
-      });
+      };
+
+      let res;
+      if (career) {
+        res = await cmsAdapter.updateCareer(career.id, payload);
+      } else {
+        res = await cmsAdapter.createCareer(payload);
+      }
 
       if (res.error) {
-        toast.error(res.error);
+        toast.error(res.error.message || res.error);
         return;
       }
 
-      toast.success(`Lowongan ${res.data.title} berhasil diterbitkan ke portal karir!`);
+      toast.success(
+        career
+          ? `Lowongan ${res.data.title} berhasil diperbarui!`
+          : `Lowongan ${res.data.title} berhasil diterbitkan ke portal karir!`
+      );
       if (onSuccess) onSuccess();
       onClose();
     } catch {
-      toast.error('Gagal menerbitkan lowongan kerja.');
+      toast.error('Gagal menyimpan lowongan kerja.');
     } finally {
       setLoading(false);
     }
@@ -77,8 +90,8 @@ export default function CareerFormModal({ isOpen, onClose, onSuccess }) {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Buka Lowongan Kerja Baru"
-      description="Daftarkan lowongan rekrutmen personel satpam, kurir, atau staf operasional ke portal publik www.barak.co.id/career."
+      title={career ? 'Edit Lowongan Kerja' : 'Buka Lowongan Kerja Baru'}
+      description="Daftarkan atau perbarui lowongan rekrutmen personel ke portal publik www.barak.co.id/career."
       size="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-4">

@@ -83,14 +83,14 @@ export default function IncidentListPage() {
     const res = await incidentAdapter.createIncident(payload);
     if (res.error) throw res.error;
     toast.success('Laporan insiden berhasil dicatat.');
-    loadData();
+    await loadData();
   };
 
   const handleEscalateIncident = async (id, { targetDept, reason }) => {
     const res = await incidentAdapter.escalateIncident(id, { targetDept, reason });
     if (res.error) throw res.error;
     toast.success(`Insiden berhasil dieskalasi ke divisi ${targetDept}.`);
-    loadData();
+    await loadData();
   };
 
   const handleResolveIncident = async (id) => {
@@ -106,7 +106,7 @@ export default function IncidentListPage() {
     toast.success('Insiden dinyatakan selesai (Resolved).');
     setResolvingId(null);
     setResolutionText('');
-    loadData();
+    await loadData();
   };
 
   // Severity styling helper

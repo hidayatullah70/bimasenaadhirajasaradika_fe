@@ -119,6 +119,47 @@ export const legalAdapter = {
     return data;
   },
 
+  async createCase(payload) {
+    return this.createLegalCase(payload);
+  },
+
+  async updateLegalCase(id, payload) {
+    if (isMock) {
+      const casesStore = getCasesStore();
+      const normId = String(id).toLowerCase().trim();
+      const idx = casesStore.findIndex((c) => String(c.id).toLowerCase().trim() === normId || String(c.caseNumber).toLowerCase().trim() === normId);
+      if (idx === -1) return { data: null, error: { message: 'Kasus legal tidak ditemukan.' } };
+
+      const oldCase = casesStore[idx];
+      const updated = {
+        ...oldCase,
+        ...payload,
+        id: oldCase.id,
+        caseNumber: oldCase.caseNumber,
+        updatedAt: new Date().toISOString(),
+      };
+      casesStore[idx] = updated;
+      saveCasesStore(casesStore);
+
+      await emitAudit({
+        action: 'LEGAL_CASE_EDIT',
+        module: 'Legal',
+        entity: 'LegalCase',
+        entityId: oldCase.id,
+        details: { caseNumber: oldCase.caseNumber, changes: Object.keys(payload) },
+      });
+
+      return { data: updated, error: null };
+    }
+
+    const { data } = await apiClient.patch(`/legal/cases/${id}`, payload);
+    return data;
+  },
+
+  async updateCase(id, payload) {
+    return this.updateLegalCase(id, payload);
+  },
+
   async addLegalAction(caseId, { actionType, title, description, recordedBy = 'Farhan Maulana (Legal)' }) {
     if (isMock) {
       const casesStore = getCasesStore();

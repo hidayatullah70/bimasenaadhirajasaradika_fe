@@ -135,14 +135,22 @@ export default function AssignmentListPage() {
   const handleSave = async (payload) => {
     try {
       if (editingAssignment) {
-        await assignmentAdapter.updateAssignment(editingAssignment.id, payload);
+        const res = await assignmentAdapter.updateAssignment(editingAssignment.id, payload);
+        if (res?.error) {
+          toast.error(res.error.message || 'Gagal memperbarui penugasan.');
+          return;
+        }
         toast.success(`Penugasan ${payload.employeeName} berhasil diperbarui.`);
       } else {
-        await assignmentAdapter.createAssignment(payload);
+        const res = await assignmentAdapter.createAssignment(payload);
+        if (res?.error) {
+          toast.error(res.error.message || 'Gagal menyimpan penugasan.');
+          return;
+        }
         toast.success(`Penugasan baru untuk ${payload.employeeName} berhasil disimpan.`);
       }
       setIsModalOpen(false);
-      loadData();
+      await loadData();
     } catch {
       toast.error('Gagal menyimpan penugasan.');
     }

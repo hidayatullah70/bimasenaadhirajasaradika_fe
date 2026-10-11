@@ -29,11 +29,20 @@ export default function MaintenancePage() {
     loadData();
   }, []);
 
-  const handleMarkComplete = (id) => {
-    setSchedules((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, status: 'COMPLETED' } : s))
-    );
-    toast.success('Jadwal pemeliharaan preventif ditandai selesai!');
+  const handleMarkComplete = async (id) => {
+    try {
+      const res = await itAdapter.updateMaintenanceSchedule(id, { status: 'COMPLETED' });
+      if (res?.error) {
+        toast.error(res.error.message || 'Gagal memperbarui status.');
+        return;
+      }
+      setSchedules((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, status: 'COMPLETED' } : s))
+      );
+      toast.success('Jadwal pemeliharaan preventif ditandai selesai!');
+    } catch {
+      toast.error('Gagal memperbarui pemeliharaan preventif.');
+    }
   };
 
   return (

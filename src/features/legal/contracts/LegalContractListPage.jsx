@@ -94,14 +94,22 @@ export default function LegalContractListPage() {
   const handleSaveContract = async (payload) => {
     try {
       if (editingContract) {
-        await legalAdapter.updateContract(editingContract.id, payload);
+        const res = await legalAdapter.updateContract(editingContract.id, payload);
+        if (res?.error) {
+          toast.error(res.error.message || 'Gagal memperbarui dokumen PKS.');
+          return;
+        }
         toast.success(`Dokumen PKS ${payload.contractNumber} berhasil diperbarui.`);
       } else {
-        await legalAdapter.createContract(payload);
+        const res = await legalAdapter.createContract(payload);
+        if (res?.error) {
+          toast.error(res.error.message || 'Gagal meregistrasi dokumen PKS.');
+          return;
+        }
         toast.success(`Dokumen PKS ${payload.contractNumber} berhasil diregistrasi.`);
       }
       setIsFormModalOpen(false);
-      loadData();
+      await loadData();
     } catch {
       toast.error('Gagal menyimpan dokumen PKS.');
     }

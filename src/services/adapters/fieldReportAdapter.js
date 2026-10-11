@@ -94,10 +94,19 @@ export const fieldReportAdapter = {
     return data;
   },
 
+  async createReport(payload) {
+    return this.createFieldReport(payload);
+  },
+
+  async updateReport(id, payload) {
+    return this.updateFieldReport(id, payload);
+  },
+
   async updateFieldReport(id, payload) {
     if (isMock) {
       const store = getStore();
-      const idx = store.findIndex((f) => f.id === id || f.reportCode === id);
+      const normId = String(id).toLowerCase().trim();
+      const idx = store.findIndex((f) => String(f.id).toLowerCase().trim() === normId || String(f.reportCode).toLowerCase().trim() === normId);
       if (idx === -1) return { data: null, error: { message: 'Laporan patroli tidak ditemukan.' } };
 
       const oldReport = store[idx];

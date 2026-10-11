@@ -298,6 +298,51 @@ export const cmsAdapter = {
     return data;
   },
 
+  async updateCareer(id, careerData) {
+    if (isMock) {
+      const careersStore = getCareersStore();
+      const normId = String(id).toLowerCase().trim();
+      const index = careersStore.findIndex(
+        (c) => String(c.id).toLowerCase().trim() === normId || String(c.slug).toLowerCase().trim() === normId
+      );
+      if (index === -1) return { data: null, error: { message: 'Lowongan tidak ditemukan' } };
+
+      const oldJob = careersStore[index];
+      const updated = {
+        ...oldJob,
+        ...careerData,
+        id: oldJob.id,
+        updatedAt: new Date().toISOString(),
+      };
+      careersStore[index] = updated;
+      saveCareersStore(careersStore);
+
+      emitAudit({
+        action: 'CMS_CAREER_EDIT',
+        module: 'CMS',
+        targetId: oldJob.id,
+        details: { title: updated.title, changes: Object.keys(careerData) },
+      });
+
+      return { data: updated, error: null };
+    }
+
+    const { data } = await apiClient.patch(`/cms/careers/${id}`, careerData);
+    return data;
+  },
+
+  async deleteCareer(id) {
+    if (isMock) {
+      const careersStore = getCareersStore();
+      const normId = String(id).toLowerCase().trim();
+      const filtered = careersStore.filter((c) => String(c.id).toLowerCase().trim() !== normId);
+      saveCareersStore(filtered);
+      return { data: { success: true, id }, error: null };
+    }
+    const { data } = await apiClient.delete(`/cms/careers/${id}`);
+    return data;
+  },
+
   // ── 3. FAQS ────────────────────────────────────────────────────────────
   async getFaqs({ search = '', category = '' } = {}) {
     if (isMock) {
@@ -331,6 +376,49 @@ export const cmsAdapter = {
       return { data: newFaq, error: null };
     }
     const { data } = await apiClient.post('/cms/faqs', faqData);
+    return data;
+  },
+
+  async updateFaq(id, faqData) {
+    if (isMock) {
+      const faqsStore = getFaqsStore();
+      const normId = String(id).toLowerCase().trim();
+      const index = faqsStore.findIndex((f) => String(f.id).toLowerCase().trim() === normId);
+      if (index === -1) return { data: null, error: { message: 'FAQ tidak ditemukan' } };
+
+      const oldFaq = faqsStore[index];
+      const updated = {
+        ...oldFaq,
+        ...faqData,
+        id: oldFaq.id,
+        updatedAt: new Date().toISOString(),
+      };
+      faqsStore[index] = updated;
+      saveFaqsStore(faqsStore);
+
+      emitAudit({
+        action: 'CMS_FAQ_EDIT',
+        module: 'CMS',
+        targetId: oldFaq.id,
+        details: { question: updated.question },
+      });
+
+      return { data: updated, error: null };
+    }
+
+    const { data } = await apiClient.patch(`/cms/faqs/${id}`, faqData);
+    return data;
+  },
+
+  async deleteFaq(id) {
+    if (isMock) {
+      const faqsStore = getFaqsStore();
+      const normId = String(id).toLowerCase().trim();
+      const filtered = faqsStore.filter((f) => String(f.id).toLowerCase().trim() !== normId);
+      saveFaqsStore(filtered);
+      return { data: { success: true, id }, error: null };
+    }
+    const { data } = await apiClient.delete(`/cms/faqs/${id}`);
     return data;
   },
 
@@ -497,3 +585,6 @@ export const cmsAdapter = {
     return data;
   },
 };
+
+export default cmsAdapter;
+

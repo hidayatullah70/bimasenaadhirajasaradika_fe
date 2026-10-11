@@ -120,24 +120,63 @@ export const invoiceAdapter = {
     return data;
   },
 
-  async recordPayment(invoiceId, { amount, paymentMethod, referenceNumber, notes, actorName = 'Siti Rahma (Finance)' }) {
+  async updateInvoice(id, payload) {
     if (isMock) {
       const invoices = getInvoicesStore();
-      const idx = invoices.findIndex((i) => i.id === invoiceId);
+      const normId = String(id).toLowerCase().trim();
+      const idx = invoices.findIndex(
+        (i) => String(i.id).toLowerCase().trim() === normId || String(i.invoiceNumber).toLowerCase().trim() === normId
+      );
+      if (idx === -1) return { data: null, error: { message: 'Faktur tidak ditemukan.' } };
+
+      const oldInv = invoices[idx];
+      const updated = {
+        ...oldInv,
+        ...payload,
+        id: oldInv.id,
+        invoiceNumber: oldInv.invoiceNumber,
+        updatedAt: new Date().toISOString(),
+      };
+      invoices[idx] = updated;
+      saveInvoicesStore(invoices);
+
+      await emitAudit({
+        action: 'INVOICE_EDIT',
+        module: 'Finance',
+        entity: 'Invoice',
+        entityId: oldInv.id,
+        details: { invoiceNumber: oldInv.invoiceNumber, changes: Object.keys(payload) },
+      });
+
+      return { data: updated, error: null };
+    }
+
+    const { data } = await apiClient.patch(`/invoices/${id}`, payload);
+    return data;
+  },
+
+  async recordPayment(invoiceId, { amount, paymentMethod, referenceNumber, bankReferenceNumber, notes, actorName = 'Siti Rahma (Finance)' }) {
+    if (isMock) {
+      const invoices = getInvoicesStore();
+      const normId = String(invoiceId).toLowerCase().trim();
+      const idx = invoices.findIndex(
+        (i) => String(i.id).toLowerCase().trim() === normId || String(i.invoiceNumber).toLowerCase().trim() === normId
+      );
       if (idx === -1) return { data: null, error: { message: 'Faktur tidak ditemukan.' } };
 
       const inv = invoices[idx];
       const payAmount = Number(amount) || 0;
-      const newPaid = inv.paidAmount + payAmount;
+      const newPaid = (inv.paidAmount || 0) + payAmount;
       const newRemaining = Math.max(0, inv.totalAmount - newPaid);
       const newStatus = newRemaining === 0 ? STATUS.PAID : STATUS.PARTIALLY_PAID;
+      const ref = referenceNumber || bankReferenceNumber || '';
 
       const paymentRecord = {
-        id: `PAY-2026-09-${(inv.paymentHistory.length + 1).toString().padStart(3, '0')}`,
+        id: `PAY-2026-09-${((inv.paymentHistory || []).length + 1).toString().padStart(3, '0')}`,
         amount: payAmount,
         paymentDate: new Date().toISOString().slice(0, 10),
-        paymentMethod,
-        referenceNumber,
+        paymentMethod: paymentMethod || 'Bank Transfer (BCA)',
+        referenceNumber: ref,
         notes,
         receivedBy: actorName,
       };
@@ -145,9 +184,10 @@ export const invoiceAdapter = {
       const updated = {
         ...inv,
         paidAmount: newPaid,
+        amountPaid: newPaid,
         remainingAmount: newRemaining,
         status: newStatus,
-        paymentHistory: [paymentRecord, ...inv.paymentHistory],
+        paymentHistory: [paymentRecord, ...(inv.paymentHistory || [])],
       };
 
       invoices[idx] = updated;
@@ -157,12 +197,12 @@ export const invoiceAdapter = {
         action: 'INVOICE_PAYMENT_RECORD',
         module: 'Finance',
         entity: 'Invoice',
-        entityId: invoiceId,
+        entityId: inv.id,
         details: {
           paymentAmount: payAmount,
           remaining: newRemaining,
           status: newStatus,
-          reference: referenceNumber,
+          reference: ref,
         },
       });
 
@@ -172,7 +212,7 @@ export const invoiceAdapter = {
     const { data } = await apiClient.post(`/invoices/${invoiceId}/payments`, {
       amount,
       paymentMethod,
-      referenceNumber,
+      referenceNumber: referenceNumber || bankReferenceNumber,
       notes,
     });
     return data;

@@ -76,7 +76,7 @@ export default function ApprovalCenterPage() {
       if (res.data) {
         toast.success(`Pengajuan "${selectedItem.title}" berhasil disetujui!`);
         closeReviewModal();
-        fetchApprovals();
+        await fetchApprovals();
         if (context?.setBadgeCounts) {
           context.setBadgeCounts((prev) => ({
             ...prev,
@@ -116,7 +116,7 @@ export default function ApprovalCenterPage() {
       if (res.data) {
         toast.success(`Pengajuan "${selectedItem.title}" telah ditolak dan dikembalikan ke pengusul.`);
         closeReviewModal();
-        fetchApprovals();
+        await fetchApprovals();
         if (context?.setBadgeCounts) {
           context.setBadgeCounts((prev) => ({
             ...prev,

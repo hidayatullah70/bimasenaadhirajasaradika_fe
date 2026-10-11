@@ -81,14 +81,14 @@ export default function InvoiceListPage() {
     const res = await invoiceAdapter.createInvoice(payload);
     if (res.error) throw res.error;
     toast.success('Faktur tagihan baru berhasil diterbitkan.');
-    loadData();
+    await loadData();
   };
 
   const handleRecordPayment = async (invoiceId, payload) => {
     const res = await invoiceAdapter.recordPayment(invoiceId, payload);
     if (res.error) throw res.error;
     toast.success('Penerimaan pembayaran berhasil dibukukan.');
-    loadData();
+    await loadData();
   };
 
   return (

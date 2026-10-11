@@ -83,14 +83,22 @@ export default function LocationListPage() {
     try {
       if (editingLocation) {
         const locId = editingLocation.id || editingLocation.code;
-        await locationAdapter.updateLocation(locId, payload);
+        const res = await locationAdapter.updateLocation(locId, payload);
+        if (res?.error) {
+          toast.error(res.error.message || 'Gagal memperbarui lokasi.');
+          return;
+        }
         toast.success(`Data lokasi ${payload.name} berhasil diperbarui.`);
       } else {
-        await locationAdapter.createLocation(payload);
+        const res = await locationAdapter.createLocation(payload);
+        if (res?.error) {
+          toast.error(res.error.message || 'Gagal menambahkan lokasi.');
+          return;
+        }
         toast.success(`Lokasi baru ${payload.name} berhasil ditambahkan.`);
       }
       setIsModalOpen(false);
-      loadData();
+      await loadData();
     } catch {
       toast.error('Terjadi kesalahan saat menyimpan lokasi.');
     }

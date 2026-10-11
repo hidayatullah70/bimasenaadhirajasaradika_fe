@@ -36,6 +36,10 @@ function getMaintenanceStore() {
   return getStoredCollection('it_maintenance', () => [...MOCK_MAINTENANCE_SCHEDULES]);
 }
 
+function saveMaintenanceStore(schedules) {
+  saveStoredCollection('it_maintenance', schedules);
+}
+
 export const itAdapter = {
   // ── 1. TICKETS HELP DESK ──────────────────────────────────────────────
   async getTickets({ search = '', department = '', priority = '', status = '', page = 1, pageSize = 15 } = {}) {
@@ -135,6 +139,40 @@ export const itAdapter = {
     }
 
     const { data } = await apiClient.post('/it/tickets', ticketData);
+    return data;
+  },
+
+  async updateTicket(id, payload) {
+    if (isMock) {
+      const tickets = getTicketsStore();
+      const normId = String(id).toLowerCase().trim();
+      const index = tickets.findIndex(
+        (t) => String(t.id).toLowerCase().trim() === normId || String(t.ticketNumber).toLowerCase().trim() === normId
+      );
+      if (index === -1) return { data: null, error: { message: 'Tiket tidak ditemukan' } };
+
+      const oldTicket = tickets[index];
+      const updated = {
+        ...oldTicket,
+        ...payload,
+        id: oldTicket.id,
+        ticketNumber: oldTicket.ticketNumber,
+        updatedAt: new Date().toISOString(),
+      };
+      tickets[index] = updated;
+      saveTicketsStore(tickets);
+
+      emitAudit({
+        action: 'IT_TICKET_EDIT',
+        module: 'IT',
+        targetId: oldTicket.id,
+        details: { ticketNumber: oldTicket.ticketNumber, changes: Object.keys(payload) },
+      });
+
+      return { data: updated, error: null };
+    }
+
+    const { data } = await apiClient.patch(`/it/tickets/${id}`, payload);
     return data;
   },
 
@@ -304,6 +342,40 @@ export const itAdapter = {
     return data;
   },
 
+  async updateAsset(id, payload) {
+    if (isMock) {
+      const assets = getAssetsStore();
+      const normId = String(id).toLowerCase().trim();
+      const index = assets.findIndex(
+        (a) => String(a.id).toLowerCase().trim() === normId || String(a.assetCode).toLowerCase().trim() === normId
+      );
+      if (index === -1) return { data: null, error: { message: 'Aset tidak ditemukan' } };
+
+      const oldAsset = assets[index];
+      const updated = {
+        ...oldAsset,
+        ...payload,
+        id: oldAsset.id,
+        assetCode: oldAsset.assetCode,
+        updatedAt: new Date().toISOString(),
+      };
+      assets[index] = updated;
+      saveAssetsStore(assets);
+
+      emitAudit({
+        action: 'IT_ASSET_EDIT',
+        module: 'IT',
+        targetId: oldAsset.id,
+        details: { assetCode: oldAsset.assetCode, changes: Object.keys(payload) },
+      });
+
+      return { data: updated, error: null };
+    }
+
+    const { data } = await apiClient.patch(`/it/assets/${id}`, payload);
+    return data;
+  },
+
   async updateAssetStatus(id, newStatus, condition = '', note = '') {
     if (isMock) {
       const assets = getAssetsStore();
@@ -346,6 +418,72 @@ export const itAdapter = {
     }
     const { data } = await apiClient.get('/it/maintenance');
     return data;
+  },
+
+  async createMaintenanceSchedule(payload) {
+    if (isMock) {
+      const store = getMaintenanceStore();
+      const newId = `MNT-2026-${String(store.length + 1).padStart(3, '0')}`;
+      const newMnt = {
+        ...payload,
+        id: newId,
+        taskTitle: payload.taskTitle || payload.title || 'Inspeksi & Pemeliharaan Rutin',
+        frequency: payload.frequency || 'BULANAN',
+        status: payload.status || 'SCHEDULED',
+        scheduledDate: payload.scheduledDate || new Date().toISOString().split('T')[0],
+        createdAt: new Date().toISOString(),
+      };
+      saveMaintenanceStore([...store, newMnt]);
+
+      emitAudit({
+        action: 'IT_MAINTENANCE_CREATE',
+        module: 'IT',
+        targetId: newId,
+        details: { title: newMnt.taskTitle },
+      });
+
+      return { data: newMnt, error: null };
+    }
+    const { data } = await apiClient.post('/it/maintenance', payload);
+    return data;
+  },
+
+  async createMaintenance(payload) {
+    return this.createMaintenanceSchedule(payload);
+  },
+
+  async updateMaintenanceSchedule(id, payload) {
+    if (isMock) {
+      const store = getMaintenanceStore();
+      const normId = String(id).toLowerCase().trim();
+      const index = store.findIndex((m) => String(m.id).toLowerCase().trim() === normId);
+      if (index === -1) return { data: null, error: { message: 'Jadwal pemeliharaan tidak ditemukan' } };
+
+      const oldMnt = store[index];
+      const updated = {
+        ...oldMnt,
+        ...payload,
+        id: oldMnt.id,
+        updatedAt: new Date().toISOString(),
+      };
+      store[index] = updated;
+      saveMaintenanceStore(store);
+
+      emitAudit({
+        action: 'IT_MAINTENANCE_UPDATE',
+        module: 'IT',
+        targetId: oldMnt.id,
+        details: { title: updated.taskTitle, status: updated.status },
+      });
+
+      return { data: updated, error: null };
+    }
+    const { data } = await apiClient.patch(`/it/maintenance/${id}`, payload);
+    return data;
+  },
+
+  async updateMaintenance(id, payload) {
+    return this.updateMaintenanceSchedule(id, payload);
   },
 
   // ── 4. SYSTEM HEALTH MONITORING ───────────────────────────────────────
@@ -419,4 +557,7 @@ export const itAdapter = {
     return data;
   },
 };
+
+export default itAdapter;
+
 

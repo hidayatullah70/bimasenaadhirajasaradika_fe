@@ -90,7 +90,7 @@ export default function AssetListPage() {
         return;
       }
       toast.success(`Status aset diperbarui menjadi: ${newStatus}`);
-      loadData();
+      await loadData();
     } catch {
       toast.error('Gagal memperbarui status aset.');
     }

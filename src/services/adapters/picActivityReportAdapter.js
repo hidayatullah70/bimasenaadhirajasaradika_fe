@@ -68,6 +68,7 @@ export const picActivityReportAdapter = {
 
       return apiSuccess({
         reports: items,
+        data: items,
         total: items.length,
       });
     }
@@ -121,6 +122,40 @@ export const picActivityReportAdapter = {
     }
 
     const { data } = await apiClient.post('/operations/pic-reports', payload);
+    return data;
+  },
+
+  /**
+   * Update an existing PIC Activity Report
+   */
+  async updateReport(id, payload) {
+    if (isMockMode()) {
+      const items = getReportsStore();
+      const normId = String(id).toLowerCase().trim();
+      const idx = items.findIndex((r) => String(r.id).toLowerCase().trim() === normId);
+      if (idx === -1) return apiError('NOT_FOUND', 'Laporan kegiatan tidak ditemukan.');
+
+      const oldRpt = items[idx];
+      const updated = {
+        ...oldRpt,
+        ...payload,
+        id: oldRpt.id,
+        updatedAt: new Date().toISOString(),
+      };
+      items[idx] = updated;
+      saveReportsStore(items);
+
+      emitAudit({
+        action: 'PIC_REPORT_EDIT',
+        module: 'operations',
+        targetId: oldRpt.id,
+        details: `Laporan kegiatan lapangan oleh ${updated.picName} diperbarui.`,
+      });
+
+      return apiSuccess(updated);
+    }
+
+    const { data } = await apiClient.patch(`/operations/pic-reports/${id}`, payload);
     return data;
   },
 

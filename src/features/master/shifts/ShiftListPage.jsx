@@ -58,14 +58,22 @@ export default function ShiftListPage() {
     try {
       if (editingShift) {
         const sId = editingShift.id || editingShift.code;
-        await shiftAdapter.updateShift(sId, payload);
+        const res = await shiftAdapter.updateShift(sId, payload);
+        if (res?.error) {
+          toast.error(res.error.message || 'Gagal memperbarui shift.');
+          return;
+        }
         toast.success(`Shift ${payload.name} berhasil diperbarui.`);
       } else {
-        await shiftAdapter.createShift(payload);
+        const res = await shiftAdapter.createShift(payload);
+        if (res?.error) {
+          toast.error(res.error.message || 'Gagal menambahkan shift.');
+          return;
+        }
         toast.success(`Shift ${payload.name} berhasil ditambahkan.`);
       }
       setIsModalOpen(false);
-      loadData();
+      await loadData();
     } catch {
       toast.error('Gagal menyimpan shift.');
     }

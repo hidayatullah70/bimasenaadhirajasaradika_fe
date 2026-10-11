@@ -82,14 +82,14 @@ export default function LegalCaseListPage() {
     const res = await legalAdapter.createLegalCase(payload);
     if (res.error) throw res.error;
     toast.success('Berkas perkara hukum baru berhasil didaftarkan.');
-    loadData();
+    await loadData();
   };
 
   const handleAddAction = async (caseId, payload) => {
     const res = await legalAdapter.addLegalAction(caseId, payload);
     if (res.error) throw res.error;
     toast.success('Tindakan hukum resmi berhasil dicatat.');
-    loadData();
+    await loadData();
   };
 
   const handleCloseCase = async (caseId) => {
@@ -105,7 +105,7 @@ export default function LegalCaseListPage() {
     toast.success('Kasus hukum dinyatakan selesai dan ditutup (Closed).');
     setClosingCaseId(null);
     setResolutionNotes('');
-    loadData();
+    await loadData();
   };
 
   const getPriorityBadge = (priority) => {

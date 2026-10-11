@@ -20,12 +20,12 @@ const CATEGORIES = [
   { value: 'KEMITRAAN', label: 'Alur Kerjasama Mitra Baru' },
 ];
 
-export default function FaqFormModal({ isOpen, onClose, onSuccess }) {
+export default function FaqFormModal({ isOpen, onClose, faq, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    category: 'LAYANAN',
-    question: '',
-    answer: '',
+    category: faq?.category || 'LAYANAN',
+    question: faq?.question || '',
+    answer: faq?.answer || '',
   });
 
   const handleChange = (e) => {
@@ -43,17 +43,24 @@ export default function FaqFormModal({ isOpen, onClose, onSuccess }) {
     setLoading(true);
     try {
       const selectedCat = CATEGORIES.find((c) => c.value === formData.category);
-      const res = await cmsAdapter.createFaq({
+      const payload = {
         ...formData,
         categoryLabel: selectedCat ? selectedCat.label : formData.category,
-      });
+      };
+
+      let res;
+      if (faq) {
+        res = await cmsAdapter.updateFaq(faq.id, payload);
+      } else {
+        res = await cmsAdapter.createFaq(payload);
+      }
 
       if (res.error) {
-        toast.error(res.error);
+        toast.error(res.error.message || res.error);
         return;
       }
 
-      toast.success('Pertanyaan FAQ baru berhasil ditambahkan!');
+      toast.success(faq ? 'Pertanyaan FAQ berhasil diperbarui!' : 'Pertanyaan FAQ baru berhasil ditambahkan!');
       if (onSuccess) onSuccess();
       onClose();
     } catch {
@@ -67,8 +74,8 @@ export default function FaqFormModal({ isOpen, onClose, onSuccess }) {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Tambah Tanya Jawab (FAQ) Baru"
-      description="Tambahkan informasi panduan atau jawaban atas pertanyaan yang sering diajukan calon klien mitra."
+      title={faq ? 'Edit Tanya Jawab (FAQ)' : 'Tambah Tanya Jawab (FAQ) Baru'}
+      description="Kelola pertanyaan yang sering diajukan mitra klien dan publik seputar layanan PT. BARAK."
       size="md"
     >
       <form onSubmit={handleSubmit} className="space-y-4">

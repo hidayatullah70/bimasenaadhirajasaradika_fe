@@ -128,6 +128,40 @@ export const marketingAdapter = {
     return data;
   },
 
+  async updateLead(id, payload) {
+    if (isMock) {
+      const leadsStore = getLeadsStore();
+      const normId = String(id).toLowerCase().trim();
+      const index = leadsStore.findIndex(
+        (l) => String(l.id).toLowerCase().trim() === normId || String(l.leadNumber).toLowerCase().trim() === normId
+      );
+      if (index === -1) return { data: null, error: { message: 'Lead tidak ditemukan' } };
+
+      const oldLead = leadsStore[index];
+      const updated = {
+        ...oldLead,
+        ...payload,
+        id: oldLead.id,
+        leadNumber: oldLead.leadNumber,
+        updatedAt: new Date().toISOString(),
+      };
+      leadsStore[index] = updated;
+      saveLeadsStore(leadsStore);
+
+      emitAudit({
+        action: 'LEAD_EDIT',
+        module: 'MARKETING',
+        targetId: oldLead.id,
+        details: { company: updated.companyName, changes: Object.keys(payload) },
+      });
+
+      return { data: updated, error: null };
+    }
+
+    const { data } = await apiClient.patch(`/marketing/leads/${id}`, payload);
+    return data;
+  },
+
   async updateLeadStatus(id, newStatus, note = '') {
     if (isMock) {
       const leadsStore = getLeadsStore();
@@ -262,6 +296,81 @@ export const marketingAdapter = {
       return { data: opp || null, error: opp ? null : 'Opportunity tidak ditemukan' };
     }
     const { data } = await apiClient.get(`/marketing/opportunities/${id}`);
+    return data;
+  },
+
+  async createOpportunity(oppData) {
+    if (isMock) {
+      const opportunitiesStore = getOpportunitiesStore();
+      const newOppId = `OPP-2026-${String(opportunitiesStore.length + 1).padStart(3, '0')}`;
+      const newOppNumber = `OPP/BRK/2026/09/${String(opportunitiesStore.length + 1).padStart(3, '0')}`;
+
+      const newOpp = {
+        id: newOppId,
+        opportunityNumber: newOppNumber,
+        companyName: oppData.companyName || oppData.clientName || 'Calon Klien',
+        picName: oppData.picName || 'PIC',
+        phone: oppData.phone || '0812000000',
+        email: oppData.email || 'pic@klien.co.id',
+        serviceInterest: oppData.serviceInterest || oppData.serviceInterested || 'Jasa Pengamanan',
+        stage: oppData.stage || 'PROSPECTING',
+        stageLabel: oppData.stageLabel || 'Penjajakan (Prospecting)',
+        probability: oppData.probability !== undefined ? oppData.probability : 25,
+        estimatedManpower: Number(oppData.estimatedManpower) || 6,
+        monthlyValue: Number(oppData.monthlyValue) || Number(oppData.estimatedValue) || 36000000,
+        dealValueTotal: (Number(oppData.monthlyValue) || Number(oppData.estimatedValue) || 36000000) * 12,
+        salesOwner: oppData.salesOwner || 'Reza Pratama (Sales Rep)',
+        notes: oppData.notes || '',
+        createdAt: new Date().toISOString(),
+      };
+
+      saveOpportunitiesStore([newOpp, ...opportunitiesStore]);
+
+      emitAudit({
+        action: 'OPPORTUNITY_CREATE',
+        module: 'MARKETING',
+        targetId: newOppId,
+        details: { company: newOpp.companyName, stage: newOpp.stage },
+      });
+
+      return { data: newOpp, error: null };
+    }
+
+    const { data } = await apiClient.post('/marketing/opportunities', oppData);
+    return data;
+  },
+
+  async updateOpportunity(id, payload) {
+    if (isMock) {
+      const opportunitiesStore = getOpportunitiesStore();
+      const normId = String(id).toLowerCase().trim();
+      const index = opportunitiesStore.findIndex(
+        (o) => String(o.id).toLowerCase().trim() === normId || String(o.opportunityNumber).toLowerCase().trim() === normId
+      );
+      if (index === -1) return { data: null, error: { message: 'Opportunity tidak ditemukan' } };
+
+      const oldOpp = opportunitiesStore[index];
+      const updated = {
+        ...oldOpp,
+        ...payload,
+        id: oldOpp.id,
+        opportunityNumber: oldOpp.opportunityNumber,
+        updatedAt: new Date().toISOString(),
+      };
+      opportunitiesStore[index] = updated;
+      saveOpportunitiesStore(opportunitiesStore);
+
+      emitAudit({
+        action: 'OPPORTUNITY_EDIT',
+        module: 'MARKETING',
+        targetId: oldOpp.id,
+        details: { company: updated.companyName, changes: Object.keys(payload) },
+      });
+
+      return { data: updated, error: null };
+    }
+
+    const { data } = await apiClient.patch(`/marketing/opportunities/${id}`, payload);
     return data;
   },
 
@@ -563,3 +672,5 @@ export const marketingAdapter = {
     return data;
   },
 };
+
+export default marketingAdapter;

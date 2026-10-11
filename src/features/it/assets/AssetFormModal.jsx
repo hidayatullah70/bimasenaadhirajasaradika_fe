@@ -31,19 +31,19 @@ const LOCATIONS = [
   'Kantor Pusat PT. BARAK (Tangerang)',
 ];
 
-export default function AssetFormModal({ isOpen, onClose, onSuccess }) {
+export default function AssetFormModal({ isOpen, onClose, asset, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    assetName: '',
-    assetType: 'BARRIER_GATE',
-    serialNumber: '',
-    locationName: LOCATIONS[0],
-    department: 'OPERATIONS',
-    purchaseDate: new Date().toISOString().split('T')[0],
-    warrantyExpiry: new Date(Date.now() + 730 * 86400000).toISOString().split('T')[0],
-    condition: 'Baik / Baru Diinstalasi',
-    pic: 'Bagus Prakoso (IT Support)',
-    notes: '',
+    assetName: asset?.assetName || '',
+    assetType: asset?.assetType || 'BARRIER_GATE',
+    serialNumber: asset?.serialNumber || '',
+    locationName: asset?.locationName || LOCATIONS[0],
+    department: asset?.department || 'OPERATIONS',
+    purchaseDate: asset?.purchaseDate || new Date().toISOString().split('T')[0],
+    warrantyExpiry: asset?.warrantyExpiry || new Date(Date.now() + 730 * 86400000).toISOString().split('T')[0],
+    condition: asset?.condition || 'Baik / Baru Diinstalasi',
+    pic: asset?.pic || 'Bagus Prakoso (IT Support)',
+    notes: asset?.notes || '',
   });
 
   const handleChange = (e) => {
@@ -61,21 +61,32 @@ export default function AssetFormModal({ isOpen, onClose, onSuccess }) {
     setLoading(true);
     try {
       const selectedType = ASSET_TYPES.find((t) => t.value === formData.assetType);
-      const res = await itAdapter.createAsset({
+      const payload = {
         ...formData,
         assetTypeLabel: selectedType ? selectedType.label : formData.assetType,
-      });
+      };
+
+      let res;
+      if (asset) {
+        res = await itAdapter.updateAsset(asset.id, payload);
+      } else {
+        res = await itAdapter.createAsset(payload);
+      }
 
       if (res.error) {
-        toast.error(res.error);
+        toast.error(res.error.message || res.error);
         return;
       }
 
-      toast.success(`Aset ${res.data.assetCode} (${res.data.assetName}) berhasil didaftarkan!`);
+      toast.success(
+        asset
+          ? `Aset ${res.data.assetCode} (${res.data.assetName}) berhasil diperbarui!`
+          : `Aset ${res.data.assetCode} (${res.data.assetName}) berhasil didaftarkan!`
+      );
       if (onSuccess) onSuccess();
       onClose();
     } catch {
-      toast.error('Gagal meregistrasi aset IT.');
+      toast.error('Gagal menyimpan aset IT.');
     } finally {
       setLoading(false);
     }
@@ -85,8 +96,8 @@ export default function AssetFormModal({ isOpen, onClose, onSuccess }) {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Registrasi Aset & Perangkat IT Posko Baru"
-      description="Daftarkan perangkat keras operasional (Barrier Gate, CCTV, Mesin Absensi, Komputer) ke sistem inventarisasi PT. BARAK."
+      title={asset ? 'Edit Data Aset & Perangkat IT' : 'Registrasi Aset & Perangkat IT Posko Baru'}
+      description="Daftarkan atau perbarui perangkat keras operasional (Barrier Gate, CCTV, Mesin Absensi, Komputer) di sistem inventarisasi PT. BARAK."
       size="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-4">

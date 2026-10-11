@@ -80,7 +80,7 @@ export default function ReplacementListPage() {
     const res = await replacementAdapter.createReplacementRequest(payload);
     if (res.error) throw res.error;
     toast.success('Pengajuan pergantian personel berhasil dikirim.');
-    loadData();
+    await loadData();
   };
 
   const handleApprove = async (id) => {
@@ -90,7 +90,7 @@ export default function ReplacementListPage() {
       return;
     }
     toast.success('Pengajuan pergantian personel telah disetujui.');
-    loadData();
+    await loadData();
   };
 
   const handleReject = async (id) => {
@@ -106,7 +106,7 @@ export default function ReplacementListPage() {
     toast.success('Pengajuan pergantian personel telah ditolak.');
     setRejectingId(null);
     setRejectReason('');
-    loadData();
+    await loadData();
   };
 
   return (

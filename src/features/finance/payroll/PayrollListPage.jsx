@@ -76,7 +76,7 @@ export default function PayrollListPage() {
       const res = await payrollAdapter.submitToDirector(currentPeriod.id);
       if (res.error) throw res.error;
       toast.success('Batch payroll berhasil diverifikasi dan diajukan ke Direktur Utama.');
-      loadData();
+      await loadData();
     } catch (err) {
       toast.error(err?.message || 'Gagal mengajukan payroll.');
     }
@@ -88,7 +88,7 @@ export default function PayrollListPage() {
       const res = await payrollAdapter.approvePayroll(currentPeriod.id);
       if (res.error) throw res.error;
       toast.success('Batch payroll resmi disetujui Direktur Utama.');
-      loadData();
+      await loadData();
     } catch (err) {
       toast.error(err?.message || 'Gagal menyetujui payroll.');
     }
@@ -100,7 +100,7 @@ export default function PayrollListPage() {
       const res = await payrollAdapter.processDisbursement(currentPeriod.id);
       if (res.error) throw res.error;
       toast.success('Pencairan dana penggajian berhasil diproses (Disbursed).');
-      loadData();
+      await loadData();
     } catch (err) {
       toast.error(err?.message || 'Gagal memproses pencairan gaji.');
     }

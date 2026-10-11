@@ -136,14 +136,22 @@ export default function EmployeeListPage() {
     try {
       if (editingEmployee) {
         const empId = editingEmployee.id || editingEmployee.id_karyawan;
-        await employeeAdapter.updateEmployee(empId, payload);
+        const res = await employeeAdapter.updateEmployee(empId, payload);
+        if (res?.error) {
+          toast.error(res.error.message || 'Gagal memperbarui data karyawan.');
+          return;
+        }
         toast.success(`Data ${payload.nama_lengkap_sesuai_KTP} berhasil diperbarui.`);
       } else {
-        await employeeAdapter.createEmployee(payload);
+        const res = await employeeAdapter.createEmployee(payload);
+        if (res?.error) {
+          toast.error(res.error.message || 'Gagal mendaftarkan karyawan.');
+          return;
+        }
         toast.success(`Karyawan baru ${payload.nama_lengkap_sesuai_KTP} berhasil didaftarkan.`);
       }
       setIsModalOpen(false);
-      loadData();
+      await loadData();
     } catch {
       toast.error('Terjadi kesalahan saat menyimpan data karyawan.');
     }

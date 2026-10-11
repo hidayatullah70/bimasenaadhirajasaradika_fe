@@ -83,7 +83,7 @@ export default function ArticleListPage() {
         return;
       }
       toast.success('Artikel berhasil dihapus!');
-      loadData();
+      await loadData();
     } catch {
       toast.error('Gagal menghapus artikel.');
     }

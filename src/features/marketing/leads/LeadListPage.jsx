@@ -78,7 +78,7 @@ export default function LeadListPage() {
         return;
       }
       toast.success(`Status lead berhasil diperbarui menjadi ${newStatus}`);
-      loadData();
+      await loadData();
     } catch {
       toast.error('Gagal memperbarui status lead.');
     }

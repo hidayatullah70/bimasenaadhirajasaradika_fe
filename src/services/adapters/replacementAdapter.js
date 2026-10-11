@@ -96,10 +96,19 @@ export const replacementAdapter = {
     return data;
   },
 
+  async createReplacement(payload) {
+    return this.createReplacementRequest(payload);
+  },
+
+  async getReplacements(params) {
+    return this.getReplacementRequests(params);
+  },
+
   async updateReplacement(id, payload) {
     if (isMock) {
       const store = getStore();
-      const idx = store.findIndex((r) => r.id === id || r.requestNumber === id);
+      const normId = String(id).toLowerCase().trim();
+      const idx = store.findIndex((r) => String(r.id).toLowerCase().trim() === normId || String(r.requestNumber).toLowerCase().trim() === normId);
       if (idx === -1) return { data: null, error: { message: 'Pengajuan tidak ditemukan.' } };
 
       const oldRep = store[idx];
