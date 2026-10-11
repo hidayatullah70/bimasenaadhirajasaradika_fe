@@ -26,8 +26,60 @@ import {
   Loader2,
 } from 'lucide-react';
 import authAdapter from '@/services/adapters/authAdapter';
-import { resizeImageToSquare } from '@/utils/imageResize';
+import imageResize from '@/utils/imageResize';
 import toast from 'react-hot-toast';
+
+/**
+ * Resize and center-crop an uploaded image file to 1:1 aspect ratio (square avatar).
+ * Includes robust inline canvas fallback to guarantee compatibility across all environments.
+ */
+function cropImageToSquare(file, targetSize = 256) {
+  if (imageResize && typeof imageResize.resizeImageToSquare === 'function') {
+    return imageResize.resizeImageToSquare(file, targetSize);
+  }
+
+  return new Promise((resolve, reject) => {
+    if (!file || !file.type.startsWith('image/')) {
+      reject(new Error('File yang dipilih harus berupa file gambar.'));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Gagal membaca file gambar dari device.'));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Gagal memuat format gambar.'));
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = targetSize;
+        canvas.height = targetSize;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Browser tidak mendukung Canvas grafis.'));
+          return;
+        }
+
+        const cropSize = Math.min(img.width, img.height);
+        let cropX = 0;
+        let cropY = 0;
+
+        if (img.width > img.height) {
+          cropX = Math.round((img.width - cropSize) / 2);
+        } else if (img.height > img.width) {
+          cropY = Math.round((img.height - cropSize) * 0.25);
+        }
+
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, cropX, cropY, cropSize, cropSize, 0, 0, targetSize, targetSize);
+
+        resolve(canvas.toDataURL('image/jpeg', 0.88));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 export default function ProfilePage() {
   const { currentUser, updateCurrentUser } = useAuth();
@@ -66,7 +118,7 @@ export default function ProfilePage() {
     setAvatarLoading(true);
     try {
       // Otomatis resize & center-crop ke rasio 1:1 persegi (256x256)
-      const squareDataUrl = await resizeImageToSquare(file, 256);
+      const squareDataUrl = await cropImageToSquare(file, 256);
 
       // Simpan ke authAdapter (sync ke avatarStore, userAdapter, & session)
       const res = await authAdapter.updateAvatar(squareDataUrl);
@@ -102,7 +154,7 @@ export default function ProfilePage() {
         toast.success('Foto profil dikembalikan ke inisial nama.');
       }
     } catch (err) {
-      toast.error('Gagal menghapus foto profil.');
+      toast.error(err?.message || 'Gagal menghapus foto profil.');
     } finally {
       setAvatarLoading(false);
     }
