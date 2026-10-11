@@ -129,6 +129,22 @@ export default function ProfilePage() {
     return () => window.removeEventListener('barak:avatar-updated', handleAvatarUpdate);
   }, [currentUser]);
 
+  const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
+  const avatarMenuRef = useRef(null);
+
+  // Close avatar popup menu on click outside
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (avatarMenuRef.current && !avatarMenuRef.current.contains(e.target)) {
+        setAvatarMenuOpen(false);
+      }
+    };
+    if (avatarMenuOpen) {
+      document.addEventListener('mousedown', handleOutsideClick);
+    }
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [avatarMenuOpen]);
+
   const [showPasswordForm, setShowPasswordForm] = useState(false);
 
   const [currentPassword, setCurrentPassword] = useState('');
@@ -277,8 +293,12 @@ export default function ProfilePage() {
             <CardContent className="pt-6 px-6 pb-6">
               {/* Avatar & Header */}
               <div className="flex flex-col items-center mb-6">
-                <div className="relative group mb-3">
-                  <div className="h-20 w-20 rounded-full bg-primary-red/10 border-2 border-primary-red/30 flex items-center justify-center shadow-md overflow-hidden relative">
+                <div className="relative mb-3" ref={avatarMenuRef}>
+                  <div
+                    className="h-20 w-20 rounded-full bg-primary-red/10 border-2 border-primary-red/30 flex items-center justify-center shadow-md overflow-hidden relative cursor-pointer"
+                    onClick={() => setAvatarMenuOpen((v) => !v)}
+                    title="Klik untuk kelola foto profil"
+                  >
                     {avatarLoading ? (
                       <div className="absolute inset-0 bg-ink/40 flex items-center justify-center">
                         <Loader2 className="h-6 w-6 text-white animate-spin" />
@@ -296,17 +316,61 @@ export default function ProfilePage() {
                     )}
                   </div>
 
-                  {/* Tombol Kamera Cepat pada Badge Avatar */}
+                  {/* Tombol Kamera pada Badge Avatar */}
                   <button
                     type="button"
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => setAvatarMenuOpen((v) => !v)}
                     disabled={avatarLoading}
                     className="absolute -bottom-1 -right-1 p-2 rounded-full bg-primary-red text-white hover:bg-primary-red/90 shadow-lg border-2 border-white transition-all transform hover:scale-110 active:scale-95 disabled:opacity-50"
-                    title="Ganti Foto Profil"
-                    aria-label="Ganti Foto Profil"
+                    title="Kelola Foto Profil"
+                    aria-label="Kelola Foto Profil"
                   >
                     <Camera className="h-3.5 w-3.5" />
                   </button>
+
+                  {/* Dropdown Menu Tindakan Foto Profil */}
+                  {avatarMenuOpen && (
+                    <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-48 bg-surface rounded-xl border border-border shadow-dropdown py-1.5 z-40 text-xs animate-in fade-in zoom-in-95 duration-150">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAvatarMenuOpen(false);
+                          fileInputRef.current?.click();
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-ink hover:bg-canvas text-left transition-colors font-medium"
+                      >
+                        <Upload className="h-3.5 w-3.5 text-primary-red" />
+                        <span>{activeAvatar ? 'Ganti Foto (Galeri)' : 'Upload Foto (Galeri)'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAvatarMenuOpen(false);
+                          cameraInputRef.current?.click();
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-ink hover:bg-canvas text-left transition-colors font-medium"
+                      >
+                        <Camera className="h-3.5 w-3.5 text-primary-red" />
+                        <span>Ambil dari Kamera</span>
+                      </button>
+                      {activeAvatar && (
+                        <>
+                          <div className="h-px bg-border my-1" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAvatarMenuOpen(false);
+                              handleRemoveAvatar();
+                            }}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 text-danger hover:bg-danger/10 text-left transition-colors font-medium"
+                          >
+                            <Trash2 className="h-3.5 w-3.5 text-danger" />
+                            <span>Hapus Foto Profil</span>
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <h3 className="text-lg font-bold text-ink text-center">{currentUser.name}</h3>
@@ -336,43 +400,6 @@ export default function ProfilePage() {
                     if (file) handleProcessImage(file);
                   }}
                 />
-
-                {/* Tombol Aksi Foto Profil */}
-                <div className="flex flex-wrap items-center justify-center gap-2 mt-3 text-xs">
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={avatarLoading}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-canvas hover:bg-slate/10 text-ink font-medium transition-colors disabled:opacity-50"
-                  >
-                    <Upload className="h-3.5 w-3.5 text-primary-red" />
-                    <span>Upload Foto</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => cameraInputRef.current?.click()}
-                    disabled={avatarLoading}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-canvas hover:bg-slate/10 text-ink font-medium transition-colors disabled:opacity-50"
-                    title="Ambil foto langsung dengan kamera device"
-                  >
-                    <Camera className="h-3.5 w-3.5 text-primary-red" />
-                    <span>Kamera</span>
-                  </button>
-
-                  {activeAvatar && (
-                    <button
-                      type="button"
-                      onClick={handleRemoveAvatar}
-                      disabled={avatarLoading}
-                      className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-danger/20 bg-danger/5 hover:bg-danger/15 text-danger font-medium transition-colors disabled:opacity-50"
-                      title="Hapus foto profil dan kembali ke inisial"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                      <span>Hapus</span>
-                    </button>
-                  )}
-                </div>
               </div>
 
               {/* Detail fields */}
