@@ -11,7 +11,9 @@
  */
 
 import { isMockMode, apiSuccess, apiError } from '@/services/apiClient';
-import { MOCK_USERS } from '@/services/mock/mockUsers';
+import { MOCK_USERS, ROLE_PERMISSIONS } from '@/services/mock/mockUsers';
+import { ROLE_LABELS } from '@/constants/roles';
+import userAdapter from '@/services/adapters/userAdapter';
 import restClient from '@/services/apiClient';
 import { attendanceAdapter } from '@/services/adapters/attendanceAdapter';
 
@@ -25,7 +27,7 @@ const mockAuth = {
     await new Promise((r) => setTimeout(r, 600));
 
     const normalizedUsername = (username === 'direktur' || username === 'direkturutama') ? 'direkturutama' : username;
-    const user = MOCK_USERS.find((u) => {
+    let user = MOCK_USERS.find((u) => {
       if (u.username === normalizedUsername) {
         if (normalizedUsername === 'direkturutama') {
           return password === 'dev_direkturutama_2026' || password === 'dev_direktur_2026' || u.password === password;
@@ -34,6 +36,18 @@ const mockAuth = {
       }
       return false;
     });
+
+    if (!user) {
+      const dynamicUserRes = await userAdapter.getUserById(normalizedUsername);
+      if (dynamicUserRes?.data && dynamicUserRes.data.status === 'ACTIVE') {
+        const d = dynamicUserRes.data;
+        user = {
+          ...d,
+          roleLabel: d.roleLabel || ROLE_LABELS[d.role] || d.role,
+          permissions: ROLE_PERMISSIONS[d.role] || [],
+        };
+      }
+    }
 
     if (!user) {
       return apiError('AUTH_INVALID', 'Username atau password salah.');

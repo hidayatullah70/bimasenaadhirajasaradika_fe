@@ -44,20 +44,31 @@ export default function UserListPage() {
   const [userToDelete, setUserToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await userAdapter.getUsers({ search, role, page, pageSize: 25 });
-      if (res.data) {
-        setUsers(res.data);
-        setMeta(res.meta || { total: res.data.length, totalPages: 1, pageSize: 25 });
+  const loadData = useCallback(
+    async (overrides = {}) => {
+      setLoading(true);
+      try {
+        const qSearch = overrides.search !== undefined ? overrides.search : search;
+        const qRole = overrides.role !== undefined ? overrides.role : role;
+        const qPage = overrides.page !== undefined ? overrides.page : page;
+        const res = await userAdapter.getUsers({
+          search: qSearch,
+          role: qRole,
+          page: qPage,
+          pageSize: 25,
+        });
+        if (res.data) {
+          setUsers(res.data);
+          setMeta(res.meta || { total: res.data.length, totalPages: 1, pageSize: 25 });
+        }
+      } catch {
+        toast.error('Gagal memuat akun pengguna.');
+      } finally {
+        setLoading(false);
       }
-    } catch {
-      toast.error('Gagal memuat akun pengguna.');
-    } finally {
-      setLoading(false);
-    }
-  }, [search, role, page]);
+    },
+    [search, role, page]
+  );
 
   useEffect(() => {
     loadData();
@@ -82,6 +93,9 @@ export default function UserListPage() {
       }
       const isNowActive = res.data?.status === 'ACTIVE';
       toast.success(`Status akun @${user.username} berhasil ${isNowActive ? 'diaktifkan' : 'dinonaktifkan'}.`);
+      if (res.data) {
+        setUsers((prev) => prev.map((u) => (u.id === res.data.id ? res.data : u)));
+      }
       await loadData();
     } catch {
       toast.error('Gagal mengubah status akun.');
@@ -98,6 +112,9 @@ export default function UserListPage() {
         return;
       }
       toast.success(`Akun @${userToDelete.username} berhasil dihapus.`);
+      const deletedId = userToDelete.id;
+      setUsers((prev) => prev.filter((u) => u.id !== deletedId));
+      setMeta((prev) => ({ ...prev, total: Math.max(0, prev.total - 1) }));
       setUserToDelete(null);
       await loadData();
     } catch {
@@ -117,6 +134,9 @@ export default function UserListPage() {
           return;
         }
         toast.success(`Akun @${payload.username} berhasil diperbarui.`);
+        if (res.data) {
+          setUsers((prev) => prev.map((u) => (u.id === res.data.id ? res.data : u)));
+        }
       } else {
         const res = await userAdapter.createUser(payload);
         if (res?.error) {
@@ -124,6 +144,13 @@ export default function UserListPage() {
           return;
         }
         toast.success(`Akun baru @${payload.username} berhasil didaftarkan.`);
+        setSearch('');
+        setRole('');
+        setPage(1);
+        setIsModalOpen(false);
+        setEditingUser(null);
+        await loadData({ search: '', role: '', page: 1 });
+        return;
       }
       setIsModalOpen(false);
       setEditingUser(null);
@@ -221,7 +248,14 @@ export default function UserListPage() {
                           {u.name ? u.name.charAt(0) : 'U'}
                         </div>
                         <div>
-                          <p className="font-semibold text-ink">{u.name}</p>
+                          <div className="flex items-center gap-1.5">
+                            <p className="font-semibold text-ink">{u.name}</p>
+                            {u.createdAt && (
+                              <span className="px-1.5 py-0.2 text-[9px] font-semibold rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                Baru
+                              </span>
+                            )}
+                          </div>
                           <p className="text-[11px] font-mono text-muted">@{u.username}</p>
                         </div>
                       </div>

@@ -30,6 +30,17 @@ function markAsDeleted(id, username) {
   saveStoredCollection(DELETED_KEY, nextList);
 }
 
+function unmarkDeleted(id, username) {
+  const list = getStoredCollection(DELETED_KEY, () => []);
+  const idKey = String(id || '').toLowerCase().trim();
+  const userKey = String(username || '').toLowerCase().trim();
+  const nextList = (Array.isArray(list) ? list : []).filter((item) => {
+    const k = String(item).toLowerCase().trim();
+    return k !== idKey && k !== userKey;
+  });
+  saveStoredCollection(DELETED_KEY, nextList);
+}
+
 function getStore() {
   const store = getStoredCollection(STORAGE_KEY, () => [...MOCK_SYSTEM_USERS]);
   const deletedSet = getDeletedSet();
@@ -103,6 +114,16 @@ export const userAdapter = {
         filtered = filtered.filter((u) => u.status === status);
       }
 
+      // Tampilkan akun baru (yang memiliki createdAt) di urutan paling atas (terbaru dahulu)
+      filtered.sort((a, b) => {
+        if (a.createdAt && b.createdAt) {
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        }
+        if (a.createdAt && !b.createdAt) return -1;
+        if (!a.createdAt && b.createdAt) return 1;
+        return 0;
+      });
+
       const total = filtered.length;
       const start = (page - 1) * pageSize;
       const paginated = filtered.slice(start, start + pageSize);
@@ -161,8 +182,9 @@ export const userAdapter = {
         status: payload.status || STATUS.ACTIVE,
         createdAt: new Date().toISOString(),
       };
-      const updatedStore = [...store, newUser];
+      const updatedStore = [newUser, ...store];
       saveStore(updatedStore);
+      unmarkDeleted(newId, newUser.username);
 
       await emitAudit({
         action: 'USER_CREATE',

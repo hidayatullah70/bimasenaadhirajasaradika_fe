@@ -173,8 +173,11 @@ export default function UserFormModal({ isOpen, user, onClose, onSave }) {
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                 className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink font-mono"
-                placeholder="ahmad.yani"
+                placeholder="ahmad.yani atau pic001"
               />
+              <p className="text-[10px] text-muted mt-0.5">
+                Bebas kombinasi huruf, angka, titik, strip, underscore (misal: pic001, ahmad.yani).
+              </p>
               {errors.username && <p className="text-primary-red text-[11px] mt-1">{errors.username}</p>}
             </div>
             <div>

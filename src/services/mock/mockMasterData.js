@@ -719,4 +719,17 @@ export const MOCK_SYSTEM_USERS = [
     status: STATUS.ACTIVE,
     lastLogin: '2026-10-03T08:00:00Z',
   },
+  {
+    id: 'USR-012',
+    username: 'pic001',
+    email: 'pic001@bimasenaadhirajasaradika.com',
+    name: 'PIC Koordinator Lapangan 01',
+    role: ROLES.OPERASIONAL,
+    subRole: 'PIC_KORLAP',
+    roleLabel: 'PIC Koordinator Lapangan',
+    department: 'Operasional Lapangan',
+    status: STATUS.ACTIVE,
+    createdAt: '2026-10-11T06:30:00.000Z',
+    lastLogin: null,
+  },
 ];
