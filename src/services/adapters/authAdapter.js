@@ -325,17 +325,52 @@ const mockAuth = {
 const restAuth = {
   async login(credentials) {
     const res = await restClient.post('/auth/login', credentials);
-    if (res.data && (res.data.isAttendanceOnly || res.data.username === 'user1' || res.data.username === 'user2')) {
-      const uId = res.data.username || res.data.id;
+    if (res.error) {
+      return res;
+    }
+
+    const authData = res.data?.token ? res.data : (res.data?.data || res);
+    const token = authData.token;
+    const rawUser = authData.user || authData;
+
+    if (token && typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem('barak_token', token);
+    }
+
+    const activeAvatar =
+      rawUser.avatar ||
+      getCustomAvatar(rawUser.username) ||
+      getCustomAvatar(rawUser.id) ||
+      getLastUpdatedAvatar() ||
+      null;
+
+    const safeUser = {
+      ...rawUser,
+      role: rawUser.role || rawUser.role_id,
+      roleLabel: ROLE_LABELS[rawUser.role || rawUser.role_id] || rawUser.role,
+      permissions: rawUser.permissions || ROLE_PERMISSIONS[rawUser.role || rawUser.role_id] || [],
+      avatar: activeAvatar,
+    };
+
+    setSessionItem(SESSION_KEY, JSON.stringify(safeUser));
+    if (activeAvatar) {
+      saveStoredAvatar(safeUser.username, activeAvatar);
+      if (safeUser.id) saveStoredAvatar(safeUser.id, activeAvatar);
+    }
+
+    if (safeUser.isAttendanceOnly || safeUser.username === 'user1' || safeUser.username === 'user2') {
+      const uId = safeUser.username || safeUser.id;
       attendanceAdapter.clearInputerHistory(uId);
     }
-    return res;
+
+    return apiSuccess(safeUser);
   },
+
   async logout(userContext) {
     let currentUser = userContext;
     if (!currentUser) {
       try {
-        const raw = sessionStorage.getItem(SESSION_KEY);
+        const raw = getSessionItem(SESSION_KEY);
         if (raw) currentUser = JSON.parse(raw);
       } catch {
         // ignore
@@ -347,19 +382,89 @@ const restAuth = {
       attendanceAdapter.clearInputerHistory(uId);
     }
 
-    const result = await restClient.post('/auth/logout', {});
-    sessionStorage.removeItem('barak_token');
-    sessionStorage.removeItem(SESSION_KEY);
-    return result;
+    try {
+      await restClient.post('/auth/logout', {});
+    } catch {
+      // ignore
+    }
+
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.removeItem('barak_token');
+    }
+    removeSessionItem(SESSION_KEY);
+    return apiSuccess(null);
   },
+
   async getMe() {
-    return restClient.get('/auth/me');
+    const token = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('barak_token') : null;
+    if (!token) {
+      const raw = getSessionItem(SESSION_KEY);
+      if (!raw) return apiError('AUTH_UNAUTHENTICATED', 'Tidak ada sesi aktif.');
+      try {
+        const parsed = JSON.parse(raw);
+        return apiSuccess(parsed);
+      } catch {
+        return apiError('AUTH_CORRUPT_SESSION', 'Sesi tidak valid.');
+      }
+    }
+
+    const res = await restClient.get('/auth/me');
+    if (res.error) {
+      const raw = getSessionItem(SESSION_KEY);
+      if (raw) {
+        try {
+          return apiSuccess(JSON.parse(raw));
+        } catch {
+          // ignore
+        }
+      }
+      return res;
+    }
+
+    const rawUser = res.data?.user || res.data;
+    const activeAvatar =
+      rawUser.avatar ||
+      getCustomAvatar(rawUser.username) ||
+      getCustomAvatar(rawUser.id) ||
+      getLastUpdatedAvatar() ||
+      null;
+
+    const safeUser = {
+      ...rawUser,
+      role: rawUser.role || rawUser.role_id,
+      roleLabel: ROLE_LABELS[rawUser.role || rawUser.role_id] || rawUser.role,
+      permissions: rawUser.permissions || ROLE_PERMISSIONS[rawUser.role || rawUser.role_id] || [],
+      avatar: activeAvatar,
+    };
+
+    setSessionItem(SESSION_KEY, JSON.stringify(safeUser));
+    return apiSuccess(safeUser);
   },
+
   async changePassword(payload) {
-    return restClient.patch('/auth/change-password', payload);
+    const res = await restClient.patch('/auth/change-password', payload);
+    return res;
   },
+
   async updateAvatar(avatarDataUrl) {
-    return restClient.patch('/auth/avatar', { avatar: avatarDataUrl });
+    const res = await restClient.patch('/auth/avatar', { avatar: avatarDataUrl });
+    if (res.error) return res;
+
+    const raw = getSessionItem(SESSION_KEY);
+    if (raw) {
+      try {
+        const currentUser = JSON.parse(raw);
+        currentUser.avatar = avatarDataUrl || null;
+        setSessionItem(SESSION_KEY, JSON.stringify(currentUser));
+        saveStoredAvatar(currentUser.username, avatarDataUrl);
+        if (currentUser.id) saveStoredAvatar(currentUser.id, avatarDataUrl);
+      } catch {
+        // ignore
+      }
+    }
+
+    window.dispatchEvent(new CustomEvent('barak:avatar-updated', { detail: { avatar: avatarDataUrl } }));
+    return apiSuccess({ avatar: avatarDataUrl });
   },
 };
 

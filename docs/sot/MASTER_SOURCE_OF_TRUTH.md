@@ -676,3 +676,24 @@ app.use(cors({
 ### 10.3 Protokol Autentikasi JWT
 - Frontend secara otomatis menyisipkan header: `Authorization: Bearer <token>` pada setiap request via `apiClient.js`.
 - Jika backend mengembalikan status `401 Unauthorized`, frontend akan otomatis mengarahkan pengguna ke `/ops/login`.
+
+---
+
+## 11. Protokol Persistensi Otoritatif Backend REST API & Basis Data MySQL (Authoritative Persistence Protocol)
+
+### 11.1 Eliminasi Ketergantungan Local Storage Sementara
+Seluruh penambahan, pembaruan, dan fungsi CRUD (Create, Read, Update, Delete) serta operasi impor maupun ekspor berkas pada semua menu dan modul sistem (Karyawan, Klien, Penugasan/Penempatan, Presensi Posko, Penggajian, Faktur Penagihan, COD Kasbon, Kasus/Kontrak Legal, Marketing CRM, Tiket IT, dan Manajemen Profil Pengguna) tidak lagi tersimpan sementara di penyimpanan lokal peramban (localStorage/sessionStorage), melainkan wajib tersimpan secara permanen dan terverifikasi di backend REST API Express.js dan basis data relasional MySQL 8.0 (`barak_ioms`).
+
+### 11.2 Ketahanan Sesi, Restart & Sinkronisasi Lintas Sesi
+Apabila peramban di-refresh, server backend/database di-restart, atau pengguna melakukan logout kemudian login kembali:
+1. Seluruh data tetap tersimpan secara permanen di MySQL dan disinkronkan kembali saat inisialisasi modul.
+2. Token JWT disimpan di `sessionStorage` (`barak_token`) dan dikirimkan secara otomatis pada setiap request HTTP.
+3. Kredensial kata sandi yang telah diubah tersimpan dalam hash Bcrypt di tabel `users` MySQL.
+4. Foto profil / avatar tersimpan permanen di kolom `avatar` tabel `users` MySQL dan dipetakan ke seluruh alias pengguna.
+
+### 11.3 Normalisasi Amplop Respons Data (`apiClient.js`)
+Modul `src/services/apiClient.js` menerapkan normalisasi amplop respons universal yang kompatibel dengan seluruh 26 service adapter:
+- Respons sukses dibungkus dalam bentuk `{ success: true, data: payloadData, meta, message, error: null }`.
+- Objek data didekorasi sehingga mendukung pemanggilan langsung (`res.data`), destrukturisasi Axios-style (`const { data } = await apiClient.get(...)`), maupun pemrosesan array langsung (`Array.isArray(res.data)`).
+- Error HTTP dipetakan ke format standar `{ data: null, meta: {}, error: { code, message, fields }, success: false }` untuk penanganan notifikasi toast yang mulus dan informatif.
+

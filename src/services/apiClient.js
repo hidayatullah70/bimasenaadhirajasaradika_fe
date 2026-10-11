@@ -103,13 +103,47 @@ export const restClient = {
 
       if (!response.ok) {
         return apiError(
-          json?.error?.code || `HTTP_${response.status}`,
-          json?.error?.message || `HTTP ${response.status}`,
-          json?.error?.fields || {}
+          json?.error?.code || json?.message || `HTTP_${response.status}`,
+          json?.error?.message || json?.message || `HTTP ${response.status}`,
+          json?.errors || json?.error?.fields || {}
         );
       }
 
-      return json;
+      // Backend envelope: { success: true, data: ..., meta: ..., message: ... }
+      const payloadData = json && typeof json === 'object' && 'data' in json ? json.data : json;
+      const meta = (json && json.meta) || {};
+
+      // Decorate payloadData so that whether callers destructure { data }
+      // or inspect res.data, res.meta, res.error, or treat res as an array,
+      // all operations remain 100% synchronized and compatible.
+      if (Array.isArray(payloadData)) {
+        payloadData.data = payloadData;
+        payloadData.meta = meta;
+        payloadData.error = null;
+        payloadData.success = json?.success ?? true;
+        payloadData.message = json?.message || '';
+      } else if (payloadData && typeof payloadData === 'object') {
+        if (!('data' in payloadData)) {
+          payloadData.data = payloadData;
+        }
+        if (!('meta' in payloadData)) {
+          payloadData.meta = meta;
+        }
+        if (!('error' in payloadData)) {
+          payloadData.error = null;
+        }
+        if (!('success' in payloadData)) {
+          payloadData.success = json?.success ?? true;
+        }
+      }
+
+      return {
+        ...json,
+        data: payloadData,
+        meta,
+        message: json?.message || '',
+        error: null,
+      };
     } catch (err) {
       return apiError('NETWORK_ERROR', err.message || 'Network error');
     }
