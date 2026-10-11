@@ -49,12 +49,13 @@ Pengembangan backend Node.js / Express / MySQL **wajib mengikuti urutan 20 tahap
 
 ### Tahap 1: Skema Database & Migrasi (Database Schema & DDL)
 - Buat database `barak_ioms` pada MySQL 8.0 (Laragon lokal / Railway cloud).
-- Eksekusi DDL 28 tabel relasional sesuai spesifikasi [03_ENTITY_CONTRACT.md](file:///c:/laragon/www/bimasenaadhirajasaradika/frontend/03_ENTITY_CONTRACT.md).
+- Eksekusi DDL 29 tabel relasional sesuai spesifikasi [MASTER_SOURCE_OF_TRUTH.md](file:///c:/laragon/www/bimasenaadhirajasaradika/frontend/docs/sot/MASTER_SOURCE_OF_TRUTH.md) (termasuk kolom `avatar` pada tabel `users`).
 - Pasang indeks primer dan komposit pada foreign key, NIK, kode klien, kode penugasan, dan nomor faktur.
 
-### Tahap 2: Autentikasi & Sesi (JWT Authentication)
-- Endpoint `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `GET /api/v1/auth/me`.
-- Hashing kata sandi aman (Bcrypt / Argon2) dengan salt rounds minimum 10.
+### Tahap 2: Autentikasi, Sesi & Keamanan Akun (JWT Auth & User Security)
+- Endpoint `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `GET /api/v1/auth/me`, `PATCH /api/v1/auth/change-password`, `PATCH /api/v1/auth/avatar`, `POST /api/v1/auth/logout`.
+- Hashing kata sandi aman (Bcrypt / Argon2) dengan salt rounds minimum 10, validasi pencocokan kata sandi lama sebelum pergantian kata sandi baru.
+- Manajemen unggah/crop foto profil (rasio 1:1 persegi) dan penyimpanan path/URL pada tabel `users`.
 - Token akses JWT berdurasi 15–60 menit dan refresh token rotasi (7 hari).
 
 ### Tahap 3: Pengguna, Peran & Hak Akses (Users, Roles & RBAC Middleware)

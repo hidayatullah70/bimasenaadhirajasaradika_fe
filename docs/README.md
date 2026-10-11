@@ -15,7 +15,7 @@ Jika Anda adalah pengembang backend yang akan mengimplementasikan REST API (Expr
    - Seeding resmi 18 Klien riil terverifikasi PT. BARAK (`CLI-000001` s/d `CLI-000018`).
    - Format amplop respons standar JSON (`{ success, data, message, meta }`) dan penanganan error validasi (`{ success: false, errors }`).
    - Matriks izin RBAC granular 8 peran, inputer, dan PIC klien, serta batas *Maker-Checker*.
-   - 6 Alur bisnis lintas departemen (Hapus Karyawan, Presensi, Marketing WON Cascade, Rekonsiliasi COD, Payroll Maker-Checker, dan Impor Excel Karyawan Atomik).
+   - 7 Alur bisnis lintas departemen (Hapus Karyawan, Presensi, Marketing WON Cascade, Rekonsiliasi COD, Payroll Maker-Checker, Impor Excel Karyawan Atomik, serta Manajemen Keamanan Akun, Kata Sandi & Avatar).
    - Kamus status enum seragam huruf kapital (*uppercase*).
    - Urutan 20 Tahap Implementasi Backend (*Step-by-step Execution Order*).
    - Panduan konfigurasi CORS Express, JWT middleware, dan upload berkas multipart S3/MinIO.

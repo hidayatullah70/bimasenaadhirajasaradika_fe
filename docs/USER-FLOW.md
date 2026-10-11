@@ -50,17 +50,40 @@ Visitor navigates to /contact (via Navbar CTA / Menu / Footer / Floating CTA)
 
 ---
 
-## 3. Autentikasi Internal, Sesi & Error Boundary
+## 3. Autentikasi Internal, Sesi, Profil & Keamanan Pengguna
 ```text
 /ops/login
 └── Input: Username & Password
     └── POST /auth/login
-        ├── Sukses → Simpan Token JWT + Muat Hak Akses (Role & Permissions)
+        ├── Sukses → Simpan Token JWT + Muat Hak Akses & Avatar (Role, Permissions, Avatar)
         │   └── Redirect ke Dashboard Sesuai Peran (/ops/director, /ops/hrd, dll.)
         └── Gagal → Tampilkan pesan kesalahan & cegah login
 
-Jika Terjadi Token Kedaluwarsa (HTTP 401):
-└── Interceptor otomatis menghapus sesi → Redirect ke /ops/login dengan toast peringatan.
+Sesi Berjalan (Session Lifecycle):
+├── GET /auth/me → Sinkronisasi profil, otoritas RBAC, dan custom avatar pengguna aktif
+├── Token Kedaluwarsa (HTTP 401) → Interceptor otomatis bersihkan sesi & redirect ke /ops/login
+└── POST /auth/logout → Hapus token, bersihkan sesi, dan bersihkan riwayat kerja petugas inputer
+
+Manajemen Profil & Keamanan Akun (/ops/profile):
+├── A. Ubah Kata Sandi (Change Password Flow):
+│   └── Klik "Ubah Kata Sandi" → Buka form Keamanan (default: hidden/collapsed)
+│       └── Input Kata Sandi Saat Ini + Kata Sandi Baru (min 6 karakter) + Konfirmasi
+│           └── PATCH /auth/change-password
+│               ├── Sukses → Hash baru disimpan di database, catat log audit USER_PASSWORD_CHANGE
+│               └── Gagal → Tampilkan validasi error (kata sandi lama salah / panjang < 6)
+│
+└── B. Pengelolaan Foto Profil (Avatar Lifecycle):
+    └── Klik Ikon Kamera pada Lingkaran Profil → Menu Popover Mengambang:
+        ├── 1. Opsi Galeri → Unggah berkas gambar dari penyimpanan perangkat
+        ├── 2. Opsi Kamera → Ambil foto langsung melalui webcam/kamera perangkat
+        └── 3. Opsi Hapus (jika ada foto) → Hapus foto profil, kembali ke inisial nama
+        └── Pemrosesan Gambar:
+            ├── Auto Center-Crop & Resize via HTML5 Canvas (Rasio 1:1 persegi, 256x256 px)
+            ├── Instant Local Preview (0 ms latency) langsung merender gambar di UI
+            └── PATCH /auth/avatar (simpan Base64 DataURL / S3 URL ke database)
+                ├── Broadcast window event 'barak:avatar-updated'
+                ├── Bilah navigasi atas (Topbar) seketika memperbarui foto avatar
+                └── Catat log audit USER_AVATAR_UPDATE
 
 Jika Terjadi Error Runtime Antarmuka (Route Error Boundary):
 └── Tangkap via RouteErrorBoundary → Tampilkan layar ramah pemulihan dengan opsi "Muat Ulang" atau "Kembali ke Operasional".

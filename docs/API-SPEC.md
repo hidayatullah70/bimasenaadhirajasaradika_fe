@@ -100,7 +100,62 @@ Frontend mengirimkan filter dan paginasi melalui query string URL terserialisasi
 | `POST` | `/auth/login` | Otentikasi username & password, terbitkan token JWT | `{ username, password }` | Publik |
 | `POST` | `/auth/refresh` | Perpanjang akses token kedaluwarsa | `{ refreshToken }` | Publik |
 | `GET` | `/auth/me` | Ambil identitas pengguna login & daftar izin | - | Terautentikasi |
+| `PATCH`| `/auth/change-password` | Ubah kata sandi akun pengguna aktif | `{ currentPassword, newPassword }` | Terautentikasi |
+| `PATCH`| `/auth/avatar` | Perbarui / hapus foto profil avatar pengguna aktif | `{ avatar }` (Base64 DataURL / URL / `null`) | Terautentikasi |
 | `POST` | `/auth/logout` | Revokasi sesi & blacklist token di server | - | Terautentikasi |
+
+#### Detail Kontrak Endpoint Keamanan Akun & Avatar:
+
+##### 1. `PATCH /auth/change-password`
+- **Request Headers:** `Authorization: Bearer <token>`, `Content-Type: application/json`
+- **Request Body:**
+  ```json
+  {
+    "currentPassword": "passwordLama123",
+    "newPassword": "passwordBaru456"
+  }
+  ```
+- **Validation Rules:**
+  - `currentPassword`: Wajib diisi, harus cocok dengan `password_hash` aktif di database.
+  - `newPassword`: Wajib diisi, minimal 6 karakter.
+- **Success Response (`200 OK`):**
+  ```json
+  {
+    "data": {
+      "success": true,
+      "message": "Kata sandi berhasil diperbarui."
+    },
+    "meta": {},
+    "error": null
+  }
+  ```
+- **Error Responses:**
+  - `400 Bad Request`: `AUTH_PASSWORD_TOO_SHORT` ("Kata sandi baru minimal 6 karakter.")
+  - `401 Unauthorized`: `AUTH_WRONG_PASSWORD` ("Kata sandi saat ini tidak cocok.")
+
+##### 2. `PATCH /auth/avatar`
+- **Request Headers:** `Authorization: Bearer <token>`, `Content-Type: application/json`
+- **Request Body:**
+  ```json
+  {
+    "avatar": "data:image/jpeg;base64,/9j/4AAQSkZJRg..." // atau null untuk reset ke inisial
+  }
+  ```
+- **Validation Rules:**
+  - Gambar wajib memiliki rasio 1:1 persegi (dipotong 256x256 px di frontend via HTML5 Canvas sebelum dikirim).
+  - Format yang diizinkan: JPG, PNG, WebP.
+- **Success Response (`200 OK`):**
+  ```json
+  {
+    "data": {
+      "success": true,
+      "avatar": "data:image/jpeg;base64,/9j/4AAQSkZJRg..." // atau null
+    },
+    "meta": {},
+    "error": null
+  }
+  ```
+
 
 ### 5.2 Master Karyawan (`/employees`)
 | Metode | Endpoint | Deskripsi | Query / Body Payload | Izin Diperlukan |

@@ -44,6 +44,9 @@ PT. BARAK IOMS (*Integrated Outsourcing Management System*) adalah sistem operas
    $$\text{PPN 11\% (Opsional)} = 11\% \times \text{Manajemen Fee}$$
    $$\text{Total Invoice Akhir} = \text{Sub Total Tagihan} + \text{Manajemen Fee} + \text{PPN 11\%} - \text{PPh 23}$$
 8. **Integritas Aset Brand Resmi:** Logo resmi korporat adalah `/assets/img/logo/logoAja.png` dengan token warna resmi: `--primary-red: #BA1D23`, `--primary-yellow: #F9CE3B`, `--accent-green: #32B23E`, dan `--ink: #0F172A`.
+9. **Tata Kelola Keamanan Akun & Foto Profil (User Security & Profile Governance):**
+   - **Pergantian Kata Sandi (`PATCH /api/v1/auth/change-password`):** Pengguna dapat mengubah kata sandinya secara mandiri melalui form `/ops/profile`. Backend wajib memverifikasi kecocokan kata sandi lama, memvalidasi panjang kata sandi baru (minimal 6 karakter), meng-hash kata sandi menggunakan Bcrypt/Argon2 sebelum disimpan di tabel `users`, dan mencatat mutasi ke `audit_logs` (`USER_PASSWORD_CHANGE`).
+   - **Foto Profil / Avatar (`PATCH /api/v1/auth/avatar`):** Mendukung unggah dari galeri perangkat maupun kamera langsung. Seluruh foto dipotong dan dikompresi ke rasio persegi 1:1 (`256x256` px). Kolom `avatar` pada tabel `users` menyimpan URL / Base64 Data URL. Penghapusan foto (`avatar: null`) mengembalikan avatar ke inisial nama. Perubahan foto disinkronkan secara instan (real-time broadcast) ke seluruh shell navigasi (Topbar) dan dicatat di `audit_logs` (`USER_AVATAR_UPDATE`).
 
 ---
 
@@ -120,6 +123,7 @@ Aplikasi frontend PT. BARAK IOMS menerapkan struktur berlapis murni tanpa koplin
    - `email`: `VARCHAR(100)` (UNIQUE, NOT NULL)
    - `password_hash`: `VARCHAR(255)` (NOT NULL, Bcrypt / Argon2)
    - `full_name`: `VARCHAR(100)` (NOT NULL)
+   - `avatar`: `LONGTEXT` (NULLABLE, Base64 Data URL atau URL CDN/S3 foto profil rasio 1:1)
    - `role_id`: `VARCHAR(30)` (FK $\rightarrow$ `roles.id`)
    - `client_id`: `VARCHAR(36)` (NULLABLE, FK $\rightarrow$ `clients.id`, khusus akun PIC Klien)
    - `status`: `ENUM('ACTIVE', 'SUSPENDED', 'INACTIVE')` (DEFAULT: `'ACTIVE'`)
@@ -427,6 +431,8 @@ Seluruh data berikut **wajib di-seed secara permanen** pada tabel `clients` dan 
 | **Auth** | `POST` | `/api/v1/auth/login` | Publik | Otentikasi username & password, kembalikan JWT |
 | | `POST` | `/api/v1/auth/logout` | Terautentikasi | Hapus token, bersihkan draf kerja sesi inputer |
 | | `GET` | `/api/v1/auth/me` | Terautentikasi | Profil pengguna, peran, dan daftar izin aktif |
+| | `PATCH` | `/api/v1/auth/change-password` | Terautentikasi | Ganti kata sandi akun aktif (verifikasi password lama & min 6 karakter) |
+| | `PATCH` | `/api/v1/auth/avatar` | Terautentikasi | Perbarui atau hapus foto profil avatar pengguna aktif (1:1 square crop) |
 | **Karyawan** | `GET` | `/api/v1/employees` | `employee.view` | Filter pencarian, tipe, site, dan paginasi |
 | | `POST` | `/api/v1/employees` | `employee.create` | Tambah personel baru |
 | | `PATCH` | `/api/v1/employees/:id`| `employee.edit` | Perbarui data pribadi personel |
@@ -529,6 +535,52 @@ Seluruh data berikut **wajib di-seed secara permanen** pada tabel `clients` dan 
 - Fitur Impor Excel (`EmployeeImportModal.jsx`) memproses berkas `.xlsx`.
 - Eksekusi backend **wajib atomik**: membuat entitas `employees` sekaligus menerbitkan entitas `placements` aktif yang terikat ke Klien dan Lokasi Penempatan terpilih dalam satu transaksi database (`START TRANSACTION` $\rightarrow$ `COMMIT`).
 
+### 7.6 Alur Manajemen Profil Pengguna, Keamanan Kata Sandi & Avatar (User Security & Profile Governance)
+
+#### A. Alur Pergantian Kata Sandi Mandiri
+```
+[Pengguna di /ops/profile]
+           │
+           ▼
+[Klik Button "Ubah Kata Sandi"] ──> Buka form "Keamanan & Ubah Kata Sandi" (default: hidden)
+           │
+           ▼
+[Input: Kata Sandi Saat Ini, Kata Sandi Baru (min 6 karakter), Konfirmasi Kata Sandi]
+           │
+           ▼
+[PATCH /api/v1/auth/change-password]
+           ├──> Verifikasi kata sandi saat ini cocok dengan hash database (Bcrypt/Argon2)
+           ├──> Validasi panjang kata sandi baru minimal 6 karakter
+           ├──> Generate salt & hash kata sandi baru -> UPDATE `users.password_hash`
+           └──> Terbitkan entri `audit_logs`:
+                { action: 'USER_PASSWORD_CHANGE', module: 'AUTH', entity: 'User', entityId: user.id }
+```
+
+#### B. Alur Pengelolaan Foto Profil (Avatar) & Sinkronisasi Real-Time
+```
+[Pengguna di /ops/profile]
+           │
+           ▼
+[Klik Ikon Kamera / Lingkaran Profil] ──> Tampilkan menu popover mengambang:
+           ├── 1. "Ganti / Upload Foto (Galeri)" ──> Buka dialog file chooser device
+           ├── 2. "Ambil dari Kamera" ──> Aktifkan webcam / kamera perangkat
+           └── 3. "Hapus Foto Profil" (jika avatar aktif ada) ──> Hapus avatar (null)
+           │
+           ▼
+[Auto Center-Crop & Resize via HTML5 Canvas] ──> Rasio persegi 1:1, ukuran target 256x256 px
+           │
+           ▼
+[Instant Local Preview (0ms latency)] ──> Lingkaran foto langsung menampilkan gambar
+           │
+           ▼
+[PATCH /api/v1/auth/avatar] ──> Simpan URL berkas / Data URL ke kolom `users.avatar`
+           │
+           ├──> Broadcast Event Browser: `window.dispatchEvent('barak:avatar-updated')`
+           ├──> Topbar navigasi & AppShell seketika memperbarui gambar avatar pengguna
+           └──> Terbitkan entri `audit_logs`:
+                { action: 'USER_AVATAR_UPDATE', module: 'AUTH', entity: 'User', details: { hasAvatar: bool } }
+```
+
 ---
 
 ## 8. Kamus Status Enum Terpusat & Transisi Siklus Hidup
@@ -560,7 +612,7 @@ Tim backend disarankan membangun sistem secara berurutan sesuai roadmap 20 tahap
 ```
 
 1. **Tahap 1: Skema Database & Migrasi (DDL MySQL):** Eksekusi 29 tabel relasional dengan indeks dan foreign key.
-2. **Tahap 2: Autentikasi JWT & Sesi:** Login, refresh token, logout dengan pembersihan sesi inputer.
+2. **Tahap 2: Autentikasi JWT, Sesi & Keamanan Akun:** Login, refresh token, logout dengan pembersihan sesi inputer, ganti kata sandi (`/auth/change-password`), dan upload/crop foto profil avatar (`/auth/avatar`).
 3. **Tahap 3: Pengguna, Peran & Middleware RBAC:** Middleware `requireAuth`, `requireRole`, `requirePermission`.
 4. **Tahap 4: Modul Karyawan & Impor Excel Massal:** Endpoint CRUD, NIK 16 digit, endpoint `/employees/import` atomik.
 5. **Tahap 5: Mitra Bisnis & Klien:** Endpoint CRUD, seeding 18 klien resmi PT. BARAK.

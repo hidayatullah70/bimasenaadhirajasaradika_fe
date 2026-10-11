@@ -114,6 +114,16 @@ Dikelola bersama di bawah kendali Admin, HRD, dan Direktur pada rute `/ops/maste
 
 ---
 
+### 2.9 Profil Pengguna Mandiri & Keamanan Kredensial (`/ops/profile`)
+
+| Aspek | Komponen / Rute Antarmuka | Rincian Entitas Data & Aksi Input |
+|---|---|---|
+| **Menu Input Awal** | - `/ops/profile` (Profil Pengguna Mandiri)<br>- Badge Kamera di Lingkaran Avatar<br>- Form Keamanan & Kata Sandi | 1. **Pengelolaan Foto Profil (Avatar):** Klik ikon kamera pada lingkaran foto $\rightarrow$ Popover menu (Galeri / Kamera / Hapus). Auto-crop rasio 1:1 persegi (256x256 px). Pratinjau instan (0 ms delay), penyimpanan ke `users.avatar`, dan siaran event real-time ke Topbar.<br>2. **Pergantian Kata Sandi:** Toggle tombol "Ubah Kata Sandi" $\rightarrow$ Input kata sandi lama, kata sandi baru (min 6 karakter), konfirmasi kata sandi. |
+| **Output Sistem** | - `/ops/profile` (Profil Pengguna)<br>- Bilah Navigasi Shell (`Topbar.jsx`) | - Foto profil pengguna langsung terpasang pada badge navigasi kanan atas dan halaman profil.<br>- Kredensial baru aktif untuk autentikasi sesi berikutnya. |
+| **Aliran ke Menu Direktur** | - `/ops/director/activity` / `/ops/audit` (Audit Trail) | - Setiap perubahan kata sandi (`USER_PASSWORD_CHANGE`) dan pembaruan foto profil (`USER_AVATAR_UPDATE`) tercatat otomatis pada jejak audit Direktur. |
+
+---
+
 ## 3. Struktur Pengawasan Eksekutif pada Menu Direktur (`/ops/director/*`)
 
 Semua data dari seluruh divisi operasional di atas teragregasi secara otomatis pada 5 menu utama Direktur:

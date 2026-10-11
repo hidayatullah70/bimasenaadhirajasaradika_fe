@@ -1224,7 +1224,7 @@ Placement (1) ───< Attendance Records (N)
 ```
 
 ### 20.2 Daftar 28 Entitas Database Relasional
-1. **`users`:** Akun pengguna internal (id, username, email, password_hash, role_id, is_active).
+1. **`users`:** Akun pengguna internal (id, username, email, password_hash, avatar, role_id, is_active).
 2. **`roles`:** 8 Peran sistem (id, name, code, description).
 3. **`permissions`:** Hak akses granular (id, permission_key, module, description).
 4. **`role_permissions`:** Tabel junction peran $\leftrightarrow$ izin (role_id, permission_id).
