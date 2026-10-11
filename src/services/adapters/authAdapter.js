@@ -17,6 +17,7 @@ import userAdapter from '@/services/adapters/userAdapter';
 import restClient from '@/services/apiClient';
 import { attendanceAdapter } from '@/services/adapters/attendanceAdapter';
 import { emitAudit } from '@/utils/auditLogger';
+import { getStoredPasswords, saveStoredPassword, getCustomPassword } from '@/utils/credentialStore';
 
 // --- Mock Implementation ---
 
@@ -55,6 +56,7 @@ const mockAuth = {
     if (!cleanInput) {
       return apiError('AUTH_INVALID', 'Username dan password wajib diisi.');
     }
+    const inputPw = String(password || '').trim();
 
     const aliasMap = {
       'direktur': 'direkturutama',
@@ -88,18 +90,24 @@ const mockAuth = {
       return apiError('AUTH_INACTIVE', 'Akun pengguna ini sedang dinonaktifkan.');
     }
 
+    // 3. Cek custom password yang tersimpan di authoritative credentialStore
+    const customPw =
+      getCustomPassword(targetUsername) ||
+      getCustomPassword(cleanInput) ||
+      (liveUser?.id ? getCustomPassword(liveUser.id) : null) ||
+      (liveUser?.password ? liveUser.password.trim() : null);
+
     let user = null;
 
     if (mockUser) {
-      // Verifikasi password mock (prioritaskan custom password di live store jika ada)
-      const hasCustomPw = liveUser && liveUser.password && liveUser.password !== mockUser.password;
-      const validPw = hasCustomPw
-        ? password === liveUser.password
-        : (password === mockUser.password ||
-           (targetUsername === 'direkturutama' && (password === 'dev_direkturutama_2026' || password === 'dev_direktur_2026')) ||
-           password === `dev_${mockUser.username}_2026` ||
-           password === 'admin123' ||
-           password === 'password');
+      // Verifikasi password (prioritaskan custom password jika sudah pernah diubah)
+      const validPw = customPw
+        ? inputPw === customPw
+        : (inputPw === mockUser.password ||
+           (targetUsername === 'direkturutama' && (inputPw === 'dev_direkturutama_2026' || inputPw === 'dev_direktur_2026')) ||
+           inputPw === `dev_${mockUser.username}_2026` ||
+           inputPw === 'admin123' ||
+           inputPw === 'password');
 
       if (validPw) {
         user = {
@@ -113,10 +121,11 @@ const mockAuth = {
     } else if (liveUser && liveUser.status === 'ACTIVE') {
       // Akun dinamis yang dibuat dari menu Pengguna & Akses
       const validPw =
-        password === liveUser.password ||
-        password === `dev_${liveUser.username}_2026` ||
-        password === 'admin123' ||
-        password === 'password';
+        (customPw && inputPw === customPw) ||
+        inputPw === (liveUser.password ? liveUser.password.trim() : '') ||
+        inputPw === `dev_${liveUser.username}_2026` ||
+        inputPw === 'admin123' ||
+        inputPw === 'password';
 
       if (validPw) {
         user = {
@@ -187,34 +196,51 @@ const mockAuth = {
       return apiError('AUTH_CORRUPT_SESSION', 'Sesi tidak valid.');
     }
 
-    if (!currentPassword) {
+    const cleanCurrent = String(currentPassword || '').trim();
+    const cleanNew = String(newPassword || '').trim();
+
+    if (!cleanCurrent) {
       return apiError('AUTH_CURRENT_REQUIRED', 'Kata sandi saat ini wajib diisi.');
     }
-    if (!newPassword || newPassword.length < 6) {
+    if (!cleanNew || cleanNew.length < 6) {
       return apiError('AUTH_PASSWORD_TOO_SHORT', 'Kata sandi baru minimal 6 karakter.');
     }
 
-    const storedUserRes = await userAdapter.getUserById(currentUser.username || currentUser.id);
+    const targetUsername = String(currentUser.username || '').toLowerCase().trim();
+    const targetUserId = String(currentUser.id || '').toLowerCase().trim();
+
+    const storedUserRes = await userAdapter.getUserById(targetUsername || targetUserId);
     const storedUser = storedUserRes?.data;
     const mockUser = MOCK_USERS.find(
-      (u) => (u.username || '').toLowerCase() === (currentUser.username || '').toLowerCase()
+      (u) => (u.username || '').toLowerCase().trim() === targetUsername
     );
 
-    const expectedPw = storedUser?.password || mockUser?.password || `dev_${currentUser.username}_2026`;
+    const savedPasswords = getStoredPasswords();
+    const expectedPw =
+      savedPasswords[targetUsername] ||
+      savedPasswords[targetUserId] ||
+      (storedUser?.password ? storedUser.password.trim() : null) ||
+      mockUser?.password ||
+      `dev_${currentUser.username}_2026`;
+
     const isValidCurrent =
-      currentPassword === expectedPw ||
-      currentPassword === 'admin123' ||
-      currentPassword === 'password' ||
-      (mockUser && currentPassword === mockUser.password);
+      cleanCurrent === expectedPw ||
+      cleanCurrent === 'admin123' ||
+      cleanCurrent === 'password' ||
+      (mockUser && cleanCurrent === mockUser.password);
 
     if (!isValidCurrent) {
       return apiError('AUTH_WRONG_PASSWORD', 'Kata sandi saat ini tidak cocok.');
     }
 
-    // Perbarui password di store pengguna
-    if (storedUser) {
-      await userAdapter.updateUser(storedUser.id, { password: newPassword });
-    }
+    // 1. Simpan ke authoritative credentialStore (localStorage + in-memory)
+    saveStoredPassword(targetUsername, cleanNew);
+    if (targetUserId) saveStoredPassword(targetUserId, cleanNew);
+    if (storedUser?.id) saveStoredPassword(storedUser.id, cleanNew);
+
+    // 2. Perbarui password di userAdapter store
+    const updateTargetId = storedUser?.id || targetUsername;
+    await userAdapter.updateUser(updateTargetId, { password: cleanNew });
 
     currentUser.hasCustomPassword = true;
     setSessionItem(SESSION_KEY, JSON.stringify(currentUser));

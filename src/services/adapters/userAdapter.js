@@ -8,6 +8,7 @@ import { MOCK_SYSTEM_USERS } from '@/services/mock/mockMasterData';
 import { emitAudit } from '@/utils/auditLogger';
 import { STATUS } from '@/constants/status';
 import { getStoredCollection, saveStoredCollection } from '@/utils/storage';
+import { saveStoredPassword } from '@/utils/credentialStore';
 
 const isMock = import.meta.env.VITE_API_MODE !== 'rest';
 const STORAGE_KEY = 'barak_users';
@@ -224,6 +225,8 @@ export const userAdapter = {
       const updatedStore = [newUser, ...store];
       saveStore(updatedStore);
       unmarkDeleted(newId, newUser.username);
+      saveStoredPassword(newUser.username, newUser.password);
+      saveStoredPassword(newId, newUser.password);
 
       await emitAudit({
         action: 'USER_CREATE',
@@ -280,6 +283,11 @@ export const userAdapter = {
       };
       store[idx] = updated;
       saveStore(store);
+
+      if (payload.password?.trim()) {
+        saveStoredPassword(updated.username, updated.password);
+        saveStoredPassword(finalId, updated.password);
+      }
 
       // Jika username login diubah, tandai username lama agar tidak di-resurrect oleh mock seed
       if (oldUser.username && oldUser.username.toLowerCase().trim() !== newUsernameKey) {
