@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 import authAdapter from '@/services/adapters/authAdapter';
 import imageResize from '@/utils/imageResize';
-import { getCustomAvatar } from '@/utils/avatarStore';
+import { getCustomAvatar, getLastUpdatedAvatar } from '@/utils/avatarStore';
 import toast from 'react-hot-toast';
 
 /**
@@ -94,6 +94,7 @@ export default function ProfilePage() {
       currentUser?.avatar ||
       (currentUser?.username ? getCustomAvatar(currentUser.username) : null) ||
       (currentUser?.id ? getCustomAvatar(currentUser.id) : null) ||
+      getLastUpdatedAvatar() ||
       null
     );
   });
@@ -102,14 +103,18 @@ export default function ProfilePage() {
     avatarPreview ||
     currentUser?.avatar ||
     (currentUser?.username ? getCustomAvatar(currentUser.username) : null) ||
-    (currentUser?.id ? getCustomAvatar(currentUser.id) : null);
+    (currentUser?.id ? getCustomAvatar(currentUser.id) : null) ||
+    getLastUpdatedAvatar() ||
+    null;
 
   // Sync avatarPreview whenever currentUser updates
   useEffect(() => {
     const avatar =
       currentUser?.avatar ||
       (currentUser?.username ? getCustomAvatar(currentUser.username) : null) ||
-      (currentUser?.id ? getCustomAvatar(currentUser.id) : null);
+      (currentUser?.id ? getCustomAvatar(currentUser.id) : null) ||
+      getLastUpdatedAvatar() ||
+      null;
     if (avatar) {
       setAvatarPreview(avatar);
     }

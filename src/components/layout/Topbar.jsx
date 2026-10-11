@@ -10,7 +10,7 @@ import { Menu, Search, Bell, User, ChevronDown, Settings, LogOut } from 'lucide-
 import clsx from 'clsx';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ROLE_LABELS } from '@/constants/roles';
-import { getCustomAvatar } from '@/utils/avatarStore';
+import { getCustomAvatar, getLastUpdatedAvatar } from '@/utils/avatarStore';
 import toast from 'react-hot-toast';
 
 import DevIndicatorModal from './DevIndicatorModal';
@@ -27,6 +27,7 @@ export default function Topbar({ onMobileMenuOpen, unreadCount = 0, onSearchOpen
       currentUser?.avatar ||
       (currentUser?.username ? getCustomAvatar(currentUser.username) : null) ||
       (currentUser?.id ? getCustomAvatar(currentUser.id) : null) ||
+      getLastUpdatedAvatar() ||
       null
     );
   });
@@ -36,6 +37,7 @@ export default function Topbar({ onMobileMenuOpen, unreadCount = 0, onSearchOpen
       currentUser?.avatar ||
       (currentUser?.username ? getCustomAvatar(currentUser.username) : null) ||
       (currentUser?.id ? getCustomAvatar(currentUser.id) : null) ||
+      getLastUpdatedAvatar() ||
       null;
     setActiveAvatar(avatar);
   }, [currentUser]);

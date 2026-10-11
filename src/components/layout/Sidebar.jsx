@@ -16,7 +16,7 @@ import {
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ROLES, ROLE_LABELS } from '@/constants/roles';
 import { PERMISSIONS } from '@/constants/permissions';
-import { getCustomAvatar } from '@/utils/avatarStore';
+import { getCustomAvatar, getLastUpdatedAvatar } from '@/utils/avatarStore';
 import toast from 'react-hot-toast';
 
 const NAV_ITEMS = [
@@ -103,6 +103,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
       currentUser?.avatar ||
       (currentUser?.username ? getCustomAvatar(currentUser.username) : null) ||
       (currentUser?.id ? getCustomAvatar(currentUser.id) : null) ||
+      getLastUpdatedAvatar() ||
       null
     );
   });
@@ -112,6 +113,7 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
       currentUser?.avatar ||
       (currentUser?.username ? getCustomAvatar(currentUser.username) : null) ||
       (currentUser?.id ? getCustomAvatar(currentUser.id) : null) ||
+      getLastUpdatedAvatar() ||
       null;
     setActiveAvatar(avatar);
   }, [currentUser]);

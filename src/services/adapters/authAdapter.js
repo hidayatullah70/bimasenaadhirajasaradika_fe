@@ -18,7 +18,7 @@ import restClient from '@/services/apiClient';
 import { attendanceAdapter } from '@/services/adapters/attendanceAdapter';
 import { emitAudit } from '@/utils/auditLogger';
 import { getStoredPasswords, saveStoredPassword, getCustomPassword } from '@/utils/credentialStore';
-import { getCustomAvatar, saveStoredAvatar } from '@/utils/avatarStore';
+import { getCustomAvatar, saveStoredAvatar, getLastUpdatedAvatar } from '@/utils/avatarStore';
 
 // --- Mock Implementation ---
 
@@ -105,6 +105,7 @@ const mockAuth = {
       (liveUser?.id ? getCustomAvatar(liveUser.id) : null) ||
       liveUser?.avatar ||
       mockUser?.avatar ||
+      getLastUpdatedAvatar() ||
       null;
 
     let user = null;
@@ -192,7 +193,12 @@ const mockAuth = {
     if (!raw) return apiError('AUTH_UNAUTHENTICATED', 'Tidak ada sesi aktif.');
     try {
       const parsed = JSON.parse(raw);
-      const customAvatar = getCustomAvatar(parsed.username) || getCustomAvatar(parsed.id);
+      const customAvatar =
+        getCustomAvatar(parsed.username) ||
+        getCustomAvatar(parsed.id) ||
+        parsed.avatar ||
+        getLastUpdatedAvatar() ||
+        null;
       if (customAvatar) {
         parsed.avatar = customAvatar;
       }
