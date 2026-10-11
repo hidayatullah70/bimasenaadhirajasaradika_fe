@@ -46,7 +46,7 @@ PT. BARAK IOMS (*Integrated Outsourcing Management System*) adalah sistem operas
 8. **Integritas Aset Brand Resmi:** Logo resmi korporat adalah `/assets/img/logo/logoAja.png` dengan token warna resmi: `--primary-red: #BA1D23`, `--primary-yellow: #F9CE3B`, `--accent-green: #32B23E`, dan `--ink: #0F172A`.
 9. **Tata Kelola Keamanan Akun & Foto Profil (User Security & Profile Governance):**
    - **Pergantian Kata Sandi (`PATCH /api/v1/auth/change-password`):** Pengguna dapat mengubah kata sandinya secara mandiri melalui form `/ops/profile`. Backend wajib memverifikasi kecocokan kata sandi lama, memvalidasi panjang kata sandi baru (minimal 6 karakter), meng-hash kata sandi menggunakan Bcrypt/Argon2 sebelum disimpan di tabel `users`, dan mencatat mutasi ke `audit_logs` (`USER_PASSWORD_CHANGE`).
-   - **Foto Profil / Avatar (`PATCH /api/v1/auth/avatar`):** Mendukung unggah dari galeri perangkat maupun kamera langsung. Seluruh foto dipotong dan dikompresi ke rasio persegi 1:1 (`256x256` px). Kolom `avatar` pada tabel `users` menyimpan URL / Base64 Data URL. Penghapusan foto (`avatar: null`) mengembalikan avatar ke inisial nama. Perubahan foto disinkronkan secara instan (real-time broadcast) ke seluruh shell navigasi (Topbar) dan dicatat di `audit_logs` (`USER_AVATAR_UPDATE`).
+   - **Foto Profil / Avatar (`PATCH /api/v1/auth/avatar`):** Mendukung unggah dari galeri perangkat maupun kamera langsung. Seluruh foto dipotong dan dikompresi ke rasio persegi 1:1 (`256x256` px). Kolom `avatar` pada tabel `users` menyimpan URL / Base64 Data URL. Foto profil wajib persisten secara permanen dan tidak boleh kembali menjadi inisial huruf saat pengguna logout atau login kembali; sistem memetakan avatar ke akun utama, user ID, dan seluruh alias resmi (`direkturutama` $\leftrightarrow$ `juli.priyanto` $\leftrightarrow$ `usr-001`, dsb.) dengan fallback foto profil terakhir yang diperbarui. Penghapusan foto secara eksplisit (`avatar: null`) adalah satu-satunya kondisi yang mengembalikan avatar ke inisial nama. Perubahan foto disinkronkan secara instan (real-time broadcast `barak:avatar-updated`) ke seluruh bilah navigasi Shell (Sidebar & Topbar) dan dicatat di `audit_logs` (`USER_AVATAR_UPDATE`).
 
 ---
 
@@ -575,8 +575,9 @@ Seluruh data berikut **wajib di-seed secara permanen** pada tabel `clients` dan 
            ▼
 [PATCH /api/v1/auth/avatar] ──> Simpan URL berkas / Data URL ke kolom `users.avatar`
            │
+           ├──> Mapping multi-alias (direkturutama ↔ juli.priyanto ↔ usr-001) & fallback foto profil terakhir
            ├──> Broadcast Event Browser: `window.dispatchEvent('barak:avatar-updated')`
-           ├──> Topbar navigasi & AppShell seketika memperbarui gambar avatar pengguna
+           ├──> Seluruh bilah navigasi (Sidebar kiri atas & Topbar kanan atas) seketika menampilkan foto baru
            └──> Terbitkan entri `audit_logs`:
                 { action: 'USER_AVATAR_UPDATE', module: 'AUTH', entity: 'User', details: { hasAvatar: bool } }
 ```

@@ -97,9 +97,9 @@ Frontend mengirimkan filter dan paginasi melalui query string URL terserialisasi
 ### 5.1 Autentikasi & Profil Pengguna (`/auth`)
 | Metode | Endpoint | Deskripsi | Query / Body Payload | Izin Diperlukan |
 |---|---|---|---|---|
-| `POST` | `/auth/login` | Otentikasi username & password, terbitkan token JWT | `{ username, password }` | Publik |
+| `POST` | `/auth/login` | Otentikasi username & password (mendukung alias resmi), terbitkan token JWT & objek user dengan `avatar` | `{ username, password }` | Publik |
 | `POST` | `/auth/refresh` | Perpanjang akses token kedaluwarsa | `{ refreshToken }` | Publik |
-| `GET` | `/auth/me` | Ambil identitas pengguna login & daftar izin | - | Terautentikasi |
+| `GET` | `/auth/me` | Ambil identitas pengguna login, daftar izin & string/URL `avatar` aktif | - | Terautentikasi |
 | `PATCH`| `/auth/change-password` | Ubah kata sandi akun pengguna aktif | `{ currentPassword, newPassword }` | Terautentikasi |
 | `PATCH`| `/auth/avatar` | Perbarui / hapus foto profil avatar pengguna aktif | `{ avatar }` (Base64 DataURL / URL / `null`) | Terautentikasi |
 | `POST` | `/auth/logout` | Revokasi sesi & blacklist token di server | - | Terautentikasi |
@@ -144,6 +144,12 @@ Frontend mengirimkan filter dan paginasi melalui query string URL terserialisasi
 - **Validation Rules:**
   - Gambar wajib memiliki rasio 1:1 persegi (dipotong 256x256 px di frontend via HTML5 Canvas sebelum dikirim).
   - Format yang diizinkan: JPG, PNG, WebP.
+- **Behavior & Persistence:**
+  - Backend menyimpan URL / Data URL ke kolom `users.avatar`.
+  - Foto profil persisten secara permanen dan disajikan pada endpoint `POST /auth/login` dan `GET /auth/me`.
+  - Sistem mengenali seluruh alias akun (`direkturutama` $\leftrightarrow$ `juli.priyanto` $\leftrightarrow$ `usr-001`, dsb.).
+  - Jika payload `avatar === null`, kolom `users.avatar` diatur ke `NULL` dan sistem mengembalikan tampilan ke inisial nama.
+  - Tercatat di `audit_logs` dengan aksi `USER_AVATAR_UPDATE` atau `USER_AVATAR_REMOVE`.
 - **Success Response (`200 OK`):**
   ```json
   {

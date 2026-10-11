@@ -77,13 +77,15 @@ Manajemen Profil & Keamanan Akun (/ops/profile):
         ├── 1. Opsi Galeri → Unggah berkas gambar dari penyimpanan perangkat
         ├── 2. Opsi Kamera → Ambil foto langsung melalui webcam/kamera perangkat
         └── 3. Opsi Hapus (jika ada foto) → Hapus foto profil, kembali ke inisial nama
-        └── Pemrosesan Gambar:
+        └── Pemrosesan Gambar & Persistensi:
             ├── Auto Center-Crop & Resize via HTML5 Canvas (Rasio 1:1 persegi, 256x256 px)
             ├── Instant Local Preview (0 ms latency) langsung merender gambar di UI
-            └── PATCH /auth/avatar (simpan Base64 DataURL / S3 URL ke database)
-                ├── Broadcast window event 'barak:avatar-updated'
-                ├── Bilah navigasi atas (Topbar) seketika memperbarui foto avatar
-                └── Catat log audit USER_AVATAR_UPDATE
+            ├── PATCH /auth/avatar (simpan Base64 DataURL / S3 URL ke database)
+            │   ├── Mapping multi-alias (direkturutama ↔ juli.priyanto ↔ usr-001) & fallback foto profil terakhir
+            │   ├── Broadcast window event 'barak:avatar-updated'
+            │   ├── Bilah navigasi atas (Topbar kanan atas) & bilah navigasi samping (Sidebar kiri atas) seketika memperbarui foto
+            │   ├── Foto persisten secara permanen dan tetap tampil saat logout maupun login ulang
+            │   └── Catat log audit USER_AVATAR_UPDATE (atau USER_AVATAR_REMOVE jika dihapus)
 
 Jika Terjadi Error Runtime Antarmuka (Route Error Boundary):
 └── Tangkap via RouteErrorBoundary → Tampilkan layar ramah pemulihan dengan opsi "Muat Ulang" atau "Kembali ke Operasional".

@@ -55,7 +55,7 @@ Pengembangan backend Node.js / Express / MySQL **wajib mengikuti urutan 20 tahap
 ### Tahap 2: Autentikasi, Sesi & Keamanan Akun (JWT Auth & User Security)
 - Endpoint `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `GET /api/v1/auth/me`, `PATCH /api/v1/auth/change-password`, `PATCH /api/v1/auth/avatar`, `POST /api/v1/auth/logout`.
 - Hashing kata sandi aman (Bcrypt / Argon2) dengan salt rounds minimum 10, validasi pencocokan kata sandi lama sebelum pergantian kata sandi baru.
-- Manajemen unggah/crop foto profil (rasio 1:1 persegi) dan penyimpanan path/URL pada tabel `users`.
+- Manajemen unggah/crop foto profil (rasio 1:1 persegi) dan penyimpanan path/URL pada tabel `users.avatar`. Dukungan resolusi alias akun resmi (`direkturutama` ↔ `juli.priyanto` ↔ `usr-001`, dsb.), respon `avatar` persisten pada endpoint login & getMe, serta penghapusan aman (`avatar: null`) yang mengembalikan ke inisial nama.
 - Token akses JWT berdurasi 15–60 menit dan refresh token rotasi (7 hari).
 
 ### Tahap 3: Pengguna, Peran & Hak Akses (Users, Roles & RBAC Middleware)
