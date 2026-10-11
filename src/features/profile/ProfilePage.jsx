@@ -3,7 +3,7 @@
  * Menampilkan detail profil pengguna aktif & formulir pergantian kata sandi (Change Password).
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ROLE_LABELS } from '@/constants/roles';
 import PageHeader from '@/components/layout/PageHeader';
@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import authAdapter from '@/services/adapters/authAdapter';
 import imageResize from '@/utils/imageResize';
+import { getCustomAvatar } from '@/utils/avatarStore';
 import toast from 'react-hot-toast';
 
 /**
@@ -88,6 +89,46 @@ export default function ProfilePage() {
   const cameraInputRef = useRef(null);
   const [avatarLoading, setAvatarLoading] = useState(false);
 
+  const [avatarPreview, setAvatarPreview] = useState(() => {
+    return (
+      currentUser?.avatar ||
+      (currentUser?.username ? getCustomAvatar(currentUser.username) : null) ||
+      (currentUser?.id ? getCustomAvatar(currentUser.id) : null) ||
+      null
+    );
+  });
+
+  const activeAvatar =
+    avatarPreview ||
+    currentUser?.avatar ||
+    (currentUser?.username ? getCustomAvatar(currentUser.username) : null) ||
+    (currentUser?.id ? getCustomAvatar(currentUser.id) : null);
+
+  // Sync avatarPreview whenever currentUser updates
+  useEffect(() => {
+    const avatar =
+      currentUser?.avatar ||
+      (currentUser?.username ? getCustomAvatar(currentUser.username) : null) ||
+      (currentUser?.id ? getCustomAvatar(currentUser.id) : null);
+    if (avatar) {
+      setAvatarPreview(avatar);
+    }
+  }, [currentUser]);
+
+  // Listen to cross-component avatar update event for real-time sync
+  useEffect(() => {
+    const handleAvatarUpdate = (e) => {
+      const { identifier, avatar } = e.detail || {};
+      const currentUsername = currentUser?.username?.toLowerCase().trim();
+      const currentId = currentUser?.id?.toLowerCase().trim();
+      if (!identifier || identifier === currentUsername || identifier === currentId) {
+        setAvatarPreview(avatar || null);
+      }
+    };
+    window.addEventListener('barak:avatar-updated', handleAvatarUpdate);
+    return () => window.removeEventListener('barak:avatar-updated', handleAvatarUpdate);
+  }, [currentUser]);
+
   const [showPasswordForm, setShowPasswordForm] = useState(false);
 
   const [currentPassword, setCurrentPassword] = useState('');
@@ -120,9 +161,13 @@ export default function ProfilePage() {
       // Otomatis resize & center-crop ke rasio 1:1 persegi (256x256)
       const squareDataUrl = await cropImageToSquare(file, 256);
 
+      // Langsung perbarui tampilan lokal secara instan (0ms delay)
+      setAvatarPreview(squareDataUrl);
+
       // Simpan ke authAdapter (sync ke avatarStore, userAdapter, & session)
       const res = await authAdapter.updateAvatar(squareDataUrl);
       if (res?.error) {
+        setAvatarPreview(currentUser?.avatar || null);
         toast.error(res.error.message || 'Gagal menyimpan foto profil.');
       } else {
         // Update reactive state di AuthContext
@@ -132,6 +177,7 @@ export default function ProfilePage() {
         toast.success('Foto profil berhasil diperbarui & disinkronkan!');
       }
     } catch (err) {
+      setAvatarPreview(currentUser?.avatar || null);
       toast.error(err?.message || 'Gagal memproses gambar foto profil.');
     } finally {
       setAvatarLoading(false);
@@ -141,11 +187,14 @@ export default function ProfilePage() {
   };
 
   const handleRemoveAvatar = async () => {
-    if (!currentUser?.avatar) return;
+    if (!activeAvatar) return;
     setAvatarLoading(true);
+    const prevAvatar = activeAvatar;
+    setAvatarPreview(null);
     try {
       const res = await authAdapter.updateAvatar(null);
       if (res?.error) {
+        setAvatarPreview(prevAvatar);
         toast.error(res.error.message || 'Gagal menghapus foto profil.');
       } else {
         if (updateCurrentUser) {
@@ -154,6 +203,7 @@ export default function ProfilePage() {
         toast.success('Foto profil dikembalikan ke inisial nama.');
       }
     } catch (err) {
+      setAvatarPreview(prevAvatar);
       toast.error(err?.message || 'Gagal menghapus foto profil.');
     } finally {
       setAvatarLoading(false);
@@ -233,9 +283,9 @@ export default function ProfilePage() {
                       <div className="absolute inset-0 bg-ink/40 flex items-center justify-center">
                         <Loader2 className="h-6 w-6 text-white animate-spin" />
                       </div>
-                    ) : currentUser.avatar ? (
+                    ) : activeAvatar ? (
                       <img
-                        src={currentUser.avatar}
+                        src={activeAvatar}
                         alt={currentUser.name}
                         className="h-full w-full object-cover"
                       />
@@ -310,7 +360,7 @@ export default function ProfilePage() {
                     <span>Kamera</span>
                   </button>
 
-                  {currentUser.avatar && (
+                  {activeAvatar && (
                     <button
                       type="button"
                       onClick={handleRemoveAvatar}

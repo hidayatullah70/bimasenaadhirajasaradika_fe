@@ -57,6 +57,19 @@ export function saveStoredAvatar(identifier, avatarDataUrl) {
       // ignore
     }
   }
+
+  // Dispatch custom event for real-time synchronization across UI components
+  if (typeof window !== 'undefined') {
+    try {
+      window.dispatchEvent(
+        new CustomEvent('barak:avatar-updated', {
+          detail: { identifier: norm, avatar: avatarDataUrl || null },
+        })
+      );
+    } catch {
+      // ignore
+    }
+  }
 }
 
 /**

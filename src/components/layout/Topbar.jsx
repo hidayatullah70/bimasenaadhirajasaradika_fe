@@ -10,6 +10,7 @@ import { Menu, Search, Bell, User, ChevronDown, Settings, LogOut } from 'lucide-
 import clsx from 'clsx';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ROLE_LABELS } from '@/constants/roles';
+import { getCustomAvatar } from '@/utils/avatarStore';
 import toast from 'react-hot-toast';
 
 import DevIndicatorModal from './DevIndicatorModal';
@@ -20,6 +21,37 @@ export default function Topbar({ onMobileMenuOpen, unreadCount = 0, onSearchOpen
   const [profileOpen, setProfileOpen] = useState(false);
   const [devModalOpen, setDevModalOpen] = useState(false);
   const profileRef = useRef(null);
+
+  const [activeAvatar, setActiveAvatar] = useState(() => {
+    return (
+      currentUser?.avatar ||
+      (currentUser?.username ? getCustomAvatar(currentUser.username) : null) ||
+      (currentUser?.id ? getCustomAvatar(currentUser.id) : null) ||
+      null
+    );
+  });
+
+  useEffect(() => {
+    const avatar =
+      currentUser?.avatar ||
+      (currentUser?.username ? getCustomAvatar(currentUser.username) : null) ||
+      (currentUser?.id ? getCustomAvatar(currentUser.id) : null) ||
+      null;
+    setActiveAvatar(avatar);
+  }, [currentUser]);
+
+  useEffect(() => {
+    const handleAvatarUpdate = (e) => {
+      const { identifier, avatar } = e.detail || {};
+      const currentUsername = currentUser?.username?.toLowerCase().trim();
+      const currentId = currentUser?.id?.toLowerCase().trim();
+      if (!identifier || identifier === currentUsername || identifier === currentId) {
+        setActiveAvatar(avatar || null);
+      }
+    };
+    window.addEventListener('barak:avatar-updated', handleAvatarUpdate);
+    return () => window.removeEventListener('barak:avatar-updated', handleAvatarUpdate);
+  }, [currentUser]);
 
   // Close profile dropdown on outside click
   useEffect(() => {
@@ -120,9 +152,9 @@ export default function Topbar({ onMobileMenuOpen, unreadCount = 0, onSearchOpen
             aria-label="Menu profil"
           >
             <div className="h-7 w-7 rounded-full bg-primary-red/10 flex items-center justify-center flex-none overflow-hidden border border-border/50">
-              {currentUser?.avatar ? (
+              {activeAvatar ? (
                 <img
-                  src={currentUser.avatar}
+                  src={activeAvatar}
                   alt={currentUser?.name || 'User'}
                   className="h-full w-full object-cover"
                 />
@@ -144,9 +176,9 @@ export default function Topbar({ onMobileMenuOpen, unreadCount = 0, onSearchOpen
             >
               <div className="px-4 py-3 border-b border-border flex items-center gap-3">
                 <div className="h-9 w-9 rounded-full bg-primary-red/10 flex items-center justify-center flex-none overflow-hidden border border-border">
-                  {currentUser?.avatar ? (
+                  {activeAvatar ? (
                     <img
-                      src={currentUser.avatar}
+                      src={activeAvatar}
                       alt={currentUser?.name || 'User'}
                       className="h-full w-full object-cover"
                     />
