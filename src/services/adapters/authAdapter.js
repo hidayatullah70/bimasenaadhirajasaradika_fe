@@ -37,6 +37,16 @@ const mockAuth = {
       return false;
     });
 
+    if (user) {
+      // Verifikasi apakah akun mock ini telah diubah username-nya atau dihapus
+      const liveCheck = await userAdapter.getUserById(user.id || user.username);
+      if (liveCheck?.data && liveCheck.data.username !== user.username) {
+        user = null;
+      } else if (liveCheck?.error && !liveCheck?.data) {
+        user = null;
+      }
+    }
+
     if (!user) {
       const dynamicUserRes = await userAdapter.getUserById(normalizedUsername);
       if (dynamicUserRes?.data && dynamicUserRes.data.status === 'ACTIVE') {

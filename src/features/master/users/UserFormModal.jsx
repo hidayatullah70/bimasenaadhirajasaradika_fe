@@ -23,6 +23,7 @@ const DEFAULT_DEPARTMENTS = {
 
 export default function UserFormModal({ isOpen, user, onClose, onSave }) {
   const [formData, setFormData] = useState({
+    id: '',
     name: '',
     username: '',
     email: '',
@@ -38,6 +39,7 @@ export default function UserFormModal({ isOpen, user, onClose, onSave }) {
   useEffect(() => {
     if (user) {
       setFormData({
+        id: user.id || '',
         name: user.name || '',
         username: user.username || '',
         email: user.email || '',
@@ -49,6 +51,7 @@ export default function UserFormModal({ isOpen, user, onClose, onSave }) {
       });
     } else {
       setFormData({
+        id: '',
         name: '',
         username: '',
         email: '',
@@ -123,7 +126,10 @@ export default function UserFormModal({ isOpen, user, onClose, onSave }) {
       toast.error('Mohon lengkapi kolom yang wajib diisi dengan format valid.');
       return;
     }
-    onSave(formData);
+    onSave({
+      ...formData,
+      id: user?.id || formData.id || undefined,
+    });
   };
 
   return (

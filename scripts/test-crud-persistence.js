@@ -221,8 +221,21 @@ async function runTests() {
 
   const updatedUser = (await userAdapter.updateUser(newUser.id, {
     name: 'Staff Senior Operasional',
+    username: 'staffops_senior',
   })).data;
-  assert(updatedUser.name === 'Staff Senior Operasional', 'User edit persists');
+  assert(updatedUser.name === 'Staff Senior Operasional', 'User edit name persists');
+  assert(updatedUser.username === 'staffops_senior', 'User edit username persists');
+
+  // Verify rename persistence in list and absence of old username
+  const usersListAfterRename = (await userAdapter.getUsers({ page: 1, pageSize: 50 })).data;
+  assert(usersListAfterRename.some((u) => u.username === 'staffops_senior'), 'Renamed username found in user list');
+  assert(!usersListAfterRename.some((u) => u.username === 'staffops_baru'), 'Old username not resurrected in user list');
+
+  // Duplicate username check
+  const duplicateEditRes = await userAdapter.updateUser(newUser.id, {
+    username: 'juli.priyanto',
+  });
+  assert(duplicateEditRes.error !== null, 'Duplicate username edit is rejected');
 
   // Status Toggle
   const toggledUser = (await userAdapter.toggleUserStatus(newUser.id)).data;

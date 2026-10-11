@@ -127,7 +127,7 @@ export default function UserListPage() {
   const handleSave = async (payload) => {
     try {
       if (editingUser) {
-        const uId = editingUser.id || editingUser.username;
+        const uId = editingUser.id || editingUser.username || payload.id;
         const res = await userAdapter.updateUser(uId, payload);
         if (res?.error) {
           toast.error(res.error.message || 'Gagal memperbarui akun pengguna.');
@@ -135,7 +135,24 @@ export default function UserListPage() {
         }
         toast.success(`Akun @${payload.username} berhasil diperbarui.`);
         if (res.data) {
-          setUsers((prev) => prev.map((u) => (u.id === res.data.id ? res.data : u)));
+          const matchTargetId = (res.data.id || '').toLowerCase().trim();
+          const matchTargetOldId = (uId || '').toLowerCase().trim();
+          const matchOldUsername = (editingUser.username || '').toLowerCase().trim();
+          const matchNewUsername = (payload.username || '').toLowerCase().trim();
+
+          setUsers((prev) =>
+            prev.map((u) => {
+              const uIdNorm = (u.id || '').toLowerCase().trim();
+              const uNameNorm = (u.username || '').toLowerCase().trim();
+              if (
+                (uIdNorm && (uIdNorm === matchTargetId || uIdNorm === matchTargetOldId)) ||
+                (uNameNorm && (uNameNorm === matchOldUsername || uNameNorm === matchNewUsername))
+              ) {
+                return res.data;
+              }
+              return u;
+            })
+          );
         }
       } else {
         const res = await userAdapter.createUser(payload);

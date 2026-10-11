@@ -45,13 +45,13 @@ function getStore() {
   const store = getStoredCollection(STORAGE_KEY, () => [...MOCK_SYSTEM_USERS]);
   const deletedSet = getDeletedSet();
 
-  // Self-healing & auto-sync: pastikan seluruh user default ada jika belum secara eksplisit dihapus
+  // Self-healing & auto-sync: pastikan seluruh user default ada jika belum secara eksplisit dihapus/direname
   let hasMissing = false;
   MOCK_SYSTEM_USERS.forEach((defaultUser) => {
     const idKey = (defaultUser.id || '').toLowerCase().trim();
     const userKey = (defaultUser.username || '').toLowerCase().trim();
 
-    // Jika user ini sudah dihapus oleh pengguna, jangan hidupkan kembali
+    // Jika user ini sudah dihapus atau username lamanya diganti, jangan hidupkan kembali
     if (deletedSet.has(idKey) || deletedSet.has(userKey)) {
       return;
     }
@@ -65,6 +65,11 @@ function getStore() {
       store.push({ ...defaultUser });
       hasMissing = true;
     } else {
+      // Pastikan id konsisten
+      if (!store[existingIndex].id && defaultUser.id) {
+        store[existingIndex].id = defaultUser.id;
+        hasMissing = true;
+      }
       // Sinkronkan atribut roleLabel & subRole jika belum ada
       if (defaultUser.roleLabel && !store[existingIndex].roleLabel) {
         store[existingIndex].roleLabel = defaultUser.roleLabel;
@@ -213,21 +218,50 @@ export const userAdapter = {
       if (idx === -1) return { data: null, error: { message: 'Pengguna tidak ditemukan.' } };
 
       const oldUser = store[idx];
+      const newUsernameKey = (payload.username || '').toLowerCase().trim();
+
+      // Cek apakah username baru sudah digunakan oleh akun lain
+      if (newUsernameKey && newUsernameKey !== (oldUser.username || '').toLowerCase().trim()) {
+        const duplicate = store.find(
+          (u, i) => i !== idx && (u.username || '').toLowerCase().trim() === newUsernameKey
+        );
+        if (duplicate) {
+          return {
+            data: null,
+            error: { message: `Username "${payload.username}" sudah digunakan oleh akun lain.` },
+          };
+        }
+      }
+
+      const finalId = oldUser.id || payload.id || id || `USR-${String(idx + 1).padStart(3, '0')}`;
       const updated = {
         ...oldUser,
         ...payload,
-        id: oldUser.id,
+        id: finalId,
+        username: payload.username ? payload.username.trim() : oldUser.username,
+        name: payload.name ? payload.name.trim() : oldUser.name,
+        email: payload.email ? payload.email.trim() : oldUser.email,
         updatedAt: new Date().toISOString(),
       };
       store[idx] = updated;
       saveStore(store);
 
+      // Jika username login diubah, tandai username lama agar tidak di-resurrect oleh mock seed
+      if (oldUser.username && oldUser.username.toLowerCase().trim() !== newUsernameKey) {
+        markAsDeleted(null, oldUser.username);
+      }
+      unmarkDeleted(finalId, updated.username);
+
       await emitAudit({
         action: 'USER_EDIT',
         module: 'IT',
         entity: 'User',
-        entityId: oldUser.id,
-        details: { changes: Object.keys(payload) },
+        entityId: finalId,
+        details: {
+          changes: Object.keys(payload),
+          oldUsername: oldUser.username,
+          newUsername: updated.username,
+        },
       });
 
       return { data: updated, error: null };
