@@ -5,8 +5,8 @@
  * Source of Truth: PRD §8 (App Shell) / AGENTS.md §Coding Rules.
  */
 
-import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { NavLink, useNavigate, Link } from 'react-router-dom';
 import clsx from 'clsx';
 import {
   LayoutDashboard, Users, Shield, Briefcase, DollarSign,
@@ -16,6 +16,7 @@ import {
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ROLES, ROLE_LABELS } from '@/constants/roles';
 import { PERMISSIONS } from '@/constants/permissions';
+import { getCustomAvatar } from '@/utils/avatarStore';
 import toast from 'react-hot-toast';
 
 const NAV_ITEMS = [
@@ -96,6 +97,37 @@ const NAV_ITEMS = [
 export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }) {
   const { currentUser, hasPermission, logout } = useAuth();
   const navigate = useNavigate();
+
+  const [activeAvatar, setActiveAvatar] = useState(() => {
+    return (
+      currentUser?.avatar ||
+      (currentUser?.username ? getCustomAvatar(currentUser.username) : null) ||
+      (currentUser?.id ? getCustomAvatar(currentUser.id) : null) ||
+      null
+    );
+  });
+
+  useEffect(() => {
+    const avatar =
+      currentUser?.avatar ||
+      (currentUser?.username ? getCustomAvatar(currentUser.username) : null) ||
+      (currentUser?.id ? getCustomAvatar(currentUser.id) : null) ||
+      null;
+    setActiveAvatar(avatar);
+  }, [currentUser]);
+
+  useEffect(() => {
+    const handleAvatarUpdate = (e) => {
+      const { identifier, avatar } = e.detail || {};
+      const currentUsername = currentUser?.username?.toLowerCase().trim();
+      const currentId = currentUser?.id?.toLowerCase().trim();
+      if (!identifier || identifier === currentUsername || identifier === currentId) {
+        setActiveAvatar(avatar || null);
+      }
+    };
+    window.addEventListener('barak:avatar-updated', handleAvatarUpdate);
+    return () => window.removeEventListener('barak:avatar-updated', handleAvatarUpdate);
+  }, [currentUser]);
 
   const visibleItems = currentUser?.isAttendanceOnly
     ? [
@@ -198,23 +230,44 @@ export default function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose
       </div>
 
       {/* User info */}
-      {!collapsed && (
-        <div className="px-4 py-3 border-b border-border flex-none">
-          <div className="flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-full bg-primary-red/10 flex items-center justify-center flex-none">
+      <div className={clsx(
+        'px-4 py-3 border-b border-border flex-none',
+        collapsed && 'flex justify-center px-2'
+      )}>
+        <Link
+          to="/ops/profile"
+          onClick={onMobileClose}
+          className={clsx(
+            'flex items-center gap-2.5 group transition-opacity hover:opacity-90',
+            collapsed && 'justify-center'
+          )}
+          title={`Profil ${currentUser?.name || 'Pengguna'} (${ROLE_LABELS[currentUser?.role] ?? currentUser?.role})`}
+        >
+          <div className="h-9 w-9 rounded-full bg-primary-red/10 flex items-center justify-center flex-none overflow-hidden border border-border/50">
+            {activeAvatar ? (
+              <img
+                src={activeAvatar}
+                alt={currentUser?.name || 'User'}
+                className="h-full w-full object-cover"
+              />
+            ) : (
               <span className="text-primary-red font-bold text-sm" aria-hidden>
                 {currentUser?.name?.[0] ?? '?'}
               </span>
-            </div>
+            )}
+          </div>
+          {!collapsed && (
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-ink truncate">{currentUser?.name}</p>
+              <p className="text-sm font-semibold text-ink truncate group-hover:text-primary-red transition-colors">
+                {currentUser?.name}
+              </p>
               <p className="text-xs text-muted truncate">
                 {ROLE_LABELS[currentUser?.role] ?? currentUser?.role}
               </p>
             </div>
-          </div>
-        </div>
-      )}
+          )}
+        </Link>
+      </div>
 
       {/* Navigation */}
       <nav
