@@ -210,12 +210,14 @@ export const userAdapter = {
         return match ? Math.max(max, parseInt(match[1], 10)) : max;
       }, 0);
       const newId = `USR-${(maxNum + 1).toString().padStart(3, '0')}`;
+      const defaultPw = payload.password?.trim() || `dev_${payload.username.trim()}_2026`;
       const newUser = {
         ...payload,
         id: newId,
         username: payload.username.trim(),
         name: payload.name.trim(),
         email: payload.email.trim(),
+        password: defaultPw,
         status: payload.status || STATUS.ACTIVE,
         createdAt: new Date().toISOString(),
       };
@@ -273,6 +275,7 @@ export const userAdapter = {
         username: payload.username ? payload.username.trim() : oldUser.username,
         name: payload.name ? payload.name.trim() : oldUser.name,
         email: payload.email ? payload.email.trim() : oldUser.email,
+        password: payload.password?.trim() ? payload.password.trim() : (oldUser.password || `dev_${oldUser.username}_2026`),
         updatedAt: new Date().toISOString(),
       };
       store[idx] = updated;

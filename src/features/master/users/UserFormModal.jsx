@@ -32,6 +32,7 @@ export default function UserFormModal({ isOpen, user, onClose, onSave }) {
     status: STATUS.ACTIVE,
     subRole: '',
     roleLabel: '',
+    password: '',
   });
 
   const [errors, setErrors] = useState({});
@@ -48,6 +49,7 @@ export default function UserFormModal({ isOpen, user, onClose, onSave }) {
         status: user.status || STATUS.ACTIVE,
         subRole: user.subRole || '',
         roleLabel: user.roleLabel || '',
+        password: '',
       });
     } else {
       setFormData({
@@ -60,6 +62,7 @@ export default function UserFormModal({ isOpen, user, onClose, onSave }) {
         status: STATUS.ACTIVE,
         subRole: '',
         roleLabel: '',
+        password: '',
       });
     }
     setErrors({});
@@ -266,6 +269,24 @@ export default function UserFormModal({ isOpen, user, onClose, onSave }) {
               className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink"
               placeholder="Operasional Lapangan"
             />
+          </div>
+
+          <div className="p-3 rounded-lg bg-canvas border border-border space-y-1.5">
+            <label className="block text-sm font-semibold text-ink">
+              {user ? 'Reset Kata Sandi Pengguna (Opsional)' : 'Kata Sandi Awal Login (Opsional)'}
+            </label>
+            <input
+              type="text"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              className="w-full px-3 py-2 border border-border rounded-lg bg-white text-ink text-sm font-mono placeholder:font-sans"
+              placeholder={user ? 'Kosongkan jika tidak ingin mengubah kata sandi' : 'Default otomatis: dev_[username]_2026'}
+            />
+            <p className="text-xs text-muted">
+              {user
+                ? 'Isi kolom ini jika ingin mereset password akun ini secara langsung.'
+                : 'Jika dikosongkan, kata sandi awal akan otomatis diset dev_[username]_2026.'}
+            </p>
           </div>
 
           <div className="pt-3 border-t border-border flex justify-end gap-2">
