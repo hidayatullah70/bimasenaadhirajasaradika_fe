@@ -27,6 +27,8 @@ import toast from 'react-hot-toast';
 export default function ProfilePage() {
   const { currentUser } = useAuth();
 
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -89,9 +91,15 @@ export default function ProfilePage() {
         description="Kelola informasi identitas akun, hak akses jabatan, dan keamanan kata sandi Anda."
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Kolom 1: Informasi Akun (5 cols) */}
-        <div className="lg:col-span-5 space-y-6">
+      <div
+        className={`transition-all duration-300 ${
+          showPasswordForm
+            ? 'grid grid-cols-1 lg:grid-cols-12 gap-6 items-start'
+            : 'max-w-xl mx-auto'
+        }`}
+      >
+        {/* Kolom 1: Informasi Akun */}
+        <div className={showPasswordForm ? 'lg:col-span-5 space-y-6' : 'w-full space-y-6'}>
           <Card className="border border-border shadow-sm">
             <CardHeader className="border-b border-border bg-canvas/30 py-4 px-6">
               <h2 className="text-base font-semibold text-ink flex items-center gap-2">
@@ -150,6 +158,27 @@ export default function ProfilePage() {
                     </p>
                   </div>
                 </div>
+
+                {/* Tombol Ubah Kata Sandi / Password di bawah field Peran Otorisasi */}
+                <div className="pt-2">
+                  <Button
+                    type="button"
+                    variant={showPasswordForm ? 'outline' : 'primary'}
+                    onClick={() => {
+                      setShowPasswordForm((prev) => !prev);
+                      setError('');
+                      setSuccessMsg('');
+                    }}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 font-medium shadow-sm transition-all"
+                  >
+                    <KeyRound className="h-4 w-4" />
+                    <span>
+                      {showPasswordForm
+                        ? 'Tutup Formulir Kata Sandi'
+                        : 'Ubah Kata Sandi / Password'}
+                    </span>
+                  </Button>
+                </div>
               </div>
 
               <div className="mt-5 p-3 rounded-lg bg-info/10 border border-info/20 text-info">
@@ -161,155 +190,179 @@ export default function ProfilePage() {
           </Card>
         </div>
 
-        {/* Kolom 2: Keamanan & Ubah Kata Sandi (7 cols) */}
-        <div className="lg:col-span-7">
-          <Card className="border border-border shadow-sm">
-            <CardHeader className="border-b border-border bg-canvas/30 py-4 px-6">
-              <h2 className="text-base font-semibold text-ink flex items-center gap-2">
-                <KeyRound className="h-4 w-4 text-primary-red" />
-                Keamanan & Ubah Kata Sandi
-              </h2>
-            </CardHeader>
-            <CardContent className="pt-6 px-6 pb-6">
-              <p className="text-sm text-muted mb-6 leading-relaxed">
-                Untuk menjaga keamanan akun operasional Anda, disarankan untuk memperbarui kata sandi secara berkala dengan minimal 6 karakter kombinasi huruf dan angka.
-              </p>
-
-              {error && (
-                <div
-                  role="alert"
-                  className="flex items-start gap-2.5 mb-5 p-3.5 rounded-lg bg-danger/10 border border-danger/25 text-danger text-sm"
+        {/* Kolom 2: Keamanan & Ubah Kata Sandi (Tampil saat showPasswordForm = true) */}
+        {showPasswordForm && (
+          <div className="lg:col-span-7 transition-all duration-300">
+            <Card className="border border-border shadow-sm">
+              <CardHeader className="border-b border-border bg-canvas/30 py-4 px-6 flex flex-row items-center justify-between">
+                <h2 className="text-base font-semibold text-ink flex items-center gap-2">
+                  <KeyRound className="h-4 w-4 text-primary-red" />
+                  Keamanan & Ubah Kata Sandi
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordForm(false)}
+                  className="text-xs text-muted hover:text-ink font-medium px-2.5 py-1 rounded border border-border hover:bg-canvas transition-colors"
                 >
-                  <AlertCircle className="h-4 w-4 flex-none mt-0.5" />
-                  <span>{error}</span>
-                </div>
-              )}
+                  Tutup
+                </button>
+              </CardHeader>
+              <CardContent className="pt-6 px-6 pb-6">
+                <p className="text-sm text-muted mb-6 leading-relaxed">
+                  Untuk menjaga keamanan akun operasional Anda, disarankan untuk memperbarui kata sandi secara berkala dengan minimal 6 karakter kombinasi huruf dan angka.
+                </p>
 
-              {successMsg && (
-                <div
-                  role="status"
-                  className="flex items-start gap-2.5 mb-5 p-3.5 rounded-lg bg-success/10 border border-success/25 text-success text-sm"
-                >
-                  <CheckCircle2 className="h-4 w-4 flex-none mt-0.5" />
-                  <span>{successMsg}</span>
-                </div>
-              )}
-
-              <form onSubmit={handleChangePassword} className="space-y-4">
-                {/* Kata Sandi Saat Ini */}
-                <div>
-                  <label
-                    htmlFor="current-password-input"
-                    className="block text-sm font-medium text-ink mb-1.5"
+                {error && (
+                  <div
+                    role="alert"
+                    className="flex items-start gap-2.5 mb-5 p-3.5 rounded-lg bg-danger/10 border border-danger/25 text-danger text-sm"
                   >
-                    Kata Sandi Saat Ini <span className="text-danger">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="current-password-input"
-                      type={showCurrent ? 'text' : 'password'}
-                      autoComplete="current-password"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      placeholder="Masukkan kata sandi saat ini"
-                      required
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-white text-ink text-sm focus:outline-none focus:ring-2 focus:ring-primary-red/30 focus:border-primary-red pr-10 transition-all"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowCurrent((v) => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink transition-colors"
-                      aria-label={showCurrent ? 'Sembunyikan' : 'Tampilkan'}
-                    >
-                      {showCurrent ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
+                    <AlertCircle className="h-4 w-4 flex-none mt-0.5" />
+                    <span>{error}</span>
                   </div>
-                </div>
+                )}
 
-                {/* Kata Sandi Baru */}
-                <div>
-                  <label
-                    htmlFor="new-password-input"
-                    className="block text-sm font-medium text-ink mb-1.5"
+                {successMsg && (
+                  <div
+                    role="status"
+                    className="flex items-start gap-2.5 mb-5 p-3.5 rounded-lg bg-success/10 border border-success/25 text-success text-sm"
                   >
-                    Kata Sandi Baru <span className="text-danger">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="new-password-input"
-                      type={showNew ? 'text' : 'password'}
-                      autoComplete="new-password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Minimal 6 karakter"
-                      required
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-white text-ink text-sm focus:outline-none focus:ring-2 focus:ring-primary-red/30 focus:border-primary-red pr-10 transition-all"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowNew((v) => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink transition-colors"
-                      aria-label={showNew ? 'Sembunyikan' : 'Tampilkan'}
-                    >
-                      {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
+                    <CheckCircle2 className="h-4 w-4 flex-none mt-0.5" />
+                    <span>{successMsg}</span>
                   </div>
-                </div>
+                )}
 
-                {/* Konfirmasi Kata Sandi Baru */}
-                <div>
-                  <label
-                    htmlFor="confirm-password-input"
-                    className="block text-sm font-medium text-ink mb-1.5"
-                  >
-                    Konfirmasi Kata Sandi Baru <span className="text-danger">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="confirm-password-input"
-                      type={showConfirm ? 'text' : 'password'}
-                      autoComplete="new-password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Ulangi kata sandi baru"
-                      required
-                      className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-white text-ink text-sm focus:outline-none focus:ring-2 focus:ring-primary-red/30 focus:border-primary-red pr-10 transition-all"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirm((v) => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink transition-colors"
-                      aria-label={showConfirm ? 'Sembunyikan' : 'Tampilkan'}
+                <form onSubmit={handleChangePassword} className="space-y-4">
+                  {/* Kata Sandi Saat Ini */}
+                  <div>
+                    <label
+                      htmlFor="current-password-input"
+                      className="block text-sm font-medium text-ink mb-1.5"
                     >
-                      {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
+                      Kata Sandi Saat Ini <span className="text-danger">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="current-password-input"
+                        type={showCurrent ? 'text' : 'password'}
+                        autoComplete="current-password"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        placeholder="Masukkan kata sandi saat ini"
+                        required
+                        className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-white text-ink text-sm focus:outline-none focus:ring-2 focus:ring-primary-red/30 focus:border-primary-red pr-10 transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrent((v) => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink transition-colors"
+                        aria-label={showCurrent ? 'Sembunyikan' : 'Tampilkan'}
+                      >
+                        {showCurrent ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
                   </div>
-                </div>
 
-                <div className="pt-3">
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    disabled={loading}
-                    className="w-full sm:w-auto flex items-center justify-center gap-2"
-                  >
-                    {loading ? (
-                      <>
-                        <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        <span>Menyimpan Perubahan...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Lock className="h-4 w-4" />
-                        <span>Perbarui Kata Sandi</span>
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
+                  {/* Kata Sandi Baru */}
+                  <div>
+                    <label
+                      htmlFor="new-password-input"
+                      className="block text-sm font-medium text-ink mb-1.5"
+                    >
+                      Kata Sandi Baru <span className="text-danger">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="new-password-input"
+                        type={showNew ? 'text' : 'password'}
+                        autoComplete="new-password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Minimal 6 karakter"
+                        required
+                        className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-white text-ink text-sm focus:outline-none focus:ring-2 focus:ring-primary-red/30 focus:border-primary-red pr-10 transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNew((v) => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink transition-colors"
+                        aria-label={showNew ? 'Sembunyikan' : 'Tampilkan'}
+                      >
+                        {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Konfirmasi Kata Sandi Baru */}
+                  <div>
+                    <label
+                      htmlFor="confirm-password-input"
+                      className="block text-sm font-medium text-ink mb-1.5"
+                    >
+                      Konfirmasi Kata Sandi Baru <span className="text-danger">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="confirm-password-input"
+                        type={showConfirm ? 'text' : 'password'}
+                        autoComplete="new-password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Ulangi kata sandi baru"
+                        required
+                        className="w-full px-3.5 py-2.5 rounded-lg border border-border bg-white text-ink text-sm focus:outline-none focus:ring-2 focus:ring-primary-red/30 focus:border-primary-red pr-10 transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirm((v) => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink transition-colors"
+                        aria-label={showConfirm ? 'Sembunyikan' : 'Tampilkan'}
+                      >
+                        {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 flex items-center gap-3">
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      disabled={loading}
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-2"
+                    >
+                      {loading ? (
+                        <>
+                          <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>Menyimpan...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Lock className="h-4 w-4" />
+                          <span>Perbarui Kata Sandi</span>
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setShowPasswordForm(false);
+                        setError('');
+                        setSuccessMsg('');
+                        setCurrentPassword('');
+                        setNewPassword('');
+                        setConfirmPassword('');
+                      }}
+                      className="flex-1 sm:flex-none"
+                    >
+                      Batal
+                    </Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );
