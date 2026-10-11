@@ -11,19 +11,13 @@ Bangun dan pelihara PT. BARAK IOMS (*Integrated Outsourcing Management System*) 
 ---
 
 ## 2. Sumber Kebenaran Tunggal (Source of Truth / SOT)
-- **Sumber Fungsional Primer:** `docs/PRD.md` (Spesifikasi produk, 28 entitas database, RBAC, dan status enum).
-- **Arsitektur Final Terpadu:** `docs/sot/01_FRONTEND_FINAL_ARCHITECTURE.md`.
-- **Spesifikasi REST & Endpoint:** `docs/API-SPEC.md` & `docs/sot/02_API_CONTRACT.md`.
-- **Skema & Kontrak Entitas Relasional:** `docs/sot/03_ENTITY_CONTRACT.md`.
-- **Matriks Izin Granular RBAC:** `docs/sot/04_RBAC_PERMISSION_MATRIX.md`.
-- **Alur Bisnis Lintas Divisi:** `docs/USER-FLOW.md` & `docs/sot/05_WORKFLOW_CONTRACT.md`.
-- **Enum Status Siklus Hidup:** `docs/sot/06_STATUS_ENUMS.md`.
-- **Standar Desain & Komponen UI:** `docs/UI-GUIDELINE.md` & `docs/sot/DASHBOARD_UX_V2.md`.
-- **Roadmap Pengembangan Backend:** `docs/IMPLEMENTATION-PLAN.md` & `docs/sot/07_BACKEND_IMPLEMENTATION_ORDER.md`.
-- **Panduan Integrasi Backend:** `docs/sot/08_FRONTEND_BACKEND_INTEGRATION_GUIDE.md`.
-- **Persistensi Data & Operasi CRUD:** `docs/sot/CRUD_PERSISTENCE_V2.md`.
-- **Matriks Input Bagian & Laporan:** `docs/DEPARTMENT-INPUT-REPORTING-MATRIX.md`.
-- **Laporan Handoff Eksekutif:** `docs/sot/FINAL_FRONTEND_HANDOFF.md`.
+- **Master Terpadu SOT & Kontrak Backend:** `docs/sot/MASTER_SOURCE_OF_TRUTH.md` (Konsolidasi seluruh arsitektur, 29 entitas DDL MySQL, 18 klien resmi, spesifikasi REST API & amplop JSON, RBAC, alur bisnis lintas divisi, status enum, roadmap 20 tahap backend, dan panduan integrasi).
+- **Spesifikasi Fungsional Produk (PRD):** `docs/PRD.md` (Spesifikasi produk, aturan bisnis, dan kebutuhan operasional).
+- **Katalog Endpoint REST Lengkap:** `docs/API-SPEC.md` (Daftar endpoint per modul operasional).
+- **Alur Bisnis Lintas Divisi:** `docs/USER-FLOW.md` (Diagram transaksi dan alur kerja lintas departemen).
+- **Matriks Input Formulir & Pelaporan:** `docs/DEPARTMENT-INPUT-REPORTING-MATRIX.md` (Alur formulir ke Cockpit Direktur).
+- **Panduan Desain & UI:** `docs/UI-GUIDELINE.md` (Standar visual, token warna, dan layout).
+- **Rencana Implementasi Backend:** `docs/IMPLEMENTATION-PLAN.md` (Rencana eksekusi dan konfigurasi server).
 
 *Jika terjadi ketidaksesuaian antara kode dan dokumen SOT di atas, stop dan konsultasikan sebelum mengubah perilaku bisnis sistem.*
 
