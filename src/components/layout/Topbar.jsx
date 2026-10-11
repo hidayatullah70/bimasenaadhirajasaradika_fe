@@ -119,10 +119,18 @@ export default function Topbar({ onMobileMenuOpen, unreadCount = 0, onSearchOpen
             aria-haspopup="menu"
             aria-label="Menu profil"
           >
-            <div className="h-7 w-7 rounded-full bg-primary-red/10 flex items-center justify-center flex-none">
-              <span className="text-primary-red font-bold text-xs" aria-hidden>
-                {currentUser?.name?.[0] ?? 'U'}
-              </span>
+            <div className="h-7 w-7 rounded-full bg-primary-red/10 flex items-center justify-center flex-none overflow-hidden border border-border/50">
+              {currentUser?.avatar ? (
+                <img
+                  src={currentUser.avatar}
+                  alt={currentUser?.name || 'User'}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="text-primary-red font-bold text-xs" aria-hidden>
+                  {currentUser?.name?.[0] ?? 'U'}
+                </span>
+              )}
             </div>
             <span className="hidden md:block max-w-[120px] truncate">{currentUser?.name}</span>
             <ChevronDown className={clsx('h-4 w-4 text-muted transition-transform', profileOpen && 'rotate-180')} aria-hidden />
@@ -134,12 +142,27 @@ export default function Topbar({ onMobileMenuOpen, unreadCount = 0, onSearchOpen
               role="menu"
               aria-label="Menu profil"
             >
-              <div className="px-4 py-3 border-b border-border">
-                <p className="text-sm font-semibold text-ink truncate">{currentUser?.name}</p>
-                <p className="text-xs text-muted truncate">{currentUser?.email}</p>
-                <p className="text-xs text-primary-red font-medium mt-0.5">
-                  {ROLE_LABELS[currentUser?.role] ?? currentUser?.role}
-                </p>
+              <div className="px-4 py-3 border-b border-border flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full bg-primary-red/10 flex items-center justify-center flex-none overflow-hidden border border-border">
+                  {currentUser?.avatar ? (
+                    <img
+                      src={currentUser.avatar}
+                      alt={currentUser?.name || 'User'}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-primary-red font-bold text-sm">
+                      {currentUser?.name?.[0] ?? 'U'}
+                    </span>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-ink truncate">{currentUser?.name}</p>
+                  <p className="text-xs text-muted truncate">{currentUser?.email}</p>
+                  <p className="text-xs text-primary-red font-medium mt-0.5">
+                    {ROLE_LABELS[currentUser?.role] ?? currentUser?.role}
+                  </p>
+                </div>
               </div>
               <div className="py-1">
                 <Link

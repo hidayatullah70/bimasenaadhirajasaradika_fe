@@ -18,6 +18,7 @@ import restClient from '@/services/apiClient';
 import { attendanceAdapter } from '@/services/adapters/attendanceAdapter';
 import { emitAudit } from '@/utils/auditLogger';
 import { getStoredPasswords, saveStoredPassword, getCustomPassword } from '@/utils/credentialStore';
+import { getCustomAvatar, saveStoredAvatar } from '@/utils/avatarStore';
 
 // --- Mock Implementation ---
 
@@ -97,6 +98,15 @@ const mockAuth = {
       (liveUser?.id ? getCustomPassword(liveUser.id) : null) ||
       (liveUser?.password ? liveUser.password.trim() : null);
 
+    // 4. Cek custom avatar yang tersimpan di authoritative avatarStore
+    const activeAvatar =
+      getCustomAvatar(targetUsername) ||
+      getCustomAvatar(cleanInput) ||
+      (liveUser?.id ? getCustomAvatar(liveUser.id) : null) ||
+      liveUser?.avatar ||
+      mockUser?.avatar ||
+      null;
+
     let user = null;
 
     if (mockUser) {
@@ -113,6 +123,7 @@ const mockAuth = {
         user = {
           ...mockUser,
           ...(liveUser || {}),
+          avatar: activeAvatar,
           role: liveUser?.role || mockUser.role,
           roleLabel: liveUser?.roleLabel || mockUser.roleLabel || ROLE_LABELS[mockUser.role],
           permissions: mockUser.permissions || ROLE_PERMISSIONS[mockUser.role] || [],
@@ -130,6 +141,7 @@ const mockAuth = {
       if (validPw) {
         user = {
           ...liveUser,
+          avatar: activeAvatar,
           roleLabel: liveUser.roleLabel || ROLE_LABELS[liveUser.role] || liveUser.role,
           permissions: ROLE_PERMISSIONS[liveUser.role] || [],
         };
@@ -179,10 +191,55 @@ const mockAuth = {
     const raw = getSessionItem(SESSION_KEY);
     if (!raw) return apiError('AUTH_UNAUTHENTICATED', 'Tidak ada sesi aktif.');
     try {
-      return apiSuccess(JSON.parse(raw));
+      const parsed = JSON.parse(raw);
+      const customAvatar = getCustomAvatar(parsed.username) || getCustomAvatar(parsed.id);
+      if (customAvatar) {
+        parsed.avatar = customAvatar;
+      }
+      return apiSuccess(parsed);
     } catch {
       return apiError('AUTH_CORRUPT_SESSION', 'Sesi tidak valid.');
     }
+  },
+
+  async updateAvatar(avatarDataUrl) {
+    await new Promise((r) => setTimeout(r, 300));
+    const raw = getSessionItem(SESSION_KEY);
+    if (!raw) return apiError('AUTH_UNAUTHENTICATED', 'Tidak ada sesi aktif.');
+    let currentUser;
+    try {
+      currentUser = JSON.parse(raw);
+    } catch {
+      return apiError('AUTH_CORRUPT_SESSION', 'Sesi tidak valid.');
+    }
+
+    const targetUsername = String(currentUser.username || '').toLowerCase().trim();
+    const targetUserId = String(currentUser.id || '').toLowerCase().trim();
+
+    // 1. Simpan ke authoritative avatarStore (localStorage + in-memory)
+    saveStoredAvatar(targetUsername, avatarDataUrl);
+    if (targetUserId) saveStoredAvatar(targetUserId, avatarDataUrl);
+
+    // 2. Perbarui session
+    currentUser.avatar = avatarDataUrl || null;
+    setSessionItem(SESSION_KEY, JSON.stringify(currentUser));
+
+    // 3. Perbarui di userAdapter
+    const storedUserRes = await userAdapter.getUserById(targetUsername || targetUserId);
+    const storedUser = storedUserRes?.data;
+    const updateTargetId = storedUser?.id || targetUsername;
+    await userAdapter.updateUser(updateTargetId, { avatar: avatarDataUrl || null });
+
+    // 4. Catat jejak audit
+    await emitAudit({
+      action: 'USER_AVATAR_UPDATE',
+      module: 'AUTH',
+      entity: 'User',
+      entityId: currentUser.id || currentUser.username,
+      details: { username: currentUser.username, hasAvatar: !!avatarDataUrl },
+    });
+
+    return apiSuccess({ success: true, avatar: avatarDataUrl || null });
   },
 
   async changePassword({ currentPassword, newPassword }) {
@@ -294,6 +351,9 @@ const restAuth = {
   },
   async changePassword(payload) {
     return restClient.patch('/auth/change-password', payload);
+  },
+  async updateAvatar(avatarDataUrl) {
+    return restClient.patch('/auth/avatar', { avatar: avatarDataUrl });
   },
 };
 

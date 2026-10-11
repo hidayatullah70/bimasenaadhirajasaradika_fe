@@ -160,7 +160,63 @@ export function resizeImageTo3x4(file, targetWidth = 300) {
   });
 }
 
+/**
+ * Resize and center-crop an uploaded image file to 1:1 aspect ratio (square profile picture / avatar).
+ *
+ * @param {File} file - Uploaded File object
+ * @param {number} [targetSize=256] - Target width & height in pixels (256x256)
+ * @returns {Promise<string>} Data URL base64 string
+ */
+export function resizeImageToSquare(file, targetSize = 256) {
+  return new Promise((resolve, reject) => {
+    if (!file || !file.type.startsWith('image/')) {
+      reject(new Error('File yang dipilih harus berupa file gambar (JPG, PNG, WEBP).'));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Gagal membaca file gambar dari device.'));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Gagal memuat format gambar. File mungkin rusak.'));
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = targetSize;
+        canvas.height = targetSize;
+        const ctx = canvas.getContext('2d');
+
+        if (!ctx) {
+          reject(new Error('Browser tidak mendukung Canvas grafis.'));
+          return;
+        }
+
+        // Center-crop to 1:1 square
+        let cropX = 0;
+        let cropY = 0;
+        let cropSize = Math.min(img.width, img.height);
+
+        if (img.width > img.height) {
+          cropX = Math.round((img.width - cropSize) / 2);
+        } else if (img.height > img.width) {
+          // Keep a slight bias towards top for portraits/faces (top 20% rather than pure center)
+          cropY = Math.round((img.height - cropSize) * 0.25);
+        }
+
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, cropX, cropY, cropSize, cropSize, 0, 0, targetSize, targetSize);
+
+        resolve(canvas.toDataURL('image/jpeg', 0.88));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 export default {
   resizeImageTo16x9,
   resizeImageTo3x4,
+  resizeImageToSquare,
 };
+

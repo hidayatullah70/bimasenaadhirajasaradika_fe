@@ -84,6 +84,14 @@ export function AuthProvider({ children }) {
     [currentUser]
   );
 
+  const updateCurrentUser = useCallback((userData) => {
+    setCurrentUser((prev) => {
+      if (!prev) return userData;
+      const updated = typeof userData === 'function' ? userData(prev) : { ...prev, ...userData };
+      return updated;
+    });
+  }, []);
+
   const value = {
     currentUser,
     role: currentUser?.role ?? null,
@@ -92,6 +100,7 @@ export function AuthProvider({ children }) {
     error,
     login,
     logout,
+    updateCurrentUser,
     hasPermission,
     hasRole,
     isAuthenticated: !!currentUser,

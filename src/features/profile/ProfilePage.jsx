@@ -3,7 +3,7 @@
  * Menampilkan detail profil pengguna aktif & formulir pergantian kata sandi (Change Password).
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ROLE_LABELS } from '@/constants/roles';
 import PageHeader from '@/components/layout/PageHeader';
@@ -20,12 +20,21 @@ import {
   KeyRound,
   CheckCircle2,
   AlertCircle,
+  Camera,
+  Upload,
+  Trash2,
+  Loader2,
 } from 'lucide-react';
 import authAdapter from '@/services/adapters/authAdapter';
+import { resizeImageToSquare } from '@/utils/imageResize';
 import toast from 'react-hot-toast';
 
 export default function ProfilePage() {
-  const { currentUser } = useAuth();
+  const { currentUser, updateCurrentUser } = useAuth();
+
+  const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
+  const [avatarLoading, setAvatarLoading] = useState(false);
 
   const [showPasswordForm, setShowPasswordForm] = useState(false);
 
@@ -42,6 +51,62 @@ export default function ProfilePage() {
   const [successMsg, setSuccessMsg] = useState('');
 
   if (!currentUser) return null;
+
+  const handleProcessImage = async (file) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('File yang dipilih harus berupa gambar (JPG, PNG, WEBP).');
+      return;
+    }
+    if (file.size > 15 * 1024 * 1024) {
+      toast.error('Ukuran file foto terlalu besar (maksimal 15MB).');
+      return;
+    }
+
+    setAvatarLoading(true);
+    try {
+      // Otomatis resize & center-crop ke rasio 1:1 persegi (256x256)
+      const squareDataUrl = await resizeImageToSquare(file, 256);
+
+      // Simpan ke authAdapter (sync ke avatarStore, userAdapter, & session)
+      const res = await authAdapter.updateAvatar(squareDataUrl);
+      if (res?.error) {
+        toast.error(res.error.message || 'Gagal menyimpan foto profil.');
+      } else {
+        // Update reactive state di AuthContext
+        if (updateCurrentUser) {
+          updateCurrentUser({ avatar: squareDataUrl });
+        }
+        toast.success('Foto profil berhasil diperbarui & disinkronkan!');
+      }
+    } catch (err) {
+      toast.error(err?.message || 'Gagal memproses gambar foto profil.');
+    } finally {
+      setAvatarLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      if (cameraInputRef.current) cameraInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!currentUser?.avatar) return;
+    setAvatarLoading(true);
+    try {
+      const res = await authAdapter.updateAvatar(null);
+      if (res?.error) {
+        toast.error(res.error.message || 'Gagal menghapus foto profil.');
+      } else {
+        if (updateCurrentUser) {
+          updateCurrentUser({ avatar: null });
+        }
+        toast.success('Foto profil dikembalikan ke inisial nama.');
+      }
+    } catch (err) {
+      toast.error('Gagal menghapus foto profil.');
+    } finally {
+      setAvatarLoading(false);
+    }
+  };
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
@@ -88,7 +153,7 @@ export default function ProfilePage() {
     <div className="space-y-6">
       <PageHeader
         title="Profil Pengguna"
-        description="Kelola informasi identitas akun, hak akses jabatan, dan keamanan kata sandi Anda."
+        description="Kelola informasi identitas akun, foto profil, hak akses jabatan, dan keamanan kata sandi Anda."
       />
 
       <div
@@ -110,15 +175,102 @@ export default function ProfilePage() {
             <CardContent className="pt-6 px-6 pb-6">
               {/* Avatar & Header */}
               <div className="flex flex-col items-center mb-6">
-                <div className="h-20 w-20 rounded-full bg-primary-red/10 border-2 border-primary-red/20 flex items-center justify-center mb-3 shadow-inner">
-                  <span className="text-3xl font-bold text-primary-red">
-                    {currentUser.name?.[0] ?? 'U'}
-                  </span>
+                <div className="relative group mb-3">
+                  <div className="h-20 w-20 rounded-full bg-primary-red/10 border-2 border-primary-red/30 flex items-center justify-center shadow-md overflow-hidden relative">
+                    {avatarLoading ? (
+                      <div className="absolute inset-0 bg-ink/40 flex items-center justify-center">
+                        <Loader2 className="h-6 w-6 text-white animate-spin" />
+                      </div>
+                    ) : currentUser.avatar ? (
+                      <img
+                        src={currentUser.avatar}
+                        alt={currentUser.name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-3xl font-bold text-primary-red">
+                        {currentUser.name?.[0] ?? 'U'}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Tombol Kamera Cepat pada Badge Avatar */}
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={avatarLoading}
+                    className="absolute -bottom-1 -right-1 p-2 rounded-full bg-primary-red text-white hover:bg-primary-red/90 shadow-lg border-2 border-white transition-all transform hover:scale-110 active:scale-95 disabled:opacity-50"
+                    title="Ganti Foto Profil"
+                    aria-label="Ganti Foto Profil"
+                  >
+                    <Camera className="h-3.5 w-3.5" />
+                  </button>
                 </div>
+
                 <h3 className="text-lg font-bold text-ink text-center">{currentUser.name}</h3>
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary-red/10 text-primary-red mt-1">
                   {ROLE_LABELS[currentUser.role] || currentUser.role}
                 </span>
+
+                {/* Hidden File Inputs */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/jpg"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleProcessImage(file);
+                  }}
+                />
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="user"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleProcessImage(file);
+                  }}
+                />
+
+                {/* Tombol Aksi Foto Profil */}
+                <div className="flex flex-wrap items-center justify-center gap-2 mt-3 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={avatarLoading}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-canvas hover:bg-slate/10 text-ink font-medium transition-colors disabled:opacity-50"
+                  >
+                    <Upload className="h-3.5 w-3.5 text-primary-red" />
+                    <span>Upload Foto</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => cameraInputRef.current?.click()}
+                    disabled={avatarLoading}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border bg-canvas hover:bg-slate/10 text-ink font-medium transition-colors disabled:opacity-50"
+                    title="Ambil foto langsung dengan kamera device"
+                  >
+                    <Camera className="h-3.5 w-3.5 text-primary-red" />
+                    <span>Kamera</span>
+                  </button>
+
+                  {currentUser.avatar && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveAvatar}
+                      disabled={avatarLoading}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-danger/20 bg-danger/5 hover:bg-danger/15 text-danger font-medium transition-colors disabled:opacity-50"
+                      title="Hapus foto profil dan kembali ke inisial"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      <span>Hapus</span>
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Detail fields */}

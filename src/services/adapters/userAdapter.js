@@ -9,6 +9,7 @@ import { emitAudit } from '@/utils/auditLogger';
 import { STATUS } from '@/constants/status';
 import { getStoredCollection, saveStoredCollection } from '@/utils/storage';
 import { saveStoredPassword } from '@/utils/credentialStore';
+import { getCustomAvatar, saveStoredAvatar } from '@/utils/avatarStore';
 
 const isMock = import.meta.env.VITE_API_MODE !== 'rest';
 const STORAGE_KEY = 'barak_users';
@@ -189,7 +190,8 @@ export const userAdapter = {
           (u.username && u.username.toLowerCase().trim() === resolvedId)
       );
       if (!user) return { data: null, error: { message: 'Pengguna tidak ditemukan.' } };
-      return { data: { ...user }, error: null };
+      const customAvatar = getCustomAvatar(user.username) || getCustomAvatar(user.id);
+      return { data: { ...user, avatar: customAvatar || user.avatar || null }, error: null };
     }
     const { data } = await apiClient.get(`/users/${id}`);
     return data;
@@ -227,6 +229,10 @@ export const userAdapter = {
       unmarkDeleted(newId, newUser.username);
       saveStoredPassword(newUser.username, newUser.password);
       saveStoredPassword(newId, newUser.password);
+      if (newUser.avatar) {
+        saveStoredAvatar(newUser.username, newUser.avatar);
+        saveStoredAvatar(newId, newUser.avatar);
+      }
 
       await emitAudit({
         action: 'USER_CREATE',
@@ -287,6 +293,11 @@ export const userAdapter = {
       if (payload.password?.trim()) {
         saveStoredPassword(updated.username, updated.password);
         saveStoredPassword(finalId, updated.password);
+      }
+
+      if (payload.avatar !== undefined) {
+        saveStoredAvatar(updated.username, payload.avatar);
+        saveStoredAvatar(finalId, payload.avatar);
       }
 
       // Jika username login diubah, tandai username lama agar tidak di-resurrect oleh mock seed
