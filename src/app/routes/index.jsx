@@ -13,6 +13,8 @@ import publicRoutes from './publicRoutes';
 import authRoutes from './authRoutes';
 import roleRoutes from './roleRoutes';
 
+import OpsIndexRedirect from './OpsIndexRedirect';
+
 const AppShell = lazy(() => import('@/components/layout/AppShell'));
 
 export const appRoutes = [
@@ -31,7 +33,7 @@ export const appRoutes = [
       </RequireAuth>
     ),
     children: [
-      { index: true, element: <Navigate to="/ops/director" replace /> },
+      { index: true, element: <OpsIndexRedirect /> },
       ...roleRoutes,
     ],
   },

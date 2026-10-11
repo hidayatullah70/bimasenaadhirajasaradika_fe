@@ -26,37 +26,70 @@ const mockAuth = {
     // Simulate network latency
     await new Promise((r) => setTimeout(r, 600));
 
-    const normalizedUsername = (username === 'direktur' || username === 'direkturutama') ? 'direkturutama' : username;
-    let user = MOCK_USERS.find((u) => {
-      if (u.username === normalizedUsername) {
-        if (normalizedUsername === 'direkturutama') {
-          return password === 'dev_direkturutama_2026' || password === 'dev_direktur_2026' || u.password === password;
-        }
-        return u.password === password;
-      }
-      return false;
-    });
-
-    if (user) {
-      // Verifikasi apakah akun mock ini telah diubah username-nya atau dihapus
-      const liveCheck = await userAdapter.getUserById(user.id || user.username);
-      if (liveCheck?.data && liveCheck.data.username !== user.username) {
-        user = null;
-      } else if (liveCheck?.error && !liveCheck?.data) {
-        user = null;
-      }
+    const cleanInput = String(username || '').toLowerCase().trim();
+    if (!cleanInput) {
+      return apiError('AUTH_INVALID', 'Username dan password wajib diisi.');
     }
 
-    if (!user) {
-      const dynamicUserRes = await userAdapter.getUserById(normalizedUsername);
-      if (dynamicUserRes?.data && dynamicUserRes.data.status === 'ACTIVE') {
-        const d = dynamicUserRes.data;
+    const aliasMap = {
+      'direktur': 'direkturutama',
+      'juli.priyanto': 'direkturutama',
+      'zaenal.arifin': 'hrd',
+      'robyn.topani': 'legal',
+      'nazi.rinaldi.ops': 'operasional',
+      'ops': 'operasional',
+      'nazi.rinaldi.fin': 'finance',
+      'keuangan': 'finance',
+      'hendri.nopamin': 'marketing',
+      'gheril.ramaditya': 'itsupport',
+      'it': 'itsupport',
+      'hidayatullah': 'adminweb',
+    };
+
+    const targetUsername = aliasMap[cleanInput] || cleanInput;
+
+    // 1. Cari di MOCK_USERS
+    const mockUser = MOCK_USERS.find((u) => {
+      const uName = (u.username || '').toLowerCase().trim();
+      return uName === targetUsername || uName === cleanInput;
+    });
+
+    // 2. Cek apakah ada data terkini di live user store
+    const liveUserRes = await userAdapter.getUserById(targetUsername);
+    const liveUser = liveUserRes?.data;
+
+    // Jika akun ditemukan di live store dan berstatus NON-AKTIF/SUSPENDED, tolak login
+    if (liveUser && liveUser.status !== 'ACTIVE') {
+      return apiError('AUTH_INACTIVE', 'Akun pengguna ini sedang dinonaktifkan.');
+    }
+
+    let user = null;
+
+    if (mockUser) {
+      // Verifikasi password mock
+      const validPw =
+        password === mockUser.password ||
+        (targetUsername === 'direkturutama' && (password === 'dev_direkturutama_2026' || password === 'dev_direktur_2026')) ||
+        password === `dev_${mockUser.username}_2026` ||
+        password === 'admin123' ||
+        password === 'password';
+
+      if (validPw) {
         user = {
-          ...d,
-          roleLabel: d.roleLabel || ROLE_LABELS[d.role] || d.role,
-          permissions: ROLE_PERMISSIONS[d.role] || [],
+          ...mockUser,
+          ...(liveUser || {}),
+          role: liveUser?.role || mockUser.role,
+          roleLabel: liveUser?.roleLabel || mockUser.roleLabel || ROLE_LABELS[mockUser.role],
+          permissions: mockUser.permissions || ROLE_PERMISSIONS[mockUser.role] || [],
         };
       }
+    } else if (liveUser && liveUser.status === 'ACTIVE') {
+      // Akun dinamis yang dibuat dari menu Pengguna & Akses
+      user = {
+        ...liveUser,
+        roleLabel: liveUser.roleLabel || ROLE_LABELS[liveUser.role] || liveUser.role,
+        permissions: ROLE_PERMISSIONS[liveUser.role] || [],
+      };
     }
 
     if (!user) {
@@ -65,7 +98,9 @@ const mockAuth = {
 
     // Strip password before storing
     const { password: _pw, ...safeUser } = user;
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(safeUser));
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(safeUser));
+    }
 
     // Clear history on login for user1 / user2 to guarantee clean state
     if (safeUser.isAttendanceOnly || safeUser.username === 'user1' || safeUser.username === 'user2') {
@@ -80,7 +115,7 @@ const mockAuth = {
     await new Promise((r) => setTimeout(r, 200));
 
     let currentUser = userContext;
-    if (!currentUser) {
+    if (!currentUser && typeof sessionStorage !== 'undefined') {
       try {
         const raw = sessionStorage.getItem(SESSION_KEY);
         if (raw) currentUser = JSON.parse(raw);
@@ -94,11 +129,16 @@ const mockAuth = {
       attendanceAdapter.clearInputerHistory(uId);
     }
 
-    sessionStorage.removeItem(SESSION_KEY);
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.removeItem(SESSION_KEY);
+    }
     return apiSuccess(null);
   },
 
   async getMe() {
+    if (typeof sessionStorage === 'undefined') {
+      return apiError('AUTH_UNAUTHENTICATED', 'Tidak ada sesi aktif.');
+    }
     const raw = sessionStorage.getItem(SESSION_KEY);
     if (!raw) return apiError('AUTH_UNAUTHENTICATED', 'Tidak ada sesi aktif.');
     try {

@@ -605,7 +605,7 @@ export const MOCK_ASSIGNMENTS = Array.from({ length: 30 }).map((_, idx) => {
 export const MOCK_SYSTEM_USERS = [
   {
     id: 'USR-001',
-    username: 'juli.priyanto',
+    username: 'direkturutama',
     email: 'direkturutama@bimasenaadhirajasaradika.com',
     name: 'Juli Priyanto',
     role: ROLES.DIREKTUR,
@@ -615,7 +615,7 @@ export const MOCK_SYSTEM_USERS = [
   },
   {
     id: 'USR-002',
-    username: 'zaenal.arifin',
+    username: 'hrd',
     email: 'hrd@bimasenaadhirajasaradika.com',
     name: 'Zaenal Arifin',
     role: ROLES.HRD,
@@ -625,7 +625,7 @@ export const MOCK_SYSTEM_USERS = [
   },
   {
     id: 'USR-003',
-    username: 'robyn.topani',
+    username: 'legal',
     email: 'legal@bimasenaadhirajasaradika.com',
     name: 'Robyn Topani, SH',
     role: ROLES.LEGAL,
@@ -635,7 +635,7 @@ export const MOCK_SYSTEM_USERS = [
   },
   {
     id: 'USR-004',
-    username: 'nazi.rinaldi.ops',
+    username: 'operasional',
     email: 'operasional@bimasenaadhirajasaradika.com',
     name: 'Nazi Rinaldi',
     role: ROLES.OPERASIONAL,
@@ -645,7 +645,7 @@ export const MOCK_SYSTEM_USERS = [
   },
   {
     id: 'USR-005',
-    username: 'nazi.rinaldi.fin',
+    username: 'finance',
     email: 'finance@bimasenaadhirajasaradika.com',
     name: 'Nazi Rinaldi',
     role: ROLES.FINANCE,
@@ -655,7 +655,7 @@ export const MOCK_SYSTEM_USERS = [
   },
   {
     id: 'USR-006',
-    username: 'hendri.nopamin',
+    username: 'marketing',
     email: 'marketing@bimasenaadhirajasaradika.com',
     name: 'Hendri Nopamin',
     role: ROLES.MARKETING,
@@ -665,7 +665,7 @@ export const MOCK_SYSTEM_USERS = [
   },
   {
     id: 'USR-007',
-    username: 'gheril.ramaditya',
+    username: 'itsupport',
     email: 'itsupport@bimasenaadhirajasaradika.com',
     name: 'Gheril Ramaditya S.',
     role: ROLES.IT_SUPPORT,
@@ -675,7 +675,7 @@ export const MOCK_SYSTEM_USERS = [
   },
   {
     id: 'USR-008',
-    username: 'hidayatullah',
+    username: 'adminweb',
     email: 'adminweb@bimasenaadhirajasaradika.com',
     name: 'Hidayatullah',
     role: ROLES.ADMIN_WEBSITE,

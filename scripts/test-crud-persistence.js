@@ -233,7 +233,7 @@ async function runTests() {
 
   // Duplicate username check
   const duplicateEditRes = await userAdapter.updateUser(newUser.id, {
-    username: 'juli.priyanto',
+    username: 'direkturutama',
   });
   assert(duplicateEditRes.error !== null, 'Duplicate username edit is rejected');
 

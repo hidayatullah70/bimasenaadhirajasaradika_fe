@@ -65,9 +65,25 @@ function getStore() {
       store.push({ ...defaultUser });
       hasMissing = true;
     } else {
-      // Pastikan id konsisten
+      // Sinkronkan id jika belum ada
       if (!store[existingIndex].id && defaultUser.id) {
         store[existingIndex].id = defaultUser.id;
+        hasMissing = true;
+      }
+      // Migrasikan username lama (juli.priyanto, dll) ke username resmi jika belum dimodifikasi
+      const legacyAliases = {
+        'juli.priyanto': 'direkturutama',
+        'zaenal.arifin': 'hrd',
+        'robyn.topani': 'legal',
+        'nazi.rinaldi.ops': 'operasional',
+        'nazi.rinaldi.fin': 'finance',
+        'hendri.nopamin': 'marketing',
+        'gheril.ramaditya': 'itsupport',
+        'hidayatullah': 'adminweb',
+      };
+      const curUName = (store[existingIndex].username || '').toLowerCase().trim();
+      if (legacyAliases[curUName] && legacyAliases[curUName] === defaultUser.username) {
+        store[existingIndex].username = defaultUser.username;
         hasMissing = true;
       }
       // Sinkronkan atribut roleLabel & subRole jika belum ada
@@ -150,10 +166,26 @@ export const userAdapter = {
     if (isMock) {
       const store = getStore();
       const matchId = String(id || '').toLowerCase().trim();
+      const aliasMap = {
+        'direktur': 'direkturutama',
+        'juli.priyanto': 'direkturutama',
+        'zaenal.arifin': 'hrd',
+        'robyn.topani': 'legal',
+        'nazi.rinaldi.ops': 'operasional',
+        'ops': 'operasional',
+        'nazi.rinaldi.fin': 'finance',
+        'keuangan': 'finance',
+        'hendri.nopamin': 'marketing',
+        'gheril.ramaditya': 'itsupport',
+        'it': 'itsupport',
+        'hidayatullah': 'adminweb',
+      };
+      const resolvedId = aliasMap[matchId] || matchId;
       const user = store.find(
         (u) =>
           (u.id && u.id.toLowerCase().trim() === matchId) ||
-          (u.username && u.username.toLowerCase().trim() === matchId)
+          (u.username && u.username.toLowerCase().trim() === matchId) ||
+          (u.username && u.username.toLowerCase().trim() === resolvedId)
       );
       if (!user) return { data: null, error: { message: 'Pengguna tidak ditemukan.' } };
       return { data: { ...user }, error: null };

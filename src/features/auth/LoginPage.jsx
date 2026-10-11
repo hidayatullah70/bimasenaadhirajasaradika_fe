@@ -49,11 +49,16 @@ export default function LoginPage() {
   };
 
   const handleQuickLogin = async (user) => {
+    setError('');
     setForm({ username: user.username, password: user.password });
     setLoading(true);
     const result = await login({ username: user.username, password: user.password });
     setLoading(false);
-    if (result.ok) navigate(result.defaultRoute || '/ops', { replace: true });
+    if (result.ok) {
+      navigate(result.defaultRoute || '/ops', { replace: true });
+    } else {
+      setError(result.error || 'Login gagal.');
+    }
   };
 
   return (
