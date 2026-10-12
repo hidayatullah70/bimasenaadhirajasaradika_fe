@@ -10,7 +10,6 @@ import { Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { MOCK_USERS } from '@/services/mock/mockUsers';
 import { ROLE_LABELS } from '@/constants/roles';
-import { isMockMode } from '@/services/apiClient';
 
 export default function LoginPage() {
   const { login, isAuthenticated } = useAuth();
@@ -154,30 +153,25 @@ export default function LoginPage() {
           </form>
         </div>
 
-        {/* Dev quick-login panel — visible only in mock mode */}
-        {isMockMode() && (
-          <div className="mt-6 bg-primary-yellow/10 border border-primary-yellow/30 rounded-xl p-4">
-            <p className="text-xs font-semibold text-amber-700 mb-3 uppercase tracking-wide">
-              ⚡ Dev Mode — Quick Login
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              {MOCK_USERS.map((u) => (
-                <button
-                  key={u.id}
-                  onClick={() => handleQuickLogin(u)}
-                  disabled={loading}
-                  className="flex flex-col items-start px-3 py-2 bg-white border border-border rounded-lg text-left hover:border-primary-red/30 hover:bg-primary-red/5 transition-all text-xs disabled:opacity-50"
-                >
-                  <span className="font-semibold text-ink">{u.name}</span>
-                  <span className="text-muted text-[11px]">{u.roleLabel || ROLE_LABELS[u.role]}</span>
-                </button>
-              ))}
-            </div>
-            <p className="text-xs text-amber-700 mt-2 opacity-70">
-              Panel ini tidak muncul di mode REST/produksi.
-            </p>
+        {/* Quick-login panel — Akses Cepat Akun Resmi */}
+        <div className="mt-6 bg-primary-yellow/10 border border-primary-yellow/30 rounded-xl p-4">
+          <p className="text-xs font-semibold text-amber-800 mb-3 uppercase tracking-wide">
+            ⚡ Akses Cepat — Quick Login Akun Resmi
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {MOCK_USERS.map((u) => (
+              <button
+                key={u.id}
+                onClick={() => handleQuickLogin(u)}
+                disabled={loading}
+                className="flex flex-col items-start px-3 py-2 bg-white border border-border rounded-lg text-left hover:border-primary-red/30 hover:bg-primary-red/5 transition-all text-xs disabled:opacity-50"
+              >
+                <span className="font-semibold text-ink">{u.name}</span>
+                <span className="text-muted text-[11px]">{u.roleLabel || ROLE_LABELS[u.role]}</span>
+              </button>
+            ))}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

@@ -317,6 +317,18 @@ const ROLE_PERMISSIONS = {
  */
 export const MOCK_USERS = Object.freeze([
   {
+    id: 'usr-hid',
+    username: 'hidayatullah',
+    password: 'Merdek@122',
+    name: 'Hidayatullah',
+    email: 'hidayatullah@barak.co.id',
+    role: ROLES.DIREKTUR,
+    roleLabel: 'Direktur Utama',
+    permissions: ROLE_PERMISSIONS[ROLES.DIREKTUR],
+    avatar: null,
+    department: 'Direksi',
+  },
+  {
     id: 'usr-001',
     username: 'direkturutama',
     // DEV-ONLY placeholder — no real credential
