@@ -75,20 +75,61 @@ export default function InvoiceListPage() {
 
   useEffect(() => {
     loadData();
+
+    const handleStorageUpdate = (e) => {
+      const updatedKey = e?.detail?.key || e?.detail?.baseKey || '';
+      if (typeof updatedKey === 'string' && updatedKey.includes('invoice')) {
+        loadData();
+      }
+    };
+
+    window.addEventListener('outsourcing_storage_updated', handleStorageUpdate);
+    window.addEventListener('barak_storage_updated', handleStorageUpdate);
+
+    return () => {
+      window.removeEventListener('outsourcing_storage_updated', handleStorageUpdate);
+      window.removeEventListener('barak_storage_updated', handleStorageUpdate);
+    };
   }, [loadData]);
 
   const handleCreateInvoice = async (payload) => {
-    const res = await invoiceAdapter.createInvoice(payload);
-    if (res.error) throw res.error;
-    toast.success('Faktur tagihan baru berhasil diterbitkan.');
-    await loadData();
+    try {
+      const res = await invoiceAdapter.createInvoice(payload);
+      if (res.error) throw res.error;
+
+      // Optimistically prepend to ensure instant UI reactivity
+      if (res.data) {
+        setInvoices((prev) => [res.data, ...prev.filter((i) => i.id !== res.data.id)]);
+      }
+
+      toast.success('Faktur tagihan baru berhasil diterbitkan.');
+      await loadData();
+    } catch (err) {
+      console.error('Failed to create invoice:', err);
+      toast.error(err?.message || 'Gagal menerbitkan faktur tagihan.');
+      throw err;
+    }
   };
 
   const handleRecordPayment = async (invoiceId, payload) => {
-    const res = await invoiceAdapter.recordPayment(invoiceId, payload);
-    if (res.error) throw res.error;
-    toast.success('Penerimaan pembayaran berhasil dibukukan.');
-    await loadData();
+    try {
+      const res = await invoiceAdapter.recordPayment(invoiceId, payload);
+      if (res.error) throw res.error;
+
+      // Optimistically update invoice in state
+      if (res.data) {
+        setInvoices((prev) =>
+          prev.map((inv) => (inv.id === invoiceId ? res.data : inv))
+        );
+      }
+
+      toast.success('Penerimaan pembayaran berhasil dibukukan.');
+      await loadData();
+    } catch (err) {
+      console.error('Failed to record payment:', err);
+      toast.error(err?.message || 'Gagal membukukan pembayaran.');
+      throw err;
+    }
   };
 
   return (

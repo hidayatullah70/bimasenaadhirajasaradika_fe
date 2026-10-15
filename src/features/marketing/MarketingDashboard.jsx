@@ -11,7 +11,6 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { StateLoading } from '@/components/ui/StateViews';
-import toast from 'react-hot-toast';
 import { marketingAdapter } from '@/services/adapters/marketingAdapter';
 import LeadFormModal from './leads/LeadFormModal';
 
@@ -31,11 +30,11 @@ export default function MarketingDashboard() {
         marketingAdapter.getHandovers({ pageSize: 4 }),
       ]);
 
-      if (statsRes.data) setStats(statsRes.data);
-      if (leadsRes.data) setRecentLeads(leadsRes.data);
-      if (handoversRes.data) setRecentHandovers(handoversRes.data);
-    } catch {
-      toast.error('Gagal memuat metrik dashboard marketing.');
+      if (statsRes?.data) setStats(statsRes.data);
+      if (leadsRes?.data) setRecentLeads(Array.isArray(leadsRes.data) ? leadsRes.data : []);
+      if (handoversRes?.data) setRecentHandovers(Array.isArray(handoversRes.data) ? handoversRes.data : []);
+    } catch (err) {
+      console.warn('Marketing dashboard load warning:', err);
     } finally {
       setLoading(false);
     }

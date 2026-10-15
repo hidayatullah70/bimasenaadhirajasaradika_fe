@@ -28,6 +28,52 @@ function getWeekNumber(dateObj) {
   return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
 }
 
+// Parse date string into normalized YYYY-MM-DD and components
+function parseDateComponents(rawDate) {
+  const today = new Date();
+  if (!rawDate) {
+    const y = String(today.getFullYear());
+    const m = String(today.getMonth() + 1).padStart(2, '0');
+    const d = String(today.getDate()).padStart(2, '0');
+    return { isoDate: `${y}-${m}-${d}`, year: y, month: m, dateObj: today };
+  }
+
+  // Already YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
+    const [y, m, d] = rawDate.split('-');
+    const dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+    return { isoDate: rawDate, year: y, month: m, dateObj };
+  }
+
+  // Format DD/MM/YYYY or MM/DD/YYYY
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(rawDate)) {
+    const [p1, p2, y] = rawDate.split('/');
+    let m = p1;
+    let d = p2;
+    if (parseInt(p1, 10) > 12) {
+      d = p1;
+      m = p2;
+    }
+    const padM = String(m).padStart(2, '0');
+    const padD = String(d).padStart(2, '0');
+    const dateObj = new Date(parseInt(y, 10), parseInt(padM, 10) - 1, parseInt(padD, 10));
+    return { isoDate: `${y}-${padM}-${padD}`, year: y, month: padM, dateObj };
+  }
+
+  const parsed = new Date(rawDate);
+  if (!isNaN(parsed.getTime())) {
+    const y = String(parsed.getFullYear());
+    const m = String(parsed.getMonth() + 1).padStart(2, '0');
+    const d = String(parsed.getDate()).padStart(2, '0');
+    return { isoDate: `${y}-${m}-${d}`, year: y, month: m, dateObj: parsed };
+  }
+
+  const y = String(today.getFullYear());
+  const m = String(today.getMonth() + 1).padStart(2, '0');
+  const d = String(today.getDate()).padStart(2, '0');
+  return { isoDate: `${y}-${m}-${d}`, year: y, month: m, dateObj: today };
+}
+
 export const picActivityReportAdapter = {
   /**
    * Get activity reports with filtering and search
@@ -43,7 +89,9 @@ export const picActivityReportAdapter = {
             r.picName?.toLowerCase().includes(q) ||
             r.namaLokasi?.toLowerCase().includes(q) ||
             r.lokasiKunjungan?.toLowerCase().includes(q) ||
-            r.isiKegiatan?.toLowerCase().includes(q)
+            r.isiKegiatan?.toLowerCase().includes(q) ||
+            r.title?.toLowerCase().includes(q) ||
+            r.description?.toLowerCase().includes(q)
         );
       }
 
@@ -55,16 +103,20 @@ export const picActivityReportAdapter = {
         items = items.filter((r) => r.lokasiKunjungan === region);
       }
 
-      if (month) {
+      if (month && month !== 'SEMUA') {
         items = items.filter((r) => String(r.bulan) === String(month).padStart(2, '0'));
       }
 
-      if (year) {
+      if (year && year !== 'SEMUA') {
         items = items.filter((r) => String(r.tahun) === String(year));
       }
 
-      // Sort newest first
-      items.sort((a, b) => new Date(b.tanggalKunjungan + 'T' + (b.jamKunjungan || '00:00')) - new Date(a.tanggalKunjungan + 'T' + (a.jamKunjungan || '00:00')));
+      // Safe sort newest first
+      items.sort((a, b) => {
+        const timeA = new Date((a.tanggalKunjungan || '1970-01-01') + 'T' + (a.jamKunjungan || '00:00')).getTime();
+        const timeB = new Date((b.tanggalKunjungan || '1970-01-01') + 'T' + (b.jamKunjungan || '00:00')).getTime();
+        return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
+      });
 
       return apiSuccess({
         reports: items,
@@ -73,10 +125,17 @@ export const picActivityReportAdapter = {
       });
     }
 
-    const { data } = await apiClient.get('/operations/pic-reports', {
+    const res = await apiClient.get('/operations/pic-reports', {
       params: { search, picName, region, month, year },
     });
-    return data;
+    if (res && res.data && !res.error) return res;
+
+    const items = getReportsStore();
+    return apiSuccess({
+      reports: items,
+      data: items,
+      total: items.length,
+    });
   },
 
   /**
@@ -85,23 +144,50 @@ export const picActivityReportAdapter = {
   async createReport(payload) {
     if (isMockMode()) {
       const items = getReportsStore();
-      const nextNum = items.length + 1;
       const today = new Date();
-      const visitDate = payload.tanggalKunjungan ? new Date(payload.tanggalKunjungan) : today;
+      const rawDate = payload.tanggalKunjungan || payload.activityDate;
+      const { isoDate, year: visitYear, month: visitMonth, dateObj } = parseDateComponents(rawDate);
+
+      // Unique ID generation: find highest numeric suffix
+      const maxNum = items.reduce((max, r) => {
+        const match = (r.id || '').match(/(\d+)$/);
+        return match ? Math.max(max, parseInt(match[1], 10)) : max;
+      }, 0);
+      const nextNum = Math.max(maxNum + 1, items.length + 1);
+      let reportId = `RPT-KORLAP-${visitYear}-${String(nextNum).padStart(3, '0')}`;
+      if (items.some((r) => r.id === reportId)) {
+        reportId = `RPT-KORLAP-${visitYear}-${String(nextNum + 1).padStart(3, '0')}`;
+      }
+
+      const locationName =
+        payload.namaLokasi ||
+        payload.locationName ||
+        payload.clientName ||
+        'Site Operasional';
+
+      const activityText =
+        payload.isiKegiatan ||
+        payload.description ||
+        payload.title ||
+        'Kunjungan dan supervisi pos keamanan lapangan';
 
       const newReport = {
-        id: `RPT-KORLAP-${visitDate.getFullYear()}-${String(nextNum).padStart(3, '0')}`,
-        picName: payload.picName,
-        lokasiKunjungan: payload.lokasiKunjungan,
-        namaLokasi: payload.namaLokasi,
-        tanggalKunjungan: payload.tanggalKunjungan || visitDate.toISOString().slice(0, 10),
+        id: reportId,
+        picName: payload.picName || 'PIC 1',
+        lokasiKunjungan: payload.lokasiKunjungan || 'Jakarta Barat & Daan Mogot',
+        namaLokasi: locationName,
+        tanggalKunjungan: isoDate,
         jamKunjungan: payload.jamKunjungan || today.toTimeString().slice(0, 5),
-        mingguKe: getWeekNumber(visitDate),
-        bulan: String(visitDate.getMonth() + 1).padStart(2, '0'),
-        tahun: String(visitDate.getFullYear()),
-        fotoKunjungan: payload.fotoKunjungan,
+        mingguKe: getWeekNumber(dateObj),
+        bulan: visitMonth,
+        tahun: visitYear,
+        fotoKunjungan:
+          payload.fotoKunjungan ||
+          'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540"><rect width="960" height="540" fill="%230F172A"/><text x="480" y="270" fill="%23FFFFFF" text-anchor="middle" font-size="20">Foto Kunjungan 16:9 HD</text></svg>',
         fotoMeta: payload.fotoMeta || { ratio: '16:9' },
-        isiKegiatan: payload.isiKegiatan,
+        isiKegiatan: activityText,
+        title: payload.title || locationName,
+        description: payload.description || activityText,
         status: 'TERKIRIM',
         verifiedAt: null,
         verifiedBy: null,
@@ -220,6 +306,28 @@ export const picActivityReportAdapter = {
     }
 
     const { data } = await apiClient.get('/operations/pic-reports/summaries');
+    return data;
+  },
+
+  async deleteReport(id) {
+    if (isMockMode()) {
+      const items = getReportsStore();
+      const normId = String(id).toLowerCase().trim();
+      const idx = items.findIndex((r) => String(r.id).toLowerCase().trim() === normId);
+      if (idx === -1) return apiError('NOT_FOUND', 'Laporan kegiatan tidak ditemukan.');
+      const removed = items[idx];
+      const updated = items.filter((_, i) => i !== idx);
+      saveReportsStore(updated);
+      emitAudit({
+        action: 'PIC_REPORT_DELETE',
+        module: 'operations',
+        targetId: removed.id,
+        details: `Laporan kegiatan ${removed.id} dihapus.`,
+      });
+      return apiSuccess({ success: true, id: removed.id });
+    }
+
+    const { data } = await apiClient.delete(`/operations/pic-reports/${id}`);
     return data;
   },
 };

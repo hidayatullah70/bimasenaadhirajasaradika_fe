@@ -23,17 +23,34 @@ export function AuthProvider({ children }) {
   // Restore session on mount
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      const { data, error: err } = await authAdapter.getMe();
+    const timeoutId = setTimeout(() => {
       if (!cancelled) {
-        if (data) setCurrentUser(data);
-        if (err && err.code !== 'AUTH_UNAUTHENTICATED') {
-          setError(err.message);
-        }
         setLoading(false);
       }
+    }, 3000);
+
+    (async () => {
+      try {
+        const { data, error: err } = await authAdapter.getMe();
+        if (!cancelled) {
+          if (data) setCurrentUser(data);
+          if (err && err.code !== 'AUTH_UNAUTHENTICATED') {
+            setError(err.message);
+          }
+        }
+      } catch (err) {
+        console.warn('Session restore error:', err);
+      } finally {
+        clearTimeout(timeoutId);
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   /**

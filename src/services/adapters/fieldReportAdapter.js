@@ -159,6 +159,10 @@ export const fieldReportAdapter = {
     const { data } = await apiClient.delete(`/field-reports/${id}`);
     return data;
   },
+
+  async deleteReport(id) {
+    return this.deleteFieldReport(id);
+  },
 };
 
 export default fieldReportAdapter;

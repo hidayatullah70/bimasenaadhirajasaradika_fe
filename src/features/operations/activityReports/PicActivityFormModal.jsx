@@ -43,6 +43,20 @@ export default function PicActivityFormModal({ isOpen, onClose, onSuccess }) {
     }
   };
 
+  const resetForm = () => {
+    setFormData({
+      picName: PIC_LIST[0],
+      lokasiKunjungan: VISIT_REGIONS[0],
+      namaLokasi: '',
+      tanggalKunjungan: new Date().toISOString().slice(0, 10),
+      jamKunjungan: new Date().toTimeString().slice(0, 5),
+      isiKegiatan: '',
+    });
+    setPhotoData(null);
+    setErrors({});
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   // Handle image upload and 16:9 resizing
   const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -50,8 +64,8 @@ export default function PicActivityFormModal({ isOpen, onClose, onSuccess }) {
 
     setIsProcessingPhoto(true);
     try {
-      // Auto-resize and center-crop to exact 16:9
-      const result = await resizeImageTo16x9(file, 1280);
+      // Auto-resize and center-crop to crisp 16:9 HD (optimized for storage efficiency)
+      const result = await resizeImageTo16x9(file, 960, 0.78);
       setPhotoData(result);
       if (errors.fotoKunjungan) {
         setErrors((prev) => ({ ...prev, fotoKunjungan: null }));
@@ -110,7 +124,9 @@ export default function PicActivityFormModal({ isOpen, onClose, onSuccess }) {
       const res = await picActivityReportAdapter.createReport(payload);
       if (res.data) {
         toast.success(`Laporan Kegiatan (${formData.picName}) berhasil dikirim ke Operasional!`);
-        if (onSuccess) onSuccess(res.data);
+        const createdItem = res.data;
+        resetForm();
+        if (onSuccess) onSuccess(createdItem);
         onClose();
       } else {
         toast.error(res.error?.message || 'Gagal mengirim laporan.');

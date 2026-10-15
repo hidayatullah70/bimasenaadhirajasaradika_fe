@@ -7,9 +7,49 @@ import apiClient from '@/services/apiClient';
 import { MOCK_SYSTEM_USERS } from '@/services/mock/mockMasterData';
 import { emitAudit } from '@/utils/auditLogger';
 import { STATUS } from '@/constants/status';
+import { ROLES, ROLE_LABELS } from '@/constants/roles';
 import { getStoredCollection, saveStoredCollection } from '@/utils/storage';
 import { saveStoredPassword } from '@/utils/credentialStore';
 import { getCustomAvatar, saveStoredAvatar } from '@/utils/avatarStore';
+
+const DEFAULT_DEPARTMENTS = {
+  [ROLES.DIREKTUR]: 'Direksi',
+  [ROLES.HRD]: 'HRD & Personalia',
+  [ROLES.LEGAL]: 'Legal & Kepatuhan',
+  [ROLES.OPERASIONAL]: 'Operasional Lapangan',
+  [ROLES.FINANCE]: 'Finance & Akuntansi',
+  [ROLES.MARKETING]: 'Marketing & Business Development',
+  [ROLES.IT_SUPPORT]: 'Teknologi Informasi',
+  [ROLES.ADMIN_WEBSITE]: 'Media & Publikasi',
+};
+
+function normalizeUser(u) {
+  if (!u) return u;
+  const role = u.role || u.role_id || ROLES.OPERASIONAL;
+  const name = u.name || u.full_name || u.fullName || u.username;
+  return {
+    ...u,
+    id: u.id,
+    name: name,
+    fullName: name,
+    full_name: name,
+    role: role,
+    role_id: role,
+    department: u.department || DEFAULT_DEPARTMENTS[role] || 'Operasional Lapangan',
+    subRole: u.subRole || (role === 'INPUTER_1' || role === 'INPUTER_2' ? 'ADMIN_HRD' : ''),
+    roleLabel:
+      u.roleLabel ||
+      ROLE_LABELS[role] ||
+      (role === 'INPUTER_1'
+        ? 'Admin HRD (Inputer 1)'
+        : role === 'INPUTER_2'
+        ? 'Admin HRD (Inputer 2)'
+        : role === 'PIC_CLIENT'
+        ? 'PIC Klien / Korlap'
+        : role),
+    avatar: u.avatar || getCustomAvatar(u.username) || getCustomAvatar(u.id) || null,
+  };
+}
 
 const isMock = import.meta.env.VITE_API_MODE !== 'rest';
 const STORAGE_KEY = 'barak_users';
@@ -81,7 +121,6 @@ function getStore() {
         'nazi.rinaldi.fin': 'finance',
         'hendri.nopamin': 'marketing',
         'gheril.ramaditya': 'itsupport',
-        'hidayatullah': 'adminweb',
       };
       const curUName = (store[existingIndex].username || '').toLowerCase().trim();
       if (legacyAliases[curUName] && legacyAliases[curUName] === defaultUser.username) {
@@ -161,6 +200,12 @@ export const userAdapter = {
     const { data } = await apiClient.get('/users', {
       params: { search, role, status, page, pageSize },
     });
+    if (data && Array.isArray(data.data)) {
+      return {
+        ...data,
+        data: data.data.map(normalizeUser),
+      };
+    }
     return data;
   },
 
@@ -181,6 +226,7 @@ export const userAdapter = {
         'gheril.ramaditya': 'itsupport',
         'it': 'itsupport',
         'hidayatullah': 'adminweb',
+        'pic_jnt': 'pic',
       };
       const resolvedId = aliasMap[matchId] || matchId;
       const user = store.find(
@@ -194,6 +240,12 @@ export const userAdapter = {
       return { data: { ...user, avatar: customAvatar || user.avatar || null }, error: null };
     }
     const { data } = await apiClient.get(`/users/${id}`);
+    if (data && data.data) {
+      return {
+        ...data,
+        data: normalizeUser(data.data),
+      };
+    }
     return data;
   },
 
@@ -245,7 +297,18 @@ export const userAdapter = {
       return { data: newUser, error: null };
     }
 
-    const { data } = await apiClient.post('/users', payload);
+    const payloadToSend = {
+      ...payload,
+      fullName: payload.name || payload.fullName || payload.full_name,
+      role: payload.role || payload.role_id,
+    };
+    const { data } = await apiClient.post('/users', payloadToSend);
+    if (data && data.data) {
+      return {
+        ...data,
+        data: normalizeUser(data.data),
+      };
+    }
     return data;
   },
 
@@ -321,7 +384,18 @@ export const userAdapter = {
       return { data: updated, error: null };
     }
 
-    const { data } = await apiClient.patch(`/users/${id}`, payload);
+    const payloadToSend = {
+      ...payload,
+      fullName: payload.name || payload.fullName || payload.full_name,
+      role: payload.role || payload.role_id,
+    };
+    const { data } = await apiClient.patch(`/users/${id}`, payloadToSend);
+    if (data && data.data) {
+      return {
+        ...data,
+        data: normalizeUser(data.data),
+      };
+    }
     return data;
   },
 

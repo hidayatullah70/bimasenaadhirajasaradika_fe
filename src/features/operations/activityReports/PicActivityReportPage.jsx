@@ -35,7 +35,7 @@ export default function PicActivityReportPage() {
   const [search, setSearch] = useState('');
   const [selectedPic, setSelectedPic] = useState('SEMUA');
   const [selectedRegion, setSelectedRegion] = useState('SEMUA');
-  const [selectedMonth, setSelectedMonth] = useState('09');
+  const [selectedMonth, setSelectedMonth] = useState('SEMUA');
   const [selectedYear, setSelectedYear] = useState('2026');
 
   // Modals
@@ -49,21 +49,40 @@ export default function PicActivityReportPage() {
         search,
         picName: selectedPic,
         region: selectedRegion,
-        month: activeTab === 'MONTHLY' ? selectedMonth : '',
-        year: selectedYear,
+        month: selectedMonth !== 'SEMUA' ? selectedMonth : '',
+        year: selectedYear !== 'SEMUA' ? selectedYear : '',
       });
-      if (res.data?.reports) {
+      if (res?.data?.reports) {
         setReports(res.data.reports);
+      } else if (Array.isArray(res?.data)) {
+        setReports(res.data);
       }
-    } catch {
-      toast.error('Gagal memuat laporan kegiatan lapangan.');
+    } catch (err) {
+      console.warn('PIC activity reports load warning:', err);
     } finally {
       setLoading(false);
     }
-  }, [search, selectedPic, selectedRegion, selectedMonth, selectedYear, activeTab]);
+  }, [search, selectedPic, selectedRegion, selectedMonth, selectedYear]);
 
   useEffect(() => {
     loadReports();
+  }, [loadReports]);
+
+  // Reactive storage listener for multi-tab and real-time updates
+  useEffect(() => {
+    const handleStorageUpdate = (e) => {
+      const key = e?.detail?.key || '';
+      const baseKey = e?.detail?.baseKey || '';
+      if (baseKey === 'pic_activity_reports' || key.includes('pic_activity_reports')) {
+        loadReports();
+      }
+    };
+    window.addEventListener('outsourcing_storage_updated', handleStorageUpdate);
+    window.addEventListener('barak_storage_updated', handleStorageUpdate);
+    return () => {
+      window.removeEventListener('outsourcing_storage_updated', handleStorageUpdate);
+      window.removeEventListener('barak_storage_updated', handleStorageUpdate);
+    };
   }, [loadReports]);
 
   // Weekly Rekap Calculations
@@ -332,22 +351,33 @@ export default function PicActivityReportPage() {
             </select>
           </div>
 
-          {/* Bulan / Tahun (for Monthly View) */}
+          {/* Bulan / Tahun */}
           <div className="flex items-center gap-1.5">
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
               className="w-1/2 px-2.5 py-2 border border-border rounded-lg bg-white text-ink text-xs font-semibold"
             >
+              <option value="SEMUA">Semua Bulan</option>
+              <option value="01">Januari</option>
+              <option value="02">Februari</option>
+              <option value="03">Maret</option>
+              <option value="04">April</option>
+              <option value="05">Mei</option>
+              <option value="06">Juni</option>
+              <option value="07">Juli</option>
+              <option value="08">Agustus</option>
               <option value="09">September</option>
               <option value="10">Oktober</option>
-              <option value="08">Agustus</option>
+              <option value="11">November</option>
+              <option value="12">Desember</option>
             </select>
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
               className="w-1/2 px-2.5 py-2 border border-border rounded-lg bg-white text-ink text-xs font-semibold"
             >
+              <option value="SEMUA">Semua Tahun</option>
               <option value="2026">2026</option>
               <option value="2025">2025</option>
             </select>
@@ -594,7 +624,17 @@ export default function PicActivityReportPage() {
       <PicActivityFormModal
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
-        onSuccess={() => loadReports()}
+        onSuccess={(newReport) => {
+          setActiveTab('LIST');
+          setSearch('');
+          setSelectedPic('SEMUA');
+          setSelectedRegion('SEMUA');
+          setSelectedMonth('SEMUA');
+          if (newReport) {
+            setReports((prev) => [newReport, ...prev.filter((r) => r.id !== newReport.id)]);
+          }
+          loadReports();
+        }}
       />
 
       {/* Detail Modal */}

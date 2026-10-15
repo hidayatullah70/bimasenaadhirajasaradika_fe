@@ -580,95 +580,136 @@ export const marketingAdapter = {
 
   // ── HANDOVERS ─────────────────────────────────────────────────────────
   async getHandovers({ search = '', page = 1, pageSize = 15 } = {}) {
-    if (isMock) {
-      let filtered = [...getHandoversStore()];
-
-      if (search.trim()) {
-        const q = search.toLowerCase();
-        filtered = filtered.filter(
-          (h) =>
-            h.id.toLowerCase().includes(q) ||
-            h.companyName.toLowerCase().includes(q) ||
-            h.signedContractNumber.toLowerCase().includes(q) ||
-            h.operationsPic.toLowerCase().includes(q) ||
-            h.financePic.toLowerCase().includes(q)
-        );
-      }
-
-      const total = filtered.length;
-      const start = (page - 1) * pageSize;
-      const paginated = filtered.slice(start, start + pageSize);
-
-      return {
-        data: paginated,
-        meta: { total, page, pageSize, totalPages: Math.ceil(total / pageSize) },
-        error: null,
-      };
+    if (!isMock) {
+      const res = await apiClient.get('/marketing/handovers', { params: { search, page, pageSize } });
+      if (res && res.data && !res.error) return res;
     }
 
-    const { data } = await apiClient.get('/marketing/handovers', { params: { search, page, pageSize } });
-    return data;
+    let filtered = [...getHandoversStore()];
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(
+        (h) =>
+          h.id.toLowerCase().includes(q) ||
+          h.companyName.toLowerCase().includes(q) ||
+          h.signedContractNumber.toLowerCase().includes(q) ||
+          h.operationsPic.toLowerCase().includes(q) ||
+          h.financePic.toLowerCase().includes(q)
+      );
+    }
+
+    const total = filtered.length;
+    const start = (page - 1) * pageSize;
+    const paginated = filtered.slice(start, start + pageSize);
+
+    return {
+      data: paginated,
+      meta: { total, page, pageSize, totalPages: Math.ceil(total / pageSize) },
+      error: null,
+    };
   },
 
   // ── SUMMARY & KPIS ────────────────────────────────────────────────────
   async getMarketingStats() {
-    if (isMock) {
-      const leadsStore = getLeadsStore();
-      const opportunitiesStore = getOpportunitiesStore();
-      const handoversStore = getHandoversStore();
-
-      const totalLeads = leadsStore.length;
-      const newLeads = leadsStore.filter((l) => l.status === STATUS.NEW).length;
-      const contactedLeads = leadsStore.filter((l) => l.status === STATUS.CONTACTED).length;
-      const qualifiedLeads = leadsStore.filter((l) => l.status === STATUS.QUALIFIED).length;
-      const convertedLeads = leadsStore.filter((l) => l.status === STATUS.CONVERTED).length;
-
-      const totalOpportunities = opportunitiesStore.length;
-      const wonOpportunities = opportunitiesStore.filter((o) => o.stage === 'WON');
-      const lostOpportunities = opportunitiesStore.filter((o) => o.stage === 'LOST');
-      const activeOpportunities = opportunitiesStore.filter(
-        (o) => o.stage !== 'WON' && o.stage !== 'LOST'
-      );
-
-      const totalPipelineValue = activeOpportunities.reduce((acc, curr) => acc + (curr.monthlyValue || 0), 0);
-      const wonValue = wonOpportunities.reduce((acc, curr) => acc + (curr.monthlyValue || 0), 0);
-      const conversionRate = totalLeads > 0 ? ((convertedLeads / totalLeads) * 100).toFixed(1) : 0;
-
-      // Group leads by source
-      const leadsBySource = leadsStore.reduce((acc, curr) => {
-        acc[curr.source] = (acc[curr.source] || 0) + 1;
-        return acc;
-      }, {});
-
-      // Group active opps by stage
-      const oppsByStage = activeOpportunities.reduce((acc, curr) => {
-        acc[curr.stage] = (acc[curr.stage] || 0) + 1;
-        return acc;
-      }, {});
-
-      return {
-        data: {
-          totalLeads,
-          newLeads,
-          contactedLeads,
-          qualifiedLeads,
-          convertedLeads,
-          conversionRate,
-          totalOpportunities,
-          activeOpportunitiesCount: activeOpportunities.length,
-          wonOpportunitiesCount: wonOpportunities.length,
-          lostOpportunitiesCount: lostOpportunities.length,
-          totalPipelineValue,
-          wonValue,
-          totalHandovers: handoversStore.length,
-          leadsBySource,
-          oppsByStage,
-        },
-        error: null,
-      };
+    if (!isMock) {
+      const res = await apiClient.get('/marketing/stats');
+      if (res && res.data && !res.error) return res;
     }
 
-    const { data } = await apiClient.get('/marketing/stats');
+    const leadsStore = getLeadsStore();
+    const opportunitiesStore = getOpportunitiesStore();
+    const handoversStore = getHandoversStore();
+
+    const totalLeads = leadsStore.length;
+    const newLeads = leadsStore.filter((l) => l.status === STATUS.NEW).length;
+    const contactedLeads = leadsStore.filter((l) => l.status === STATUS.CONTACTED).length;
+    const qualifiedLeads = leadsStore.filter((l) => l.status === STATUS.QUALIFIED).length;
+    const convertedLeads = leadsStore.filter((l) => l.status === STATUS.CONVERTED).length;
+
+    const totalOpportunities = opportunitiesStore.length;
+    const wonOpportunities = opportunitiesStore.filter((o) => o.stage === 'WON');
+    const lostOpportunities = opportunitiesStore.filter((o) => o.stage === 'LOST');
+    const activeOpportunities = opportunitiesStore.filter(
+      (o) => o.stage !== 'WON' && o.stage !== 'LOST'
+    );
+
+    const totalPipelineValue = activeOpportunities.reduce((acc, curr) => acc + (curr.monthlyValue || 0), 0);
+    const wonValue = wonOpportunities.reduce((acc, curr) => acc + (curr.monthlyValue || 0), 0);
+    const conversionRate = totalLeads > 0 ? ((convertedLeads / totalLeads) * 100).toFixed(1) : 0;
+
+    // Group leads by source
+    const leadsBySource = leadsStore.reduce((acc, curr) => {
+      acc[curr.source] = (acc[curr.source] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Group active opps by stage
+    const oppsByStage = activeOpportunities.reduce((acc, curr) => {
+      acc[curr.stage] = (acc[curr.stage] || 0) + 1;
+      return acc;
+    }, {});
+
+    return {
+      data: {
+        totalLeads,
+        newLeads,
+        contactedLeads,
+        qualifiedLeads,
+        convertedLeads,
+        conversionRate,
+        totalOpportunities,
+        activeOpportunitiesCount: activeOpportunities.length,
+        wonOpportunitiesCount: wonOpportunities.length,
+        lostOpportunitiesCount: lostOpportunities.length,
+        totalPipelineValue,
+        wonValue,
+        totalHandovers: handoversStore.length,
+        leadsBySource,
+        oppsByStage,
+      },
+      error: null,
+    };
+  },
+
+  async deleteLead(id) {
+    if (isMock) {
+      const leads = getLeadsStore();
+      const normId = String(id).toLowerCase().trim();
+      const idx = leads.findIndex((l) => String(l.id).toLowerCase().trim() === normId);
+      if (idx === -1) return { data: null, error: { message: 'Lead tidak ditemukan' } };
+      const removed = leads[idx];
+      const updated = leads.filter((_, i) => i !== idx);
+      saveLeadsStore(updated);
+      emitAudit({
+        action: 'LEAD_DELETE',
+        module: 'MARKETING',
+        targetId: removed.id,
+        details: { companyName: removed.companyName },
+      });
+      return { data: { success: true, id: removed.id }, error: null };
+    }
+    const { data } = await apiClient.delete(`/marketing/leads/${id}`);
+    return data;
+  },
+
+  async deleteOpportunity(id) {
+    if (isMock) {
+      const opps = getOpportunitiesStore();
+      const normId = String(id).toLowerCase().trim();
+      const idx = opps.findIndex((o) => String(o.id).toLowerCase().trim() === normId || String(o.opportunityNumber).toLowerCase().trim() === normId);
+      if (idx === -1) return { data: null, error: { message: 'Opportunity tidak ditemukan' } };
+      const removed = opps[idx];
+      const updated = opps.filter((_, i) => i !== idx);
+      saveOpportunitiesStore(updated);
+      emitAudit({
+        action: 'OPPORTUNITY_DELETE',
+        module: 'MARKETING',
+        targetId: removed.id,
+        details: { title: removed.title },
+      });
+      return { data: { success: true, id: removed.id }, error: null };
+    }
+    const { data } = await apiClient.delete(`/marketing/opportunities/${id}`);
     return data;
   },
 };

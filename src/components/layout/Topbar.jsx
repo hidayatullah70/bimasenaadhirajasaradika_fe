@@ -10,7 +10,7 @@ import { Menu, Search, Bell, User, ChevronDown, Settings, LogOut } from 'lucide-
 import clsx from 'clsx';
 import { useAuth } from '@/app/providers/AuthProvider';
 import { ROLE_LABELS } from '@/constants/roles';
-import { getCustomAvatar, getLastUpdatedAvatar } from '@/utils/avatarStore';
+import { getCustomAvatar } from '@/utils/avatarStore';
 import toast from 'react-hot-toast';
 
 import DevIndicatorModal from './DevIndicatorModal';
@@ -27,7 +27,6 @@ export default function Topbar({ onMobileMenuOpen, unreadCount = 0, onSearchOpen
       currentUser?.avatar ||
       (currentUser?.username ? getCustomAvatar(currentUser.username) : null) ||
       (currentUser?.id ? getCustomAvatar(currentUser.id) : null) ||
-      getLastUpdatedAvatar() ||
       null
     );
   });
@@ -37,17 +36,21 @@ export default function Topbar({ onMobileMenuOpen, unreadCount = 0, onSearchOpen
       currentUser?.avatar ||
       (currentUser?.username ? getCustomAvatar(currentUser.username) : null) ||
       (currentUser?.id ? getCustomAvatar(currentUser.id) : null) ||
-      getLastUpdatedAvatar() ||
       null;
     setActiveAvatar(avatar);
   }, [currentUser]);
 
   useEffect(() => {
     const handleAvatarUpdate = (e) => {
-      const { identifier, avatar } = e.detail || {};
+      const { identifier, canonical, avatar } = e.detail || {};
       const currentUsername = currentUser?.username?.toLowerCase().trim();
       const currentId = currentUser?.id?.toLowerCase().trim();
-      if (!identifier || identifier === currentUsername || identifier === currentId) {
+      const norm = String(identifier || '').toLowerCase().trim();
+      const canon = String(canonical || '').toLowerCase().trim();
+      const matches =
+        (norm && (norm === currentUsername || norm === currentId)) ||
+        (canon && (canon === currentUsername || canon === currentId));
+      if (matches) {
         setActiveAvatar(avatar || null);
       }
     };

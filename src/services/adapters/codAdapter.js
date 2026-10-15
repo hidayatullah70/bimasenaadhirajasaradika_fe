@@ -397,6 +397,50 @@ export const codAdapter = {
     const { data } = await apiClient.post(`/cod/cases/${caseId}/escalate`, { reason });
     return data;
   },
+
+  async deleteTransaction(id) {
+    if (isMock) {
+      const store = getCodTransactionsStore();
+      const normId = String(id).toLowerCase().trim();
+      const idx = store.findIndex((t) => String(t.id).toLowerCase().trim() === normId || String(t.trackingNumber).toLowerCase().trim() === normId);
+      if (idx === -1) return { data: null, error: { message: 'Transaksi COD tidak ditemukan.' } };
+      const removed = store[idx];
+      const updated = store.filter((_, i) => i !== idx);
+      saveCodTransactionsStore(updated);
+      await emitAudit({
+        action: 'COD_TRANSACTION_DELETE',
+        module: 'Finance',
+        entity: 'CODTransaction',
+        entityId: removed.id,
+        details: { trackingNumber: removed.trackingNumber },
+      });
+      return { data: { success: true, id: removed.id }, error: null };
+    }
+    const { data } = await apiClient.delete(`/cod/transactions/${id}`);
+    return data;
+  },
+
+  async deleteCase(id) {
+    if (isMock) {
+      const cases = getCodCasesStore();
+      const normId = String(id).toLowerCase().trim();
+      const idx = cases.findIndex((c) => String(c.id).toLowerCase().trim() === normId || String(c.caseNumber).toLowerCase().trim() === normId);
+      if (idx === -1) return { data: null, error: { message: 'Kasus COD tidak ditemukan.' } };
+      const removed = cases[idx];
+      const updated = cases.filter((_, i) => i !== idx);
+      saveCodCasesStore(updated);
+      await emitAudit({
+        action: 'COD_CASE_DELETE',
+        module: 'Finance',
+        entity: 'CODCase',
+        entityId: removed.id,
+        details: { caseNumber: removed.caseNumber },
+      });
+      return { data: { success: true, id: removed.id }, error: null };
+    }
+    const { data } = await apiClient.delete(`/cod/cases/${id}`);
+    return data;
+  },
 };
 
 export default codAdapter;

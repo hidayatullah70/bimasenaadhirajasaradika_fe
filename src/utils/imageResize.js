@@ -21,7 +21,7 @@
  *   sizeKb: number
  * }>}
  */
-export function resizeImageTo16x9(file, targetWidth = 1280) {
+export function resizeImageTo16x9(file, targetWidth = 960, quality = 0.78) {
   return new Promise((resolve, reject) => {
     if (!file || !file.type.startsWith('image/')) {
       reject(new Error('File yang diunggah harus berupa file gambar (JPG, PNG, WEBP).'));
@@ -80,7 +80,7 @@ export function resizeImageTo16x9(file, targetWidth = 1280) {
           targetHeight
         );
 
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.86);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
         const sizeKb = Math.round((dataUrl.length * 3) / 4 / 1024);
 
         resolve({

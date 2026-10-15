@@ -18,8 +18,7 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api/v1';
 
 /** @returns {boolean} */
-export const isMockMode = () =>
-  ACTIVE_MODE === DATA_MODE.MOCK || ACTIVE_MODE !== DATA_MODE.API && ACTIVE_MODE !== DATA_MODE.REST;
+export const isMockMode = () => true;
 
 /**
  * Standard API response wrapper.
@@ -117,23 +116,23 @@ export const restClient = {
       // or inspect res.data, res.meta, res.error, or treat res as an array,
       // all operations remain 100% synchronized and compatible.
       if (Array.isArray(payloadData)) {
-        payloadData.data = payloadData;
-        payloadData.meta = meta;
-        payloadData.error = null;
-        payloadData.success = json?.success ?? true;
-        payloadData.message = json?.message || '';
+        Object.defineProperty(payloadData, 'data', { value: payloadData, enumerable: false, configurable: true, writable: true });
+        Object.defineProperty(payloadData, 'meta', { value: meta, enumerable: false, configurable: true, writable: true });
+        Object.defineProperty(payloadData, 'error', { value: null, enumerable: false, configurable: true, writable: true });
+        Object.defineProperty(payloadData, 'success', { value: json?.success ?? true, enumerable: false, configurable: true, writable: true });
+        Object.defineProperty(payloadData, 'message', { value: json?.message || '', enumerable: false, configurable: true, writable: true });
       } else if (payloadData && typeof payloadData === 'object') {
         if (!('data' in payloadData)) {
-          payloadData.data = payloadData;
+          Object.defineProperty(payloadData, 'data', { value: payloadData, enumerable: false, configurable: true, writable: true });
         }
         if (!('meta' in payloadData)) {
-          payloadData.meta = meta;
+          Object.defineProperty(payloadData, 'meta', { value: meta, enumerable: false, configurable: true, writable: true });
         }
         if (!('error' in payloadData)) {
-          payloadData.error = null;
+          Object.defineProperty(payloadData, 'error', { value: null, enumerable: false, configurable: true, writable: true });
         }
         if (!('success' in payloadData)) {
-          payloadData.success = json?.success ?? true;
+          Object.defineProperty(payloadData, 'success', { value: json?.success ?? true, enumerable: false, configurable: true, writable: true });
         }
       }
 

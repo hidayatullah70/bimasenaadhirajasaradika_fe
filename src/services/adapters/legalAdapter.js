@@ -240,6 +240,36 @@ export const legalAdapter = {
     return data;
   },
 
+  async deleteLegalCase(caseId, { deletedBy = 'Farhan Maulana (Legal)', reason = '' } = {}) {
+    if (isMock) {
+      const casesStore = getCasesStore();
+      const normId = String(caseId).toLowerCase().trim();
+      const idx = casesStore.findIndex((c) => String(c.id).toLowerCase().trim() === normId || String(c.caseNumber).toLowerCase().trim() === normId);
+      if (idx === -1) return { data: null, error: { message: 'Kasus tidak ditemukan.' } };
+
+      const removed = casesStore[idx];
+      const updatedStore = casesStore.filter((c) => String(c.id).toLowerCase().trim() !== normId && String(c.caseNumber).toLowerCase().trim() !== normId);
+      saveCasesStore(updatedStore);
+
+      await emitAudit({
+        action: 'LEGAL_CASE_DELETE',
+        module: 'Legal',
+        entity: 'LegalCase',
+        entityId: caseId,
+        details: { caseNumber: removed.caseNumber, subject: removed.subject, deletedBy, reason },
+      });
+
+      return { data: { success: true }, error: null };
+    }
+
+    const { data } = await apiClient.delete(`/legal/cases/${caseId}`);
+    return data;
+  },
+
+  async deleteCase(caseId, options) {
+    return this.deleteLegalCase(caseId, options);
+  },
+
   async getContracts({ search = '', status = '', clientId = '' } = {}) {
     if (isMock) {
       let filtered = [...getContractsStore()];

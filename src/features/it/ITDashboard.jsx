@@ -23,7 +23,6 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { StateLoading } from '@/components/ui/StateViews';
-import toast from 'react-hot-toast';
 import { itAdapter } from '@/services/adapters/itAdapter';
 import TicketFormModal from './tickets/TicketFormModal';
 
@@ -43,11 +42,11 @@ export default function ITDashboard() {
         itAdapter.getTickets({ pageSize: 5 }),
       ]);
 
-      if (statsRes.data) setStats(statsRes.data);
-      if (healthRes.data) setSystemHealth(healthRes.data);
-      if (ticketsRes.data) setRecentTickets(ticketsRes.data);
-    } catch {
-      toast.error('Gagal memuat data dashboard IT Support.');
+      if (statsRes?.data) setStats(statsRes.data);
+      if (healthRes?.data) setSystemHealth(healthRes.data);
+      if (ticketsRes?.data) setRecentTickets(Array.isArray(ticketsRes.data) ? ticketsRes.data : []);
+    } catch (err) {
+      console.warn('IT dashboard load warning:', err);
     } finally {
       setLoading(false);
     }

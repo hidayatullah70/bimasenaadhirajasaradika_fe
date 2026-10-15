@@ -6,7 +6,7 @@
  * Source of Truth: PRD Section 14 (Finance Module).
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FileText,
   X,
@@ -15,18 +15,51 @@ import {
   Calculator,
   Percent,
   Building2,
+  Sparkles,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import invoiceAdapter from '@/services/adapters/invoiceAdapter';
 
 export default function InvoiceFormModal({ isOpen, onClose, clients, onSubmit }) {
   const [formData, setFormData] = useState({
-    invoiceNumber: 'INV/BRK/2026/09/001',
+    invoiceNumber: '',
     clientId: '',
-    billingPeriod: 'September 2026',
+    billingPeriod: '',
     issueDate: new Date().toISOString().slice(0, 10),
     dueDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
     notes: 'Rekening BCA PT Bimasena Adhirajasa Radhika 8833951911',
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      const now = new Date();
+      const monthNames = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+      ];
+      const currentPeriod = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+      const nextNum = invoiceAdapter.getNextInvoiceNumber
+        ? invoiceAdapter.getNextInvoiceNumber()
+        : `INV/BRK/${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/015`;
+
+      setFormData((prev) => ({
+        ...prev,
+        invoiceNumber: prev.invoiceNumber && prev.invoiceNumber !== 'INV/BRK/2026/09/001' ? prev.invoiceNumber : nextNum,
+        billingPeriod: prev.billingPeriod || currentPeriod,
+        issueDate: prev.issueDate || now.toISOString().slice(0, 10),
+        dueDate: prev.dueDate || new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+        notes: prev.notes || 'Rekening BCA PT Bimasena Adhirajasa Radhika 8833951911',
+      }));
+      setError('');
+    }
+  }, [isOpen]);
+
+  const handleRegenerateNumber = () => {
+    const nextNum = invoiceAdapter.getNextInvoiceNumber
+      ? invoiceAdapter.getNextInvoiceNumber()
+      : `INV/BRK/${new Date().getFullYear()}/${String(new Date().getMonth() + 1).padStart(2, '0')}/015`;
+    setFormData((prev) => ({ ...prev, invoiceNumber: nextNum }));
+  };
 
   // 1. Dynamic Service Items (can be added indefinitely)
   const [serviceItems, setServiceItems] = useState([
@@ -261,15 +294,26 @@ export default function InvoiceFormModal({ isOpen, onClose, clients, onSubmit })
           {/* Section: Nomor Faktur & Klien Tertagih */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
-              <label className="block font-semibold text-ink mb-1">
-                Nomor Faktur <span className="text-primary-red">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block font-semibold text-ink">
+                  Nomor Faktur <span className="text-primary-red">*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={handleRegenerateNumber}
+                  className="text-[11px] text-primary-red hover:text-primary-red/80 font-medium flex items-center gap-1 transition-colors"
+                  title="Generate Nomor Faktur Baru"
+                >
+                  <Sparkles className="h-3 w-3" />
+                  <span>Auto-Nomor</span>
+                </button>
+              </div>
               <input
                 type="text"
                 name="invoiceNumber"
                 value={formData.invoiceNumber}
                 onChange={handleChange}
-                placeholder="Contoh: INV/BRK/2026/09/001"
+                placeholder="Contoh: INV/BRK/2026/10/015"
                 className="w-full text-xs sm:text-sm font-mono font-bold border border-border rounded-xl px-3 py-2 bg-surface text-ink focus:outline-none focus:ring-2 focus:ring-primary-red/20"
                 required
               />

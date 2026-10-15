@@ -8,8 +8,20 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/app/providers/AuthProvider';
-import { MOCK_USERS } from '@/services/mock/mockUsers';
-import { ROLE_LABELS } from '@/constants/roles';
+
+const QUICK_USERS = [
+  { id: 'usr-001', username: 'direktur', password: 'dev_direktur_2026', name: 'Juli Priyanto', roleLabel: 'Direktur Utama', tag: 'Direksi', badgeColor: 'bg-red-50 text-red-700 border-red-200' },
+  { id: 'usr-002', username: 'hrd', password: 'dev_hrd_2026', name: 'Zaenal Arifin', roleLabel: 'HRD', tag: 'HRD', badgeColor: 'bg-blue-50 text-blue-700 border-blue-200' },
+  { id: 'usr-003', username: 'legal', password: 'dev_legal_2026', name: 'Robyn Topani, S.H.', roleLabel: 'Legal', tag: 'Legal', badgeColor: 'bg-purple-50 text-purple-700 border-purple-200' },
+  { id: 'usr-004', username: 'operasional', password: 'dev_operasional_2026', name: 'Nazi Rinaldi', roleLabel: 'Operasional', tag: 'Ops', badgeColor: 'bg-amber-50 text-amber-700 border-amber-200' },
+  { id: 'usr-005', username: 'finance', password: 'dev_finance_2026', name: 'Nazi Rinaldi', roleLabel: 'Finance', tag: 'Finance', badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  { id: 'usr-006', username: 'marketing', password: 'dev_marketing_2026', name: 'Hendri Nopamin', roleLabel: 'Marketing', tag: 'Marketing', badgeColor: 'bg-pink-50 text-pink-700 border-pink-200' },
+  { id: 'usr-007', username: 'itsupport', password: 'dev_itsupport_2026', name: 'Gheril Ramaditya S', roleLabel: 'IT Support', tag: 'IT', badgeColor: 'bg-cyan-50 text-cyan-700 border-cyan-200' },
+  { id: 'usr-008', username: 'adminweb', password: 'dev_adminweb_2026', name: 'Hidayatullah', roleLabel: 'Admin Web', tag: 'CMS', badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+  { id: 'usr-011', username: 'pic', password: 'dev_pic_2026', name: 'PIC Korlap', roleLabel: 'Kordinator Lapangan', tag: 'PIC', badgeColor: 'bg-orange-50 text-orange-700 border-orange-200' },
+  { id: 'usr-009', username: 'user1', password: 'dev_user1_2026', name: 'Admin01 HRD', roleLabel: 'Inputer Absensi 1', tag: 'Inputer', badgeColor: 'bg-slate-100 text-slate-700 border-slate-200' },
+  { id: 'usr-010', username: 'user2', password: 'dev_user2_2026', name: 'Admin02 HRD', roleLabel: 'Inputer Absensi 2', tag: 'Inputer', badgeColor: 'bg-slate-100 text-slate-700 border-slate-200' },
+];
 
 export default function LoginPage() {
   const { login, isAuthenticated } = useAuth();
@@ -49,9 +61,11 @@ export default function LoginPage() {
 
   const handleQuickLogin = async (user) => {
     setError('');
-    setForm({ username: user.username, password: user.password });
+    const uName = user.username === 'direkturutama' ? 'direktur' : user.username;
+    const uPass = user.password || `dev_${uName}_2026`;
+    setForm({ username: uName, password: uPass });
     setLoading(true);
-    const result = await login({ username: user.username, password: user.password });
+    const result = await login({ username: uName, password: uPass });
     setLoading(false);
     if (result.ok) {
       navigate(result.defaultRoute || '/ops', { replace: true });
@@ -61,22 +75,22 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-canvas flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-canvas flex items-center justify-center px-4 py-8">
+      <div className="w-full max-w-xl">
         {/* Logo */}
-        <div className="flex flex-col items-center mb-8">
+        <div className="flex flex-col items-center mb-6">
           <img
             src="/assets/img/logo/logoAja.png"
             alt="PT. BIMASENA ADHIRAJASA RADIKA"
-            className="h-16 object-contain mb-4"
+            className="h-16 object-contain mb-3"
           />
           <h1 className="text-xl font-bold text-ink">PT. BIMASENA ADHIRAJASA RADIKA</h1>
           <p className="text-sm text-muted mt-1">Sistem Manajemen Operasional Internal</p>
         </div>
 
         {/* Form card */}
-        <div className="bg-surface rounded-xl border border-border shadow-card p-8">
-          <h2 className="text-lg font-semibold text-ink mb-6">Masuk ke Sistem</h2>
+        <div className="bg-surface rounded-xl border border-border shadow-card p-6 sm:p-8">
+          <h2 className="text-lg font-semibold text-ink mb-5">Masuk ke Sistem</h2>
 
           {error && (
             <div
@@ -153,21 +167,43 @@ export default function LoginPage() {
           </form>
         </div>
 
-        {/* Quick-login panel — Akses Cepat Akun Resmi */}
-        <div className="mt-6 bg-primary-yellow/10 border border-primary-yellow/30 rounded-xl p-4">
-          <p className="text-xs font-semibold text-amber-800 mb-3 uppercase tracking-wide">
-            ⚡ Akses Cepat — Quick Login Akun Resmi
+        {/* Quick-login panel */}
+        <div className="mt-6 bg-amber-50/70 border border-amber-200 rounded-xl p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5">
+              <span className="text-amber-600 font-bold text-sm">⚡</span>
+              <h3 className="text-xs font-bold text-amber-900 uppercase tracking-wide">
+                Mode Quick Login — Uji Coba Pengguna
+              </h3>
+            </div>
+            <span className="text-[11px] font-semibold bg-amber-200/80 text-amber-900 px-2 py-0.5 rounded-full border border-amber-300">
+              11 Akun Aktif
+            </span>
+          </div>
+          <p className="text-[11px] text-amber-800/80 mb-3 leading-relaxed">
+            Klik salah satu akun di bawah untuk langsung masuk dan menguji seluruh fungsi & alur kerja perannya:
           </p>
-          <div className="grid grid-cols-2 gap-2">
-            {MOCK_USERS.map((u) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-80 overflow-y-auto pr-1">
+            {QUICK_USERS.map((u) => (
               <button
                 key={u.id}
+                type="button"
                 onClick={() => handleQuickLogin(u)}
                 disabled={loading}
-                className="flex flex-col items-start px-3 py-2 bg-white border border-border rounded-lg text-left hover:border-primary-red/30 hover:bg-primary-red/5 transition-all text-xs disabled:opacity-50"
+                className="flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-lg text-left hover:border-primary-red/50 hover:bg-red-50/30 transition-all text-xs disabled:opacity-50 shadow-xs group"
               >
-                <span className="font-semibold text-ink">{u.name}</span>
-                <span className="text-muted text-[11px]">{u.roleLabel || ROLE_LABELS[u.role]}</span>
+                <div className="min-w-0 pr-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-semibold text-ink group-hover:text-primary-red transition-colors truncate">
+                      {u.name}
+                    </span>
+                  </div>
+                  <p className="text-muted text-[11px] truncate mt-0.5">{u.roleLabel}</p>
+                  <p className="text-[10px] text-slate-400 font-mono mt-0.5">@{u.username}</p>
+                </div>
+                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border shrink-0 ${u.badgeColor}`}>
+                  {u.tag}
+                </span>
               </button>
             ))}
           </div>

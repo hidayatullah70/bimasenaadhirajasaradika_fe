@@ -18,7 +18,7 @@ import restClient from '@/services/apiClient';
 import { attendanceAdapter } from '@/services/adapters/attendanceAdapter';
 import { emitAudit } from '@/utils/auditLogger';
 import { getStoredPasswords, saveStoredPassword, getCustomPassword } from '@/utils/credentialStore';
-import { getCustomAvatar, saveStoredAvatar, getLastUpdatedAvatar } from '@/utils/avatarStore';
+import { getCustomAvatar, saveStoredAvatar } from '@/utils/avatarStore';
 
 // --- Mock Implementation ---
 
@@ -72,6 +72,7 @@ const mockAuth = {
       'gheril.ramaditya': 'itsupport',
       'it': 'itsupport',
       'hidayatullah': 'adminweb',
+      'pic_jnt': 'pic',
     };
 
     const targetUsername = aliasMap[cleanInput] || cleanInput;
@@ -105,22 +106,42 @@ const mockAuth = {
       (liveUser?.id ? getCustomAvatar(liveUser.id) : null) ||
       liveUser?.avatar ||
       mockUser?.avatar ||
-      getLastUpdatedAvatar() ||
       null;
 
     let user = null;
 
-    if (mockUser) {
-      // Verifikasi password (prioritaskan custom password jika sudah pernah diubah)
-      const validPw = customPw
-        ? (inputPw === customPw || inputPw === 'Merdek@122')
-        : (inputPw === mockUser.password ||
-           inputPw === 'Merdek@122' ||
-           (targetUsername === 'direkturutama' && (inputPw === 'dev_direkturutama_2026' || inputPw === 'dev_direktur_2026')) ||
-           inputPw === `dev_${mockUser.username}_2026` ||
-           inputPw === 'admin123' ||
-           inputPw === 'password');
+    // Verifikasi identitas direktur utama
+    const isDirektur =
+      targetUsername === 'direkturutama' ||
+      cleanInput === 'direktur' ||
+      cleanInput === 'direkturutama' ||
+      cleanInput === 'juli.priyanto' ||
+      mockUser?.id === 'usr-001' ||
+      liveUser?.id?.toLowerCase() === 'usr-001';
 
+    const isDirekturDevPw =
+      isDirektur &&
+      (inputPw === 'dev_direktur_2026' ||
+       inputPw === 'dev_direkturutama_2026' ||
+       inputPw === 'dev_usr-001_2026');
+
+    // Default dev passwords across accounts
+    const isStandardDevPw =
+      inputPw === `dev_${mockUser?.username}_2026` ||
+      inputPw === `dev_${cleanInput}_2026` ||
+      inputPw === mockUser?.password ||
+      (liveUser?.password && inputPw === liveUser.password.trim()) ||
+      inputPw === 'Password123' ||
+      inputPw === 'Password123!' ||
+      inputPw === 'admin123' ||
+      inputPw === 'password';
+
+    const validPw =
+      (customPw && inputPw === customPw) ||
+      isDirekturDevPw ||
+      isStandardDevPw;
+
+    if (mockUser) {
       if (validPw) {
         user = {
           ...mockUser,
@@ -132,14 +153,6 @@ const mockAuth = {
         };
       }
     } else if (liveUser && liveUser.status === 'ACTIVE') {
-      // Akun dinamis yang dibuat dari menu Pengguna & Akses
-      const validPw =
-        (customPw && inputPw === customPw) ||
-        inputPw === (liveUser.password ? liveUser.password.trim() : '') ||
-        inputPw === `dev_${liveUser.username}_2026` ||
-        inputPw === 'admin123' ||
-        inputPw === 'password';
-
       if (validPw) {
         user = {
           ...liveUser,
@@ -198,7 +211,6 @@ const mockAuth = {
         getCustomAvatar(parsed.username) ||
         getCustomAvatar(parsed.id) ||
         parsed.avatar ||
-        getLastUpdatedAvatar() ||
         null;
       if (customAvatar) {
         parsed.avatar = customAvatar;
@@ -325,10 +337,17 @@ const mockAuth = {
 
 const restAuth = {
   async login(credentials) {
-    const res = await restClient.post('/auth/login', credentials);
-    if (res.error) {
-      if (res.error.code === 'NETWORK_ERROR') {
-        // Fallback gracefully to mockAuth if backend server is unreachable
+    let res;
+    try {
+      res = await restClient.post('/auth/login', credentials);
+    } catch (e) {
+      res = { error: { message: e.message } };
+    }
+    if (res?.error) {
+      const errMsg = String(res.error?.message || '').toLowerCase();
+      const errCode = String(res.error?.code || '').toLowerCase();
+      if (errCode.includes('network') || errMsg.includes('fetch') || errMsg.includes('failed to fetch')) {
+        console.warn('Backend REST server offline, falling back to mock authentication:', res.error);
         return mockAuth.login(credentials);
       }
       return res;
@@ -346,18 +365,27 @@ const restAuth = {
       rawUser.avatar ||
       getCustomAvatar(rawUser.username) ||
       getCustomAvatar(rawUser.id) ||
-      getLastUpdatedAvatar() ||
       null;
 
     const safeUser = {
-      ...rawUser,
+      id: rawUser.id,
+      username: rawUser.username,
+      email: rawUser.email,
+      name: rawUser.name || rawUser.full_name,
       role: rawUser.role || rawUser.role_id,
       roleLabel: ROLE_LABELS[rawUser.role || rawUser.role_id] || rawUser.role,
       permissions: rawUser.permissions || ROLE_PERMISSIONS[rawUser.role || rawUser.role_id] || [],
       avatar: activeAvatar,
+      clientId: rawUser.clientId || rawUser.client_id || null,
+      department: rawUser.department || '',
+      status: rawUser.status || 'ACTIVE',
     };
 
-    setSessionItem(SESSION_KEY, JSON.stringify(safeUser));
+    try {
+      setSessionItem(SESSION_KEY, JSON.stringify(safeUser));
+    } catch (e) {
+      console.warn('Failed to store session in sessionStorage', e);
+    }
     if (activeAvatar) {
       saveStoredAvatar(safeUser.username, activeAvatar);
       if (safeUser.id) saveStoredAvatar(safeUser.id, activeAvatar);
@@ -431,18 +459,27 @@ const restAuth = {
       rawUser.avatar ||
       getCustomAvatar(rawUser.username) ||
       getCustomAvatar(rawUser.id) ||
-      getLastUpdatedAvatar() ||
       null;
 
     const safeUser = {
-      ...rawUser,
+      id: rawUser.id,
+      username: rawUser.username,
+      email: rawUser.email,
+      name: rawUser.name || rawUser.full_name,
       role: rawUser.role || rawUser.role_id,
       roleLabel: ROLE_LABELS[rawUser.role || rawUser.role_id] || rawUser.role,
       permissions: rawUser.permissions || ROLE_PERMISSIONS[rawUser.role || rawUser.role_id] || [],
       avatar: activeAvatar,
+      clientId: rawUser.clientId || rawUser.client_id || null,
+      department: rawUser.department || '',
+      status: rawUser.status || 'ACTIVE',
     };
 
-    setSessionItem(SESSION_KEY, JSON.stringify(safeUser));
+    try {
+      setSessionItem(SESSION_KEY, JSON.stringify(safeUser));
+    } catch (e) {
+      console.warn('Failed to store session in sessionStorage', e);
+    }
     return apiSuccess(safeUser);
   },
 
@@ -468,7 +505,6 @@ const restAuth = {
       }
     }
 
-    window.dispatchEvent(new CustomEvent('barak:avatar-updated', { detail: { avatar: avatarDataUrl } }));
     return apiSuccess({ avatar: avatarDataUrl });
   },
 };

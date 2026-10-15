@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 import authAdapter from '@/services/adapters/authAdapter';
 import imageResize from '@/utils/imageResize';
-import { getCustomAvatar, getLastUpdatedAvatar } from '@/utils/avatarStore';
+import { getCustomAvatar } from '@/utils/avatarStore';
 import toast from 'react-hot-toast';
 
 /**
@@ -94,7 +94,6 @@ export default function ProfilePage() {
       currentUser?.avatar ||
       (currentUser?.username ? getCustomAvatar(currentUser.username) : null) ||
       (currentUser?.id ? getCustomAvatar(currentUser.id) : null) ||
-      getLastUpdatedAvatar() ||
       null
     );
   });
@@ -104,7 +103,6 @@ export default function ProfilePage() {
     currentUser?.avatar ||
     (currentUser?.username ? getCustomAvatar(currentUser.username) : null) ||
     (currentUser?.id ? getCustomAvatar(currentUser.id) : null) ||
-    getLastUpdatedAvatar() ||
     null;
 
   // Sync avatarPreview whenever currentUser updates
@@ -113,20 +111,22 @@ export default function ProfilePage() {
       currentUser?.avatar ||
       (currentUser?.username ? getCustomAvatar(currentUser.username) : null) ||
       (currentUser?.id ? getCustomAvatar(currentUser.id) : null) ||
-      getLastUpdatedAvatar() ||
       null;
-    if (avatar) {
-      setAvatarPreview(avatar);
-    }
+    setAvatarPreview(avatar);
   }, [currentUser]);
 
   // Listen to cross-component avatar update event for real-time sync
   useEffect(() => {
     const handleAvatarUpdate = (e) => {
-      const { identifier, avatar } = e.detail || {};
+      const { identifier, canonical, avatar } = e.detail || {};
       const currentUsername = currentUser?.username?.toLowerCase().trim();
       const currentId = currentUser?.id?.toLowerCase().trim();
-      if (!identifier || identifier === currentUsername || identifier === currentId) {
+      const norm = String(identifier || '').toLowerCase().trim();
+      const canon = String(canonical || '').toLowerCase().trim();
+      const matches =
+        (norm && (norm === currentUsername || norm === currentId)) ||
+        (canon && (canon === currentUsername || canon === currentId));
+      if (matches) {
         setAvatarPreview(avatar || null);
       }
     };

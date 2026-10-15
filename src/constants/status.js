@@ -49,6 +49,13 @@ export const STATUS = Object.freeze({
   FINANCE_REVIEW: 'FINANCE_REVIEW',
   DIRECTOR_APPROVAL: 'DIRECTOR_APPROVAL',
   PROCESSED: 'PROCESSED',
+  // Invoice / Finance statuses
+  ISSUED: 'ISSUED',
+  SENT: 'SENT',
+  PARTIALLY_PAID: 'PARTIALLY_PAID',
+  PAID: 'PAID',
+  OVERDUE: 'OVERDUE',
+  VOID: 'VOID',
   // Legal case
   INVESTIGATION: 'INVESTIGATION',
   LEGAL_REVIEW: 'LEGAL_REVIEW',
@@ -83,6 +90,12 @@ export const STATUS_LABELS = Object.freeze({
   [STATUS.LATE]: 'Terlambat',
   [STATUS.ABSENT]: 'Absen',
   [STATUS.PROCESSED]: 'Diproses',
+  [STATUS.ISSUED]: 'Terkirim',
+  [STATUS.SENT]: 'Terkirim',
+  [STATUS.PARTIALLY_PAID]: 'Sebagian',
+  [STATUS.PAID]: 'Lunas',
+  [STATUS.OVERDUE]: 'Jatuh Tempo',
+  [STATUS.VOID]: 'Dibatalkan',
 });
 
 /**
@@ -114,4 +127,10 @@ export const STATUS_COLORS = Object.freeze({
   [STATUS.LATE]: 'bg-warning/10 text-warning ring-1 ring-warning/20',
   [STATUS.ABSENT]: 'bg-danger/10 text-danger ring-1 ring-danger/20',
   [STATUS.PROCESSED]: 'bg-success/10 text-success ring-1 ring-success/20',
+  [STATUS.ISSUED]: 'bg-blue-50 text-blue-700 ring-1 ring-blue-700/20',
+  [STATUS.SENT]: 'bg-blue-50 text-blue-700 ring-1 ring-blue-700/20',
+  [STATUS.PARTIALLY_PAID]: 'bg-amber-50 text-amber-700 ring-1 ring-amber-700/20',
+  [STATUS.PAID]: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-700/20',
+  [STATUS.OVERDUE]: 'bg-red-50 text-red-700 ring-1 ring-red-700/20',
+  [STATUS.VOID]: 'bg-slate-100 text-slate-500 ring-1 ring-slate-300',
 });

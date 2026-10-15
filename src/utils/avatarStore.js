@@ -12,7 +12,6 @@ const NS_AVATARS_KEY = 'outsourcing_dev_user_avatars';
 const NS_LAST_AVATAR_KEY = 'outsourcing_dev_last_avatar';
 
 let memoryAvatars = {};
-let memoryLastAvatar = null;
 
 const ALIAS_MAP = {
   'direktur': 'direkturutama',
@@ -27,6 +26,7 @@ const ALIAS_MAP = {
   'gheril.ramaditya': 'itsupport',
   'it': 'itsupport',
   'hidayatullah': 'adminweb',
+  'pic_jnt': 'pic',
 };
 
 const REVERSE_ALIAS_MAP = {
@@ -38,8 +38,9 @@ const REVERSE_ALIAS_MAP = {
   'marketing': ['hendri.nopamin', 'usr-006'],
   'itsupport': ['gheril.ramaditya', 'it', 'usr-007'],
   'adminweb': ['hidayatullah', 'usr-008'],
-  'user1': ['usr-009'],
-  'user2': ['usr-010'],
+  'user1': ['admin01', 'usr-009'],
+  'user2': ['admin02', 'usr-010'],
+  'pic': ['pic_jnt', 'usr-011'],
 };
 
 /**
@@ -63,60 +64,30 @@ export function getStoredAvatars() {
   return { ...memoryAvatars };
 }
 
+// Purge any legacy global avatar fallback to prevent cross-contamination between different accounts
+if (typeof localStorage !== 'undefined') {
+  try {
+    localStorage.removeItem(LAST_AVATAR_KEY);
+    localStorage.removeItem(NS_LAST_AVATAR_KEY);
+  } catch {
+    // ignore
+  }
+}
+
 /**
- * Get the most recently uploaded profile picture across the system.
- * Serves as persistent fallback so user photos never revert to initials after logout.
- * @returns {string|null}
+ * Deprecated global fallback — returns null to guarantee strictly isolated per-user avatars.
+ * @returns {null}
  */
 export function getLastUpdatedAvatar() {
-  if (memoryLastAvatar) return memoryLastAvatar;
-  if (typeof localStorage !== 'undefined') {
-    try {
-      const stored = localStorage.getItem(LAST_AVATAR_KEY) || localStorage.getItem(NS_LAST_AVATAR_KEY);
-      if (stored) {
-        memoryLastAvatar = stored;
-        return stored;
-      }
-      // Fallback: check stored avatars dictionary
-      const avatars = getStoredAvatars();
-      const vals = Object.values(avatars);
-      if (vals.length > 0 && vals[vals.length - 1]) {
-        memoryLastAvatar = vals[vals.length - 1];
-        return memoryLastAvatar;
-      }
-    } catch {
-      // ignore
-    }
-  }
   return null;
 }
 
-/**
- * Store the latest updated profile picture.
- * @param {string|null} avatarDataUrl
- */
-export function setLastUpdatedAvatar(avatarDataUrl) {
-  memoryLastAvatar = avatarDataUrl || null;
-  if (typeof localStorage !== 'undefined') {
-    try {
-      if (avatarDataUrl) {
-        localStorage.setItem(LAST_AVATAR_KEY, avatarDataUrl);
-        localStorage.setItem(NS_LAST_AVATAR_KEY, avatarDataUrl);
-      } else {
-        localStorage.removeItem(LAST_AVATAR_KEY);
-        localStorage.removeItem(NS_LAST_AVATAR_KEY);
-      }
-    } catch {
-      // ignore
-    }
-  }
+export function setLastUpdatedAvatar() {
+  // No-op to prevent cross-user avatar contamination
 }
 
-/**
- * Clear the latest updated profile picture fallback.
- */
 export function clearLastUpdatedAvatar() {
-  setLastUpdatedAvatar(null);
+  // No-op
 }
 
 /**
@@ -128,10 +99,10 @@ export function saveStoredAvatar(identifier, avatarDataUrl) {
   const norm = String(identifier || '').toLowerCase().trim();
   if (!norm) return;
 
-  const identifiersToUpdate = new Set([norm]);
-  if (ALIAS_MAP[norm]) identifiersToUpdate.add(ALIAS_MAP[norm]);
-  if (REVERSE_ALIAS_MAP[norm]) {
-    REVERSE_ALIAS_MAP[norm].forEach((a) => identifiersToUpdate.add(a));
+  const canonical = ALIAS_MAP[norm] || norm;
+  const identifiersToUpdate = new Set([norm, canonical]);
+  if (REVERSE_ALIAS_MAP[canonical]) {
+    REVERSE_ALIAS_MAP[canonical].forEach((a) => identifiersToUpdate.add(a));
   }
 
   // Update in-memory cache
@@ -142,13 +113,6 @@ export function saveStoredAvatar(identifier, avatarDataUrl) {
       delete memoryAvatars[id];
     }
   });
-
-  // Update latest updated avatar tracking
-  if (avatarDataUrl) {
-    setLastUpdatedAvatar(avatarDataUrl);
-  } else {
-    clearLastUpdatedAvatar();
-  }
 
   // Persist to localStorage
   if (typeof localStorage !== 'undefined') {
@@ -174,7 +138,7 @@ export function saveStoredAvatar(identifier, avatarDataUrl) {
     try {
       window.dispatchEvent(
         new CustomEvent('barak:avatar-updated', {
-          detail: { identifier: norm, avatar: avatarDataUrl || null },
+          detail: { identifier: norm, canonical, avatar: avatarDataUrl || null },
         })
       );
     } catch {
@@ -184,38 +148,35 @@ export function saveStoredAvatar(identifier, avatarDataUrl) {
 }
 
 /**
- * Get custom avatar data URL for a given user identifier, checking aliases and global latest fallback.
+ * Get custom avatar data URL for a given user identifier, checking aliases strictly without fallback to other users.
  * @param {string} [identifier] - Username or user ID
  * @returns {string|null}
  */
 export function getCustomAvatar(identifier) {
   const norm = String(identifier || '').toLowerCase().trim();
-  const avatars = getStoredAvatars();
+  if (!norm) return null;
 
-  if (norm) {
-    if (avatars[norm]) return avatars[norm];
-    if (ALIAS_MAP[norm] && avatars[ALIAS_MAP[norm]]) return avatars[ALIAS_MAP[norm]];
-    if (REVERSE_ALIAS_MAP[norm]) {
-      for (const rev of REVERSE_ALIAS_MAP[norm]) {
-        if (avatars[rev]) return avatars[rev];
-      }
+  const avatars = getStoredAvatars();
+  if (avatars[norm]) return avatars[norm];
+
+  const canonical = ALIAS_MAP[norm] || norm;
+  if (avatars[canonical]) return avatars[canonical];
+
+  if (REVERSE_ALIAS_MAP[canonical]) {
+    for (const alias of REVERSE_ALIAS_MAP[canonical]) {
+      if (avatars[alias]) return avatars[alias];
     }
   }
-
-  // Fallback to the latest updated profile picture so avatar never reverts unexpectedly
-  const last = getLastUpdatedAvatar();
-  if (last) return last;
 
   return null;
 }
 
 /**
- * Remove stored custom avatar for a user identifier and clear the latest fallback.
+ * Remove stored custom avatar for a user identifier and its aliases.
  * @param {string} identifier
  */
 export function removeStoredAvatar(identifier) {
   saveStoredAvatar(identifier, null);
-  clearLastUpdatedAvatar();
 }
 
 export default {

@@ -488,72 +488,134 @@ export const itAdapter = {
 
   // ── 4. SYSTEM HEALTH MONITORING ───────────────────────────────────────
   async getSystemHealth() {
-    if (isMock) {
-      return { data: MOCK_SYSTEM_HEALTH, error: null };
+    if (!isMock) {
+      const res = await apiClient.get('/it/health');
+      if (res && res.data && !res.error) return res;
     }
-    const { data } = await apiClient.get('/it/health');
-    return data;
+    return { data: MOCK_SYSTEM_HEALTH, error: null };
   },
 
   // ── 5. KPI SUMMARY & METRICS ──────────────────────────────────────────
   async getITStats() {
-    if (isMock) {
-      const tickets = getTicketsStore();
-      const assets = getAssetsStore();
-
-      const totalTickets = tickets.length;
-      const openTickets = tickets.filter((t) => t.status === STATUS.OPEN).length;
-      const assignedTickets = tickets.filter((t) => t.status === STATUS.ASSIGNED).length;
-      const inProgressTickets = tickets.filter((t) => t.status === STATUS.IN_PROGRESS).length;
-      const waitingTickets = tickets.filter((t) => t.status === STATUS.WAITING).length;
-      const resolvedTickets = tickets.filter((t) => t.status === STATUS.RESOLVED).length;
-      const closedTickets = tickets.filter((t) => t.status === STATUS.CLOSED).length;
-
-      const activeTicketsCount = openTickets + assignedTickets + inProgressTickets + waitingTickets;
-      const criticalTickets = tickets.filter(
-        (t) => (t.priority === 'CRITICAL' || t.priority === 'HIGH') && t.status !== STATUS.RESOLVED && t.status !== STATUS.CLOSED
-      ).length;
-
-      const totalAssets = assets.length;
-      const activeAssets = assets.filter((a) => a.status === 'ACTIVE').length;
-      const maintenanceAssets = assets.filter((a) => a.status === 'MAINTENANCE' || a.status === 'BROKEN').length;
-
-      // Group tickets by department
-      const ticketsByDepartment = tickets.reduce((acc, curr) => {
-        acc[curr.department] = (acc[curr.department] || 0) + 1;
-        return acc;
-      }, {});
-
-      // Group assets by type
-      const assetsByType = assets.reduce((acc, curr) => {
-        acc[curr.assetType] = (acc[curr.assetType] || 0) + 1;
-        return acc;
-      }, {});
-
-      return {
-        data: {
-          totalTickets,
-          activeTicketsCount,
-          openTickets,
-          assignedTickets,
-          inProgressTickets,
-          waitingTickets,
-          resolvedTickets,
-          closedTickets,
-          criticalTickets,
-          totalAssets,
-          activeAssets,
-          maintenanceAssets,
-          ticketsByDepartment,
-          assetsByType,
-          uptimeHours: MOCK_SYSTEM_HEALTH.uptimeHours,
-          overallHealth: MOCK_SYSTEM_HEALTH.overallStatus,
-        },
-        error: null,
-      };
+    if (!isMock) {
+      const res = await apiClient.get('/it/stats');
+      if (res && res.data && !res.error) return res;
     }
 
-    const { data } = await apiClient.get('/it/stats');
+    const tickets = getTicketsStore();
+    const assets = getAssetsStore();
+
+    const totalTickets = tickets.length;
+    const openTickets = tickets.filter((t) => t.status === STATUS.OPEN).length;
+    const assignedTickets = tickets.filter((t) => t.status === STATUS.ASSIGNED).length;
+    const inProgressTickets = tickets.filter((t) => t.status === STATUS.IN_PROGRESS).length;
+    const waitingTickets = tickets.filter((t) => t.status === STATUS.WAITING).length;
+    const resolvedTickets = tickets.filter((t) => t.status === STATUS.RESOLVED).length;
+    const closedTickets = tickets.filter((t) => t.status === STATUS.CLOSED).length;
+
+    const activeTicketsCount = openTickets + assignedTickets + inProgressTickets + waitingTickets;
+    const criticalTickets = tickets.filter(
+      (t) => (t.priority === 'CRITICAL' || t.priority === 'HIGH') && t.status !== STATUS.RESOLVED && t.status !== STATUS.CLOSED
+    ).length;
+
+    const totalAssets = assets.length;
+    const activeAssets = assets.filter((a) => a.status === 'ACTIVE').length;
+    const maintenanceAssets = assets.filter((a) => a.status === 'MAINTENANCE' || a.status === 'BROKEN').length;
+
+    // Group tickets by department
+    const ticketsByDepartment = tickets.reduce((acc, curr) => {
+      acc[curr.department] = (acc[curr.department] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Group assets by type
+    const assetsByType = assets.reduce((acc, curr) => {
+      acc[curr.assetType] = (acc[curr.assetType] || 0) + 1;
+      return acc;
+    }, {});
+
+    return {
+      data: {
+        totalTickets,
+        activeTicketsCount,
+        openTickets,
+        assignedTickets,
+        inProgressTickets,
+        waitingTickets,
+        resolvedTickets,
+        closedTickets,
+        criticalTickets,
+        totalAssets,
+        activeAssets,
+        maintenanceAssets,
+        ticketsByDepartment,
+        assetsByType,
+        uptimeHours: MOCK_SYSTEM_HEALTH.uptimeHours,
+        overallHealth: MOCK_SYSTEM_HEALTH.overallStatus,
+      },
+      error: null,
+    };
+  },
+
+  async deleteTicket(id) {
+    if (isMock) {
+      const tickets = getTicketsStore();
+      const normId = String(id).toLowerCase().trim();
+      const idx = tickets.findIndex((t) => String(t.id).toLowerCase().trim() === normId || String(t.ticketNumber).toLowerCase().trim() === normId);
+      if (idx === -1) return { data: null, error: { message: 'Tiket tidak ditemukan' } };
+      const removed = tickets[idx];
+      const updated = tickets.filter((_, i) => i !== idx);
+      saveTicketsStore(updated);
+      emitAudit({
+        action: 'IT_TICKET_DELETE',
+        module: 'IT',
+        targetId: removed.id,
+        details: { ticketNumber: removed.ticketNumber },
+      });
+      return { data: { success: true, id: removed.id }, error: null };
+    }
+    const { data } = await apiClient.delete(`/it/tickets/${id}`);
+    return data;
+  },
+
+  async deleteAsset(id) {
+    if (isMock) {
+      const assets = getAssetsStore();
+      const normId = String(id).toLowerCase().trim();
+      const idx = assets.findIndex((a) => String(a.id).toLowerCase().trim() === normId || String(a.assetCode).toLowerCase().trim() === normId);
+      if (idx === -1) return { data: null, error: { message: 'Aset tidak ditemukan' } };
+      const removed = assets[idx];
+      const updated = assets.filter((_, i) => i !== idx);
+      saveAssetsStore(updated);
+      emitAudit({
+        action: 'IT_ASSET_DELETE',
+        module: 'IT',
+        targetId: removed.id,
+        details: { assetCode: removed.assetCode },
+      });
+      return { data: { success: true, id: removed.id }, error: null };
+    }
+    const { data } = await apiClient.delete(`/it/assets/${id}`);
+    return data;
+  },
+
+  async deleteMaintenanceSchedule(id) {
+    if (isMock) {
+      const store = getMaintenanceStore();
+      const idx = store.findIndex((m) => m.id === id);
+      if (idx === -1) return { data: null, error: { message: 'Jadwal pemeliharaan tidak ditemukan' } };
+      const removed = store[idx];
+      const updated = store.filter((_, i) => i !== idx);
+      saveMaintenanceStore(updated);
+      emitAudit({
+        action: 'IT_MAINTENANCE_DELETE',
+        module: 'IT',
+        targetId: removed.id,
+        details: { title: removed.taskTitle },
+      });
+      return { data: { success: true, id: removed.id }, error: null };
+    }
+    const { data } = await apiClient.delete(`/it/maintenance/${id}`);
     return data;
   },
 };

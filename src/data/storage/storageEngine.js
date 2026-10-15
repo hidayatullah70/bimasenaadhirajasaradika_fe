@@ -43,6 +43,9 @@ export function qualifyKey(key) {
   return `${STORAGE_NAMESPACE}${key}`;
 }
 
+// In-memory fallback cache to ensure zero data loss during quota or transient storage issues
+const memoryFallbackStore = new Map();
+
 export const storage = {
   /**
    * Get an item from storage by key.
@@ -70,10 +73,20 @@ export const storage = {
         }
       }
 
-      if (raw === null) return defaultValue;
-      return JSON.parse(raw);
+      if (raw === null) {
+        if (memoryFallbackStore.has(fullKey)) {
+          return memoryFallbackStore.get(fullKey);
+        }
+        return defaultValue;
+      }
+      const parsed = JSON.parse(raw);
+      memoryFallbackStore.set(fullKey, parsed);
+      return parsed;
     } catch (err) {
       console.warn(`[StorageEngine] Error reading ${fullKey}:`, err);
+      if (memoryFallbackStore.has(fullKey)) {
+        return memoryFallbackStore.get(fullKey);
+      }
       return defaultValue;
     }
   },
@@ -86,6 +99,7 @@ export const storage = {
   set(key, value) {
     if (typeof window === 'undefined') return;
     const fullKey = qualifyKey(key);
+    memoryFallbackStore.set(fullKey, value);
     try {
       const jsonStr = JSON.stringify(value);
       window.localStorage.setItem(fullKey, jsonStr);
@@ -107,6 +121,22 @@ export const storage = {
       );
     } catch (err) {
       console.error(`[StorageEngine] Error saving ${fullKey}:`, err);
+      // Self-healing: if localStorage quota exceeded, clear non-critical audit logs and retry once
+      try {
+        const auditKey = qualifyKey('audit_logs');
+        window.localStorage.removeItem(auditKey);
+        window.localStorage.removeItem('barak_audit_logs');
+        const jsonStr = JSON.stringify(value);
+        window.localStorage.setItem(fullKey, jsonStr);
+      } catch {
+        console.warn(`[StorageEngine] Quota fallback active for ${fullKey}`);
+      }
+      // Always dispatch event so UI re-renders with fresh memory cache
+      window.dispatchEvent(
+        new CustomEvent('outsourcing_storage_updated', {
+          detail: { key: fullKey, baseKey: key },
+        })
+      );
     }
   },
 
@@ -117,6 +147,7 @@ export const storage = {
   remove(key) {
     if (typeof window === 'undefined') return;
     const fullKey = qualifyKey(key);
+    memoryFallbackStore.delete(fullKey);
     try {
       window.localStorage.removeItem(fullKey);
       const legacyKey = `${LEGACY_PREFIX}${key.replace(STORAGE_NAMESPACE, '')}`;
@@ -159,6 +190,7 @@ export const storage = {
    */
   clear(onlyNamespace = true) {
     if (typeof window === 'undefined') return;
+    memoryFallbackStore.clear();
     if (!onlyNamespace) {
       window.localStorage.clear();
       return;

@@ -218,8 +218,105 @@ export const directorAdapter = {
       };
     }
 
-    const { data } = await apiClient.get('/director/dashboard-stats');
-    return data;
+    const res = await apiClient.get('/director/dashboard-stats');
+    const apiData = res.data?.data || res.data || {};
+
+    const nonDeletedEmployees = getStoredCollection('master_employees', () => [...MOCK_EMPLOYEES]).filter((e) => !e.isDeleted);
+    const wf = apiData.workforce || {};
+    const cs = apiData.clientsAndSites || {};
+    const fn = apiData.finance || {};
+    const gv = apiData.governance || {};
+
+    const activeEmployees = wf.activeEmployees ?? nonDeletedEmployees.filter((e) => e.status === STATUS.ACTIVE || e.status_kerja === 'AKTIF').length;
+    const totalEmployees = wf.totalEmployees ?? nonDeletedEmployees.length;
+    const activeClients = cs.totalClients ?? 18;
+    const activeLocations = cs.totalSites ?? 7;
+    const activeAssignments = wf.activePlacements ?? activeEmployees;
+    const outstandingReceivables = fn.outstandingReceivables ?? 0;
+    const pendingApprovalsCount = gv.pendingApprovals ?? 0;
+
+    const formattedData = {
+      kpi: {
+        activeEmployees,
+        totalEmployees,
+        activeClients,
+        activeLocations,
+        activeAssignments,
+        monthlyRevenue: fn.totalCollected || 0,
+        outstandingReceivables,
+        overdueReceivables: fn.overdueReceivables || 0,
+        overdueInvoicesCount: fn.overdueInvoicesCount || 0,
+        payrollTotal: fn.payrollTotal || 0,
+        payrollStatus: 'SIAP_DISETUJUI',
+        activeLegalCases: gv.activeLegalCases || 0,
+        unresolvedCODCount: 0,
+        unresolvedCODAmount: 0,
+        openIncidents: gv.openIncidentsCount || 0,
+        criticalIncidents: 0,
+        openTickets: 0,
+        slaBreachedTickets: 0,
+        totalLeads: 0,
+        pipelineValue: 0,
+        wonDealsCount: 0,
+        pendingApprovalsCount,
+        publishedArticles: 0,
+        activeCareers: 0,
+        pendingInquiries: 0,
+        ...(apiData.kpi || {})
+      },
+      workforce: {
+        headcount: activeEmployees,
+        total: totalEmployees,
+        expiringContracts: gv.expiringContractsCount || 0,
+        serviceCounts: { SECURITY: activeEmployees, KURIR: 0, PARKIR: 0, CLEANING: 0, MANPOWER: 0, LOSS_PREVENTION: 0 },
+        activeAssignments,
+        ...(apiData.workforce || {})
+      },
+      operations: {
+        activeLocations,
+        activeClients,
+        openIncidents: gv.openIncidentsCount || 0,
+        criticalIncidents: 0,
+        pendingReplacements: 0,
+        ...(apiData.operations || {})
+      },
+      finance: {
+        monthlyRevenue: fn.totalCollected || 0,
+        outstandingReceivables,
+        overdueReceivables: 0,
+        payrollTotal: 0,
+        payrollStatus: 'SIAP_DISETUJUI',
+        unresolvedCODCount: 0,
+        unresolvedCODAmount: 0,
+        ...(apiData.finance || {})
+      },
+      legal: {
+        activeLegalCases: 0,
+        expiringContractsCount: gv.expiringContractsCount || 0,
+        compliantLicenses: 3,
+        totalLicenses: 3,
+        ...(apiData.legal || {})
+      },
+      marketing: {
+        totalLeads: 0,
+        activeOpportunities: 0,
+        pipelineValue: 0,
+        wonDealsCount: 0,
+        ...(apiData.marketing || {})
+      },
+      it: {
+        openTickets: 0,
+        slaBreachedTickets: 0,
+        activeAssets: 0,
+        ...(apiData.it || {})
+      },
+      approvals: apiData.approvals || getApprovalsStore().filter((a) => a.status === STATUS.PENDING).slice(0, 5),
+    };
+
+    return {
+      data: formattedData,
+      error: null,
+    };
   },
 
   /**

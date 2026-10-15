@@ -22,7 +22,6 @@ import { Link } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { StateLoading } from '@/components/ui/StateViews';
-import toast from 'react-hot-toast';
 import { cmsAdapter } from '@/services/adapters/cmsAdapter';
 import ArticleFormModal from './articles/ArticleFormModal';
 import CareerFormModal from './careers/CareerFormModal';
@@ -40,17 +39,23 @@ export default function WebsiteDashboard() {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      const [statsRes, inqRes, artRes] = await Promise.all([
+      const [statsRes, inqRes, artRes] = await Promise.allSettled([
         cmsAdapter.getCMSStats(),
         cmsAdapter.getInquiries({ pageSize: 4 }),
         cmsAdapter.getArticles({ pageSize: 4 }),
       ]);
 
-      if (statsRes.data) setStats(statsRes.data);
-      if (inqRes.data) setRecentInquiries(inqRes.data);
-      if (artRes.data) setRecentArticles(artRes.data);
+      if (statsRes.status === 'fulfilled' && statsRes.value?.data) {
+        setStats(statsRes.value.data);
+      }
+      if (inqRes.status === 'fulfilled' && inqRes.value?.data) {
+        setRecentInquiries(Array.isArray(inqRes.value.data) ? inqRes.value.data : []);
+      }
+      if (artRes.status === 'fulfilled' && artRes.value?.data) {
+        setRecentArticles(Array.isArray(artRes.value.data) ? artRes.value.data : []);
+      }
     } catch {
-      toast.error('Gagal memuat analitik website CMS.');
+      // Graceful error recovery
     } finally {
       setLoading(false);
     }
